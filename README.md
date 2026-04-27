@@ -14,7 +14,12 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 
 ## Project Status
-Need to add our badges etc. here
+
+![Build](https://github.com/COS301-SE-2026/Equity-Lens/actions/workflows/ci.yml/badge.svg)
+[![Coverage](https://codecov.io/gh/COS301-SE-2026/Equity-Lens/branch/main/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2026/Equity-Lens)
+![Requirements](https://img.shields.io/badge/requirements-up%20to%20date-brightgreen)
+[![GitHub Issues](https://img.shields.io/github/issues/COS301-SE-2026/Equity-Lens)](https://github.com/COS301-SE-2026/Equity-Lens/issues)
+[![Uptime Robot](https://img.shields.io/uptimerobot/status/m802935846)](https://uptimerobot.com)
 
 ## The Team
 
