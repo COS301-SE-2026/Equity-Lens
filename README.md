@@ -1,4 +1,4 @@
-The Big Five (TB5) | EquityLens
+# The Big Five (TB5) | EquityLens
 
 EquityLens is a web-based platform aimed at bridging the gap between retail investors 
 and investment analytics by providing the user with the ability to import their own portfolio, 
@@ -24,7 +24,6 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 ## The Team
 
 ### Joshua Heath
-**Role:** Frontend Engineering | Backend Engineering
 **Student Number:** u23541475
 
 Third-year Computer Science student at the University of Pretoria with 
