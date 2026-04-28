@@ -48,6 +48,14 @@ BSc Computer Science student in their third-year at the University of Pretoria, 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/antony-van-straten/)
 [![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/antonyvs05)
 
+### Jonty Honey
+**Student Number:** u23536862
+
+Third year Bsc Computer Science student at the University of Pretoria with a passion for data science, full stack and game development.
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/jonty-honey/)
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/jonty282)
+
 ## Tech Stack
 
 | Layer | Technology |
