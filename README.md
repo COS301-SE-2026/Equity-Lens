@@ -23,6 +23,14 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 ## The Team
 
+### Abdulrahman Sabah
+*Student Number:* u24566170
+
+I am a final year student in computer science, with a very deep passion on cybersecurity. I am very eager to specialize in this specific field.
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](www.linkedin.com/in/abdulrahman-sabah-a240aa39b)
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/abdulrahman-sabah)
+
 ### Joshua Heath
 **Student Number:** u23541475
 
