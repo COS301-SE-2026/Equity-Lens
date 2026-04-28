@@ -32,6 +32,14 @@ full-stack development experience across academic and personal projects.
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/joshua-heath-a910b5367)
 [![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/Josh-Heath123)
 
+### Antony Van Straten
+**Student Number:** u24590739
+
+BSc Computer Science student in their third-year at the University of Pretoria, deeply passionate about Machine Learning, Artificial Intelligence and building in general. Gained full-stack experience through personal and academic projects.
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/antony-van-straten/)
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/antonyvs05)
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -40,9 +48,9 @@ full-stack development experience across academic and personal projects.
 | Backend | FastAPI, AWS Lambda, API Gateway |
 | Auth | AWS Cognito |
 | Database | AWS RDS PostgreSQL, AWS S3 |
-| AI | Gemini 2.0 Flash / Groq + Llama 3 |
+| AI | AWS Bedrock |
 | Market Data | yfinance / Alpha Vantage |
-| News | NewsAPI.org |
+| News | Marketaux |
 | File Handling | pdfPlumber |
 | CI/CD | GitHub Actions, AWS SAM |
 
