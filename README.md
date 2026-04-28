@@ -50,7 +50,7 @@ BSc Computer Science student in their third-year at the University of Pretoria, 
 | Database | AWS RDS PostgreSQL, AWS S3 |
 | AI | AWS Bedrock |
 | Market Data | yfinance / Alpha Vantage |
-| News | Marketaux |
+| News | Marketaux + Finnhub.io |
 | File Handling | pdfPlumber |
 | CI/CD | GitHub Actions, AWS SAM |
 
