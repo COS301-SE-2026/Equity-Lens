@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+alembic
+boto3
+pdfplumber
+pandas
+numpy
+scipy
+yfinance
+httpx
+python-jose
+passlib
+python-multipart
