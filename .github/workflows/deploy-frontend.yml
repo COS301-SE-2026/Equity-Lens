@@ -10,4 +10,7 @@ jobs:
     backend:
         runs-on: ubuntu-latest
         timeout-minutes: 5
+        steps:
+            - name: just to run
+              run: echo "Will be empty for now"
     
