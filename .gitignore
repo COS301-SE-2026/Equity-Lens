@@ -1,0 +1,62 @@
+# Python
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.production
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Node
+frontend/node_modules/
+node_modules/
+frontend/dist/
+frontend/build/
+
+# Testing
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+**/.pytest_cache/
+
+# IDEs
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# AWS
+.aws-sam/
+infrastructure/.aws-sam/
+samconfig.toml
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+*.zip
+*.tar.gz
