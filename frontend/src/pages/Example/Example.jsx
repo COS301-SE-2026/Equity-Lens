@@ -1,10 +1,20 @@
+import { useState } from "react";
 
 
-//Just a small html page - for the testing template
-export default function TestOne() {
+export default function SimplePage() {
+    
+    const [message, setMessage] = useState("");
+
   return (
     <div>
       <h1>Example Page</h1>
+
+      <button onClick={() => setMessage("Welcome User")}>
+        Example Button
+      </button>
+
+      <p>{message}</p>
+      
     </div>
   );
 }
