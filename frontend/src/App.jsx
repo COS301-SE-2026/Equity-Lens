@@ -1,9 +1,7 @@
+import AppRouter from "./router/AppRouter";
+
 function App() {
-  return (
-    <div>
-      <h1>EquityLens</h1>
-      <p>Frontend running</p>
-    </div>
-  )
+  return <AppRouter />;
 }
-export default App
+
+export default App;
