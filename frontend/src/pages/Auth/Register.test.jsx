@@ -11,6 +11,18 @@ describe('Register Page Integration',() => {
         const utils = render(<Register/>);
         return {user,...utils};
     };
+
+    it("All validation errors should be present for an empty form submission", async() => {
+        const {user} = setup();
+        const submitButton = screen.getByRole('button',{name: /Submit/i});
+        await user.click(submitButton);
+
+        expect(await screen.findByText(/Full name is required/i).toBeInTheDocument());
+        expect(await screen.findByText(/Email is required/i).toBeInTheDocument());
+        expect(await screen.findByText(/Password is required/i).toBeInTheDocument());
+        expect(await screen.findByText(/Confirmed password is required/i).toBeInTheDocument());
+    })
+
 }
 
 )
