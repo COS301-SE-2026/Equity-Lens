@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 * {
@@ -27,6 +31,24 @@
   --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.6);
   --font-primary: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --color-surface: var(--bg-card);
+  --color-border: var(--border-default);
+  --color-text: var(--text-primary);
+  --color-text-muted: var(--text-secondary);
+  --color-background: var(--bg-primary);
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0A0A0A;
+  --bg-secondary: #1A1A1A;
+  --bg-tertiary: #2C2C2C;
+  --bg-card: #1A1A1A;
+  --text-primary: #FFFFFF;
+  --text-secondary: #6B6B6B;
+  --text-muted: #4B4B4B;
+  --border-default: #2C2C2C;
+  --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.4);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
 [data-theme="light"] {
@@ -36,8 +58,10 @@
   --bg-card: #FFFFFF;
   --text-primary: #0A0A0A;
   --text-secondary: #6B6B6B;
+  --text-muted: #9CA3AF;
   --border-default: #E5E5E5;
   --shadow-card: 0 4px 6px rgba(0, 0, 0, 0.08);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.15);
 }
 
 body {
