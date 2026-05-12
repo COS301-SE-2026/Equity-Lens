@@ -9,7 +9,7 @@ export const Register = () => {
             <input type = "text" id = "full_name" name = "full_name"/>
 
             <label htmlfor = "email">E-mail</label>
-            <input type = "text" id = "email" name = "email"/>
+            <input type = "email" id = "email" name = "email"/>
 
             <label htmlfor = "password">Password</label>
             <input type = "text" id = "password" name = "password"/>
@@ -17,6 +17,7 @@ export const Register = () => {
             <label htmlfor = "confirm_password">Confirm Password</label>
             <input type = "text" id = "confirm_password" name = "confirm_password"/>
 
+            <button>Submit</button>
         </form>
     </div>
    
