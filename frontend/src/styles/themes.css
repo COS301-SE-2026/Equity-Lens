@@ -1,10 +1,11 @@
 /*root instead of light for default behaviour*/
 :root {
   --bg: white;
+  --text-primary: #0f172a;
 }
 
 .dark {
   --bg: black;
+  --text-primary: #f1f5f9;
 }
 
-h1 { color: #60a5fa; }
