@@ -1,14 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useTheme } from './context/ThemeContext.jsx'
 
 function App() {
-  const [dark, setDark] = useState(() => localStorage.getItem('theme') === 'dark')
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', dark)
-    localStorage.setItem('theme', dark ? 'dark' : 'light')
-  }, [dark])
-
-  const toggle = () => setDark(d => !d)
+  const { dark, toggle } = useTheme()
 
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--text-primary)', minHeight: '100vh' }}>
