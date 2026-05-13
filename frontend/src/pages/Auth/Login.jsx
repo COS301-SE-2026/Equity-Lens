@@ -1,4 +1,4 @@
-import "bootstrap/dist/css/bootstrap.min.css";
+
 
 export default function Login() {
   return (
@@ -100,5 +100,7 @@ export default function Login() {
         </div>
       </div>
     </div>
+
+    
   );
 }
