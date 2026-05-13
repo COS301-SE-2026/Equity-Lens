@@ -2,10 +2,12 @@
 :root {
   --bg: white;
   --text-primary: #0f172a;
+  --border-color: black;
 }
 
 .dark {
   --bg: black;
   --text-primary: #f1f5f9;
+  --border-color: white;
 }
 
