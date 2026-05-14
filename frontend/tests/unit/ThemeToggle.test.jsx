@@ -39,4 +39,16 @@ describe("Should toggle theme", () => {
     expect(screen.getByLabelText("Switch to light mode")).toBeDefined();
   });
 
+  it("shows the light icon by default", () => {
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    );
+
+    //src should point to the sun (light mode) icon
+    const icon = screen.getByRole("button").querySelector("img");
+    expect(icon.src).toContain("light.png");
+  });
+
 });
