@@ -35,4 +35,19 @@ const CustomTooltip = ({ active, payload }) => {
   }
   return null;
 };
+const CustomLegend = ({ payload }) => (
+  <ul className="flex flex-wrap justify-center gap-3 mt-4">
+    {payload.map((entry, index) => (
+      <li key={index} className="flex items-center gap-1.5">
+        <div
+          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+          style={{ backgroundColor: entry.color }}
+        />
+        <span className="text-xs text-[var(--text-secondary)]">{entry.value}</span>
+      </li>
+    ))}
+  </ul>
+);
+
+
 
