@@ -2,28 +2,28 @@ import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { ROUTES } from '../utils/constants';
+
 import Login from '../pages/Auth/Login';
 import Register from '../pages/Auth/Register';
 import Dashboard from '../pages/Dashboard/Dashboard';
 import Portfolio from '../pages/Portfolio/Portfolio';
 import Analytics from '../pages/Analytics/Analytics';
 import NotFound from '../pages/NotFound/NotFound';
+import AIChat from "../pages/AIChat/AIChat";
+import News from "../pages/News/News";
+
 import LoadingSpinner from '../components/common/LoadingSpinner/LoadingSpinner';
 import Sidebar from '../components/common/Sidebar/Sidebar';
 import Topbar from '../components/common/Topbar/Topbar';
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--bg-primary)]">
-      <Sidebar
-        open={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 overflow-auto">
         <Topbar onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto p-4">
           {children}
         </main>
       </div>
@@ -33,53 +33,28 @@ const AppLayout = ({ children }) => {
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuthContext();
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-  return isAuthenticated
-    ? <AppLayout>{children}</AppLayout>
-    : <Navigate to={ROUTES.LOGIN} replace />;
+  if (loading) return <div className="flex items-center justify-center min-h-screen"><LoadingSpinner size="lg" /></div>;
+  return isAuthenticated ? <AppLayout>{children}</AppLayout> : <Navigate to={ROUTES.LOGIN} replace />;
 };
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuthContext();
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
+  if (loading) return <div className="flex items-center justify-center min-h-screen"><LoadingSpinner size="lg" /></div>;
   return !isAuthenticated ? children : <Navigate to={ROUTES.DASHBOARD} replace />;
 };
 
 const AppRouter = () => (
   <BrowserRouter>
     <Routes>
-      <Route
-        path={ROUTES.LOGIN}
-        element={<PublicRoute><Login /></PublicRoute>}
-      />
-      <Route
-        path={ROUTES.REGISTER}
-        element={<PublicRoute><Register /></PublicRoute>}
-      />
-      <Route
-        path={ROUTES.DASHBOARD}
-        element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
-      />
-      <Route
-        path={ROUTES.PORTFOLIO}
-        element={<ProtectedRoute><Portfolio /></ProtectedRoute>}
-      />
-      <Route
-        path={ROUTES.ANALYTICS}
-        element={<ProtectedRoute><Analytics /></ProtectedRoute>}
-      />
+      <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path={ROUTES.REGISTER} element={<PublicRoute><Register /></PublicRoute>} />
+      
+      <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path={ROUTES.PORTFOLIO} element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
+      <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+      <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
+      <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
+
       <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
