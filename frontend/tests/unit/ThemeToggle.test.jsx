@@ -40,6 +40,8 @@ describe("Should toggle theme", () => {
   });
 
   it("shows the light icon by default", () => {
+
+    
     render(
       <ThemeProvider>
         <ThemeToggle />
@@ -50,5 +52,19 @@ describe("Should toggle theme", () => {
     const icon = screen.getByRole("button").querySelector("img");
     expect(icon.src).toContain("light.png");
   });
+
+  it("shows the dark icon when it is in dark mode", () => {
+    localStorage.setItem("theme", "dark");
+    
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    );
+
+    //src should point to the sun (light mode) icon
+    const icon = screen.getByRole("button").querySelector("img");
+    expect(icon.src).toContain("dark.png");
+  });  
 
 });
