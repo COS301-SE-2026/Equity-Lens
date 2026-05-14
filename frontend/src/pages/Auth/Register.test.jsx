@@ -48,7 +48,19 @@ it("Regex error should appear if email requirements not met",async() =>{
     expect(regexErrorMail).toBeInTheDocument();
 })
 
+it("Error message should appear if passwords do not match",async() => {
+    const {user} = setup();
+    const inputPass = screen.getByLabelText(/Password/i);
+    const confirmPass = screen.getByLabelText(/Confirm Password/i);
 
+    await user.type(inputPass,'StrongP@ss123!@#');
+    await user.type(confirmPass,'NoMatch123!@#');
+
+    await user.tab();
+
+    const matchError = screen.findByText(/Passwords do not match/i)
+    expect(matchError).toBeInTheDocument();
+})
 
 }
 
