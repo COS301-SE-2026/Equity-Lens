@@ -1,4 +1,6 @@
 import ThemeToggle from './components/common/ThemeToggle/ThemeToggle.jsx'
+import Login from './pages/Auth/Login'
+
 
 function App() {
   return (
@@ -7,6 +9,7 @@ function App() {
       <p>Frontend running</p>
       {/* This is the Theme toggling button */}
       <ThemeToggle />
+        <Login />
     </div>
   )
 }
