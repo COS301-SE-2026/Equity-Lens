@@ -18,6 +18,15 @@ const CHART_COLORS = [
   '#EC4899',
 ];
 
+const mockSectorData = [
+  { sector: 'Financial Services', percentage: 35.5, value: 450000 },
+  { sector: 'Technology', percentage: 22.0, value: 280000 },
+  { sector: 'Mining & Resources', percentage: 18.5, value: 235000 },
+  { sector: 'Healthcare', percentage: 12.0, value: 152000 },
+  { sector: 'Consumer Goods', percentage: 7.5, value: 95000 },
+  { sector: 'Real Estate', percentage: 4.5, value: 57000 },
+];
+
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const { sector, percentage, value } = payload[0].payload;
@@ -49,5 +58,43 @@ const CustomLegend = ({ payload }) => (
   </ul>
 );
 
+const SectorPieChart = ({ data = mockSectorData }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 text-[var(--text-secondary)] text-sm">
+        No sector data available
+      </div>
+    );
+  }
+
+  return (
+    <div aria-label="Sector allocation pie chart">
+      <ResponsiveContainer width="100%" height={300}>
+        <PieChart>
+          <Pie
+            data={data}
+            dataKey="percentage"
+            nameKey="sector"
+            cx="50%"
+            cy="50%"
+            outerRadius={100}
+            innerRadius={55}
+            paddingAngle={2}
+          >
+            {data.map((_, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={CHART_COLORS[index % CHART_COLORS.length]}
+              />
+            ))}
+          </Pie>
+          <Tooltip content={<CustomTooltip />} />
+          <Legend content={<CustomLegend />} />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+export default SectorPieChart;
 
 
