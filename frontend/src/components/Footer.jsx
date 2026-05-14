@@ -1,7 +1,7 @@
 
 export default function Footer() {
   return (
-    <footer className="bg-dark text-white py-3 mt-5">
+    <footer className="bg-body-tertiary text-body py-3 mt-5">
       <div className="container d-flex flex-row justify-content-between align-items-center">
 
         <div>
@@ -13,15 +13,15 @@ export default function Footer() {
         </div>
 
         <div className="d-flex flex-row gap-3">
-          <a href="#" className="text-white text-decoration-none">
+          <a href="#" className="text-body text-decoration-none">
             Home
           </a>
 
-          <a href="#" className="text-white text-decoration-none">
+          <a href="#" className="text-body text-decoration-none">
             About
           </a>
 
-          <a href="#" className="text-white text-decoration-none">
+          <a href="#" className="text-body text-decoration-none">
             Contact
           </a>
         </div>

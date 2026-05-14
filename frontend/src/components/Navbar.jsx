@@ -1,7 +1,7 @@
 
 export default function Navbar() {
   return (
-    <nav className="navbar navbar-expand-lg bg-white shadow-sm py-3">
+    <nav className="navbar navbar-expand-lg bg-body shadow-sm py-3">
 
       <div className="container">
 
@@ -13,21 +13,21 @@ export default function Navbar() {
 
           <a
             href="#"
-            className="text-dark text-decoration-none"
+            className="text-body text-decoration-none"
           >
             Home
           </a>
 
           <a
             href="#"
-            className="text-dark text-decoration-none"
+            className="text-body text-decoration-none"
           >
             tests
           </a>
 
           <a
             href="#"
-            className="text-dark text-decoration-none"
+            className="text-body text-decoration-none"
           >
             tests
           </a>

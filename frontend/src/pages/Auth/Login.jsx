@@ -1,12 +1,10 @@
 
-import 'bootstrap/dist/css/bootstrap.min.css'
-
 export default function Login() {
   return (
 
-    <div className="vh-100 bg-white">
+    <div className="vh-100 bg-body text-body">
 
-      <nav className="bg-white">
+      <nav className="bg-body">
         <span>
           EquityLens
         </span>
@@ -44,7 +42,7 @@ export default function Login() {
     Learn More
   </button>
 
-  <button className="btn btn-outline-dark px-4 py-2 rounded-4">
+  <button className="btn btn-outline-secondary px-4 py-2 rounded-4">
     Contact Us
   </button>
 
