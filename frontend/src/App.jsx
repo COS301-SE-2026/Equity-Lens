@@ -1,9 +1,14 @@
-function App() {
-  return (
-    <div>
-      <h1>EquityLens</h1>
-      <p>Frontend running</p>
-    </div>
-  )
-}
-export default App
+import { AuthProvider } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import AppRouter from './router/AppRouter';
+import './styles/globals.css';
+
+const App = () => (
+  <ThemeProvider>
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
+  </ThemeProvider>
+);
+
+export default App;
