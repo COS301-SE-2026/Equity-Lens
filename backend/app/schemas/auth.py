@@ -25,7 +25,10 @@ class RegisterRequest(BaseModel):
         if not any(c.islower() for c in v):
             raise ValueError("Password must contain at least one lowercase letter")
         if not any(c.isdigit() for c in v):
-            raise ValueError("Password must contain at least one number")
+            raise ValueError("Password must contain at least one number")    
+        special_chars = set('!@#$%^&*()_+-=[]{}|;:,.<>?/~`@$!%*?&#.')
+        if not any(c in special_chars for c in v):
+            raise ValueError("Password must contain at least one special character (!@#$%^&*...)")
         return v
 
 
