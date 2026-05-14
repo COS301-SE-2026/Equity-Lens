@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import usePortfolio from '../../hooks/usePortfolio';
 import useAuth from '../../hooks/useAuth';
-import StockTickerCard from '../../components/dashboard/StockTickerCard/StockTickerCard';
-import PerformanceLineChart from '../../components/charts/PerformanceLineChart/PerformanceLineChart';
-import DividendBarChart from '../../components/charts/DividendBarChart/DividendBarChart';
-import WatchlistItem from '../../components/dashboard/WatchlistItem/WatchlistItem';
-import HoldingsTable from '../../components/portfolio/HoldingsTable/HoldingsTable';
-import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
+// import StockTickerCard from '../../components/dashboard/StockTickerCard/StockTickerCard';
+// import PerformanceLineChart from '../../components/charts/PerformanceLineChart/PerformanceLineChart';
+// import DividendBarChart from '../../components/charts/DividendBarChart/DividendBarChart';
+// import WatchlistItem from '../../components/dashboard/WatchlistItem/WatchlistItem';
+// import HoldingsTable from '../../components/portfolio/HoldingsTable/HoldingsTable';
+// import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
 
 const WATCHLIST = [
   { ticker: 'NPN', name: 'Naspers', price: 3150.00, changePercent: 12.5 },
