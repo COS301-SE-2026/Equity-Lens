@@ -10,7 +10,7 @@ const initialValues = {
 }
 
 
-export const Register = () => {
+export default function Register() {
 
 
 

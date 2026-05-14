@@ -6,7 +6,7 @@ import Footer from './components/Footer'
 import Navbar from './components/Navbar'
 
 
-import {Register} from "/src/pages/Auth/Register.jsx"
+// import {Register} from "/src/pages/Auth/Register.jsx"
 function App() {
   return (
     <>

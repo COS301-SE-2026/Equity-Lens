@@ -4,24 +4,6 @@ export default function Login() {
 
     <div className="vh-100 bg-body text-body">
 
-      <nav className="bg-body">
-        <span>
-          EquityLens
-        </span>
-
-        <label>
-          test 1
-        </label>
-        
-
-        <button>
-          Sign Up
-        </button>
-
-
-      </nav>
-
-
       <div className="row h-100">
 
         {/* Left Side of the login page */}
