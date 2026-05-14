@@ -19,7 +19,7 @@ const FormInput = ({
           className="text-sm font-medium text-[var(--text-primary)]"
         >
           {label}
-          {required && <span className="text-[var(--color-danger)] ml-1">*</span>}
+          {required && <span className="text-[var(--color-danger)] ml-1" aria-hidden="true">*</span>}
         </label>
       )}
       <input

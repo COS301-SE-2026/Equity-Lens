@@ -101,7 +101,7 @@ const Register = () => {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={touched.fullName ? errors.fullName : undefined}
-                placeholder="Test User"
+                placeholder="Your Name Here"
                 required
               />
 
@@ -113,7 +113,7 @@ const Register = () => {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={touched.email ? errors.email : undefined}
-                placeholder="email@email.com"
+                placeholder="your@email.com"
                 required
               />
 
