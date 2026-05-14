@@ -1,85 +1,143 @@
-import React from "react";
-import {render, screen, waitFor} from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import '@testing-library/jest-dom';
-import {Register} from './Register';
-import { set } from "react-hook-form";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import Register from './Register';
 
-describe('Register Page Integration',() => {
-    //Helper to clean up code (reduce identical calls)
-    const setup = () => {
-        const user = userEvent.setup();
-        const utils = render(<Register/>);
-        return {user,...utils};
-    };
+const mockRegister = vi.fn();
+const mockNavigate = vi.fn();
 
-    it("All validation errors should be present for an empty form submission", async() => {
-        const {user} = setup();
-        const submitButton = screen.getByRole('button',{name: /Submit/i});
-        await user.click(submitButton);
+vi.mock('../../hooks/useAuth', () => ({
+  default: () => ({
+    register: mockRegister,
+    isAuthenticated: false,
+    loading: false,
+  }),
+}));
 
-        expect(await screen.findByText(/Full name is required/i)).toBeInTheDocument();
-        expect(await screen.findByText(/Email is required/i)).toBeInTheDocument();
-        expect(await screen.findByText(/^Password is required$/i)).toBeInTheDocument();
-        expect(await screen.findByText(/Confirmed password is required/i)).toBeInTheDocument();
-    })
-
-it("Regex error should appear when requirements are not met for password", async() => {
-    const {user} = setup();
-    const inputPass = screen.getByLabelText(/^Password$/i);
-
-    await user.type(inputPass, 'weakpass');
-   await user.click(screen.getByRole('button', { name: /Submit/i }));
-
-    const regexError = await screen.findByText(/atleast 8 characters long/i);
-
-    expect(regexError).toBeInTheDocument();
-
-})
-
-it("Regex error should appear if email requirements not met",async() =>{
-    const {user} = setup();
-    const inputEmail = screen.getByLabelText(/E-mail/i);
-
-    await user.type(inputEmail,'weakmail!gmail,com');
-    await user.click(screen.getByRole('button', { name: /Submit/i }));
-
-    const regexErrorMail = await screen.findByText(/Invalid Email/i);
-    expect(regexErrorMail).toBeInTheDocument();
-})
-
-it("Error message should appear if passwords do not match",async() => {
-    const {user} = setup();
-    const inputPass = screen.getByLabelText(/^Password$/i);
-    const confirmPass = screen.getByLabelText(/Confirm Password/i);
-
-    await user.type(inputPass,'StrongP@ss123!@#');
-    await user.type(confirmPass,'NoMatch123!@#');
-
-   await user.click(screen.getByRole('button', { name: /Submit/i }));
-
-    const matchError = await screen.findByText(/passwords do not match/i)
-    expect(matchError).toBeInTheDocument();
-})
-
-it("Form submission should succeed with all valid inputs",async() => {
-    const {user} = setup();
-    const inputFullname = screen.getByLabelText(/Full Name/i);
-    const inputEmail = screen.getByLabelText(/E-mail/i);
-    const inputPassword = screen.getByLabelText(/^Password$/i);
-    const inputConfirmPass = screen.getByLabelText(/Confirm Password/i);
-
-    await user.type(inputFullname,'Antony Van Straten');
-    await user.type(inputEmail,'antonyvs05@gmail.com');
-    await user.type(inputPassword,'StrongP@ss1!');
-    await user.type(inputConfirmPass,'StrongP@ss1!');
-
-    const submitButton = screen.getByRole('button',{name: /Submit/i});
-    await user.click(submitButton);
-
-    await waitFor(() => {
-        expect(screen.queryByText(/is required/i)).not.toBeInTheDocument();
-        expect(screen.queryByText(/Passwords do not match/i)).not.toBeInTheDocument();
-    });
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return { ...actual, useNavigate: () => mockNavigate };
 });
+
+const renderRegister = () =>
+  render(<MemoryRouter><Register /></MemoryRouter>);
+
+describe('Register Page', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('renders registration form', () => {
+    renderRegister();
+    expect(screen.getByRole('form', { name: /registration form/i })).toBeInTheDocument();
+  });
+
+  it('renders all form fields', () => {
+    renderRegister();
+    expect(screen.getByLabelText(/full name/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/email address/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/confirm password/i)).toBeInTheDocument();
+  });
+
+  it('shows error for empty fields on submit', async () => {
+    renderRegister();
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await waitFor(() => {
+      expect(screen.getByText('Full name is required')).toBeInTheDocument();
+    });
+  });
+
+  it('shows error for invalid email', async () => {
+    renderRegister();
+    const emailInput = screen.getByLabelText(/email address/i);
+    fireEvent.change(emailInput, { target: { value: 'notanemail', name: 'email' } });
+    fireEvent.blur(emailInput);
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+    });
+  });
+
+  it('shows error when passwords do not match', async () => {
+    renderRegister();
+    fireEvent.change(screen.getByLabelText(/^password/i), {
+      target: { value: 'Password1', name: 'password' },
+    });
+    const confirmInput = screen.getByLabelText(/confirm password/i);
+    fireEvent.change(confirmInput, {
+      target: { value: 'Password2', name: 'confirmPassword' },
+    });
+    fireEvent.blur(confirmInput);
+    await waitFor(() => {
+      expect(screen.getByText('Passwords do not match')).toBeInTheDocument();
+    });
+  });
+
+  it('calls register with correct values on valid submit', async () => {
+    mockRegister.mockResolvedValue({});
+    renderRegister();
+    fireEvent.change(screen.getByLabelText(/full name/i), {
+      target: { value: 'Joshua Heath', name: 'fullName' },
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: 'josh@test.com', name: 'email' },
+    });
+    fireEvent.change(screen.getByLabelText(/^password/i), {
+      target: { value: 'Password1', name: 'password' },
+    });
+    fireEvent.change(screen.getByLabelText(/confirm password/i), {
+      target: { value: 'Password1', name: 'confirmPassword' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await waitFor(() => {
+      expect(mockRegister).toHaveBeenCalledWith('Joshua Heath', 'josh@test.com', 'Password1');
+    });
+  });
+
+  it('shows success message after successful registration', async () => {
+    mockRegister.mockResolvedValue({});
+    renderRegister();
+    fireEvent.change(screen.getByLabelText(/full name/i), {
+      target: { value: 'Joshua Heath', name: 'fullName' },
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: 'josh@test.com', name: 'email' },
+    });
+    fireEvent.change(screen.getByLabelText(/^password/i), {
+      target: { value: 'Password1', name: 'password' },
+    });
+    fireEvent.change(screen.getByLabelText(/confirm password/i), {
+      target: { value: 'Password1', name: 'confirmPassword' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await waitFor(() => {
+      expect(screen.getByRole('status')).toHaveTextContent(/account created successfully/i);
+    });
+  });
+
+  it('shows server error message on failed registration', async () => {
+    mockRegister.mockRejectedValue(new Error('Email already in use'));
+    renderRegister();
+    fireEvent.change(screen.getByLabelText(/full name/i), {
+      target: { value: 'Joshua Heath', name: 'fullName' },
+    });
+    fireEvent.change(screen.getByLabelText(/email address/i), {
+      target: { value: 'josh@test.com', name: 'email' },
+    });
+    fireEvent.change(screen.getByLabelText(/^password/i), {
+      target: { value: 'Password1', name: 'password' },
+    });
+    fireEvent.change(screen.getByLabelText(/confirm password/i), {
+      target: { value: 'Password1', name: 'confirmPassword' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Email already in use');
+    });
+  });
+
+  it('renders link to login page', () => {
+    renderRegister();
+    expect(screen.getByRole('link', { name: /sign in/i })).toBeInTheDocument();
+  });
 });
