@@ -37,6 +37,19 @@ it("Regex error should appear when requirements are not met for password", async
 
 })
 
+it("Regex error should appear if email requirements not met",async() =>{
+    const {user} = setup();
+    const inputEmail = screen.getByLabelText(/E-mail/i);
+
+    await user.type(inputEmail,'weakmail!gmail,com');
+    await user.tab();
+
+    const regexErrorMail = screen.findByText(/Invalid Email/i);
+    expect(regexErrorMail).toBeInTheDocument();
+})
+
+
+
 }
 
 )
