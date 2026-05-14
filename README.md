@@ -168,6 +168,32 @@ JKH : chore: update dependencies
 - Python 3.11+
 - Docker and Docker Compose
 
+### Frontend Testing
+
+Go to the frontend folder: cd frontend
+Go to the test folder: cd test
+Run the tests: npm test
+
+### Backend Testing
+
+Go to the backend folder: cd frontend
+Go to the test folder: cd test
+Run the tests: npm test
+
+### Frontend coverage
+
+Go to the frontend folder: cd frontend
+Go to the test folder: cd test
+Run the coverage: npm run coverage
+
+### Backend coverage
+
+Go to the backend folder: cd frontend
+Go to the test folder: cd test
+Run the coverage: npm run coverage
+
+
 ### Run with Docker
 ```bash
 docker-compose up --build
+
