@@ -3,12 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthContext } from '../context/AuthContext';
 import { ROUTES } from '../utils/constants';
 
-import Login from '../pages/Auth/Login';
-import Register from '../pages/Auth/Register';
-import Dashboard from '../pages/Dashboard/Dashboard';
-import Portfolio from '../pages/Portfolio/Portfolio';
-import Analytics from '../pages/Analytics/Analytics';
-import NotFound from '../pages/NotFound/NotFound';
+import Login from "../pages/Auth/Login";
+import Register from "../pages/Auth/Register";
+import Dashboard from "../pages/Dashboard/Dashboard";
 import AIChat from "../pages/AIChat/AIChat";
 import News from "../pages/News/News";
 

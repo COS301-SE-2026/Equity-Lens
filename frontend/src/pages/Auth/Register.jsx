@@ -44,8 +44,8 @@ const Register = () => {
     { fullName: '', email: '', password: '', confirmPassword: '' },
     validate
   );
-
-  const onSubmit = async (formValues) => {
+  
+const onSubmit = async (formValues) => {
     setServerError(null);
     try {
       await register(formValues.fullName, formValues.email, formValues.password);
