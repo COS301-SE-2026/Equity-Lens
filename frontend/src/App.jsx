@@ -1,3 +1,10 @@
+import AppRouter from "./router/AppRouter";
+
+function App() {
+  return <AppRouter />;
+}
+
+export default App;
 import ThemeToggle from './components/common/ThemeToggle/ThemeToggle.jsx'
 
 function App() {
