@@ -101,3 +101,10 @@ const Sidebar = ({ open, onClose }) => {
 };
 
 export default Sidebar;
+
+
+const Sidebar = () => {
+  return <div>testing</div>;
+};
+
+export default Sidebar;
