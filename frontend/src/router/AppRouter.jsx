@@ -1,17 +1,17 @@
+import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuthContext } from '../context/AuthContext';
-import { ROUTES } from '../utils/constants';
-
-import Login from "../pages/Auth/Login";
-import Register from "../pages/Auth/Register";
-import Dashboard from "../pages/Dashboard/Dashboard";
-import AIChat from "../pages/AIChat/AIChat";
-import News from "../pages/News/News";
-
+import useAuth from '../hooks/useAuth';
 import LoadingSpinner from '../components/common/LoadingSpinner/LoadingSpinner';
 import Sidebar from '../components/common/Sidebar/Sidebar';
 import Topbar from '../components/common/Topbar/Topbar';
+import Login from '../pages/Auth/Login';
+import Register from '../pages/Auth/Register';
+import Dashboard from '../pages/Dashboard/Dashboard';
+import Portfolio from '../pages/Portfolio/Portfolio';
+import Analytics from '../pages/Analytics/Analytics';
+import AIChat from '../pages/AIChat/AIChat';
+import NotFound from '../pages/NotFound/NotFound';
+import { ROUTES } from '../utils/constants';
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -29,13 +29,13 @@ const AppLayout = ({ children }) => {
 };
 
 const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuthContext();
+  const { isAuthenticated, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-screen"><LoadingSpinner size="lg" /></div>;
   return isAuthenticated ? <AppLayout>{children}</AppLayout> : <Navigate to={ROUTES.LOGIN} replace />;
 };
 
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, loading } = useAuthContext();
+  const { isAuthenticated, loading } = useAuth();
   if (loading) return <div className="flex items-center justify-center min-h-screen"><LoadingSpinner size="lg" /></div>;
   return !isAuthenticated ? children : <Navigate to={ROUTES.DASHBOARD} replace />;
 };
@@ -49,8 +49,7 @@ const AppRouter = () => (
       <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path={ROUTES.PORTFOLIO} element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
       <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-      <Route path="/ai-chat" element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
-      <Route path="/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
+      <Route path={ROUTES.AI_CHAT} element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
 
       <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
       <Route path="*" element={<NotFound />} />
