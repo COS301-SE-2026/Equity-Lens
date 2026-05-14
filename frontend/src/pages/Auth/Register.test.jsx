@@ -62,6 +62,24 @@ it("Error message should appear if passwords do not match",async() => {
     expect(matchError).toBeInTheDocument();
 })
 
-}
+it("Form submission should succeed with all valid inputs",async() => {
+    const {user} = setup();
+    const inputFullname = screen.getByLabelText(/Full Name/i);
+    const inputEmail = screen.getByLabelText(/E-mail/i);
+    const inputPassword = screen.getByLabelText(/Password/i);
+    const inputConfirmPass = screen.getByLabelText(/Confirm Password/i);
 
-)
+    await user.type(inputFullname,'Antony Van Straten');
+    await user.type(inputEmail,'antonyvs05@gmail.com');
+    await user.type(inputPassword,'StrongP@ss1!');
+    await user.type(confirmPass,'StrongP@ss1!');
+
+    const submitButton = screen.getByRole('button',{name: /Submit/i});
+    await user.click(submitButton);
+
+    await waitFor(() => {
+        expect(screen.queryByText(/is required/i).not.toBeInTheDocument());
+        expect(screen.queryByText(/Passwords do not match/i).not.toBeInTheDocument());
+    });
+});
+});
