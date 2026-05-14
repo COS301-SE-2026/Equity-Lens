@@ -3,6 +3,7 @@ import {render, screen, waitFor} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import Register from 'Register';
+import { set } from "react-hook-form";
 
 describe('Register Page Integration',() => {
     //Helper to clean up code (reduce identical calls)
@@ -22,6 +23,19 @@ describe('Register Page Integration',() => {
         expect(await screen.findByText(/Password is required/i).toBeInTheDocument());
         expect(await screen.findByText(/Confirmed password is required/i).toBeInTheDocument());
     })
+
+it("Regex error should appear when requirements are not met for password", async() => {
+    const {user} = setup();
+    const inputPass = screen.getByLabelText(/Password$/i);
+
+    await user.type(inputPass, 'weakpass');
+    await user.tab();
+
+    const regexError = screen.findByText(/Password has to have one uppercase, one number, one character and atleast 8 characters long or illegal character detected/i);
+
+    expect(regexError).toBeInTheDocument();
+
+})
 
 }
 
