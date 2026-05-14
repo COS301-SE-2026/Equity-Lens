@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Login from "../pages/Auth/Login";
+import Register from "../pages/Auth/Register";
 import Dashboard from "../pages/Dashboard/Dashboard";
 import AIChat from "../pages/AIChat/AIChat";
 import Analytics from "../pages/Analytics/Analytics";
@@ -18,6 +19,7 @@ export default function AppRouter() {
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/news" element={<News />} />
         <Route path="/portfolio" element={<Portfolio />} />
+       <Route path="/register" element={<Register />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
