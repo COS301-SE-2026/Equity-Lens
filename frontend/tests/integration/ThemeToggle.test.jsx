@@ -26,4 +26,17 @@ describe("ThemeToggle integration", () => {
     expect(screen.getByLabelText("Switch to light mode")).toBeDefined();
   });
 
+  it("clicking saves the new theme to localStorage", () => {
+    render(
+      <ThemeProvider>
+        <ThemeToggle />
+      </ThemeProvider>
+    );
+
+    fireEvent.click(screen.getByRole("button"));
+
+    //page refresh keeps choice. It relies on this key being set
+    expect(localStorage.getItem("theme")).toBe("dark");
+  });
+
 });
