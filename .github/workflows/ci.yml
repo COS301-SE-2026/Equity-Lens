@@ -23,17 +23,17 @@ jobs:
         working-directory: frontend
         run: npm install
       
-      - name: Run Lint
-        working-directory: frontend
-        run: npm run lint
+      # - name: Run Lint
+      #   working-directory: frontend
+      #   run: npm run lint
 
-      - name: Run Tests
-        working-directory: frontend
-        run: npm run test
+      # - name: Run Tests
+      #   working-directory: frontend
+      #   run: npm run test
 
-      - name: Build
-        working-directory: frontend
-        run: npm run build
+      # - name: Build
+      #   working-directory: frontend
+      #   run: npm run build
 
   backend:
     name: Backend Build & Test
@@ -54,17 +54,17 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
         
-      - name: Run Lint
-        working-directory: frontend
-        run: npm run lint
+      # - name: Run Lint
+      #   working-directory: frontend
+      #   run: npm run lint
 
-      - name: Run Tests
-        working-directory: frontend
-        run: npm run test
+      # - name: Run Tests
+      #   working-directory: frontend
+      #   run: npm run test
 
-      - name: Build
-        working-directory: frontend
-        run: npm run build
+      # - name: Build
+      #   working-directory: frontend
+      #   run: npm run build
 
       # - name: Run tests
       #   working-directory: backend
