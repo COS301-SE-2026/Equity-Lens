@@ -1,43 +1,42 @@
 import api from './api';
 
 export const getPortfolio = async () => {
-  const response = await api.get('/api/portfolio');
+  const response = await api.get('/portfolio');
   return response.data;
 };
 
 export const getPortfolioSummary = async () => {
-  const response = await api.get('/api/portfolio/summary');
+  const response = await api.get('/portfolio/summary');
   return response.data;
 };
 
 export const getSectorAllocation = async () => {
-  const response = await api.get('/api/portfolio/sectors');
+  const response = await api.get('/portfolio/sectors');
   return response.data;
 };
 
 export const getPerformanceHistory = async () => {
-  const response = await api.get('/api/portfolio/performance');
+  const response = await api.get('/portfolio/performance');
   return response.data;
 };
 
-// Mock data for demo purposes when backend is not connected
 export const getMockPortfolioData = () => ({
   summary: {
-    totalValue: 125430.50,
-    totalCost: 98200.00,
-    totalGain: 27230.50,
-    totalGainPercent: 27.73,
-    holdingsCount: 8,
+    total_value: 125430.50,
+    total_gain_loss: 27230.50,
+    total_gain_loss_pct: 27.73,
+    daily_change: 2.4,
+    num_holdings: 8,
   },
   holdings: [
-    { ticker: 'NPN', name: 'Naspers', quantity: 10, purchasePrice: 2800, currentPrice: 3150, value: 31500, gain: 3500, gainPercent: 12.5, sector: 'Technology' },
-    { ticker: 'MTN', name: 'MTN Group', quantity: 50, purchasePrice: 120, currentPrice: 138, value: 6900, gain: 900, gainPercent: 15.0, sector: 'Telecommunications' },
-    { ticker: 'SOL', name: 'Sasol', quantity: 30, purchasePrice: 280, currentPrice: 245, value: 7350, gain: -1050, gainPercent: -12.5, sector: 'Energy' },
-    { ticker: 'FSR', name: 'Firstrand', quantity: 100, purchasePrice: 65, currentPrice: 72, value: 7200, gain: 700, gainPercent: 10.77, sector: 'Financials' },
-    { ticker: 'AGL', name: 'Anglo American', quantity: 20, purchasePrice: 550, currentPrice: 620, value: 12400, gain: 1400, gainPercent: 12.73, sector: 'Mining' },
-    { ticker: 'SBK', name: 'Standard Bank', quantity: 80, purchasePrice: 155, currentPrice: 178, value: 14240, gain: 1840, gainPercent: 14.84, sector: 'Financials' },
-    { ticker: 'BHP', name: 'BHP Group', quantity: 15, purchasePrice: 480, currentPrice: 510, value: 7650, gain: 450, gainPercent: 6.25, sector: 'Mining' },
-    { ticker: 'REM', name: 'Remgro', quantity: 40, purchasePrice: 130, currentPrice: 145, value: 5800, gain: 600, gainPercent: 11.54, sector: 'Financials' },
+    { ticker: 'NPN', name: 'Naspers', sector: 'Technology', quantity: 10, avg_price: 2800, current_price: 3150, value: 31500, gain_loss: 3500, gain_loss_pct: 12.5 },
+    { ticker: 'MTN', name: 'MTN Group', sector: 'Telecommunications', quantity: 50, avg_price: 120, current_price: 138, value: 6900, gain_loss: 900, gain_loss_pct: 15.0 },
+    { ticker: 'SOL', name: 'Sasol', sector: 'Energy', quantity: 30, avg_price: 280, current_price: 245, value: 7350, gain_loss: -1050, gain_loss_pct: -12.5 },
+    { ticker: 'FSR', name: 'Firstrand', sector: 'Financials', quantity: 100, avg_price: 65, current_price: 72, value: 7200, gain_loss: 700, gain_loss_pct: 10.77 },
+    { ticker: 'AGL', name: 'Anglo American', sector: 'Mining', quantity: 20, avg_price: 550, current_price: 620, value: 12400, gain_loss: 1400, gain_loss_pct: 12.73 },
+    { ticker: 'SBK', name: 'Standard Bank', sector: 'Financials', quantity: 80, avg_price: 155, current_price: 178, value: 14240, gain_loss: 1840, gain_loss_pct: 14.84 },
+    { ticker: 'BHP', name: 'BHP Group', sector: 'Mining', quantity: 15, avg_price: 480, current_price: 510, value: 7650, gain_loss: 450, gain_loss_pct: 6.25 },
+    { ticker: 'REM', name: 'Remgro', sector: 'Financials', quantity: 40, avg_price: 130, current_price: 145, value: 5800, gain_loss: 600, gain_loss_pct: 11.54 },
   ],
   sectorAllocation: [
     { sector: 'Technology', value: 31500, percentage: 25.1 },

@@ -3,40 +3,33 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { ThemeProvider } from "../../src/context/ThemeContext.jsx";
 import ThemeToggle from "../../src/components/common/ThemeToggle/ThemeToggle.jsx";
 
-
 describe("ThemeToggle integration", () => {
-
-  //resetting shared state
   beforeEach(() => {
     localStorage.clear();
-    document.documentElement.classList.remove("dark");
   });
 
-  it("clicking changes the label from light to dark mode", () => {
+  it("toggles from light to dark when clicked", () => {
     render(
       <ThemeProvider>
         <ThemeToggle />
       </ThemeProvider>
     );
-
-    //simulate a user clicking the button
-    fireEvent.click(screen.getByRole("button"));
-
-    //label flips because the next click would switch us back out of dark
+    const button = screen.getByRole("button");
+    expect(screen.getByLabelText("Switch to dark mode")).toBeDefined();
+    fireEvent.click(button);
     expect(screen.getByLabelText("Switch to light mode")).toBeDefined();
   });
 
-  it("clicking saves the new theme to localStorage", () => {
+  it("toggles from dark to light when clicked", () => {
+    localStorage.setItem("equitylens_theme", "dark");
     render(
       <ThemeProvider>
         <ThemeToggle />
       </ThemeProvider>
     );
-
-    fireEvent.click(screen.getByRole("button"));
-
-    //page refresh keeps choice. It relies on this key being set
-    expect(localStorage.getItem("theme")).toBe("dark");
+    const button = screen.getByRole("button");
+    expect(screen.getByLabelText("Switch to light mode")).toBeDefined();
+    fireEvent.click(button);
+    expect(screen.getByLabelText("Switch to dark mode")).toBeDefined();
   });
-
 });

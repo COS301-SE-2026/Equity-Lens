@@ -47,16 +47,26 @@ describe('Register Page', () => {
       expect(screen.getByText('Full name is required')).toBeInTheDocument();
     });
   });
-
-  it('shows error for invalid email', async () => {
-    renderRegister();
-    const emailInput = screen.getByLabelText(/email address/i);
-    fireEvent.change(emailInput, { target: { value: 'notanemail', name: 'email' } });
-    fireEvent.blur(emailInput);
-    await waitFor(() => {
-      expect(screen.getByRole('alert')).toBeInTheDocument();
-    });
+  
+it('shows error for invalid email', async () => {
+  renderRegister();
+  fireEvent.change(screen.getByLabelText(/full name/i), {
+    target: { value: 'Test User', name: 'fullName' },
   });
+  fireEvent.change(screen.getByLabelText(/email address/i), {
+    target: { value: 'notanemail', name: 'email' },
+  });
+  fireEvent.change(screen.getByLabelText(/^password/i), {
+    target: { value: 'Password1!', name: 'password' },
+  });
+  fireEvent.change(screen.getByLabelText(/confirm password/i), {
+    target: { value: 'Password1!', name: 'confirmPassword' },
+  });
+  fireEvent.click(screen.getByRole('button', { name: /create account/i }));
+  await waitFor(() => {
+    expect(screen.getByRole('alert')).toHaveTextContent('Please enter a valid email address');
+  });
+});
 
   it('shows error when passwords do not match', async () => {
     renderRegister();
@@ -83,14 +93,14 @@ describe('Register Page', () => {
       target: { value: 'josh@test.com', name: 'email' },
     });
     fireEvent.change(screen.getByLabelText(/^password/i), {
-      target: { value: 'Password1', name: 'password' },
+      target: { value: 'Password1!', name: 'password' },
     });
     fireEvent.change(screen.getByLabelText(/confirm password/i), {
-      target: { value: 'Password1', name: 'confirmPassword' },
+      target: { value: 'Password1!', name: 'confirmPassword' },
     });
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     await waitFor(() => {
-      expect(mockRegister).toHaveBeenCalledWith('Joshua Heath', 'josh@test.com', 'Password1');
+      expect(mockRegister).toHaveBeenCalledWith('Joshua Heath', 'josh@test.com', 'Password1!');
     });
   });
 
@@ -104,10 +114,10 @@ describe('Register Page', () => {
       target: { value: 'josh@test.com', name: 'email' },
     });
     fireEvent.change(screen.getByLabelText(/^password/i), {
-      target: { value: 'Password1', name: 'password' },
+      target: { value: 'Password1!', name: 'password' },
     });
     fireEvent.change(screen.getByLabelText(/confirm password/i), {
-      target: { value: 'Password1', name: 'confirmPassword' },
+      target: { value: 'Password1!', name: 'confirmPassword' },
     });
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     await waitFor(() => {
@@ -125,10 +135,10 @@ describe('Register Page', () => {
       target: { value: 'josh@test.com', name: 'email' },
     });
     fireEvent.change(screen.getByLabelText(/^password/i), {
-      target: { value: 'Password1', name: 'password' },
+      target: { value: 'Password1!', name: 'password' },
     });
     fireEvent.change(screen.getByLabelText(/confirm password/i), {
-      target: { value: 'Password1', name: 'confirmPassword' },
+      target: { value: 'Password1!', name: 'confirmPassword' },
     });
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     await waitFor(() => {
