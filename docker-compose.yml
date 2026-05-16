@@ -40,6 +40,7 @@ services:
       - POSTGRES_DB=equitylens
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
 
 volumes:
   postgres_data:
