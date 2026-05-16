@@ -1,23 +1,35 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.config import settings
 from app.routers import auth, portfolio
 from app.database import create_tables
+from app.config import settings
+from app.models import user
+from fastapi.responses import PlainTextResponse
+import traceback
 
-app = FastAPI(title="EquityLens API", description="API", version="0.1",)
+app = FastAPI(title="EquityLens API")
 
-app.add_middleware( CORSMiddleware, allow_origins=settings.cors_origins,
-allow_credentials=True, allow_methods=["*"], allow_headers=["*"], )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    tb = traceback.format_exc()
+    print(tb)
+    return PlainTextResponse(str(tb), status_code=500)
+
+@app.on_event("startup")
+async def startup():
+    create_tables()
 
 app.include_router(auth.router)
 app.include_router(portfolio.router)
 
-
-@app.on_event("startup")
-def startup():
-    create_tables()
-
-
 @app.get("/health")
-def health():
-    return {"status": "ok", "service": "EquityLens API"}
+async def health():
+    return {"status": "ok"}
