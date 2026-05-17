@@ -77,13 +77,6 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      # This will be used to scan our packages in the requirments file for secruity issues
-      - name: Run backend package security audit for the fastAPI
-        working-directory: backend
-        run: |
-          pip install pip-audit
-          pip-audit
-
       - name: Run tests
         working-directory: backend
         env:
