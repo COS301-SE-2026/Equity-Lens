@@ -10,46 +10,50 @@ const CsvUpload = ({ onCsvValid }) => {
     "Buy Price"
   ];
 
+  const cleanValue = (value) => {
+    return value.replaceAll('"', "").replace("\r", "").trim();
+  };
+
   const handleFileChange = (event) => {
     const toGetFile = event.target.files[0];
 
-    if (toGetFile == null) 
-    {
+    if (toGetFile == null) {
       setError("Please select a CSV file.");
       return;
     }
 
-    if (toGetFile.name.endsWith(".csv") == false) 
-    {
-
+    if (toGetFile.name.endsWith(".csv") == false) {
       setError("Sorry, Please make sure that it's a csv file.");
       return;
-
     }
 
     const reader = new FileReader();
 
-    reader.onload = (e) => 
-    {
-
+    reader.onload = (e) => {
       const makeAllText = e.target.result;
-      const allLineInCSV = makeAllText.split("\n").filter(line => line.trim() !== "");
 
-      const headers = allLineInCSV[0].split(",").map(h => h.trim());
+      const allLineInCSV = makeAllText
+        .split("\n")
+        .filter(line => line.trim() !== "");
+
+      const headers = allLineInCSV[0]
+        .split(";")
+        .map(h => cleanValue(h));
 
       const missingFields = requiredFields.filter(
         field => !headers.includes(field)
       );
 
-      if (missingFields.length > 0) 
-      {
+      if (missingFields.length > 0) {
         setError("Missing required fields: " + missingFields.join(", "));
         return;
       }
 
-      const rows = allLineInCSV.slice(1).map(
-        line => {
-        const values = line.split(",").map(v => v.trim());
+      const rows = allLineInCSV.slice(1).map(line => {
+        const values = line
+          .split(";")
+          .map(v => cleanValue(v));
+
         const row = {};
 
         headers.forEach((header, index) => {
