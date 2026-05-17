@@ -5,7 +5,7 @@ from typing import List
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+    database_url: str = "postgresql://postgres:postgres@localhost:5432/equitylens"
     secret_key: str = "to-be-changed-later"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
