@@ -1,18 +1,17 @@
-/*Base case so needs seperate file, not just a generic button*/
-import { useTheme } from '../../../context/ThemeContext.jsx'
-import '../../../styles/components/ThemeToggle.css'
+import { useThemeContext } from '../../../context/ThemeContext.jsx'
 
 function ThemeToggle() {
-  const { dark, toggle } = useTheme()
+  const { theme, toggleTheme } = useThemeContext()
+  const isDark = theme === 'dark'
 
   return (
     <button
-      onClick={toggle}
-      aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+      onClick={toggleTheme}
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       className="theme-toggle"
     >
       <img
-        src={dark ? '/assets/dark.png' : '/assets/light.png'}
+        src={isDark ? '/assets/dark.png' : '/assets/light.png'}
         alt=""
       />
     </button>

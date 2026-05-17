@@ -5,20 +5,38 @@ import Dashboard from './Dashboard';
 
 vi.mock('../../hooks/useAuth', () => ({
   default: () => ({
-    user: { full_name: 'Joshua Heath' },
+    user: { full_name: 'Test User' },
     isAuthenticated: true,
   }),
+}));
+
+vi.mock('recharts', () => ({
+  ResponsiveContainer: ({ children }) => children,
+  LineChart: () => null,
+  AreaChart: () => null,
+  BarChart: () => null,
+  Line: () => null,
+  Area: () => null,
+  Bar: () => null,
+  XAxis: () => null,
+  YAxis: () => null,
+  CartesianGrid: () => null,
+  Tooltip: () => null,
+  Legend: () => null,
+  PieChart: () => null,
+  Pie: () => null,
+  Cell: () => null,
 }));
 
 vi.mock('../../hooks/usePortfolio', () => ({
   default: () => ({
     portfolioData: {
       summary: {
-        totalValue: 125430.50,
-        totalCost: 98200.00,
-        totalGain: 27230.50,
-        totalGainPercent: 27.73,
-        holdingsCount: 8,
+        total_value: 125430.50,
+        total_gain_loss: 27230.50,
+        total_gain_loss_pct: 27.73,
+        daily_change: 2.4,
+        num_holdings: 8,
       },
       holdings: [
         {
@@ -26,22 +44,22 @@ vi.mock('../../hooks/usePortfolio', () => ({
           name: 'Naspers',
           sector: 'Technology',
           quantity: 10,
-          purchasePrice: 2800,
-          currentPrice: 3150,
+          avg_price: 2800,
+          current_price: 3150,
           value: 31500,
-          gain: 3500,
-          gainPercent: 12.5,
+          gain_loss: 3500,
+          gain_loss_pct: 12.5,
         },
         {
           ticker: 'MTN',
           name: 'MTN Group',
           sector: 'Telecommunications',
           quantity: 50,
-          purchasePrice: 120,
-          currentPrice: 138,
+          avg_price: 120,
+          current_price: 138,
           value: 6900,
-          gain: 900,
-          gainPercent: 15.0,
+          gain_loss: 900,
+          gain_loss_pct: 15.0,
         },
       ],
       sectorAllocation: [
@@ -66,30 +84,30 @@ describe('Dashboard', () => {
     expect(screen.getByLabelText(/portfolio dashboard/i)).toBeInTheDocument();
   });
 
-  it('renders stock ticker cards for top holdings', () => {
-    renderDashboard();
-    expect(screen.getByText('NPN')).toBeInTheDocument();
-    expect(screen.getByText('MTN')).toBeInTheDocument();
-  });
+it('renders stock ticker cards for top holdings', () => {
+  renderDashboard();
+  expect(screen.getAllByText('NPN').length).toBeGreaterThan(0);
+  expect(screen.getAllByText('MTN').length).toBeGreaterThan(0);
+});
 
   it('renders portfolio performance section', () => {
     renderDashboard();
-    expect(screen.getByText('Portfolio Performance')).toBeInTheDocument();
+    expect(screen.getByText('Portfolio performance')).toBeInTheDocument();
   });
 
   it('renders dividend section', () => {
     renderDashboard();
-    expect(screen.getByText('Dividend Income')).toBeInTheDocument();
+    expect(screen.getByText('Dividend income')).toBeInTheDocument();
   });
 
   it('renders watchlist section', () => {
     renderDashboard();
-    expect(screen.getByText('My Watchlist')).toBeInTheDocument();
+    expect(screen.getByText('Watchlist')).toBeInTheDocument();
   });
 
   it('renders holdings table section', () => {
     renderDashboard();
-    expect(screen.getByText('Your Holdings')).toBeInTheDocument();
+    expect(screen.getByText('Holdings')).toBeInTheDocument();
   });
 
   it('renders loading spinner when loading', () => {

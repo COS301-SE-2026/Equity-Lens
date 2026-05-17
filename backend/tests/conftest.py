@@ -1,67 +1,61 @@
+# tests/conftest.py
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import app.database as db_module
 from app.main import app
 from app.database import get_db
-from app.models.user import Base
+from app.models import user
 
-TEST_DATABASE_URL = "sqlite:///./test.db"
+SQLALCHEMY_TEST_URL = "sqlite:///./test.db"
 
-engine = create_engine(
-    TEST_DATABASE_URL, connect_args={"check_same_thread": False}
+test_engine = create_engine(
+    SQLALCHEMY_TEST_URL,
+    connect_args={"check_same_thread": False}
 )
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
+@pytest.fixture()
+def client():
+    db_module.engine = test_engine
+    db_module.SessionLocal = TestingSessionLocal
 
-@pytest.fixture(scope="function")
-def db():
-    Base.metadata.create_all(bind=engine)
+    db_module.Base.metadata.create_all(bind=test_engine)
+
     session = TestingSessionLocal()
-    try:
-        yield session
-    finally:
-        session.close()
-        Base.metadata.drop_all(bind=engine)
 
-
-@pytest.fixture(scope="function")
-def client(db):
     def override_get_db():
-        try:
-            yield db
-        finally:
-            pass
+        yield session
 
     app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as c:
-        yield c
+    yield TestClient(app)
+
     app.dependency_overrides.clear()
+    session.close()
+    db_module.Base.metadata.drop_all(bind=test_engine)
 
-
-@pytest.fixture
+@pytest.fixture()
 def sample_user_data():
     return {
         "full_name": "Test User",
-        "email": "test@test.com",
-        "password": "Password@1",
-        }
+        "email": "test@example.com",
+        "password": "Password1!"
+    }
 
-
-@pytest.fixture
+@pytest.fixture()
 def registered_user(client, sample_user_data):
     client.post("/api/auth/register", json=sample_user_data)
     return sample_user_data
 
-
-@pytest.fixture
+@pytest.fixture()
 def auth_headers(client, registered_user):
     response = client.post(
         "/api/auth/login",
         json={
             "email": registered_user["email"],
-            "password": registered_user["password"],
-        },
+            "password": registered_user["password"]
+        }
     )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}

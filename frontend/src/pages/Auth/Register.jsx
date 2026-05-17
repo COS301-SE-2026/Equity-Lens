@@ -73,8 +73,9 @@ const onSubmit = async (formValues) => {
             <div
               className="mb-6 p-3 rounded-lg bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] text-[var(--color-success)] text-sm"
               role="status"
+              aria-live="polite"
             >
-              Account created successfully. Redirecting to login
+              Account created successfully. Redirecting to login.
             </div>
           )}
 

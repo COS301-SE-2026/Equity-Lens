@@ -22,23 +22,33 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm install
-      
-      # - name: Run Lint
-      #   working-directory: frontend
-      #   run: npm run lint
 
-      # - name: Run Tests
-      #   working-directory: frontend
-      #   run: npm run test
+      - name: Run tests
+        working-directory: frontend
+        run: npx vitest run
 
-      # - name: Build
-      #   working-directory: frontend
-      #   run: npm run build
+      - name: Build
+        working-directory: frontend
+        run: npm run build
 
   backend:
     name: Backend Build & Test
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    services:
+      db:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: equitylens
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -53,25 +63,19 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-        
-      # - name: Run Lint
-      #   working-directory: frontend
-      #   run: npm run lint
 
-      # - name: Run Tests
-      #   working-directory: frontend
-      #   run: npm run test
+      - name: Run tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/equitylens
+          SECRET_KEY: localsecretkey123
+          ALGORITHM: HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES: 30
+          PYTHONPATH: .
+        run: python -m pytest --cov=app --cov-report=xml
 
-      # - name: Build
-      #   working-directory: frontend
-      #   run: npm run build
-
-      # - name: Run tests
-      #   working-directory: backend
-      #   run: pytest --cov=app --cov-report=xml
-
-      # - name: Upload coverage
-      #   uses: codecov/codecov-action@v4
-      #   with:
-      #     token: ${{ secrets.CODECOV_TOKEN }}
-      #     working-directory: backend
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          working-directory: backend

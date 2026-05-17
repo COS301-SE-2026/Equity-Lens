@@ -26,16 +26,19 @@ describe('validatePassword', () => {
     expect(validatePassword('Ab1')).toMatch(/at least 8 characters/);
   });
   it('returns error for missing uppercase', () => {
-    expect(validatePassword('password1')).toMatch(/uppercase/);
+    expect(validatePassword('password1!')).toMatch(/uppercase/);
   });
   it('returns error for missing lowercase', () => {
-    expect(validatePassword('PASSWORD1')).toMatch(/lowercase/);
+    expect(validatePassword('PASSWORD1!')).toMatch(/lowercase/);
   });
   it('returns error for missing number', () => {
-    expect(validatePassword('Password')).toMatch(/number/);
+    expect(validatePassword('Password!')).toMatch(/number/);
+  });
+  it('returns error for missing special character', () => {
+    expect(validatePassword('Password1')).toMatch(/special character/);
   });
   it('returns null for valid password', () => {
-    expect(validatePassword('Password1')).toBeNull();
+    expect(validatePassword('Password1!')).toBeNull();
   });
 });
 
