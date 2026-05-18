@@ -80,7 +80,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-8">
           <SectionCard
-            title="Portfolio Performance"
+            title="Portfolio performance"
             subtitle="vs JSE All Share benchmark"
           >
             <PerformanceLineChart data={portfolioData?.performanceHistory} />
@@ -88,7 +88,7 @@ const Dashboard = () => {
         </div>
 
         <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
-          <SectionCard title="Dividend Income">
+          <SectionCard title="Dividend income">
             <DividendBarChart />
           </SectionCard>
           <SectionCard title="Watchlist">

@@ -1,9 +1,10 @@
-export default function Analytics() {
-  return (
-    <div className="mt-4">
-      <h1 className="fw-bold">analytics</h1>
+const Analytics = () => (
+  <div className="max-w-7xl mx-auto px-4 py-8">
+    <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Analytics</h1>
+    <p className="text-sm text-[var(--text-secondary)]">
+      Financial indicators and analysis. Coming in Sprint 2.
+    </p>
+  </div>
+);
 
-      <p>Welcome to EquityLens</p>
-    </div>
-  );
-}
+export default Analytics;
