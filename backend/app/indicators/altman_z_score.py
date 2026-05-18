@@ -1,5 +1,5 @@
 "Calculates the Altman Z-Score"
-def caclculate_altman_zscore(working_capital, total_assets, retained_earnings, ebit, market_cap, total_liabilities, sales):
+def calculate_altman_zscore(working_capital, total_assets, retained_earnings, ebit, market_cap, total_liabilities, sales):
     Z1 = working_capital / total_assets
     Z2 = retained_earnings / total_assets
     Z3 = ebit / total_assets
