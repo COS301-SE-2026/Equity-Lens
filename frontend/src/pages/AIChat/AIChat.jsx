@@ -9,7 +9,13 @@ const AIChat = () => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
-    setMessages((prev) => [...prev, { id: Date.now(), role: 'user', text }]);
+    const userMessage = { id: Date.now(), role: 'user', text };
+    const aiMessage = {
+      id: Date.now() + 1,
+      role: 'assistant',
+      text: 'Responses coming soon...',
+    };
+    setMessages((prev) => [...prev, userMessage, aiMessage]);
     setInput('');
   };
 
@@ -33,8 +39,19 @@ const AIChat = () => {
       ) : (
         <ul className="flex flex-col gap-3">
           {messages.map((message) => (
-            <li key={message.id} className="flex justify-end">
-              <p className="max-w-[80%] rounded-lg bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)]">
+            <li
+              key={message.id}
+              className={`flex ${
+                message.role === 'user' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <p
+                className={
+                  message.role === 'user'
+                    ? 'max-w-[80%] rounded-lg bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)]'
+                    : 'max-w-[80%] text-sm text-[var(--text-secondary)]'
+                }
+              >
                 {message.text}
               </p>
             </li>
