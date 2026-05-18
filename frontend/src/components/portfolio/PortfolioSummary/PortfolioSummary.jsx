@@ -39,26 +39,33 @@ const PortfolioSummary = ({ summary }) => {
   const dailyPositive = summary.daily_change >= 0;
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div
+      className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+      aria-label="Portfolio summary statistics"
+    >
       <StatCard
         label="Total Value"
-        value={`R${summary.total_value?.toLocaleString()}`}
+        value={formatCurrency(summary.total_value)}
+        icon={DollarSign}
       />
       <StatCard
         label="Total Gain / Loss"
-        value={`${gainPositive ? '+' : ''}R${summary.total_gain_loss?.toLocaleString()}`}
-        sub={`${gainPositive ? '+' : ''}${summary.total_gain_loss_pct?.toFixed(1)}% all time`}
+        value={`${gainPositive ? '+' : ''}${formatCurrency(summary.total_gain_loss)}`}
+        sub={formatPercent(summary.total_gain_loss_pct)}
+        icon={gainPositive ? TrendingUp : TrendingDown}
         positive={gainPositive}
       />
       <StatCard
         label="Today's Change"
         value={`${dailyPositive ? '+' : ''}${summary.daily_change?.toFixed(2)}%`}
+        icon={dailyPositive ? TrendingUp : TrendingDown}
         positive={dailyPositive}
       />
       <StatCard
         label="Holdings"
         value={summary.num_holdings}
-        sub="active positions"
+        sub="Active positions"
+        icon={BarChart2}
       />
     </div>
   );
