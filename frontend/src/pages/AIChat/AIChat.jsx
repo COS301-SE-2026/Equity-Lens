@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from '../../components/common/Button/Button';
+import { getMockResponse } from '../../services/aiService';
 
 const AIChat = () => {
   const [input, setInput] = useState('');
@@ -13,7 +14,7 @@ const AIChat = () => {
     const aiMessage = {
       id: Date.now() + 1,
       role: 'assistant',
-      text: 'Responses coming soon...',
+      ...getMockResponse(text),
     };
     setMessages((prev) => [...prev, userMessage, aiMessage]);
     setInput('');
