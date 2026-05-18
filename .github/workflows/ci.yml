@@ -109,3 +109,13 @@ jobs:
           scan-ref: .
           severity: HIGH,CRITICAL
           exit-code: 1
+
+  secrets_leakes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run secret leaks in git
+        uses: gitleaks/gitleaks-action@v2
