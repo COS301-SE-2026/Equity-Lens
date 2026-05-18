@@ -7,16 +7,12 @@ const Portfolio = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-2">
-        Portfolio
-      </h1>
-
-      <p className="text-lg mb-6">
+      <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Portfolio</h1>
+      <p className="text-sm text-[var(--text-secondary)] mb-6">
         Import and manage your investment holdings.
       </p>
 
       <CsvUpload onCsvValid={setCsvData} />
-
       <CsvTable data={csvData} />
     </div>
   );
