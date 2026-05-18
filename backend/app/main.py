@@ -6,6 +6,7 @@ from app.config import settings
 from app.models import user
 from fastapi.responses import PlainTextResponse
 import traceback
+from app.routers import news
 
 app = FastAPI(title="EquityLens API")
 
@@ -33,3 +34,7 @@ app.include_router(portfolio.router)
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
+
+
+app.include_router(news.router, prefix="/api")
