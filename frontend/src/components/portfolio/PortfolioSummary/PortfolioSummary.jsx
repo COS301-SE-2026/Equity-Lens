@@ -1,14 +1,37 @@
-const StatCard = ({ label, value, sub, positive }) => (
-  <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4">
-    <p className="text-xs text-[var(--text-secondary)] mb-1">{label}</p>
-    <p className="text-xl font-mono font-semibold text-[var(--text-primary)]">{value}</p>
+import { TrendingUp, TrendingDown, DollarSign, BarChart2 } from 'lucide-react';
+
+const formatCurrency = (value) =>
+  new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(value);
+
+const formatPercent = (value) => `${value >= 0 ? '+' : ''}${value?.toFixed(2)}%`;
+
+const StatCard = ({ label, value, sub, icon: Icon, positive }) => (
+  <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 shadow-[var(--shadow-card)]">
+    <div className="flex items-start justify-between mb-3">
+      <span className="text-sm text-[var(--text-secondary)]">{label}</span>
+      {Icon && (
+        <div className="p-2 rounded-lg bg-[var(--accent-subtle)]">
+          <Icon size={16} className="text-[var(--accent-primary)]" />
+        </div>
+      )}
+    </div>
+    <p className="text-2xl font-bold text-[var(--text-primary)] font-mono mb-1">{value}</p>
     {sub && (
-      <p className={`text-xs font-mono mt-1 ${positive ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'}`}>
-        {sub}
+      <p
+        className={`text-sm font-medium ${
+          positive === undefined
+            ? 'text-[var(--text-secondary)]'
+            : positive
+            ? 'text-[var(--color-success)]'
+            : 'text-[var(--color-danger)]'
+        }`}
+      >
+        {positive !== undefined && (positive ? '▲' : '▼')} {sub}
       </p>
     )}
   </div>
 );
+
 
 const PortfolioSummary = ({ summary }) => {
   if (!summary) return null;
