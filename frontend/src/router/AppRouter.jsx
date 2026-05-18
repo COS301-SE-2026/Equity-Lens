@@ -10,6 +10,7 @@ import Dashboard from '../pages/Dashboard/Dashboard';
 import Portfolio from '../pages/Portfolio/Portfolio';
 import NotFound from '../pages/NotFound/NotFound';
 import News from '../pages/News/News';
+import AIChat from '../pages/AIChat/AIChat';
 import { ROUTES } from '../utils/constants';
 
 const AppLayout = ({ children }) => {
@@ -56,6 +57,7 @@ const AppRouter = () => (
       <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path={ROUTES.PORTFOLIO} element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
       <Route path={ROUTES.NEWS} element={<ProtectedRoute><News /></ProtectedRoute>} />
+      <Route path={ROUTES.AI_CHAT} element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
 
       <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
       <Route path="*" element={<NotFound />} />
