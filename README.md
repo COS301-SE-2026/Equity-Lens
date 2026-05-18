@@ -51,7 +51,7 @@ Third-year Computer Science student at the University of Pretoria with full-stac
 ### Antony van Straten
 **Student Number:** u24590729
 
-BSc Computer Science student in their third-year at the University of Pretoria, deeply passionate about Machine Learning, Artificial Intelligence and building in general. Gained full-stack experience through personal and academic projects.
+BSc Computer Science student in their third year at the University of Pretoria, deeply passionate about Machine Learning, Artificial Intelligence and building in general. Gained full-stack experience through personal and academic projects.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/antony-van-straten/)
 [![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/antonyvs05)
@@ -61,7 +61,7 @@ BSc Computer Science student in their third-year at the University of Pretoria, 
 ### Jonty Honey
 **Student Number:** u23536862
 
-Third year Bsc Computer Science student at the University of Pretoria with a passion for data science, full stack and game development.
+Third-year BSc Computer Science student at the University of Pretoria with a passion for data science, full-stack development and game development.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/jonty-honey/)
 [![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/jonty282)
@@ -76,9 +76,9 @@ Third year Bsc Computer Science student at the University of Pretoria with a pas
 | Backend | FastAPI, AWS Lambda, API Gateway |
 | Auth | AWS Cognito |
 | Database | AWS RDS PostgreSQL, AWS S3 |
-| AI | AWS Bedrock |
-| Market Data | yfinance / Alpha Vantage |
-| News | Marketaux + Finnhub.io |
+| AI | Gemini 2.0 Flash (primary), Groq + Llama 3 (fallback) |
+| Market Data | yfinance (primary), Alpha Vantage (fallback) |
+| News | NewsAPI.org |
 | File Handling | pdfPlumber |
 | CI/CD | GitHub Actions, AWS SAM |
 
@@ -96,9 +96,9 @@ main
 
 ### Rules
 
-- `main` — always deployable and demo-ready. Only merged into from `dev` before each demo.
-- `dev` — primary integration branch. All feature branches merge here first.
-- Never commit directly to `main` or `dev` — always via a Pull Request.
+- `main` - always deployable and demo-ready. Only merged into from `dev` before each demo.
+- `dev` - primary integration branch. All feature branches merge here first.
+- Never commit directly to `main` or `dev` - always via a Pull Request.
 - All PRs into `dev` require at least two approved reviews and a passing CI pipeline before merging.
 - Delete the branch after merging.
 
@@ -157,43 +157,75 @@ JKH : chore: update dependencies
 ### PR Rules
 
 - PRs must reference the related GitHub Issue using `Closes #[issue number]` in the description
-- At least two team member must review and approve before merging
+- At least two team members must review and approve before merging
 - CI pipeline must pass before any merge is allowed
 - Delete the branch after merging
+
+---
 
 ## Getting Started
 
 ### Prerequisites
-- Node.js 20+
-- Python 3.11+
-- Docker and Docker Compose
 
-### Frontend Testing
+- Docker Desktop (required)
+- Node.js 20+ (for running frontend tests locally)
+- Python 3.11+ (for running backend tests locally)
 
-- Go to the frontend folder: cd frontend
-- Go to the test folder: cd test
-- Run the tests: npm test
+### Running the Project
 
-### Backend Testing
+The entire stack (frontend, backend, database) runs via Docker Compose.
 
-- Go to the backend folder: cd frontend
-- Go to the test folder: cd test
-- Run the tests: npm test
-
-### Frontend coverage
-
-- Go to the frontend folder: cd frontend
-- Go to the test folder: cd test
-- Run the coverage: npm run coverage
-
-### Backend coverage
-
-- Go to the backend folder: cd frontend
-- Go to the test folder: cd test
-- Run the coverage: npm run coverage
-
-
-### Run with Docker
 ```bash
+# Start all services
+docker-compose up
+
+# Rebuild after pulling changes
+docker-compose down
 docker-compose up --build
 
+# Wipes the database
+docker-compose down -v
+docker-compose up --build
+```
+
+Once running:
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:8000 |
+| API Docs (Swagger) | http://localhost:8000/docs |
+
+> Docker Desktop must be running before executing any of the above commands.
+
+---
+
+## Testing
+
+### Frontend
+
+```bash
+cd frontend
+npx vitest run
+```
+
+### Frontend Coverage
+
+```bash
+cd frontend
+npx vitest run --coverage
+```
+
+### Backend
+
+```bash
+cd backend
+python -m pytest
+```
+
+### Backend Coverage
+
+```bash
+cd backend
+python -m pytest --cov=app --cov-report=xml
+```
