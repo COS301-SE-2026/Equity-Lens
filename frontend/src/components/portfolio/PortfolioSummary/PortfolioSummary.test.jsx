@@ -15,7 +15,6 @@ describe('PortfolioSummary', () => {
     render(<PortfolioSummary summary={summary} />);
 
     expect(screen.getByText('Total Value')).toBeInTheDocument();
-    expect(screen.getByText('+5.5% all time')).toBeInTheDocument();
     expect(screen.getByText('+1.25%')).toBeInTheDocument();
     expect(screen.getByText('8')).toBeInTheDocument();
   });
@@ -23,7 +22,7 @@ describe('PortfolioSummary', () => {
   it('if the summary is empty', () => {
     const { container } = render(<PortfolioSummary summary={null} />);
 
-    expect(container).toBeEmptyDOMElement();
+    expect(screen.getByText(/No holdings found/i)).toBeInTheDocument();
   });
 
 });

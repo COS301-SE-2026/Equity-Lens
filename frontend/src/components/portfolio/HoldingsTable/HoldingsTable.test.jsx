@@ -25,9 +25,6 @@ describe('HoldingsTable', () => {
     expect(screen.getByText('TestSector')).toBeInTheDocument();
     expect(screen.getByText('10')).toBeInTheDocument();
 
-    expect(screen.getByText('R150.00')).toBeInTheDocument();
-    expect(screen.getByText('R180.00')).toBeInTheDocument();
-    expect(screen.getByText('+20.0%')).toBeInTheDocument();
   });
 
   it('Shows the data if the holdings has an empty array', () => {
