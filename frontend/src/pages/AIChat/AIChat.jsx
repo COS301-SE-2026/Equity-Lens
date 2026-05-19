@@ -55,7 +55,7 @@ const AIChat = () => {
   <div className="flex h-full flex-col">
     {/* Page heading */}
     <header className="border-b border-[var(--border-subtle)] pb-3">
-      <h1 className="text-lg font-semibold text-[var(--text-primary)]">
+      <h1 className="text-center text-lg font-semibold text-[var(--text-primary)]">
         AI Assistant
       </h1>
     </header>
@@ -165,13 +165,14 @@ const AIChat = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask the assistant…"
+          maxLength={500}
           className="flex-1 rounded-lg border border-[var(--border-default)]
                      bg-[var(--bg-secondary)] px-3 py-2.5 text-sm
                      text-[var(--text-primary)] placeholder:text-[var(--text-dim)]
                      focus-visible:outline-none focus-visible:ring-2
                      focus-visible:ring-[var(--accent-primary)]"
         />
-        <Button type="submit" variant="primary" disabled={isThinking}>
+        <Button type="submit" variant="primary" disabled={isThinking || !input.trim()}>
           Send
         </Button>
       </form>

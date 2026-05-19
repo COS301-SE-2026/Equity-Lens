@@ -11,7 +11,7 @@ export const normalize = (input = '') =>
 // Returned when no keyword matches.
 const FALLBACK = {
   text:
-    "I'm a demo assistant (Send hi/hello/hey or get fallback message)",
+    "I'm a demo assistant (Send a keyword to receive a prompt)",
 };
 
 // Card snapshots
