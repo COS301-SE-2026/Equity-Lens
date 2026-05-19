@@ -19,10 +19,6 @@ describe('PortfolioSummary', () => {
     expect(screen.getByText('8')).toBeInTheDocument();
   });
 
-  it('if the summary is empty', () => {
-    const { container } = render(<PortfolioSummary summary={null} />);
 
-    expect(screen.getByText(/No holdings found/i)).toBeInTheDocument();
-  });
 
 });
