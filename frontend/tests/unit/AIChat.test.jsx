@@ -30,6 +30,7 @@ describe("AIChat", () => {
 
   describe("when the user sends a message", () => {
     beforeEach(() => {
+      vi.clearAllMocks();
       vi.useFakeTimers();
       getMockResponse.mockReturnValue({ text: "mock reply" });
     });
@@ -75,6 +76,61 @@ describe("AIChat", () => {
 
       expect(getMockResponse).toHaveBeenCalledWith("hi");
       expect(screen.getByText("mock reply")).toBeDefined();
+    });
+
+    it("ignores submissions that are empty or only whitespace", () => {
+      render(<AIChat />);
+      const input = screen.getByPlaceholderText("Ask the assistant…");
+      const sendButton = screen.getByRole("button", { name: /send/i });
+
+      fireEvent.change(input, { target: { value: "   " } });
+      fireEvent.click(sendButton);
+
+      expect(screen.getByText("Hello Bob")).toBeDefined();
+      expect(screen.queryByRole("list")).toBeNull();
+      expect(getMockResponse).not.toHaveBeenCalled();
+    });
+
+    it("renders the change text when the reply includes trend info", () => {
+      getMockResponse.mockReturnValue({
+        text: "MTN Group (MTN) is trading at R84.17, ",
+        changeText: "2.05% on the day.",
+        trend: "down",
+      });
+
+      render(<AIChat />);
+      fireEvent.change(screen.getByPlaceholderText("Ask the assistant…"), {
+        target: { value: "mtn" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+      act(() => {
+        vi.advanceTimersByTime(900);
+      });
+
+      expect(screen.getByText(/2\.05% on the day\./)).toBeDefined();
+    });
+
+    it("renders stock ticker cards when the reply includes them", () => {
+      getMockResponse.mockReturnValue({
+        text: "Here are your stock cards:",
+        cards: [
+          { ticker: "NPN", name: "Naspers", price: 3842.5, changePercent: 1.84 },
+        ],
+      });
+
+      render(<AIChat />);
+      fireEvent.change(screen.getByPlaceholderText("Ask the assistant…"), {
+        target: { value: "cards" },
+      });
+      fireEvent.click(screen.getByRole("button", { name: /send/i }));
+
+      act(() => {
+        vi.advanceTimersByTime(900);
+      });
+
+      expect(screen.getByText("NPN")).toBeDefined();
+      expect(screen.getByText("Naspers")).toBeDefined();
     });
   });
 });
