@@ -6,7 +6,6 @@ const Portfolio = () => (
     </p>
     <div className="mt-8 p-12 border-2 border-dashed border-[var(--border-primary)] rounded-xl flex flex-col items-center justify-center text-center">
       <div className="w-16 h-16 bg-[var(--bg-secondary)] rounded-full flex items-center justify-center mb-4">
-        <span className="text-2xl">💼</span>
       </div>
       <p className="text-[var(--text-secondary)] font-medium">
         Portfolio Management features are scheduled for Sprint 2.
