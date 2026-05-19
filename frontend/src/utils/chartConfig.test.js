@@ -7,7 +7,7 @@ import {
   AXIS_TICK_STYLE,
   LEGEND_STYLE,
   GRID_STROKE,
-} from "./chartConstants";
+} from "./chartConfig";
 
 describe("chartConstants", () => {
   it("CHART_COLORS has 6 colours", () => {
