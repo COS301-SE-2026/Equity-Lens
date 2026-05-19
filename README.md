@@ -49,7 +49,7 @@ Third-year Computer Science student at the University of Pretoria with full-stac
 ---
 
 ### Antony van Straten
-**Student Number:** u24590729
+**Student Number:** u24590739
 
 BSc Computer Science student in their third year at the University of Pretoria, deeply passionate about Machine Learning, Artificial Intelligence and building in general. Gained full-stack experience through personal and academic projects.
 
@@ -76,9 +76,9 @@ Third-year BSc Computer Science student at the University of Pretoria with a pas
 | Backend | FastAPI, AWS Lambda, API Gateway |
 | Auth | AWS Cognito |
 | Database | AWS RDS PostgreSQL, AWS S3 |
-| AI | Gemini 2.0 Flash (primary), Groq + Llama 3 (fallback) |
+| AI | AWS Bedrock |
 | Market Data | yfinance (primary), Alpha Vantage (fallback) |
-| News | NewsAPI.org |
+| News | MarketAux |
 | File Handling | pdfPlumber |
 | CI/CD | GitHub Actions, AWS SAM |
 
