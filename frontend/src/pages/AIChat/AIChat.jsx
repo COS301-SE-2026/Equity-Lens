@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Button from '../../components/common/Button/Button';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { getMockResponse } from '../../services/aiService';
@@ -7,21 +7,35 @@ import useAuth from '../../hooks/useAuth';
 const AIChat = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
+  const [isThinking, setIsThinking] = useState(false);
   const { user } = useAuth();
   const firstName = user?.full_name?.split(' ')[0] ?? 'there';
+  const bottomRef = useRef(null);
+
+  // Keep the newest message (or the typing indicator) in view.
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isThinking]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const text = input.trim();
     if (!text) return;
     const userMessage = { id: Date.now(), role: 'user', text };
-    const aiMessage = {
-      id: Date.now() + 1,
-      role: 'assistant',
-      ...getMockResponse(text),
-    };
-    setMessages((prev) => [...prev, userMessage, aiMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput('');
+    setIsThinking(true);
+
+    // Simulate the assistant "thinking" before its reply lands.
+    setTimeout(() => {
+      const aiMessage = {
+        id: Date.now() + 1,
+        role: 'assistant',
+        ...getMockResponse(text),
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+      setIsThinking(false);
+    }, 900);
   };
 
   return (
@@ -79,8 +93,24 @@ const AIChat = () => {
               </p>
             </li>
           ))}
+
+          {/* Typing indicator while the assistant "thinks" */}
+          {isThinking && (
+            <li className="flex justify-start">
+              <span className="flex items-center gap-1 px-1 py-2">
+                {[0, 150, 300].map((delay) => (
+                  <span
+                    key={delay}
+                    className="h-2 w-2 animate-bounce rounded-full bg-[var(--text-dim)]"
+                    style={{ animationDelay: `${delay}ms` }}
+                  />
+                ))}
+              </span>
+            </li>
+          )}
         </ul>
       )}
+      <div ref={bottomRef} />
     </div>
 
     {/* Composer */}
