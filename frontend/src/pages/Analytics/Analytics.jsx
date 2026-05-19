@@ -144,4 +144,71 @@ const StockRow = ({ stock, loading, results, index }) => (
     </div>
   </div>
 );
+export default function Analytics() {
+  const { stockData, loading, error } = useIndicators();
 
+  const stocks = Object.values(stockData).map((s) => s.results).filter(Boolean);
+
+  return (
+    <>
+      <style>{`
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(6px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
+      <div className="p-4 flex flex-col gap-4 max-w-[1600px] mx-auto w-full" aria-label="Analytics page">
+        <div className="flex items-center justify-between pb-3"
+          style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)' }}>
+          <div>
+            <h1 className="text-xs font-medium uppercase tracking-widest"
+              style={{ color: 'var(--text-primary,#e5e5e5)' }}>Analytics</h1>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost,#444)' }}>
+              Financial indicators calculated per holding — hover any label for an explanation
+            </p>
+          </div>
+          <span className="text-[10px] px-2 py-1 rounded font-mono"
+            style={{ color: 'var(--text-ghost,#444)', border: '1px solid var(--border-subtle,#2a2a2a)' }}>
+            {stocks.length} holdings
+          </span>
+        </div>
+
+        {error && (
+          <div className="terminal-card text-center p-8" role="alert">
+            <p className="text-xs font-medium" style={{ color: 'var(--signal-negative,#ef4444)' }}>
+              Failed to load indicators
+            </p>
+            <p className="text-[10px] mt-1" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>{error}</p>
+          </div>
+        )}
+
+        <div className="flex flex-col gap-3">
+          {loading
+            ? Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="terminal-card overflow-hidden animate-pulse">
+                  <div className="h-14 px-4 py-3" style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)' }}>
+                    <div className="h-3 w-16 rounded mb-2" style={{ background: 'var(--border-subtle,#2a2a2a)' }}/>
+                    <div className="h-2.5 w-24 rounded" style={{ background: 'var(--border-subtle,#2a2a2a)' }}/>
+                  </div>
+                  <div className="grid grid-cols-7 p-3 gap-3">
+                    {Array.from({ length: 7 }).map((_, j) => (
+                      <div key={j} className="h-10 rounded" style={{ background: 'var(--border-subtle,#2a2a2a)' }}/>
+                    ))}
+                  </div>
+                </div>
+              ))
+            : stocks.map((stock, i) => (
+                <StockRow
+                  key={stock.ticker}
+                  stock={stock}
+                  index={i}
+                  loading={false}
+                  results={stock}
+                />
+              ))
+          }
+        </div>
+      </div>
+    </>
+  );
+}
