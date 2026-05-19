@@ -13,22 +13,52 @@ const WATCHLIST = [
   { ticker: 'FSR', name: 'Firstrand', price: 72.00, changePercent: 10.77 },
 ];
 
-const SectionCard = ({ title, subtitle, children }) => (
-  <div className="terminal-card flex flex-col h-full">
-    <div
-      className="px-4 pt-3 pb-2.5"
-      style={{ borderBottom: '1px solid var(--border-subtle)' }}
-    >
-      <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
+const SectionCard = ({ title, subtitle, children, scrollable = false }) => (
+  <div
+    style={{
+      background: 'var(--surface-card)',
+      border: '1px solid var(--border-subtle)',
+      borderRadius: '6px',
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      overflow: 'hidden',
+    }}
+  >
+    <div style={{
+      padding: '10px 16px',
+      borderBottom: '1px solid var(--border-subtle)',
+      flexShrink: 0,
+    }}>
+      <p style={{
+        fontSize: '10px',
+        fontWeight: 500,
+        color: 'var(--text-primary)',
+        fontFamily: 'var(--font-primary)',
+        textTransform: 'uppercase',
+        letterSpacing: '0.08em',
+      }}>
         {title}
       </p>
       {subtitle && (
-        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost)' }}>
+        <p style={{
+          fontSize: '10px',
+          marginTop: '2px',
+          color: 'var(--text-secondary)',
+          fontFamily: 'var(--font-primary)',
+        }}>
           {subtitle}
         </p>
       )}
     </div>
-    <div className="p-4 flex-1">{children}</div>
+    <div style={{
+      padding: '16px',
+      flex: 1,
+      overflowY: scrollable ? 'auto' : 'visible',
+      maxHeight: scrollable ? '260px' : 'none',
+    }}>
+      {children}
+    </div>
   </div>
 );
 
@@ -37,7 +67,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full min-h-64">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '256px' }}>
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -45,15 +75,24 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full min-h-64">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '256px' }}>
         <div
-          className="terminal-card text-center p-8 max-w-md"
           role="alert"
+          style={{
+            background: 'var(--surface-card)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '6px',
+            padding: '32px',
+            maxWidth: '400px',
+            textAlign: 'center',
+          }}
         >
-          <p className="text-xs font-medium mb-2" style={{ color: 'var(--signal-negative)' }}>
+          <p style={{ fontSize: '11px', fontWeight: 500, marginBottom: '8px', color: 'var(--signal-negative)', fontFamily: 'var(--font-primary)' }}>
             Failed to load portfolio
           </p>
-          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{error}</p>
+          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'var(--font-primary)' }}>
+            {error}
+          </p>
         </div>
       </div>
     );
@@ -81,10 +120,7 @@ const Dashboard = () => {
         ))}
 
         <div className="col-span-12 lg:col-span-8">
-          <SectionCard
-            title="Portfolio performance"
-            subtitle="vs JSE All Share benchmark"
-          >
+          <SectionCard title="Portfolio performance" subtitle="vs JSE All Share benchmark">
             <PerformanceLineChart data={portfolioData?.performanceHistory} />
           </SectionCard>
         </div>
@@ -93,8 +129,8 @@ const Dashboard = () => {
           <SectionCard title="Dividend income">
             <DividendBarChart />
           </SectionCard>
-          <SectionCard title="Watchlist">
-            <div className="flex flex-col">
+          <SectionCard title="Watchlist" scrollable={true}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
               {WATCHLIST.map((item) => (
                 <WatchlistItem key={item.ticker} {...item} />
               ))}
@@ -103,10 +139,7 @@ const Dashboard = () => {
         </div>
 
         <div className="col-span-12">
-          <SectionCard
-            title="Holdings"
-            subtitle="All active positions in your portfolio"
-          >
+          <SectionCard title="Holdings" subtitle="All active positions in your portfolio">
             <HoldingsTable holdings={portfolioData?.holdings} />
           </SectionCard>
         </div>
