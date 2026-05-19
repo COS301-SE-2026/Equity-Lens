@@ -1,4 +1,5 @@
 import usePortfolio from '../../hooks/usePortfolio';
+import useAuth from '../../hooks/useAuth';
 import StockTickerCard from '../../components/dashboard/StockTickerCard/StockTickerCard';
 import PerformanceLineChart from '../../components/charts/PerformanceLineChart/PerformanceLineChart';
 import DividendBarChart from '../../components/charts/DividendBarChart/DividendBarChart';
@@ -13,31 +14,28 @@ const WATCHLIST = [
   { ticker: 'FSR', name: 'Firstrand', price: 72.00, changePercent: 10.77 },
 ];
 
-const SectionCard = ({ title, subtitle, children }) => (
-  <div className="terminal-card flex flex-col h-full">
-    <div
-      className="px-4 pt-3 pb-2.5"
-      style={{ borderBottom: '1px solid var(--border-subtle)' }}
-    >
-      <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>
-        {title}
-      </p>
-      {subtitle && (
-        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost)' }}>
-          {subtitle}
-        </p>
-      )}
+const SectionCard = ({ title, subtitle, children, action }) => (
+  <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl shadow-[var(--shadow-card)] flex flex-col h-full">
+    <div className="flex items-start justify-between px-5 pt-5 pb-4 border-b border-[var(--border-default)]">
+      <div>
+        <h2 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h2>
+        {subtitle && (
+          <p className="text-xs text-[var(--text-secondary)] mt-0.5">{subtitle}</p>
+        )}
+      </div>
+      {action}
     </div>
-    <div className="p-4 flex-1">{children}</div>
+    <div className="p-5 flex-1">{children}</div>
   </div>
 );
 
 const Dashboard = () => {
+  const { user } = useAuth();
   const { portfolioData, loading, error } = usePortfolio();
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full min-h-64">
+      <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -45,15 +43,15 @@ const Dashboard = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-full min-h-64">
+      <div className="flex items-center justify-center min-h-[calc(100vh-64px)]">
         <div
-          className="terminal-card text-center p-8 max-w-md"
+          className="text-center p-8 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl max-w-md"
           role="alert"
         >
-          <p className="text-xs font-medium mb-2" style={{ color: 'var(--signal-negative)' }}>
+          <p className="text-[var(--color-danger)] font-semibold mb-2">
             Failed to load portfolio
           </p>
-          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{error}</p>
+          <p className="text-sm text-[var(--text-secondary)]">{error}</p>
         </div>
       </div>
     );
@@ -63,12 +61,10 @@ const Dashboard = () => {
 
   return (
     <div
-      className="p-4 flex flex-col gap-3 max-w-[1600px] mx-auto w-full"
-      style={{ minHeight: '100%' }}
+      className="px-4 lg:px-6 py-6 space-y-6 max-w-[1600px] mx-auto w-full"
       aria-label="Portfolio dashboard"
     >
-      <div className="grid grid-cols-12 gap-3">
-
+      <div className="grid grid-cols-12 gap-4">
         {topHoldings.map((holding) => (
           <div key={holding.ticker} className="col-span-12 sm:col-span-6 xl:col-span-3">
             <StockTickerCard
@@ -79,7 +75,9 @@ const Dashboard = () => {
             />
           </div>
         ))}
+      </div>
 
+      <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-8">
           <SectionCard
             title="Portfolio performance"
@@ -89,7 +87,7 @@ const Dashboard = () => {
           </SectionCard>
         </div>
 
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-3">
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
           <SectionCard title="Dividend income">
             <DividendBarChart />
           </SectionCard>
@@ -110,7 +108,6 @@ const Dashboard = () => {
             <HoldingsTable holdings={portfolioData?.holdings} />
           </SectionCard>
         </div>
-
       </div>
     </div>
   );
