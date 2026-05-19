@@ -1,8 +1,8 @@
-from app.indicators.altman_z_score import caclculate_altman_zscore
+from app.indicators.altman_z_score import calculate_altman_zscore
 
 
 def test_altman_zscore_returns_float():
-    result = caclculate_altman_zscore(
+    result = calculate_altman_zscore(
         50000,
         200000,
         30000,
@@ -16,7 +16,7 @@ def test_altman_zscore_returns_float():
 
 
 def test_altman_zscore_positive():
-    result = caclculate_altman_zscore(
+    result = calculate_altman_zscore(
         50000,
         200000,
         30000,
