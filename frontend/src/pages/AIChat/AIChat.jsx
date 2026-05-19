@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import Button from '../../components/common/Button/Button';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 import { getMockResponse } from '../../services/aiService';
+import useAuth from '../../hooks/useAuth';
 
 const AIChat = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
+  const { user } = useAuth();
+  const firstName = user?.full_name?.split(' ')[0] ?? 'there';
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -32,11 +36,17 @@ const AIChat = () => {
     {/* Message area */}
     <div className="flex-1 overflow-y-auto py-4">
       {messages.length === 0 ? (
-        <div className="flex h-full items-center justify-center">
-          <p className="text-sm text-[var(--text-dim)]">
-            Start a conversation below.
-          </p>
+        <div className="flex h-full items-center justify-center text-center">
+          <div>
+            <p className="text-5xl font-semibold text-[var(--text-dim)]">
+              Hello {firstName}
+            </p>
+            <p className="mt-2 text-base font-normal text-[var(--text-dim)]">
+              Type below to get started.
+            </p>
+          </div>
         </div>
+
       ) : (
         <ul className="flex flex-col gap-3">
           {messages.map((message) => (
@@ -53,6 +63,18 @@ const AIChat = () => {
                     : 'max-w-[80%] text-sm text-[var(--text-secondary)]'
                 }
               >
+                {message.trend === 'up' && (
+                  <TrendingUp
+                    size={16}
+                    className="mr-1 inline text-[var(--color-success)]"
+                  />
+                )}
+                {message.trend === 'down' && (
+                  <TrendingDown
+                    size={16}
+                    className="mr-1 inline text-[var(--color-danger)]"
+                  />
+                )}
                 {message.text}
               </p>
             </li>
