@@ -109,3 +109,4 @@ jobs:
           scan-ref: .
           severity: HIGH,CRITICAL
           exit-code: 1
+

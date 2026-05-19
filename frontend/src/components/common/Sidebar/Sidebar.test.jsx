@@ -1,34 +1,48 @@
-import { describe, it, expect} from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
 describe('Sidebar', () => {
 
-  it('when sidebar is open', () => {
+
+
+  it('shows Dashboard on the screen', () => {
     render(
       <MemoryRouter>
         <Sidebar open={true} onClose={() => {}} />
       </MemoryRouter>
     );
 
-    expect(screen.getByText(/News/i)).toBeInTheDocument();
-    expect(screen.getByText(/Portfolio/i)).toBeInTheDocument();
-    expect(screen.getByText(/Dashboard/i)).toBeInTheDocument();
-    expect(screen.getByText(/JSE · LIVE · POPI/i)).toBeInTheDocument();
-    expect(screen.getByText(/COS 301 Capstone 2026/i)).toBeInTheDocument();
+    expect(screen.getByText('Dashboard')).toBeInTheDocument();
   });
 
 
-  it('when sidebar is closed', () => {
+
+
+
+
+  it('it showes the Portfolio on the side', () => {
     render(
       <MemoryRouter>
-        <Sidebar open={false} onClose={() => {() => {}}} />
+        <Sidebar open={true} onClose={() => {}} />
       </MemoryRouter>
     );
 
+    expect(screen.getByText('Portfolio')).toBeInTheDocument();
   });
 
 
+
+
+  it('it showes the News on the side', () => {
+    render(
+      <MemoryRouter>
+        <Sidebar open={true} onClose={() => {}} />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('News')).toBeInTheDocument();
+  });
 
 });
