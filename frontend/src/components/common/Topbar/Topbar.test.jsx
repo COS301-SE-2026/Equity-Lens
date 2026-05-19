@@ -12,8 +12,8 @@ vi.mock('../../../hooks/useAuth', () => ({
   }),
 }));
 
-vi.mock('../../../hooks/useTheme', () => ({
-  default: () => ({
+vi.mock('../../../context/ThemeContext.jsx', () => ({
+  useThemeContext: () => ({
     theme: 'dark',
     toggleTheme: mockToggleThemeFake,
   }),

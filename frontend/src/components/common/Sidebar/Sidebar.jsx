@@ -35,37 +35,51 @@ const Sidebar = ({ open, onClose }) => {
           lg:translate-x-0 lg:static lg:z-auto
         `}
         style={{
-          background: 'var(--surface-base)',
+          background: 'var(--surface-raised)',
           borderRight: '1px solid var(--border-subtle)',
         }}
         aria-label="Sidebar navigation"
       >
-        <div
-          className="h-9 flex items-center justify-between px-4"
-          style={{ borderBottom: '1px solid var(--border-subtle)' }}
-        >
-          <span
-            className="text-xs font-semibold tracking-widest uppercase"
-            style={{ color: 'var(--text-primary)', letterSpacing: '0.12em' }}
-          >
+        <div style={{
+          height: '36px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 16px',
+          borderBottom: '1px solid var(--border-subtle)',
+          flexShrink: 0,
+        }}>
+          <span style={{
+            fontSize: '12px',
+            fontWeight: 700,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            color: 'var(--text-primary)',
+            fontFamily: 'var(--font-primary)',
+            whiteSpace: 'nowrap',
+          }}>
             EQUITY<span style={{ color: 'var(--signal-gold)' }}>LENS</span>
           </span>
           <button
             onClick={onClose}
             className="lg:hidden"
-            style={{ color: 'var(--text-dim)' }}
+            style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}
             aria-label="Close sidebar"
           >
             <X size={14} />
           </button>
         </div>
 
-        <nav className="flex-1 py-3 flex flex-col gap-0.5 overflow-y-auto">
-          <p
-            className="text-[9px] font-semibold uppercase px-4 pb-2"
-            style={{ color: 'var(--text-ghost)', letterSpacing: '0.12em' }}
-          >
-            Workspace
+        <nav style={{ flex: 1, padding: '12px 0', display: 'flex', flexDirection: 'column', gap: '2px', overflowY: 'auto' }}>
+          <p style={{
+            fontSize: '9px',
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            color: 'var(--text-ghost)',
+            padding: '0 16px 8px',
+            fontFamily: 'var(--font-primary)',
+          }}>
           </p>
 
           {navItems.map(({ label, icon: Icon, to, badge }) => (
@@ -73,29 +87,35 @@ const Sidebar = ({ open, onClose }) => {
               key={to}
               to={to}
               onClick={onClose}
-              className="flex items-center justify-between px-4 py-2 text-xs transition-all duration-150"
               style={({ isActive }) => ({
-                color: isActive ? 'var(--text-primary)' : 'var(--text-dim)',
-                background: isActive ? 'rgba(212, 160, 23, 0.06)' : 'transparent',
-                borderLeft: isActive
-                  ? '2px solid var(--signal-gold)'
-                  : '2px solid transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 16px',
+                fontSize: '12px',
+                fontFamily: 'var(--font-primary)',
                 fontWeight: isActive ? 500 : 400,
+                color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                background: isActive ? 'rgba(212,160,23,0.06)' : 'transparent',
+                borderLeft: isActive ? '2px solid var(--signal-gold)' : '2px solid transparent',
+                textDecoration: 'none',
+                transition: 'all 120ms ease-out',
               })}
             >
-              <div className="flex items-center gap-2.5">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <Icon size={14} />
                 {label}
               </div>
               {badge && (
-                <span
-                  className="text-[9px] font-bold px-1.5 py-0.5 rounded-sm"
-                  style={{
-                    background: 'var(--signal-gold)',
-                    color: '#080A0C',
-                    letterSpacing: '0.04em',
-                  }}
-                >
+                <span style={{
+                  fontSize: '9px',
+                  fontWeight: 700,
+                  padding: '2px 6px',
+                  borderRadius: '3px',
+                  background: 'var(--signal-gold)',
+                  color: '#000',
+                  fontFamily: 'var(--font-primary)',
+                }}>
                   {badge}
                 </span>
               )}
@@ -103,23 +123,12 @@ const Sidebar = ({ open, onClose }) => {
           ))}
         </nav>
 
-        <div
-          className="px-4 py-3"
-          style={{ borderTop: '1px solid var(--border-subtle)' }}
-        >
-          <div className="flex items-center gap-1.5 mb-1">
-            <div
-              className="w-1.5 h-1.5 rounded-full"
-              style={{ background: 'var(--signal-positive)' }}
-            />
-            <span
-              className="text-[9px] font-terminal uppercase tracking-wider"
-              style={{ color: 'var(--text-ghost)' }}
-            >
-              JSE · LIVE · POPI
-            </span>
-          </div>
-          <p className="text-[9px]" style={{ color: 'var(--text-ghost)' }}>
+        <div style={{
+          padding: '12px 16px',
+          borderTop: '1px solid var(--border-subtle)',
+          flexShrink: 0,
+        }}>
+          <p style={{ fontSize: '9px', color: 'var(--text-ghost)', fontFamily: 'var(--font-primary)' }}>
             COS 301 Capstone 2026
           </p>
         </div>

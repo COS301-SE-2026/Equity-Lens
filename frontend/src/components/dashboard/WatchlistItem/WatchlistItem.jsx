@@ -1,32 +1,57 @@
-import { TrendingUp, TrendingDown } from 'lucide-react';
-
 const WatchlistItem = ({ ticker, name, price, changePercent }) => {
   const positive = changePercent >= 0;
 
   return (
-    <div className="flex items-center justify-between py-3 border-b border-[var(--border-default)] last:border-0">
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 rounded-full bg-[var(--bg-tertiary)] flex items-center justify-center text-xs font-bold text-[var(--accent-primary)]">
-          {ticker.slice(0, 2)}
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-[var(--text-primary)]">{ticker}</p>
-          <p className="text-xs text-[var(--text-secondary)]">{name}</p>
-        </div>
-      </div>
-
-      <div className="text-right">
-        <p className="text-sm font-mono font-semibold text-[var(--text-primary)]">
-          R{price?.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '8px 0',
+      borderBottom: '1px solid var(--border-subtle)',
+    }}
+      className="last:border-0"
+    >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <p style={{
+          fontSize: '12px',
+          fontWeight: 500,
+          color: 'var(--text-primary)',
+          fontFamily: 'var(--font-mono)',
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          {ticker}
         </p>
-        <div
-          className={`flex items-center justify-end gap-0.5 text-xs font-semibold ${
-            positive ? 'text-[var(--color-success)]' : 'text-[var(--color-danger)]'
-          }`}
-        >
-          {positive ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
-          {positive ? '+' : ''}{changePercent?.toFixed(2)}%
-        </div>
+        <p style={{
+          fontSize: '10px',
+          color: 'var(--text-secondary)',
+          fontFamily: 'var(--font-primary)',
+        }}>
+          {name}
+        </p>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px' }}>
+        <p style={{
+          fontSize: '12px',
+          color: 'var(--text-primary)',
+          fontFamily: 'var(--font-mono)',
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          R{price.toFixed(2)}
+        </p>
+        <span style={{
+          fontSize: '10px',
+          fontFamily: 'var(--font-mono)',
+          fontVariantNumeric: 'tabular-nums',
+          padding: '1px 6px',
+          borderRadius: '3px',
+          background: positive ? 'var(--signal-positive-bg)' : 'var(--signal-negative-bg)',
+          color: positive ? 'var(--signal-positive)' : 'var(--signal-negative)',
+          border: positive
+            ? '1px solid var(--signal-positive-border)'
+            : '1px solid var(--signal-negative-border)',
+        }}>
+          {positive ? '+' : ''}{changePercent.toFixed(2)}%
+        </span>
       </div>
     </div>
   );
