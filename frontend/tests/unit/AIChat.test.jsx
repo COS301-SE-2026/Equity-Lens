@@ -1,9 +1,11 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, act } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import AIChat from "../../src/pages/AIChat/AIChat.jsx";
 import useAuth from "../../src/hooks/useAuth.js";
+import { getMockResponse } from "../../src/services/aiService.js";
 
 vi.mock("../../src/hooks/useAuth.js");
+vi.mock("../../src/services/aiService.js");
 
 describe("AIChat", () => {
   beforeEach(() => {
@@ -24,5 +26,55 @@ describe("AIChat", () => {
     useAuth.mockReturnValue({ user: null });
     render(<AIChat />);
     expect(screen.getByText("Hello there")).toBeDefined();
+  });
+
+  describe("when the user sends a message", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+      getMockResponse.mockReturnValue({ text: "mock reply" });
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("adds the typed message to the conversation and clears input", () => {
+      render(<AIChat />);
+      const input = screen.getByPlaceholderText("Ask the assistant…");
+      const sendButton = screen.getByRole("button", { name: /send/i });
+
+      fireEvent.change(input, { target: { value: "what is NPN?" } });
+      fireEvent.click(sendButton);
+
+      expect(screen.getByText("what is NPN?")).toBeDefined();
+      expect(input.value).toBe("");
+    });
+
+    it("disables the send button while the assistant is thinking", () => {
+      render(<AIChat />);
+      const input = screen.getByPlaceholderText("Ask the assistant…");
+      const sendButton = screen.getByRole("button", { name: /send/i });
+
+      fireEvent.change(input, { target: { value: "hi" } });
+      fireEvent.click(sendButton);
+
+      expect(sendButton.disabled).toBe(true);
+    });
+
+    it("renders the assistant's reply after the thinking delay", () => {
+      render(<AIChat />);
+      const input = screen.getByPlaceholderText("Ask the assistant…");
+      const sendButton = screen.getByRole("button", { name: /send/i });
+
+      fireEvent.change(input, { target: { value: "hi" } });
+      fireEvent.click(sendButton);
+
+      act(() => {
+        vi.advanceTimersByTime(900);
+      });
+
+      expect(getMockResponse).toHaveBeenCalledWith("hi");
+      expect(screen.getByText("mock reply")).toBeDefined();
+    });
   });
 });
