@@ -9,6 +9,7 @@ const SUGGESTED_PROMPTS = [
   'Show all cards',
   'How is MTN doing?',
   "What's Sasol trading at?",
+  'How is my portfolio performing compared to the JSE benchmark?',
 ];
 
 const AIChat = () => {

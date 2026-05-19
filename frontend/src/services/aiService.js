@@ -30,6 +30,9 @@ const toCard = (t) => ({
   changePercent: t.changePct,
 });
 
+// portfolio vs JSE comparison.
+const PORTFOLIO_VS_JSE = { portfolio: 8.42, jse: 5.17 };
+
 export const getMockResponse = (rawInput) => {
   const text = normalize(rawInput);
 
@@ -43,6 +46,20 @@ export const getMockResponse = (rawInput) => {
     return {
       text: 'Here are your stock cards:',
       cards: Object.values(TICKERS).map(toCard),
+    };
+  }
+
+  if (
+    /\bportfolio\b/.test(text) &&
+    /\b(jse|benchmark|all share|compar)/.test(text)
+  ) {
+    const { portfolio, jse } = PORTFOLIO_VS_JSE;
+    const delta = portfolio - jse;
+    const verb = delta >= 0 ? 'Outperforming' : 'Underperforming';
+    return {
+      text: `Your portfolio is up ${portfolio.toFixed(2)}% YTD versus the JSE All Share at ${jse.toFixed(2)}%. `,
+      trend: delta >= 0 ? 'up' : 'down',
+      changeText: `${verb} the benchmark by ${Math.abs(delta).toFixed(2)}%.`,
     };
   }
 
