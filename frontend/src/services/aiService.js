@@ -22,6 +22,14 @@ const TICKERS = {
   fsr: { symbol: 'FSR', name: 'FirstRand', aliases: ['firstrand', 'first rand'], price: 71.34, changePct: 0.41 },
 };
 
+// Maps TICKERS entry onto the StockTickerCard
+const toCard = (t) => ({
+  ticker: t.symbol,
+  name: t.name,
+  price: t.price,
+  changePercent: t.changePct,
+});
+
 export const getMockResponse = (rawInput) => {
   const text = normalize(rawInput);
 
@@ -31,12 +39,20 @@ export const getMockResponse = (rawInput) => {
     };
   }
 
+  if (/\bcards?\b/.test(text)) {
+    return {
+      text: 'Here are your stock cards:',
+      cards: Object.values(TICKERS).map(toCard),
+    };
+  }
+
   for (const key of Object.keys(TICKERS)) {
     const t = TICKERS[key];
     const keywords = [key, ...t.aliases];
     if (keywords.some((word) => new RegExp(`\\b${word}\\b`).test(text))) {
       return {
-        text: `${t.name} (${t.symbol}) is trading at R${t.price.toFixed(2)}, ${Math.abs(t.changePct).toFixed(2)}% on the day.`,
+        text: `${t.name} (${t.symbol}) is trading at R${t.price.toFixed(2)}, `,
+        changeText: `${Math.abs(t.changePct).toFixed(2)}% on the day.`,
         trend: t.changePct >= 0 ? 'up' : 'down',
       };
     }

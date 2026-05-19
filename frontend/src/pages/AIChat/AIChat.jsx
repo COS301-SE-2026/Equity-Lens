@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Button from '../../components/common/Button/Button';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { getMockResponse } from '../../services/aiService';
+import StockTickerCard from '../../components/dashboard/StockTickerCard/StockTickerCard';
 import useAuth from '../../hooks/useAuth';
 
 const AIChat = () => {
@@ -19,6 +20,8 @@ const AIChat = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Ignore submits when thinking
+    if (isThinking) return;
     const text = input.trim();
     if (!text) return;
     const userMessage = { id: Date.now(), role: 'user', text };
@@ -70,27 +73,37 @@ const AIChat = () => {
                 message.role === 'user' ? 'justify-end' : 'justify-start'
               }`}
             >
-              <p
-                className={
-                  message.role === 'user'
-                    ? 'max-w-[80%] rounded-lg bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)]'
-                    : 'max-w-[80%] text-sm text-[var(--text-secondary)]'
-                }
-              >
-                {message.trend === 'up' && (
-                  <TrendingUp
-                    size={16}
-                    className="mr-1 inline text-[var(--color-success)]"
-                  />
-                )}
-                {message.trend === 'down' && (
-                  <TrendingDown
-                    size={16}
-                    className="mr-1 inline text-[var(--color-danger)]"
-                  />
-                )}
-                {message.text}
-              </p>
+              {message.role === 'user' ? (
+                <p className="max-w-[80%] rounded-lg bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)]">
+                  {message.text}
+                </p>
+              ) : (
+                <div className="max-w-[80%]">
+                  <p className="text-sm text-[var(--text-secondary)]">
+                    {message.text}
+                    {message.trend === 'up' && (
+                      <TrendingUp
+                        size={16}
+                        className="mr-1 inline text-[var(--color-success)]"
+                      />
+                    )}
+                    {message.trend === 'down' && (
+                      <TrendingDown
+                        size={16}
+                        className="mr-1 inline text-[var(--color-danger)]"
+                      />
+                    )}
+                    {message.changeText}
+                  </p>
+                  {message.cards && (
+                    <div className="mt-3 grid grid-cols-2 gap-3">
+                      {message.cards.map((card) => (
+                        <StockTickerCard key={card.ticker} {...card} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </li>
           ))}
 
@@ -130,7 +143,7 @@ const AIChat = () => {
                      focus-visible:outline-none focus-visible:ring-2
                      focus-visible:ring-[var(--accent-primary)]"
         />
-        <Button type="submit" variant="primary">
+        <Button type="submit" variant="primary" disabled={isThinking}>
           Send
         </Button>
       </form>
