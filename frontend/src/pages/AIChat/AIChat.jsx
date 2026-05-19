@@ -5,6 +5,12 @@ import { getMockResponse } from '../../services/aiService';
 import StockTickerCard from '../../components/dashboard/StockTickerCard/StockTickerCard';
 import useAuth from '../../hooks/useAuth';
 
+const SUGGESTED_PROMPTS = [
+  'Show all cards',
+  'How is MTN doing?',
+  "What's Sasol trading at?",
+];
+
 const AIChat = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
@@ -18,11 +24,9 @@ const AIChat = () => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isThinking]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // Ignore submits when thinking
+  const sendMessage = (rawText) => {
     if (isThinking) return;
-    const text = input.trim();
+    const text = rawText.trim();
     if (!text) return;
     const userMessage = { id: Date.now(), role: 'user', text };
     setMessages((prev) => [...prev, userMessage]);
@@ -39,6 +43,11 @@ const AIChat = () => {
       setMessages((prev) => [...prev, aiMessage]);
       setIsThinking(false);
     }, 900);
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    sendMessage(input);
   };
 
   return (
@@ -61,6 +70,24 @@ const AIChat = () => {
             <p className="mt-2 text-base font-normal text-[var(--text-dim)]">
               Type below to get started.
             </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              {SUGGESTED_PROMPTS.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => sendMessage(prompt)}
+                  className="rounded-full border border-[var(--border-default)]
+                             bg-[var(--bg-secondary)] px-3 py-1.5 text-sm
+                             text-[var(--text-secondary)]
+                             hover:bg-[var(--bg-tertiary)]
+                             hover:text-[var(--text-primary)]
+                             focus-visible:outline-none focus-visible:ring-2
+                             focus-visible:ring-[var(--accent-primary)]"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
