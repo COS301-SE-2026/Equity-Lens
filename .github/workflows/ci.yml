@@ -22,14 +22,27 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm install
+      
+      - name: Run frontend package security audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
+
+      - name: Run lint
+        working-directory: frontend
+        run: npm run lint
 
       - name: Run tests
         working-directory: frontend
         run: npx vitest run
 
+      - name: Run tests with coverage
+        working-directory: frontend
+        run: npx vitest run --coverage
+
       - name: Build
         working-directory: frontend
         run: npm run build
+
 
   backend:
     name: Backend Build & Test
@@ -79,3 +92,21 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           working-directory: backend
+
+
+  trivy:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: 1
+

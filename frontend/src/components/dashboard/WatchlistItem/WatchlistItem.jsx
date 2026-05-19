@@ -1,5 +1,6 @@
 const WatchlistItem = ({ ticker, name, price, changePercent }) => {
   const positive = changePercent >= 0;
+
   return (
     <div style={{
       display: 'flex',

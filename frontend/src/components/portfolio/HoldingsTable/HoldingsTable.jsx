@@ -1,3 +1,23 @@
+import React from 'react';
+
+import PropTypes from 'prop-types';
+
+HoldingsTable.propTypes = {
+  holdings: PropTypes.arrayOf(
+    PropTypes.shape({
+      ticker: PropTypes.string,
+      name: PropTypes.string,
+      sector: PropTypes.string,
+      quantity: PropTypes.number,
+      avg_price: PropTypes.number,
+      current_price: PropTypes.number,
+      value: PropTypes.number,
+      gain_loss: PropTypes.number,
+      gain_loss_pct: PropTypes.number,
+    })
+  ),
+};
+
 const COLS = ['Ticker', 'Name', 'Sector', 'Qty', 'Avg Cost', 'Current', 'Value', 'P&L', 'P&L %'];
 
 const HoldingsTable = ({ holdings = [] }) => (

@@ -7,10 +7,10 @@ import HoldingsTable from '../../components/portfolio/HoldingsTable/HoldingsTabl
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
 
 const WATCHLIST = [
-  { ticker: 'NPN', name: 'Naspers', price: 3150.00, changePercent: 12.5 },
-  { ticker: 'MTN', name: 'MTN Group', price: 138.00, changePercent: 15.0 },
-  { ticker: 'SOL', name: 'Sasol', price: 245.00, changePercent: -12.5 },
-  { ticker: 'FSR', name: 'Firstrand', price: 72.00, changePercent: 10.77 },
+  { ticker: 'NPN', name: 'Naspers',   price: 3150.00, changePercent: 12.5  },
+  { ticker: 'MTN', name: 'MTN Group', price: 138.00,  changePercent: 15.0  },
+  { ticker: 'SOL', name: 'Sasol',     price: 245.00,  changePercent: -12.5 },
+  { ticker: 'FSR', name: 'Firstrand', price: 72.00,   changePercent: 10.77 },
 ];
 
 const SectionCard = ({ title, subtitle, children, scrollable = false }) => (
@@ -102,12 +102,10 @@ const Dashboard = () => {
 
   return (
     <div
-      className="p-4 flex flex-col gap-3 max-w-[1600px] mx-auto w-full"
-      style={{ minHeight: '100%' }}
+      className="px-4 lg:px-6 py-6 space-y-6 max-w-[1600px] mx-auto w-full"
       aria-label="Portfolio dashboard"
     >
-      <div className="grid grid-cols-12 gap-3">
-
+      <div className="grid grid-cols-12 gap-4">
         {topHoldings.map((holding) => (
           <div key={holding.ticker} className="col-span-12 sm:col-span-6 xl:col-span-3">
             <StockTickerCard
@@ -118,14 +116,16 @@ const Dashboard = () => {
             />
           </div>
         ))}
+      </div>
 
+      <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-8">
           <SectionCard title="Portfolio performance" subtitle="vs JSE All Share benchmark">
             <PerformanceLineChart data={portfolioData?.performanceHistory} />
           </SectionCard>
         </div>
 
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-3">
+        <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
           <SectionCard title="Dividend income">
             <DividendBarChart />
           </SectionCard>
@@ -143,7 +143,6 @@ const Dashboard = () => {
             <HoldingsTable holdings={portfolioData?.holdings} />
           </SectionCard>
         </div>
-
       </div>
     </div>
   );

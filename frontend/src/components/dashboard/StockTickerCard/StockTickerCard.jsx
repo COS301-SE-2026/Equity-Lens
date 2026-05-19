@@ -13,6 +13,7 @@ const StockTickerCard = ({ ticker, name, price, changePercent }) => {
         gap: '8px',
       }}
     >
+      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           <p style={{
@@ -63,6 +64,7 @@ const StockTickerCard = ({ ticker, name, price, changePercent }) => {
         R{price?.toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
       </p>
 
+      {/* Metadata row */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
