@@ -3,7 +3,8 @@ import {
   LayoutDashboard,
   Newspaper,
   Briefcase,
-  X,
+  X, 
+  Sparkles
 } from 'lucide-react';
 import { ROUTES } from '../../../utils/constants';
 
@@ -11,6 +12,7 @@ const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, to: ROUTES.DASHBOARD },
   { label: 'Portfolio', icon: Briefcase, to: ROUTES.PORTFOLIO },
   { label: 'News', icon: Newspaper, to: ROUTES.NEWS },
+  { label: 'AI Assistant', icon: Sparkles, to: ROUTES.AI_CHAT}
 ];
 
 const Sidebar = ({ open, onClose }) => {
