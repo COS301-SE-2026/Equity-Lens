@@ -146,5 +146,30 @@ describe("AIChat", () => {
         })
       ).toBeDefined();
     });
+
+    describe("when a prompt is clicked", () => {
+      beforeEach(() => {
+        vi.clearAllMocks();
+        vi.useFakeTimers();
+        getMockResponse.mockReturnValue({ text: "mock reply" });
+      });
+
+      afterEach(() => {
+        vi.useRealTimers();
+      });
+
+      it("sends the prompt text as a user message", () => {
+        render(<AIChat />);
+        fireEvent.click(screen.getByRole("button", { name: "How is MTN doing?" }));
+
+        expect(screen.getByText("How is MTN doing?")).toBeDefined();
+
+        act(() => {
+          vi.advanceTimersByTime(900);
+        });
+
+        expect(getMockResponse).toHaveBeenCalledWith("How is MTN doing?");
+      });
+    });
   });
 });
