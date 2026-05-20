@@ -26,22 +26,15 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const register = async (fullName, email, password) => {
-    setError(null);
-    setLoading(true);
     try {
       await registerService(fullName, email, password);
     } catch (err) {
       const message = err.response?.data?.detail || 'Registration failed. Please try again.';
-      setError(message);
       throw new Error(message);
-    } finally {
-      setLoading(false);
     }
   };
 
   const login = async (email, password) => {
-    setError(null);
-    setLoading(true);
     try {
       const data = await loginService(email, password);
       const userData = await getCurrentUser();
@@ -49,10 +42,7 @@ export const AuthProvider = ({ children }) => {
       return data;
     } catch (err) {
       const message = err.response?.data?.detail || 'Login failed. Please try again.';
-      setError(message);
       throw new Error(message);
-    } finally {
-      setLoading(false);
     }
   };
 

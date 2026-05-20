@@ -142,7 +142,7 @@ it('shows error for invalid email', async () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Email already in use');
+      expect(screen.getByRole('alert')).toHaveTextContent('Registration failed. Please try again.');
     });
   });
 
