@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "vitest run --exclude=\"**/e2e/**\"",
     "test:ui": "vitest --ui",
-    "coverage": "vitest run --coverage",
+    "coverage": "vitest run --coverage --exclude=\"**/e2e/**\"",
     "test:e2e": "playwright test"
   },
   "dependencies": {
