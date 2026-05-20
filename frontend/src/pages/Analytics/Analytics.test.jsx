@@ -102,6 +102,17 @@ describe('Analytics', () => {
     expect(screen.getAllByText("Calc failed").length).toBe(7);
   });
 
+  it("renders skeleton placeholders while loading", () => {
+    useIndicators.mockReturnValue({
+      stockData: {},
+      loading: true,
+      error: null,
+    });
+    const { container } = render(<Analytics />);
+    expect(container.querySelectorAll(".animate-pulse").length).toBe(2);
+    expect(screen.queryByText("CAPM")).not.toBeInTheDocument();
+  });
+
   it("renders 'N/A' and the first sentence of the reason for insufficient data", () => {
     useIndicators.mockReturnValue({
       stockData: {
