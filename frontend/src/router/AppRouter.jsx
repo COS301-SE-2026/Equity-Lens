@@ -12,6 +12,7 @@ import NotFound from '../pages/NotFound/NotFound';
 import News from '../pages/News/News';
 import AIChat from '../pages/AIChat/AIChat';
 import { ROUTES } from '../utils/constants';
+import Analytics from '../pages/Analytics/Analytics';
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,11 +41,7 @@ const ProtectedRoute = ({ children }) => {
 
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <LoadingSpinner size="lg" />
-    </div>
-  );
+  if (loading) return null;
   return !isAuthenticated ? children : <Navigate to={ROUTES.DASHBOARD} replace />;
 };
 
@@ -58,6 +55,7 @@ const AppRouter = () => (
       <Route path={ROUTES.PORTFOLIO} element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
       <Route path={ROUTES.NEWS} element={<ProtectedRoute><News /></ProtectedRoute>} />
       <Route path={ROUTES.AI_CHAT} element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
+      <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
 
       <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
       <Route path="*" element={<NotFound />} />

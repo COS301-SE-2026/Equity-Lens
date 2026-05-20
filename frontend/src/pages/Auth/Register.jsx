@@ -46,15 +46,20 @@ const Register = () => {
   );
   
 const onSubmit = async (formValues) => {
-    setServerError(null);
-    try {
-      await register(formValues.fullName, formValues.email, formValues.password);
-      setSuccess(true);
-      setTimeout(() => navigate(ROUTES.LOGIN), 2000);
-    } catch (err) {
-      setServerError(err.message);
+  setServerError(null);
+  try {
+    await register(formValues.fullName, formValues.email, formValues.password);
+    setSuccess(true);
+    setTimeout(() => navigate(ROUTES.LOGIN), 2000);
+  } catch (err) {
+    const msg = err.message?.toLowerCase() || '';
+    if (msg.includes('already exists') || msg.includes('already registered')) {
+      setServerError('An account with this email address already exists. Please sign in instead.');
+    } else {
+      setServerError('Registration failed. Please try again.');
     }
-  };
+  }
+};
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
