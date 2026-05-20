@@ -40,22 +40,37 @@ const INDICATORS = {
   },
   rsi: {
     label: 'RSI',
-    tooltip: 'Measures price momentum on a 0–100 scale. Above 70 is overbought; below 30 is oversold.',
+    tooltip: 'Measures price momentum on a 0 - 100 scale. Above 70 is overbought; below 30 is oversold.',
     signal:   (v) => v < 30 ? 'positive' : v > 70 ? 'negative' : 'neutral',
-    describe: (v) => v > 70 ? 'Overbought — possible pullback' : v < 30 ? 'Oversold — possible bounce' : 'Neutral momentum',
+    describe: (v) => v > 70 ? 'Overbought - possible pullback' : v < 30 ? 'Oversold - possible bounce' : 'Neutral momentum',
   },
 };
 
-const Tooltip = ({ text, children }) => {
+const Tooltip = ({ text, children, align = 'left' }) => {
   const [show, setShow] = useState(false);
   return (
-    <span className="relative inline-flex items-center gap-1 cursor-default"
-      onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
+    <span
+      className="relative inline-flex items-center gap-1 cursor-default" 
+      onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}> 
+    
       {children}
       {show && (
-        <span className="absolute z-50 bottom-full left-0 mb-2 w-52 rounded px-3 py-2 text-[10px] leading-relaxed pointer-events-none"
-          style={{ background: 'var(--bg-elevated,#161616)', color: 'var(--text-secondary,#a0a0a0)',
-            border: '1px solid var(--border-subtle,#2a2a2a)', boxShadow: '0 8px 24px rgba(0,0,0,0.5)', whiteSpace: 'normal' }}>
+        <span className="absolute bottom-full mt-2 w-64 rounded-lg px-3.5 py-3 pointer-events-none"
+          style={{
+            left: align === 'left' ? 0 : 'auto',
+            right: align === 'right' ? 0 : 'auto',
+            background: '#2a2a2a',
+            color: '#e5e5e5',
+            border: '1px solid #444',
+            boxShadow: '0 12px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)',
+            whiteSpace: 'normal',
+            fontSize: '11px',
+            lineHeight: '1.6',
+            letterSpacing: '0.02em',
+            fontWeight: 400,
+            zIndex: 9999,
+          }}
+        >
           {text}
         </span>
       )}
@@ -115,7 +130,7 @@ const IndicatorCell = ({ indicatorKey, result, loading }) => {
 };
 
 const StockRow = ({ stock, loading, results, index }) => (
-  <div className="terminal-card overflow-hidden"
+  <div className="terminal-card"
     style={{ animation: 'fadeSlideIn 0.3s ease both', animationDelay: `${index * 70}ms` }}>
     <div className="flex items-center gap-3 px-4 py-3"
       style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)' }}>
@@ -128,11 +143,10 @@ const StockRow = ({ stock, loading, results, index }) => (
         <p className="text-[10px]" style={{ color: 'var(--text-ghost,#444)' }}>{stock.name}</p>
       </div>
     </div>
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7" style={{ overflow: 'visible' }}>
       {Object.keys(INDICATORS).map((key, i) => (
-        <div key={key} className="px-3 pb-3"
-          style={{ borderRight: i < 6 ? '1px solid var(--border-subtle,#2a2a2a)' : 'none' }}>
-          <Tooltip text={INDICATORS[key].tooltip}>
+        <div key={key} className="px-3 pb-3" style={{ position: 'relative', overflow: 'visible', borderRight: i < 6 ? '1px solid var(--border-subtle,#2a2a2a)' : 'none' }}>
+          <Tooltip text={INDICATORS[key].tooltip} align={i >= 4 ? 'right' : 'left'}>
             <span className="text-[9px] uppercase tracking-widest font-medium flex items-center gap-1 pt-3"
               style={{ color: 'var(--text-ghost,#444)' }}>
               {INDICATORS[key].label} <InfoIcon />
@@ -144,6 +158,7 @@ const StockRow = ({ stock, loading, results, index }) => (
     </div>
   </div>
 );
+
 export default function Analytics() {
   const { stockData, loading, error } = useIndicators();
 
@@ -164,7 +179,7 @@ export default function Analytics() {
             <h1 className="text-xs font-medium uppercase tracking-widest"
               style={{ color: 'var(--text-primary,#e5e5e5)' }}>Analytics</h1>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost,#444)' }}>
-              Financial indicators calculated per holding — hover any label for an explanation
+              Financial indicators calculated per holding - hover any label for an explanation
             </p>
           </div>
           <span className="text-[10px] px-2 py-1 rounded font-mono"
