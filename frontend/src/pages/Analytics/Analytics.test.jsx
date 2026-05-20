@@ -1,32 +1,139 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from "@testing-library/react";
 import Analytics from "./Analytics";
-describe.skip('Analytics', () => {
-    it("shows the Analytics heading", () => {
+import useIndicators from "../../hooks/useIndicators";
+
+vi.mock("../../hooks/useIndicators");
+
+describe('Analytics', () => {
+  beforeEach(() => {
+    useIndicators.mockReturnValue({
+      stockData: {},
+      loading: false,
+      error: null,
+    });
+  });
+
+  it("shows the Analytics heading", () => {
     render(<Analytics />);
-    expect(screen.getByText("Analytics")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Analytics" })).toBeInTheDocument();
   });
 
   it("shows the page description", () => {
     render(<Analytics />);
     expect(
-      screen.getByText("Financial indicators calculated per holding — hover any label for an explanation")
+      screen.getByText("Financial indicators calculated per holding - hover any label for an explanation")
     ).toBeInTheDocument();
   });
 
-  it("shows the holdings badge", () => {
+  it("shows the holdings count in the badge", () => {
     render(<Analytics />);
-    expect(screen.getByText(/holdings/)).toBeInTheDocument();
+    expect(screen.getByText("0 holdings")).toBeInTheDocument();
   });
 
-  it("shows all indicator column labels", () => {
+  it("reflects the number of stocks returned by useIndicators", () => {
+    useIndicators.mockReturnValue({
+      stockData: {
+        AAPL: { loading: false, results: { ticker: "AAPL", name: "Apple Inc." } },
+        MSFT: { loading: false, results: { ticker: "MSFT", name: "Microsoft Corp." } },
+      },
+      loading: false,
+      error: null,
+    });
     render(<Analytics />);
-    expect(screen.getAllByText("CAPM").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("P/E Ratio").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Altman Z").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Sharpe Ratio").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Beta").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Sortino Ratio").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("RSI").length).toBeGreaterThan(0);
+    expect(screen.getByText("2 holdings")).toBeInTheDocument();
+  });
+
+  it("shows all indicator column labels for each stock row", () => {
+    useIndicators.mockReturnValue({
+      stockData: {
+        AAPL: { loading: false, results: { ticker: "AAPL", name: "Apple Inc." } },
+      },
+      loading: false,
+      error: null,
+    });
+    render(<Analytics />);
+    expect(screen.getByText("CAPM")).toBeInTheDocument();
+    expect(screen.getByText("P/E Ratio")).toBeInTheDocument();
+    expect(screen.getByText("Altman Z")).toBeInTheDocument();
+    expect(screen.getByText("Sharpe Ratio")).toBeInTheDocument();
+    expect(screen.getByText("Beta")).toBeInTheDocument();
+    expect(screen.getByText("Sortino Ratio")).toBeInTheDocument();
+    expect(screen.getByText("RSI")).toBeInTheDocument();
+  });
+
+  it("renders an indicator's value and description when a result is present", () => {
+    useIndicators.mockReturnValue({
+      stockData: {
+        AAPL: {
+          loading: false,
+          results: {
+            ticker: "AAPL",
+            name: "Apple Inc.",
+            capm: { status: "ok", value: 20, unit: "%" },
+          },
+        },
+      },
+      loading: false,
+      error: null,
+    });
+    render(<Analytics />);
+    expect(screen.getByText("20%")).toBeInTheDocument();
+    expect(screen.getByText("20% expected annual return for this risk level")).toBeInTheDocument();
+  });
+
+  it("renders the error cell when an indicator result has status 'error'", () => {
+    useIndicators.mockReturnValue({
+      stockData: {
+        AAPL: {
+          loading: false,
+          results: {
+            ticker: "AAPL",
+            name: "Apple Inc.",
+            capm: { status: "error" },
+          },
+        },
+      },
+      loading: false,
+      error: null,
+    });
+    render(<Analytics />);
+    expect(screen.getAllByText("Error").length).toBe(7);
+    expect(screen.getAllByText("Calc failed").length).toBe(7);
+  });
+
+  it("renders skeleton placeholders while loading", () => {
+    useIndicators.mockReturnValue({
+      stockData: {},
+      loading: true,
+      error: null,
+    });
+    const { container } = render(<Analytics />);
+    expect(container.querySelectorAll(".animate-pulse").length).toBe(2);
+    expect(screen.queryByText("CAPM")).not.toBeInTheDocument();
+  });
+
+  it("renders 'N/A' and the first sentence of the reason for insufficient data", () => {
+    useIndicators.mockReturnValue({
+      stockData: {
+        AAPL: {
+          loading: false,
+          results: {
+            ticker: "AAPL",
+            name: "Apple Inc.",
+            capm: {
+              status: "insufficient_data",
+              reason: "Not enough history. Need 12 months of data.",
+            },
+          },
+        },
+      },
+      loading: false,
+      error: null,
+    });
+    render(<Analytics />);
+    expect(screen.getByText("N/A")).toBeInTheDocument();
+    expect(screen.getByText("Not enough history")).toBeInTheDocument();
+    expect(screen.queryByText(/Need 12 months/)).not.toBeInTheDocument();
   });
 });
