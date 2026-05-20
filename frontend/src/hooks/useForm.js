@@ -36,13 +36,11 @@ const useForm = (initialValues, validate) => {
       if (Object.keys(validationErrors).length > 0) return;
     }
     setIsSubmitting(true);
-    try {
-      await onSubmit(values);
-    } catch (err) {
-      throw err;
-    } finally {
-      setIsSubmitting(false);
-    }
+  try {
+    await onSubmit(values);
+  } finally {
+    setIsSubmitting(false);
+  }
   };
 
   const resetForm = () => {
