@@ -33,7 +33,7 @@ jobs:
 
       - name: Run tests
         working-directory: frontend
-        run: npx vitest run
+        run: npm run test
 
       - name: Run Playwright with E2E Tests
         working-directory: frontend
