@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 
 export default defineConfig({
@@ -9,7 +9,7 @@ export default defineConfig({
     setupFiles: './src/test/setup.js',
     coverage: {
       reporter: ['text', 'lcov'],
-      exclude: ['node_modules/', 'src/test/'],
+      exclude: ['node_modules/', 'src/test/', 'e2e/**',],
     },
   },
   server: {
