@@ -81,4 +81,24 @@ describe('Analytics', () => {
     expect(screen.getByText("20%")).toBeInTheDocument();
     expect(screen.getByText("20% expected annual return for this risk level")).toBeInTheDocument();
   });
+
+  it("renders the error cell when an indicator result has status 'error'", () => {
+    useIndicators.mockReturnValue({
+      stockData: {
+        AAPL: {
+          loading: false,
+          results: {
+            ticker: "AAPL",
+            name: "Apple Inc.",
+            capm: { status: "error" },
+          },
+        },
+      },
+      loading: false,
+      error: null,
+    });
+    render(<Analytics />);
+    expect(screen.getAllByText("Error").length).toBe(7);
+    expect(screen.getAllByText("Calc failed").length).toBe(7);
+  });
 });
