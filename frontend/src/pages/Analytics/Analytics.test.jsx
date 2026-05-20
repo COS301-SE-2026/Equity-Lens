@@ -44,14 +44,21 @@ describe('Analytics', () => {
     expect(screen.getByText("2 holdings")).toBeInTheDocument();
   });
 
-  it.skip("shows all indicator column labels", () => {
+  it("shows all indicator column labels for each stock row", () => {
+    useIndicators.mockReturnValue({
+      stockData: {
+        AAPL: { loading: false, results: { ticker: "AAPL", name: "Apple Inc." } },
+      },
+      loading: false,
+      error: null,
+    });
     render(<Analytics />);
-    expect(screen.getAllByText("CAPM").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("P/E Ratio").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Altman Z").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Sharpe Ratio").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Beta").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("Sortino Ratio").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("RSI").length).toBeGreaterThan(0);
+    expect(screen.getByText("CAPM")).toBeInTheDocument();
+    expect(screen.getByText("P/E Ratio")).toBeInTheDocument();
+    expect(screen.getByText("Altman Z")).toBeInTheDocument();
+    expect(screen.getByText("Sharpe Ratio")).toBeInTheDocument();
+    expect(screen.getByText("Beta")).toBeInTheDocument();
+    expect(screen.getByText("Sortino Ratio")).toBeInTheDocument();
+    expect(screen.getByText("RSI")).toBeInTheDocument();
   });
 });
