@@ -16,7 +16,7 @@ test('login e2e testing', async ({ page }) => {
   await page.goto('/login');
 
   await page.evaluate(() => {
-    localStorage.setItem('equitylens_token', 'mock-token');
+    localStorage.setItem('equitylens_token', 'justmock');
   });
 
   await page.goto('/dashboard');
