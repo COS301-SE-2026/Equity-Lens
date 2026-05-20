@@ -2,7 +2,7 @@ import { PASSWORD_MIN_LENGTH } from './constants';
 
 export const validateEmail = (email) => {
   if (!email) return 'Email is required';
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,3}$/;
   if (!emailRegex.test(email)) return 'Please enter a valid email address';
   return null;
 };

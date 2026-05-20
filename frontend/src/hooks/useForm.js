@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const useForm = (initialValues, validate) => { 
+const useForm = (initialValues, validate) => {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -26,32 +26,40 @@ const useForm = (initialValues, validate) => {
 
   const handleSubmit = (onSubmit) => async (e) => {
     e.preventDefault();
-    const allTouched = Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {});
+    const allTouched = Object.keys(values).reduce(
+      (acc, key) => ({ ...acc, [key]: true }), {}
+    );
     setTouched(allTouched);
-
     if (validate) {
       const validationErrors = validate(values);
       setErrors(validationErrors);
-      if (Object.keys(validationErrors).length > 0)
-        return;
+      if (Object.keys(validationErrors).length > 0) return;
     }
-
     setIsSubmitting(true);
-    try {
-      await onSubmit(values);
-    } finally {
-      setIsSubmitting(false);
-    }
+  try {
+    await onSubmit(values);
+  } finally {
+    setIsSubmitting(false);
+  }
   };
 
-  const resetForm = () => { 
+  const resetForm = () => {
     setValues(initialValues);
     setErrors({});
     setTouched({});
     setIsSubmitting(false);
   };
 
-  return { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit, resetForm};
+  return {
+    values,
+    errors,
+    touched,
+    isSubmitting,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+    resetForm,
+  };
 };
 
 export default useForm;

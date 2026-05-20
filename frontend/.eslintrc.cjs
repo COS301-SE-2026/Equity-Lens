@@ -1,5 +1,6 @@
 module.exports = {
   root: true,
+  ignorePatterns: ['dist/', 'coverage/', 'node_modules/'],
 
   env: {
     browser: true,//to run it on the browser

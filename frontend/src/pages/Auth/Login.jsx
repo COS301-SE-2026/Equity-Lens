@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import useAuth from '../../hooks/useAuth';
 import useForm from '../../hooks/useForm';
@@ -20,6 +20,7 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState(null);
+  const errorRef = useRef(null);
 
   const {
     values,
@@ -31,13 +32,24 @@ const Login = () => {
     handleSubmit,
   } = useForm({ email: '', password: '' }, validate);
 
+    useEffect(() => {
+    const stored = sessionStorage.getItem('login_error');
+    if (stored) {
+      setServerError(stored);
+      sessionStorage.removeItem('login_error');
+    }
+  }, []);
+
   const onSubmit = async (formValues) => {
+    sessionStorage.removeItem('login_error');
     setServerError(null);
     try {
       await login(formValues.email, formValues.password);
       navigate(ROUTES.DASHBOARD);
-    } catch (err) {
-      setServerError(err.message);
+    } catch {
+      const message = 'Incorrect email or password. Please try again.';
+      sessionStorage.setItem('login_error', message);
+      setServerError(message);
     }
   };
 
@@ -54,12 +66,12 @@ const Login = () => {
             </p>
           </div>
 
-          {serverError && (
+          {(serverError || errorRef.current) && (
             <div
               className="mb-6 p-3 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] text-[var(--color-danger)] text-sm"
               role="alert"
             >
-              {serverError}
+              {serverError || errorRef.current}
             </div>
           )}
 
@@ -80,7 +92,6 @@ const Login = () => {
                 placeholder="your@email.com"
                 required
               />
-
               <PasswordInput
                 label="Password"
                 name="password"
@@ -91,7 +102,6 @@ const Login = () => {
                 placeholder="Enter your password"
                 required
               />
-
               <Button
                 type="submit"
                 variant="primary"
