@@ -101,4 +101,28 @@ describe('Analytics', () => {
     expect(screen.getAllByText("Error").length).toBe(7);
     expect(screen.getAllByText("Calc failed").length).toBe(7);
   });
+
+  it("renders 'N/A' and the first sentence of the reason for insufficient data", () => {
+    useIndicators.mockReturnValue({
+      stockData: {
+        AAPL: {
+          loading: false,
+          results: {
+            ticker: "AAPL",
+            name: "Apple Inc.",
+            capm: {
+              status: "insufficient_data",
+              reason: "Not enough history. Need 12 months of data.",
+            },
+          },
+        },
+      },
+      loading: false,
+      error: null,
+    });
+    render(<Analytics />);
+    expect(screen.getByText("N/A")).toBeInTheDocument();
+    expect(screen.getByText("Not enough history")).toBeInTheDocument();
+    expect(screen.queryByText(/Need 12 months/)).not.toBeInTheDocument();
+  });
 });
