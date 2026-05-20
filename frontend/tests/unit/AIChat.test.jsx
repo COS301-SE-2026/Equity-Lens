@@ -133,4 +133,18 @@ describe("AIChat", () => {
       expect(screen.getByText("Naspers")).toBeDefined();
     });
   });
+
+  describe("suggested prompts", () => {
+    it("renders all four suggested prompt buttons on first load", () => {
+      render(<AIChat />);
+      expect(screen.getByRole("button", { name: "Show all cards" })).toBeDefined();
+      expect(screen.getByRole("button", { name: "How is MTN doing?" })).toBeDefined();
+      expect(screen.getByRole("button", { name: "What's Sasol trading at?" })).toBeDefined();
+      expect(
+        screen.getByRole("button", {
+          name: "How is my portfolio performing compared to the JSE benchmark?",
+        })
+      ).toBeDefined();
+    });
+  });
 });
