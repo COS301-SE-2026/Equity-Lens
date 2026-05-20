@@ -61,4 +61,24 @@ describe('Analytics', () => {
     expect(screen.getByText("Sortino Ratio")).toBeInTheDocument();
     expect(screen.getByText("RSI")).toBeInTheDocument();
   });
+
+  it("renders an indicator's value and description when a result is present", () => {
+    useIndicators.mockReturnValue({
+      stockData: {
+        AAPL: {
+          loading: false,
+          results: {
+            ticker: "AAPL",
+            name: "Apple Inc.",
+            capm: { status: "ok", value: 20, unit: "%" },
+          },
+        },
+      },
+      loading: false,
+      error: null,
+    });
+    render(<Analytics />);
+    expect(screen.getByText("20%")).toBeInTheDocument();
+    expect(screen.getByText("20% expected annual return for this risk level")).toBeInTheDocument();
+  });
 });
