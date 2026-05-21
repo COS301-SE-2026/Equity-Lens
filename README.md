@@ -7,6 +7,13 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 ---
 
+## Demo Videos
+
+- [Demo 1 Video](https://drive.google.com/file/d/1zTsXVxXO-8XaZbjOjm34sZqkUZCKs1rV/view?usp=sharing)
+
+---
+
+
 ## Documentation
 
 | | Link |
