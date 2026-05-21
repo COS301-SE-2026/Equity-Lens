@@ -1,3 +1,6 @@
+from coverage import data
+
+
 def test_get_portfolio_authenticated(client, auth_headers):
     response = client.get("/api/portfolio", headers=auth_headers)
     assert response.status_code == 200
@@ -37,5 +40,5 @@ def test_get_performance_history_authenticated(client, auth_headers):
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
-    assert "date" in data[0]
-    assert "value" in data[0]
+    assert "name" in data[0]
+    assert "benchmark" in data[0]

@@ -7,10 +7,17 @@ import HoldingsTable from '../../components/portfolio/HoldingsTable/HoldingsTabl
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
 
 const WATCHLIST = [
-  { ticker: 'NPN', name: 'Naspers',   price: 3150.00, changePercent: 12.5  },
-  { ticker: 'MTN', name: 'MTN Group', price: 138.00,  changePercent: 15.0  },
-  { ticker: 'SOL', name: 'Sasol',     price: 245.00,  changePercent: -12.5 },
-  { ticker: 'FSR', name: 'Firstrand', price: 72.00,   changePercent: 10.77 },
+  { ticker: 'ABG', name: 'Absa Group',   price: 182.50, changePercent:  1.2 },
+  { ticker: 'DSY', name: 'Discovery Ltd', price: 142.30, changePercent: -0.8 },
+  { ticker: 'VOD', name: 'Vodacom Group',   price: 98.60,  changePercent:  0.4 },
+  { ticker: 'GFI', name: 'Gold Fields', price: 312.00, changePercent:  2.1 },
+];
+
+const MOCK_PERFORMANCE = [
+  { benchmark: 72000 }, { benchmark: 73000 }, { benchmark: 73500 },
+  { benchmark: 75000 }, { benchmark: 74500 }, { benchmark: 77000 },
+  { benchmark: 78500 }, { benchmark: 80000 }, { benchmark: 78000 },
+  { benchmark: 81000 }, { benchmark: 83000 }, { benchmark: 85000 },
 ];
 
 const SectionCard = ({ title, subtitle, children, scrollable = false }) => (
@@ -98,9 +105,9 @@ const Dashboard = () => {
     );
   }
 
-  const topHoldings = portfolioData?.holdings?.slice(0, 4) || [];
-
-  return (
+const topHoldings = [...(portfolioData?.holdings || [])] .sort((a, b) => b.value - a.value) .slice(0, 4);
+  
+return (
     <div
       className="px-4 lg:px-6 py-6 space-y-6 max-w-[1600px] mx-auto w-full"
       aria-label="Portfolio dashboard"
@@ -112,7 +119,8 @@ const Dashboard = () => {
               ticker={holding.ticker}
               name={holding.name}
               price={holding.current_price}
-              changePercent={holding.gain_loss_pct}
+              changePercent={holding.daily_change_pct}
+              totalReturn={holding.gain_loss_pct}
             />
           </div>
         ))}
@@ -121,7 +129,13 @@ const Dashboard = () => {
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12 lg:col-span-8">
           <SectionCard title="Portfolio performance" subtitle="vs JSE All Share benchmark">
-            <PerformanceLineChart data={portfolioData?.performanceHistory} />
+            <PerformanceLineChart data={
+            portfolioData?.performanceHistory?.map((point, i) => ({
+              name: point.name ?? point.date?.slice(5, 7) ?? `M${i + 1}`,
+              value: point.value,
+              benchmark: point.benchmark ?? MOCK_PERFORMANCE[i]?.benchmark ?? 72000,
+            }))
+          } />
           </SectionCard>
         </div>
 

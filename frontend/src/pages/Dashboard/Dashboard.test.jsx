@@ -26,6 +26,7 @@ vi.mock('recharts', () => ({
   PieChart: () => null,
   Pie: () => null,
   Cell: () => null,
+  ReferenceLine: () => null,
 }));
 
 vi.mock('../../hooks/usePortfolio', () => ({
@@ -49,6 +50,7 @@ vi.mock('../../hooks/usePortfolio', () => ({
           value: 31500,
           gain_loss: 3500,
           gain_loss_pct: 12.5,
+          daily_change_pct: 1.4,
         },
         {
           ticker: 'MTN',
@@ -60,14 +62,15 @@ vi.mock('../../hooks/usePortfolio', () => ({
           value: 6900,
           gain_loss: 900,
           gain_loss_pct: 15.0,
+          daily_change_pct: -0.8,
         },
       ],
       sectorAllocation: [
         { sector: 'Technology', value: 31500, percentage: 25.1 },
       ],
       performanceHistory: [
-        { date: '2024-01', value: 98200 },
-        { date: '2024-12', value: 125430 },
+        { name: 'Jan', value: 98200,  benchmark: 72000 },
+        { name: 'Dec', value: 125430, benchmark: 85000 },
       ],
     },
     loading: false,
@@ -84,11 +87,11 @@ describe('Dashboard', () => {
     expect(screen.getByLabelText(/portfolio dashboard/i)).toBeInTheDocument();
   });
 
-it('renders stock ticker cards for top holdings', () => {
-  renderDashboard();
-  expect(screen.getAllByText('NPN').length).toBeGreaterThan(0);
-  expect(screen.getAllByText('MTN').length).toBeGreaterThan(0);
-});
+  it('renders stock ticker cards for top holdings', () => {
+    renderDashboard();
+    expect(screen.getAllByText('NPN').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('MTN').length).toBeGreaterThan(0);
+  });
 
   it('renders portfolio performance section', () => {
     renderDashboard();
