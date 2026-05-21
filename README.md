@@ -229,3 +229,18 @@ python -m pytest
 cd backend
 python -m pytest --cov=app --cov-report=xml
 ```
+
+### Backend Coverage
+
+```bash
+cd backend
+python -m pytest --cov=app --cov-report=xml
+```
+
+### e2e testing 
+
+```bash
+cd frontend
+npx playwright install
+npm run test:e2e
+```
