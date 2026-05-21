@@ -18,7 +18,9 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 | | Link |
 |---|---|
-| SRS Document | [View SRS](https://github.com/COS301-SE-2026/Equity-Lens/blob/main/docs/SRS.pdf) |
+| Design Document | [View Design Doc](./Documentation/DESIGN_DOCUMENT.pdf) |
+| Software Requirement Specification (SRS) | [View SRS](./Documentation/Software_Requirement_Specification.pdf) |
+| Wireframes | [View Wireframes](./Documentation/Wireframes.pdf) |
 | GitHub Project Board | [View Board](https://github.com/orgs/COS301-SE-2026/projects/45) |
 
 ---
