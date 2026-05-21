@@ -1,5 +1,6 @@
-const StockTickerCard = ({ ticker, name, price, changePercent }) => {
-  const positive = changePercent >= 0;
+const StockTickerCard = ({ ticker, name, price, changePercent, totalReturn }) => {
+  const dailyPositive = changePercent >= 0;
+  const totalPositive = totalReturn >= 0;
 
   return (
     <div
@@ -35,6 +36,7 @@ const StockTickerCard = ({ ticker, name, price, changePercent }) => {
             {ticker}
           </p>
         </div>
+
         <span style={{
           fontSize: '10px',
           padding: '2px 8px',
@@ -42,13 +44,13 @@ const StockTickerCard = ({ ticker, name, price, changePercent }) => {
           fontFamily: 'var(--font-mono)',
           fontVariantNumeric: 'tabular-nums',
           fontWeight: 500,
-          background: positive ? 'var(--signal-positive-bg)' : 'var(--signal-negative-bg)',
-          color: positive ? 'var(--signal-positive)' : 'var(--signal-negative)',
-          border: positive
+          background: totalPositive ? 'var(--signal-positive-bg)' : 'var(--signal-negative-bg)',
+          color: totalPositive ? 'var(--signal-positive)' : 'var(--signal-negative)',
+          border: totalPositive
             ? '1px solid var(--signal-positive-border)'
             : '1px solid var(--signal-negative-border)',
         }}>
-          {positive ? '+' : ''}{changePercent?.toFixed(2)}%
+          {totalPositive ? '+' : ''}{totalReturn?.toFixed(2)}%
         </span>
       </div>
 
@@ -72,19 +74,31 @@ const StockTickerCard = ({ ticker, name, price, changePercent }) => {
         paddingTop: '8px',
         borderTop: '1px solid var(--border-subtle)',
       }}>
-        <span style={{ fontSize: '9px', textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-dim)', fontFamily: 'var(--font-primary)' }}>
+        <span style={{
+          fontSize: '9px',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          color: 'var(--text-dim)',
+          fontFamily: 'var(--font-primary)',
+        }}>
           JSE
         </span>
-        <span style={{ fontSize: '9px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+        <span style={{
+          fontSize: '9px',
+          color: 'var(--text-dim)',
+          fontFamily: 'var(--font-mono)',
+          fontVariantNumeric: 'tabular-nums',
+        }}>
           Vol 1.2M
         </span>
+
         <span style={{
           fontSize: '9px',
           fontFamily: 'var(--font-mono)',
           fontVariantNumeric: 'tabular-nums',
-          color: positive ? 'var(--signal-positive)' : 'var(--signal-negative)',
+          color: dailyPositive ? 'var(--signal-positive)' : 'var(--signal-negative)',
         }}>
-          24h {positive ? '▲' : '▼'} {Math.abs(changePercent?.toFixed(2))}%
+          24h {dailyPositive ? '▲' : '▼'} {Math.abs(changePercent?.toFixed(2))}%
         </span>
       </div>
     </div>
