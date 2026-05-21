@@ -28,7 +28,7 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 ## Project Status
 
 [![Build](https://github.com/COS301-SE-2026/Equity-Lens/actions/workflows/ci.yml/badge.svg)](https://github.com/COS301-SE-2026/Equity-Lens/actions)
-[![Coverage](https://codecov.io/gh/COS301-SE-2026/Equity-Lens/branch/main/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2026/Equity-Lens)
+[![codecov](https://codecov.io/gh/COS301-SE-2026/Equity-Lens/graph/badge.svg?token=K5WIIJ0VXC)](https://codecov.io/gh/COS301-SE-2026/Equity-Lens)
 ![Requirements](https://img.shields.io/badge/requirements-up%20to%20date-brightgreen)
 [![GitHub Issues](https://img.shields.io/github/issues/COS301-SE-2026/Equity-Lens)](https://github.com/COS301-SE-2026/Equity-Lens/issues)
 
