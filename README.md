@@ -237,7 +237,7 @@ cd backend
 python -m pytest --cov=app --cov-report=xml
 ```
 
-### e2e testing Coverage
+### e2e testing 
 
 ```bash
 cd frontend
