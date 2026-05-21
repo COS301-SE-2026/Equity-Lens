@@ -47,6 +47,13 @@ jobs:
         working-directory: frontend
         run: npm run coverage
 
+      - name: Upload frontend coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          working-directory: frontend
+          files: ./coverage/lcov.info
+
       - name: Build
         working-directory: frontend
         run: npm run build

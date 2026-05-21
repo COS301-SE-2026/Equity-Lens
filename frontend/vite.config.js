@@ -9,6 +9,7 @@ export default defineConfig({
     setupFiles: './src/test/setup.js',
     coverage: {
       reporter: ['text', 'lcov'],
+      reportsDirectory: './coverage',
       exclude: ['node_modules/', 'src/test/','e2e/**',],
     },
   },
