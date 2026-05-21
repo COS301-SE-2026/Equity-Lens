@@ -25,16 +25,6 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 ---
 
-## Project Status
-
-[![Build](https://github.com/COS301-SE-2026/Equity-Lens/actions/workflows/ci.yml/badge.svg)](https://github.com/COS301-SE-2026/Equity-Lens/actions)
-[![codecov](https://codecov.io/gh/COS301-SE-2026/Equity-Lens/graph/badge.svg?token=K5WIIJ0VXC)](https://codecov.io/gh/COS301-SE-2026/Equity-Lens)
-![Requirements](https://img.shields.io/badge/requirements-up%20to%20date-brightgreen)
-[![GitHub Issues](https://img.shields.io/github/issues/COS301-SE-2026/Equity-Lens)](https://github.com/COS301-SE-2026/Equity-Lens/issues)
-[![Uptime Robot](https://img.shields.io/uptimerobot/status/m802962116)](https://uptimerobot.com)
-
----
-
 ## The Team
 
 ### Abdulrahman Sabah
@@ -211,32 +201,25 @@ Once running:
 
 ## Testing
 
-### Frontend
+### Frontend unit and integration test
 
 ```bash
 cd frontend
-npx vitest run
+npm run test
 ```
 
 ### Frontend Coverage
 
 ```bash
 cd frontend
-npx vitest run --coverage
+npm run coverage
 ```
 
-### Backend
+### Backend unit and integration test
 
 ```bash
 cd backend
 python -m pytest
-```
-
-### Backend Coverage
-
-```bash
-cd backend
-python -m pytest --cov=app --cov-report=xml
 ```
 
 ### Backend Coverage
