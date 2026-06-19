@@ -42,3 +42,30 @@ CREATE TABLE IF NOT EXISTS documents
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+
+CREATE TABLE IF NOT EXISTS news_articles 
+(
+
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    document_id NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+
+    stock_symbol VARCHAR(255) NOT NULL,
+
+    source_name VARCHAR(255),
+    author VARCHAR(255),
+
+    title TEXT NOT NULL,
+    description TEXT,
+
+    article_url TEXT NOT NULL UNIQUE,
+    image_url TEXT,
+
+    published_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
