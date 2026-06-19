@@ -24,3 +24,21 @@ CREATE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
+
+
+
+CREATE TABLE IF NOT EXISTS documents 
+(
+
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    file_name VARCHAR(255) NOT NULL,
+    encrypted_file_path TEXT NOT NULL,
+    encrypted_document_text TEXT,
+    extracted_password TEXT,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
