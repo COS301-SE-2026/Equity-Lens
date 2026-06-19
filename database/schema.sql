@@ -1,3 +1,6 @@
+
+-- all these tables, will be used to create a user
+
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 CREATE TABLE IF NOT EXISTS users (
@@ -25,6 +28,33 @@ CREATE TRIGGER update_users_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+
+-- all these will be used for RBAC
+
+CREATE TABLE IF NOT EXISTS roles
+(
+
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    roles_name varchar(100) UNIQUE NOT NULL,
+    roles_description TEXT,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS  user_roles
+(
+
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,    
+    role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,  
+
+    -- in here just to prevent any duplicates inside here
+    primary key(user_id,role_id)
+);
+
+
+-- all these will be used to import all the information for the pdf
 
 CREATE TABLE IF NOT EXISTS  transaction_type
 (
