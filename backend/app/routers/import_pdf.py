@@ -20,7 +20,7 @@ from app.services.import_pdf import SaveDividendsAndWithholdingTaxImport
 from app.services.import_pdf import SaveTransactionInterestImport
 from app.services.import_pdf import SaveTransactionExpensesImport
 
-router = APIRouter(prefix="/import-pdf", tags=["Import PDF"])
+router = APIRouter(prefix="/import_pdf", tags=["Import PDF"])
 
 @router.post("/")
 def ImportPdfDataDB(data: ImportPdfRequest,db : Session = Depends(get_db)):
@@ -46,7 +46,7 @@ def SaveHoldingsImportDB(data: HoldingsRequest,db : Session = Depends(get_db)):
         data=data
     )
 
-@router.post("/save_Instrument_Purchases_and_Sales")
+@router.post("/save_instrument_purchases_and_sales")
 def SaveInstrumentPurchasesAndSalesImportDB(data: InstrumentPurchasesAndSalesRequest,db : Session = Depends(get_db)):
     return SaveInstrumentPurchasesAndSalesImport(
         database=db,
@@ -54,7 +54,7 @@ def SaveInstrumentPurchasesAndSalesImportDB(data: InstrumentPurchasesAndSalesReq
         data=data
     )
 
-@router.post("/save_Transaction_Costs")
+@router.post("/save_transaction_costs")
 def SaveTransactionCostsImportDB(data: TransactionCostsRequest,db : Session = Depends(get_db)):
     return SaveTransactionCostsImport(
         database=db,
@@ -62,7 +62,7 @@ def SaveTransactionCostsImportDB(data: TransactionCostsRequest,db : Session = De
         data=data
     )
 
-@router.post("/save_Contributions_and_Withdrawals")
+@router.post("/save_contributions_and_withdrawals")
 def SaveContributionsAndWithdrawalsImportDB(data: ContributionsAndWithdrawalsRequest,db : Session = Depends(get_db)):
     return SaveContributionsAndWithdrawalsImport(
         database=db,
@@ -70,7 +70,7 @@ def SaveContributionsAndWithdrawalsImportDB(data: ContributionsAndWithdrawalsReq
         data=data
     )
 
-@router.post("/save_Dividends_and_Withholding_Tax")
+@router.post("/save_dividends_and_withholding_tax")
 def SaveDividendsAndWithholdingTaxImportDB(data: DividendsAndWithholdingTaxRequest,db : Session = Depends(get_db)):
     return SaveDividendsAndWithholdingTaxImport(
         database=db,
@@ -78,7 +78,7 @@ def SaveDividendsAndWithholdingTaxImportDB(data: DividendsAndWithholdingTaxReque
         data=data
     )
 
-@router.post("/save_transaction_Interest")
+@router.post("/save_transaction_interest")
 def SaveTransactionInterestImportDB(data: TransactionInterestRequest,db : Session = Depends(get_db)):
     return SaveTransactionInterestImport(
         database=db,
@@ -86,7 +86,7 @@ def SaveTransactionInterestImportDB(data: TransactionInterestRequest,db : Sessio
         data=data
     )
 
-@router.post("/save_transaction_Expenses")
+@router.post("/save_transaction_expenses")
 def SaveTransactionExpensesImportDB(data: TransactionExpensesRequest,db : Session = Depends(get_db)):
     return SaveTransactionExpensesImport(
         database=db,

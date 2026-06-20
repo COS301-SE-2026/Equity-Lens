@@ -37,7 +37,7 @@ class InstrumentPurchasesAndSalesRequest(BaseModel):
 
 class TransactionCostsRequest(BaseModel):
     portfolio_id: str
-    transaction_type_id: UUID
+    instrument_type_id: UUID
     brokerage: Decimal
     other_trading_costs: Decimal
 

@@ -97,7 +97,7 @@ class TransactionCosts(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id",ondelete="CASCADE"), nullable=False)
 
-    transaction_type_id = Column(UUID(as_uuid=True), ForeignKey("transaction_types.id",ondelete="CASCADE"), nullable=False)
+    instrument_type_id = Column(UUID(as_uuid=True), ForeignKey("instrument_types.id",ondelete="CASCADE"), nullable=False)
     brokerage = Column(Numeric(18,2))
     other_trading_costs = Column(Numeric(18,2))
 
