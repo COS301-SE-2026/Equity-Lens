@@ -13,12 +13,11 @@ from app.models.portfolio import TransactionExpenses
 def SaveDocument(database,user_id,data):
 
     saving = Document(
-        user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
+        user_id = user_id,
         file_name = data.file_name,
         encrypted_file_path = "Frontend",
         encrypted_document_text = data.document_text,
         extracted_password = data.password
-
     )
 
     database.add(saving)
@@ -30,7 +29,7 @@ def SaveDocument(database,user_id,data):
 def SavePortfolios(database,user_id,data):
 
     saving = Portfolios(
-        user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
+        user_id = user_id,
         document_id = data.document_id,
         account_number = data.account_number,
         portfolio_name = data.portfolio_name,
@@ -46,7 +45,6 @@ def SavePortfolios(database,user_id,data):
 def SaveHoldings(database,user_id,data):
 
     saving = Holdings(
-        # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         instrument_name = data.instrument_name,
         portfolio_id = data.portfolio_id,
         quantity = data.quantity,
@@ -67,7 +65,6 @@ def SaveHoldings(database,user_id,data):
 def SaveInstrumentPurchasesAndSales(database,user_id,data):
 
     saving = InstrumentPurchasesAndSales(
-        # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transactions_date = data.transactions_date,
         transaction_type_id = data.transaction_type_id,
@@ -88,7 +85,6 @@ def SaveInstrumentPurchasesAndSales(database,user_id,data):
 def SaveTransactionCosts(database,user_id,data):
 
     saving = TransactionCosts(
-        # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         instrument_type_id = data.instrument_type_id,
         brokerage = data.brokerage,
@@ -105,7 +101,6 @@ def SaveTransactionCosts(database,user_id,data):
 def SaveContributionsAndWithdrawals(database,user_id,data):
 
     saving = ContributionsAndWithdrawals(
-        # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transaction_date = data.transaction_date,
         settlement_date = data.settlement_date,
@@ -124,7 +119,6 @@ def SaveContributionsAndWithdrawals(database,user_id,data):
 def SaveDividendsAndWithholdingTax(database,user_id,data):
 
     saving = DividendsAndWithholdingTax(
-        # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transaction_date = data.transaction_date,
         instrument_type_id = data.instrument_type_id,
@@ -144,7 +138,6 @@ def SaveDividendsAndWithholdingTax(database,user_id,data):
 def SaveTransactionInterest(database,user_id,data):
 
     saving = TransactionInterest(
-        # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transaction_date = data.transaction_date,
         settlement_date = data.settlement_date,
@@ -163,7 +156,6 @@ def SaveTransactionInterest(database,user_id,data):
 def SaveTransactionExpenses(database,user_id,data):
 
     saving = TransactionExpenses(
-        # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transaction_date = data.transaction_date,
         settlement_date = data.settlement_date,
