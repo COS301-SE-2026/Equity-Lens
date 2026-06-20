@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS  user_roles
 
 -- all these will be used to import all the information for the pdf
 
-CREATE TABLE IF NOT EXISTS  transaction_type
+CREATE TABLE IF NOT EXISTS  transaction_types
 (
 
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS  transaction_type
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS  instrument_type
+CREATE TABLE IF NOT EXISTS  instrument_types
 (
 
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -132,98 +132,98 @@ CREATE TABLE IF NOT EXISTS holdings
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS Instrument_Purchases_and_Sales 
+CREATE TABLE IF NOT EXISTS instrument_purchases_and_sales 
 (
 
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
 
     transactions_date DATE,
-    transaction_type_id UUID REFERENCES transaction_type(id),
-    instrument_type_id UUID REFERENCES instrument_type(id),
+    transaction_type_id UUID REFERENCES transaction_types(id),
+    instrument_type_id UUID REFERENCES instrument_types(id),
     price NUMERIC(18,2),
     quantity NUMERIC(18,4),
     transactions_cost NUMERIC(18,2),
-    Value_Zar NUMERIC(18,2),
+    value_zar NUMERIC(18,2),
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS  Transaction_Costs 
+CREATE TABLE IF NOT EXISTS  transaction_costs 
 (
 
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
 
-    instrument_type_id UUID REFERENCES instrument_type(id),
-    Brokerage NUMERIC(18,2),
-    Other_Trading_Costs NUMERIC(18,2),
+    instrument_type_id UUID REFERENCES instrument_types(id),
+    brokerage NUMERIC(18,2),
+    other_trading_costs NUMERIC(18,2),
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 
-CREATE TABLE IF NOT EXISTS  Contributions_and_Withdrawals
-(
-
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
-
-    transaction_date DATE,
-    Settlement_Date DATE,
-    transaction_type_id UUID REFERENCES transaction_type(id),
-    value_ZAR NUMERIC(18,2),
-
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS  Dividends_and_Withholding_Tax 
+CREATE TABLE IF NOT EXISTS  contributions_and_withdrawals
 (
 
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
 
     transaction_date DATE,
-    instrument_type_id UUID REFERENCES instrument_type(id),
-    Gross_dividend NUMERIC(18,2),
-    Withholding_tax NUMERIC(18,2),
-    Net_dividend NUMERIC(18,2),
-    Tax_rate NUMERIC(18,2),
+    settlement_date DATE,
+    transaction_type_id UUID REFERENCES transaction_types(id),
+    value_zar NUMERIC(18,2),
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS  transaction_Interest
+CREATE TABLE IF NOT EXISTS  dividends_and_withholding_tax 
 (
 
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
 
     transaction_date DATE,
-    Settlement_Date DATE,
-    transaction_type_id UUID REFERENCES transaction_type(id),
-    instrument_type_id UUID REFERENCES instrument_type(id),
-    value_ZAR NUMERIC(18,2),
+    instrument_type_id UUID REFERENCES instrument_types(id),
+    gross_dividend NUMERIC(18,2),
+    withholding_tax NUMERIC(18,2),
+    net_dividend NUMERIC(18,2),
+    tax_rate NUMERIC(18,2),
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS  transaction_Expenses
+CREATE TABLE IF NOT EXISTS  transaction_interest
 (
 
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
 
     transaction_date DATE,
-    Settlement_Date DATE,
-    transaction_type_id UUID REFERENCES transaction_type(id),
+    settlement_date DATE,
+    transaction_type_id UUID REFERENCES transaction_types(id),
+    instrument_type_id UUID REFERENCES instrument_types(id),
+    value_zar NUMERIC(18,2),
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS  transaction_expenses
+(
+
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
+
+    transaction_date DATE,
+    settlement_date DATE,
+    transaction_type_id UUID REFERENCES transaction_types(id),
     narrative TEXT,
-    value_ZAR NUMERIC(18,2),
+    value_zar NUMERIC(18,2),
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
