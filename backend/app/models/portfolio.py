@@ -74,7 +74,7 @@ class holdings(Base):
 
 
 class Instrument_Purchases_and_Sales(Base):
-    __tablename__ = "Instrument_Purchases_and_Sales"
+    __tablename__ = "instrument_purchases_and_sales"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id",ondelete="CASCADE"), nullable=False)
@@ -92,7 +92,7 @@ class Instrument_Purchases_and_Sales(Base):
 
 
 class Transaction_Costs(Base):
-    __tablename__ = "Transaction_Costs"
+    __tablename__ = "transaction_costs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id",ondelete="CASCADE"), nullable=False)
@@ -106,7 +106,7 @@ class Transaction_Costs(Base):
 
 
 class Contributions_and_Withdrawals(Base):
-    __tablename__ = "Contributions_and_Withdrawals"
+    __tablename__ = "contributions_and_withdrawals"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id",ondelete="CASCADE"), nullable=False)
@@ -121,7 +121,7 @@ class Contributions_and_Withdrawals(Base):
     updated_at = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))
 
 class Dividends_and_Withholding_Tax(Base):
-    __tablename__ = "Dividends_and_Withholding_Tax"
+    __tablename__ = "dividends_and_withholding_tax"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id",ondelete="CASCADE"), nullable=False)
