@@ -90,7 +90,7 @@ def SaveTransactionCosts(database,user_id,data):
     saving = TransactionCosts(
         # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
-        transaction_type_id = data.transaction_type_id,
+        instrument_type_id = data.instrument_type_id,
         brokerage = data.brokerage,
         other_trading_costs = data.other_trading_costs
 
