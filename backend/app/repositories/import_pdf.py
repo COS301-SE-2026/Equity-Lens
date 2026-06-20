@@ -1,16 +1,16 @@
 import uuid
 from app.models.portfolio import Document
-from app.models.portfolio import portfolios
-from app.models.portfolio import holdings
-from app.models.portfolio import Instrument_Purchases_and_Sales
-from app.models.portfolio import Transaction_Costs
-from app.models.portfolio import Contributions_and_Withdrawals
-from app.models.portfolio import Dividends_and_Withholding_Tax
-from app.models.portfolio import transaction_Interest
-from app.models.portfolio import transaction_Expenses
+from app.models.portfolio import Portfolios
+from app.models.portfolio import Holdings
+from app.models.portfolio import InstrumentPurchasesAndSales
+from app.models.portfolio import TransactionCosts
+from app.models.portfolio import ContributionsAndWithdrawals
+from app.models.portfolio import DividendsAndWithholdingTax
+from app.models.portfolio import TransactionInterest
+from app.models.portfolio import TransactionExpenses
 
 
-def save_document(database,user_id,data):
+def SaveDocument(database,user_id,data):
 
     saving = Document(
         user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
@@ -27,9 +27,9 @@ def save_document(database,user_id,data):
 
     return saving
 
-def save_portfolios(database,user_id,data):
+def SavePortfolios(database,user_id,data):
 
-    saving = portfolios(
+    saving = Portfolios(
         user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         document_id = data.document_id,
         account_number = data.account_number,
@@ -43,9 +43,9 @@ def save_portfolios(database,user_id,data):
 
     return saving
 
-def save_holdings(database,user_id,data):
+def SaveHoldings(database,user_id,data):
 
-    saving = holdings(
+    saving = Holdings(
         # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         instrument_name = data.instrument_name,
         portfolio_id = data.portfolio_id,
@@ -64,9 +64,9 @@ def save_holdings(database,user_id,data):
 
     return saving
 
-def save_Instrument_Purchases_and_Sales(database,user_id,data):
+def SaveInstrumentPurchasesAndSales(database,user_id,data):
 
-    saving = Instrument_Purchases_and_Sales(
+    saving = InstrumentPurchasesAndSales(
         # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transactions_date = data.transactions_date,
@@ -75,7 +75,7 @@ def save_Instrument_Purchases_and_Sales(database,user_id,data):
         price = data.price,
         quantity = data.quantity,
         transactions_cost = data.transactions_cost,
-        Value_Zar = data.Value_Zar
+        value_zar = data.value_zar
 
     )
 
@@ -85,14 +85,14 @@ def save_Instrument_Purchases_and_Sales(database,user_id,data):
 
     return saving
 
-def save_Transaction_Costs(database,user_id,data):
+def SaveTransactionCosts(database,user_id,data):
 
-    saving = Transaction_Costs(
+    saving = TransactionCosts(
         # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transaction_type_id = data.transaction_type_id,
-        Brokerage = data.Brokerage,
-        Other_Trading_Costs = data.Other_Trading_Costs
+        brokerage = data.brokerage,
+        other_trading_costs = data.other_trading_costs
 
     )
 
@@ -102,15 +102,15 @@ def save_Transaction_Costs(database,user_id,data):
 
     return saving
 
-def save_Contributions_and_Withdrawals(database,user_id,data):
+def SaveContributionsAndWithdrawals(database,user_id,data):
 
-    saving = Contributions_and_Withdrawals(
+    saving = ContributionsAndWithdrawals(
         # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transaction_date = data.transaction_date,
-        Settlement_Date = data.Settlement_Date,
+        settlement_date = data.settlement_date,
         transaction_type_id = data.transaction_type_id,
-        value_ZAR = data.value_ZAR
+        value_zar = data.value_zar
 
 
     )
@@ -121,17 +121,17 @@ def save_Contributions_and_Withdrawals(database,user_id,data):
 
     return saving
 
-def save_Dividends_and_Withholding_Tax(database,user_id,data):
+def SaveDividendsAndWithholdingTax(database,user_id,data):
 
-    saving = Dividends_and_Withholding_Tax(
+    saving = DividendsAndWithholdingTax(
         # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transaction_date = data.transaction_date,
         instrument_type_id = data.instrument_type_id,
-        Gross_dividend = data.Gross_dividend,
-        Withholding_tax = data.Withholding_tax,
-        Net_dividend = data.Net_dividend,
-        Tax_rate = data.Tax_rate
+        gross_dividend = data.gross_dividend,
+        withholding_tax = data.withholding_tax,
+        net_dividend = data.net_dividend,
+        tax_rate = data.tax_rate
 
     )
 
@@ -141,16 +141,16 @@ def save_Dividends_and_Withholding_Tax(database,user_id,data):
 
     return saving
 
-def save_transaction_Interest(database,user_id,data):
+def SaveTransactionInterest(database,user_id,data):
 
-    saving = transaction_Interest(
+    saving = TransactionInterest(
         # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transaction_date = data.transaction_date,
-        Settlement_Date = data.Settlement_Date,
+        settlement_date = data.settlement_date,
         transaction_type_id = data.transaction_type_id,
         instrument_type_id = data.instrument_type_id,
-        value_ZAR = data.value_ZAR
+        value_zar = data.value_zar
 
     )
 
@@ -160,16 +160,16 @@ def save_transaction_Interest(database,user_id,data):
 
     return saving
 
-def save_transaction_Expenses(database,user_id,data):
+def SaveTransactionExpenses(database,user_id,data):
 
-    saving = transaction_Expenses(
+    saving = TransactionExpenses(
         # user_id = "ec305d39-72fb-46a3-8e4a-2c61d2d466b9",
         portfolio_id = data.portfolio_id,
         transaction_date = data.transaction_date,
-        Settlement_Date = data.Settlement_Date,
+        settlement_date = data.settlement_date,
         transaction_type_id = data.transaction_type_id,
         narrative = data.narrative,
-        value_ZAR = data.value_ZAR
+        value_zar = data.value_zar
 
     )
 
