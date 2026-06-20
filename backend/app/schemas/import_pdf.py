@@ -25,7 +25,7 @@ class HoldingsRequest(BaseModel):
     current_value: Decimal
     weight_percentage: Decimal
 
-class InstrumentPurchasesandSalesRequest(BaseModel):
+class InstrumentPurchasesAndSalesRequest(BaseModel):
     portfolio_id: str
     transactions_date: date
     transaction_type_id: UUID
@@ -33,44 +33,44 @@ class InstrumentPurchasesandSalesRequest(BaseModel):
     price: Decimal
     quantity: Decimal
     transactions_cost: Decimal
-    Value_Zar: Decimal
+    value_zar: Decimal
 
 class TransactionCostsRequest(BaseModel):
     portfolio_id: str
     transaction_type_id: UUID
-    Brokerage: Decimal
-    Other_Trading_Costs: Decimal
+    brokerage: Decimal
+    other_trading_costs: Decimal
 
-class ContributionsandWithdrawalsRequest(BaseModel):
+class ContributionsAndWithdrawalsRequest(BaseModel):
     portfolio_id: str
     transaction_date: date
-    Settlement_Date: date
+    settlement_date: date
     transaction_type_id: UUID
-    value_ZAR: Decimal
+    value_zar: Decimal
 
-class DividendsandWithholdingTaxRequest(BaseModel):
+class DividendsAndWithholdingTaxRequest(BaseModel):
     portfolio_id: str
     transaction_date: date
     instrument_type_id: UUID
-    Gross_dividend: Decimal
-    Withholding_tax: Decimal
-    Net_dividend: Decimal
-    Tax_rate: Decimal
+    gross_dividend: Decimal
+    withholding_tax: Decimal
+    net_dividend: Decimal
+    tax_rate: Decimal
 
-class transactionInterestRequest(BaseModel):
+class TransactionInterestRequest(BaseModel):
     portfolio_id: str
     transaction_date: date
-    Settlement_Date: date
+    settlement_date: date
     transaction_type_id: UUID
     instrument_type_id: UUID
-    value_ZAR: Decimal
+    value_zar: Decimal
 
-class transactionExpensesRequest(BaseModel):
+class TransactionExpensesRequest(BaseModel):
     portfolio_id: str
     transaction_date: date
-    Settlement_Date: date
+    settlement_date: date
     transaction_type_id: UUID
     narrative: str
-    value_ZAR: Decimal
+    value_zar: Decimal
 
 
