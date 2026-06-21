@@ -80,6 +80,18 @@ CREATE TABLE IF NOT EXISTS  instrument_types
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS  narrative_types
+(
+
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    narrative_name varchar(100) UNIQUE NOT NULL,
+    narrative_description TEXT,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 
 CREATE TABLE IF NOT EXISTS documents 
 (
