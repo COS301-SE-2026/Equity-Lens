@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS  instrument_types
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS  narrative_ty
+CREATE TABLE IF NOT EXISTS  narrative_types
 (
 
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
