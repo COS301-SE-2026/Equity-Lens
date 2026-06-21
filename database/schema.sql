@@ -242,6 +242,34 @@ CREATE TABLE IF NOT EXISTS  transaction_expenses
 );
 
 
+insert into narrative_types(narrative_name,narrative_description)
+VALUES
+('Cash Management Fee',' '),
+('VAT on Cash Management Fee',' '),
+('Early Settlement Fee',' '),
+('Value Added Tax on costs (VAT) for Early Settlement Fee',' ');
+
+insert into instrument_types(instrument_name,instrument_description)
+VALUES
+('10X S&P South Africa Top50 Index Exchange Traded Fund',' '),
+('10X S&P 500 Exchange Traded Fund',' '),
+('EasyETFs AI World Actively Managed ETF',' '),
+('Satrix MSCI Emerging Markets ETF',' '),
+('Trust Account',' ');
+
+insert into transaction_types(transaction_name,transaction_description)
+VALUES
+('Cash Management Fee',' '),
+('VAT on Cash Management Fee',' '),
+('Early settlement fee',' '),
+('VAT',' '),
+('Cash investment interest received',' '),
+('Securities Interest',' '),
+('Capital contribution',' '),
+('Capital withdrawal',' '),
+('Sales',' '),
+('Purchases',' ');
+
 
 
 
