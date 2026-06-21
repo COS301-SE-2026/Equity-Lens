@@ -21,6 +21,9 @@ from app.services.import_pdf import SaveTransactionInterestImport
 from app.services.import_pdf import SaveTransactionExpensesImport
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
+from app.models.portfolio import InstrumentType
+from app.models.portfolio import NarrativeType
+from app.models.portfolio import TransactionType
 
 
 router = APIRouter(prefix="/import_pdf", tags=["Import PDF"])
@@ -96,3 +99,19 @@ def SaveTransactionExpensesImportDB(data: TransactionExpensesRequest,db : Sessio
         user_id=CurrentUser.id,
         data=data
     )
+
+
+@router.get("/get_instrument_type_id/{instrument_name}")
+def GetInstrumentsTypeID(instrument_name: str,db : Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):
+    data = db.query(InstrumentType).filter(InstrumentType.instrument_name == instrument_name).first()
+    return { "id" : str(data.id)}
+
+@router.get("/get_narrative_type_id/{narrative_name}")
+def GetNarrativesTypeID(narrative_name: str,db : Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):
+    data = db.query(NarrativeType).filter(NarrativeType.narrative_name == narrative_name).first()
+    return { "id" : str(data.id)}
+
+@router.get("/get_transaction_type_id/{transaction_name}")
+def GetTranscationTypeID(transaction_name: str,db : Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):
+    data = db.query(TransactionType).filter(TransactionType.transaction_name == transaction_name).first()
+    return { "id" : str(data.id)}
