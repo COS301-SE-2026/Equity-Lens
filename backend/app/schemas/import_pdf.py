@@ -70,7 +70,7 @@ class TransactionExpensesRequest(BaseModel):
     transaction_date: date
     settlement_date: date
     transaction_type_id: UUID
-    narrative: str
+    narrative_type_id: UUID
     value_zar: Decimal
 
 

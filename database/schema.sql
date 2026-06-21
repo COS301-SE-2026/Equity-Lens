@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS  transaction_expenses
     transaction_date DATE,
     settlement_date DATE,
     transaction_type_id UUID REFERENCES transaction_types(id),
-    narrative TEXT,
+    narrative_type_id UUID REFERENCES narrative_types(id),
     value_zar NUMERIC(18,2),
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),

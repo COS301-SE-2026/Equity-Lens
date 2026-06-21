@@ -15,6 +15,17 @@ class TransactionType(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))
 
+class NarrativeType(Base):
+    __tablename__ = "narrative_types"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    narrative_name = Column(String(100), nullable=False)
+    narrative_description = Column(Text)
+
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))
+
 class InstrumentType(Base):
     __tablename__ = "instrument_types"
 
