@@ -8,6 +8,7 @@ from fastapi.responses import PlainTextResponse
 import traceback
 from app.routers import news
 from app.routers import import_pdf
+from app.routers import pdf_summary
 
 app = FastAPI(title="EquityLens API")
 
@@ -39,3 +40,5 @@ async def health():
 # app.include_router(news.router, prefix="/api")
 
 app.include_router(import_pdf.router)
+
+app.include_router(pdf_summary.router)
