@@ -13,7 +13,8 @@ def ImportPdfData(database,user_id,data):
 
     return {
         "Success": True,
-        "Message": "PDF has been saved successfully"
+        "Message": "PDF has been saved successfully",
+        "document_id": str(document.id)
     }
 
 def SavePortfoliosImport(database,user_id,data):
@@ -21,7 +22,8 @@ def SavePortfoliosImport(database,user_id,data):
 
     return {
         "Success": True,
-        "Message": "PDF has been saved successfully"
+        "Message": "PDF has been saved successfully",
+        "portfolio_id": str(document.id)
     }
 
 def SaveHoldingsImport(database,user_id,data):
