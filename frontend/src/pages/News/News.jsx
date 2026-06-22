@@ -11,23 +11,65 @@ const NewsInvestment = () => {
       .catch((error) => console.log(error));
   }, []);
 
+
   return (
-    <div>
-      <h1>Investment News</h1>
+    <div className="mb-8">
 
-      {articles.map((article, index) => (
-        <div key={index}>
-          <h2>{article.title}</h2>
-          <p>{article.description}</p>
+      <h1 className="text-4xl font-bold text-white">Investment News</h1>
 
-          <a href={article.url}>
-            click in here to go to,or to read more information
-          </a>
+      <p className="text-gray-400 mt-2">Stay updated with the latest market news and insights</p>
 
-          <hr />
+      <div className="grid grid-cols-3 gap-8 mt-4">
+
+        <div className="p-6 border border-grey-700 rounded-2xl">
+          <h2 className="text-xl font-semibold text-white mb-2">Market Overview</h2>
+          <p> To Do, to put a date</p>
         </div>
-      ))}
+
+        <div className="p-6 border border-grey-700 rounded-2xl">
+          <h2 className="text-xl font-semibold text-white mb-2">Market Overview</h2>
+        </div>
+
+        <div className="p-6 border border-grey-700 rounded-2xl">
+          <h2 className="text-xl font-semibold text-white mb-2">My Watchlist</h2>
+        </div>
+
+      </div>
+
+      <div className="grid grid-cols-3 gap-6 mt-6">
+        
+        <div className="col-span-2 p-5 border border-gray-700 rounded-2xl">
+
+          <h2 className="text-xl font-semibold text-white mb-2">Latest News</h2>
+
+        </div>
+
+        <div className="p-5 border border-gray-700 rounded-2xl">
+
+          <h2 className="text-xl font-semibold text-white mb-2">Top News For My Portfolio</h2>
+
+        </div>
+
+      </div>
+
+    
     </div>
+
+
+
+
+
+
+      
+
+
+
+
+    
+
+
+
+
   );
 };
 
