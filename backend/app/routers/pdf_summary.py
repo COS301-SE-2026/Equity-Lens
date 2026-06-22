@@ -14,7 +14,7 @@ router = APIRouter(prefix="/import_pdf_summary", tags=["Import PDF"])
 def ImportGetSummaryImportPDF(portfolioID: str,db : Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):
     return GetSummaryImportPDF(
         database=db,
-        portfolioID=portfolioIDs
+        portfolioID=portfolioID
     )
 
 @router.get("/top_holdings/{portfolioID}")
