@@ -79,7 +79,7 @@ const Portfolio = () => {
     try {
       const convertPdf = await ShowPdf.getDocument({
         data: await getTheFile.arrayBuffer(),
-        password: "secret",
+        password: "",
 
       }).promise;
 
@@ -246,13 +246,8 @@ const Portfolio = () => {
           })
         }
        );
-
-        const getuploadHoldingsRequest = uploadHoldingsRequest.json();
-
       }
 
-
-      console.log("FixNumberComma" , FixNumberComma);
 
       const StartingFullPurchaseAndInvestment = FixNumberComma.indexOf("Instrument_Purchases_and_Sales");
       const EndingFullPurchaseAndInvestment =  allTotal[3];
@@ -267,7 +262,7 @@ const Portfolio = () => {
 
 
         FinalArrayPurchaseAndInvestment.push({
-          transactions_date: fullPurchaseAndInvestment[i],
+          transactions_date: fullPurchaseAndInvestment[i].replaceAll("/","-"),
           transaction_type_id: transactionID,
           instrument_type_id: instrumentID,
           price: fullPurchaseAndInvestment[i + 3],
@@ -278,8 +273,34 @@ const Portfolio = () => {
         
       }
 
-      console.table(FinalArrayPurchaseAndInvestment);
+      for(const eachItems of FinalArrayPurchaseAndInvestment)
+      { 
+       const uploadHoldingsRequest = await fetch(
+        "http://localhost:8000/import_pdf/save_instrument_purchases_and_sales/",
+        {
+          method: "POST",
+          headers:
+          {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`
+          },
 
+          body: JSON.stringify({
+            portfolio_id: getuploadPortfolioRequest.portfolio_id,
+            transactions_date: eachItems.transactions_date,
+            transaction_type_id: eachItems.transaction_type_id,
+            instrument_type_id: eachItems.instrument_type_id,
+            price: eachItems.price,
+            quantity: eachItems.quantity,
+            transactions_cost: eachItems.transactions_cost,
+            value_zar: eachItems.value_zar,
+          })
+        }
+       );
+
+      
+
+      }
 
       const StartingTransactionCosts = FixNumberComma.indexOf("Detailed_Transactions_-_Transaction_Costs");
       const EndingTransactionCosts =  allTotal[4];
@@ -300,7 +321,28 @@ const Portfolio = () => {
         
       }
 
-      console.table(FinalTransactionCosts);
+      for(const eachItems of FinalTransactionCosts)
+      { 
+       const uploadHoldingsRequest = await fetch(
+        "http://localhost:8000/import_pdf/save_transaction_costs/",
+        {
+          method: "POST",
+          headers:
+          {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`
+          },
+
+          body: JSON.stringify({
+            portfolio_id: getuploadPortfolioRequest.portfolio_id,
+            instrument_type_id: eachItems.instrument_type_id,
+            brokerage: eachItems.brokerage,
+            other_trading_costs: eachItems.other_trading_costs,
+          })
+        }
+       );
+
+      }
 
       const StartingContributionsAndWithdrawals = FixNumberComma.indexOf("Detailed_Transactions_-_Contributions_and_Withdrawals");
       const EndingContributionsAndWithdrawals =  FixNumberComma.indexOf("Page_6");
@@ -314,15 +356,37 @@ const Portfolio = () => {
 
         
         FinalContributionsAndWithdrawals.push({
-          transaction_date: fullContributionsAndWithdrawals[i],
-          settlement_date: fullContributionsAndWithdrawals[i + 1],
+          transaction_date: fullContributionsAndWithdrawals[i].replaceAll("/","-"),
+          settlement_date: fullContributionsAndWithdrawals[i + 1].replaceAll("/","-"),
           transaction_type_id: transactionID,
           value_zar: fullContributionsAndWithdrawals[i + 3],
         })
         
       }
 
-      console.table(FinalContributionsAndWithdrawals);
+      for(const eachItems of FinalContributionsAndWithdrawals)
+      { 
+       const uploadHoldingsRequest = await fetch(
+        "http://localhost:8000/import_pdf/save_contributions_and_withdrawals/",
+        {
+          method: "POST",
+          headers:
+          {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`
+          },
+
+          body: JSON.stringify({
+            portfolio_id: getuploadPortfolioRequest.portfolio_id,
+            transaction_date: eachItems.transaction_date,
+            settlement_date: eachItems.settlement_date,
+            transaction_type_id: eachItems.transaction_type_id,
+            value_zar: eachItems.value_zar,
+          })
+        }
+       );
+      }
+
 
 
       const StartingDividendsAndWithholdingTax = FixNumberComma.indexOf("Detailed_Transactions_-_Dividends_and_Withholding_Tax_[4]");
@@ -338,7 +402,7 @@ const Portfolio = () => {
 
         
         FinalDividendsAndWithholdingTax.push({
-          transaction_date: fullDividendsAndWithholdingTax[i],
+          transaction_date: fullDividendsAndWithholdingTax[i].replaceAll("/","-"),
           instrument_type_id: instrumentID,
           gross_dividend: fullDividendsAndWithholdingTax[i + 2],
           withholding_tax: fullDividendsAndWithholdingTax[i + 3],
@@ -348,7 +412,31 @@ const Portfolio = () => {
         
       }
 
-      console.table(FinalDividendsAndWithholdingTax);
+      for(const eachItems of FinalDividendsAndWithholdingTax)
+      { 
+       const uploadHoldingsRequest = await fetch(
+        "http://localhost:8000/import_pdf/save_dividends_and_withholding_tax/",
+        {
+          method: "POST",
+          headers:
+          {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`
+          },
+
+          body: JSON.stringify({
+            portfolio_id: getuploadPortfolioRequest.portfolio_id,
+            transaction_date: eachItems.transaction_date,
+            instrument_type_id: eachItems.instrument_type_id,
+            gross_dividend: eachItems.gross_dividend,
+            withholding_tax: eachItems.withholding_tax,
+            net_dividend: eachItems.net_dividend,
+            tax_rate: eachItems.tax_rate,
+          })
+        }
+       );
+      }
+
 
       const StartingTransactionInterest = FixNumberComma.indexOf("Detailed_Transactions_-_Interest");
       const EndingTransactionInterest =   allTotal[6];
@@ -364,8 +452,8 @@ const Portfolio = () => {
 
 
         FinalTransactionInterest.push({
-          transaction_date: fullTransactionInterest[i],
-          settlement_date: fullTransactionInterest[i + 1],
+          transaction_date: fullTransactionInterest[i].replaceAll("/","-"),
+          settlement_date: fullTransactionInterest[i + 1].replaceAll("/","-"),
           transaction_type_id: transactionID,
           instrument_type_id: instrumentID,
           value_zar: fullTransactionInterest[i + 4],
@@ -373,7 +461,30 @@ const Portfolio = () => {
         
       }
 
-      console.table(FinalTransactionInterest);
+       for(const eachItems of FinalTransactionInterest)
+      { 
+       const uploadHoldingsRequest = await fetch(
+        "http://localhost:8000/import_pdf/save_transaction_interest/",
+        {
+          method: "POST",
+          headers:
+          {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`
+          },
+
+          body: JSON.stringify({
+            portfolio_id: getuploadPortfolioRequest.portfolio_id,
+            transaction_date: eachItems.transaction_date,
+            settlement_date: eachItems.settlement_date,
+            transaction_type_id: eachItems.transaction_type_id,
+            instrument_type_id: eachItems.instrument_type_id,
+            value_zar: eachItems.value_zar,
+          })
+        }
+       );
+
+      }
 
 
       const StartingTransactionExpenses = FixNumberComma.indexOf("Detailed_Transactions_-_Expenses");
@@ -390,16 +501,40 @@ const Portfolio = () => {
 
 
         FinalTransactionExpenses.push({
-          transaction_date: fullTransactionExpenses[i],
-          settlement_date: fullTransactionExpenses[i + 1],
+          transaction_date: fullTransactionExpenses[i].replaceAll("/","-"),
+          settlement_date: fullTransactionExpenses[i + 1].replaceAll("/","-"),
           transaction_type_id: transactionID,
-          narrative: narrativeID,
+          narrative_type_id: narrativeID,
           value_zar: fullTransactionExpenses[i + 4],
         })
         
       }
 
-      console.table(FinalTransactionExpenses);
+       for(const eachItems of FinalTransactionExpenses)
+      { 
+       const uploadHoldingsRequest = await fetch(
+        "http://localhost:8000/import_pdf/save_transaction_expenses/",
+        {
+          method: "POST",
+          headers:
+          {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`
+          },
+
+          body: JSON.stringify({
+            portfolio_id: getuploadPortfolioRequest.portfolio_id,
+            transaction_date: eachItems.transaction_date,
+            settlement_date: eachItems.settlement_date,
+            transaction_type_id: eachItems.transaction_type_id,
+            narrative_type_id: eachItems.narrative_type_id,
+            value_zar: eachItems.value_zar,
+          })
+        }
+       );
+      }
+
+      
     }
     catch (theErrors) {
       setTheErrors("Failed to open your Pdf, Please try again");
