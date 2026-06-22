@@ -160,7 +160,7 @@ def SaveTransactionExpenses(database,user_id,data):
         transaction_date = data.transaction_date,
         settlement_date = data.settlement_date,
         transaction_type_id = data.transaction_type_id,
-        narrative = data.narrative,
+        narrative_type_id = data.narrative_type_id,
         value_zar = data.value_zar
 
     )

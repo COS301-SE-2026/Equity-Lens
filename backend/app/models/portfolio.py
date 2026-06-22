@@ -175,7 +175,7 @@ class TransactionExpenses(Base):
     transaction_date = Column(Date)
     settlement_date = Column(Date)
     transaction_type_id = Column(UUID(as_uuid=True), ForeignKey("transaction_types.id",ondelete="CASCADE"), nullable=False)
-    narrative = Column(Text)
+    narrative_type_id = Column(Text)
     value_zar = Column(Numeric(18,2))
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
