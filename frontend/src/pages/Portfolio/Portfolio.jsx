@@ -542,25 +542,39 @@ const Portfolio = () => {
   }
 
 
-  return (
+    return (
+      
+    <div className="p-10">
+      <h1 className="text-4xl font-bold text-white">Portfolio Analysis</h1>
+      <p className="text-gray-400 mt-2">
+        Upload and analyse your portfolio statement
+      </p>
 
-    <div className="p-6">
-      <h1>Portfolio Analysis</h1>
-      <input
-        type="file"
-        accept="application/pdf"
-        onChange={whenPressingTheFile}
 
-      />
 
-      {theErrors && <p> {theErrors} </p>}
+      <div className="mt-10 flex justify-center">
+      <div className="w-full p-8 border border-gray-700 rounded-3xl text-center">
 
-      {values && (
-        <div className="mt-4">
-          <h2>Portfolio Value</h2>
-          <p>R {values}</p>
-        </div>
-      )}
+
+        <p className="text-2xl font-semibold text-white mb-2">
+        Upload your portfolio statement
+       </p>
+
+       <p className="text-gray-400 mb-8">
+        Select your portfolio statement
+       </p>
+
+        <input
+          type="file"
+          accept="application/pdf"
+          onChange={whenPressingTheFile}
+          className="text-white file:bg-yellow-500 file:text-black file:border-0 file:px-4 file:py-2 file:rounded-lg file:font-medium"
+        />
+
+      </div>
+
+      </div>
+
 
 
 
