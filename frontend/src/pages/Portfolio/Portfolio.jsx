@@ -1,101 +1,436 @@
-import {useState} from "react";
+import { useState } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
+import { getToken } from "../../services/authService"
 
 ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
 
-const Portfolio = () =>
-{
-   const[convert,setConvert] = useState("");
-   const[values,setTheValues] = useState("");
-   const[theErrors,setTheErrors] = useState("");
+
+ const ToGetIDForInstrument = async (getName) =>
+ {
+    const getID = await fetch(
+        `http://localhost:8000/import_pdf/get_instrument_type_id/${getName}`,
+        {
+          method: "GET",
+          headers:
+          {
+            Authorization: `Bearer ${getToken()}`
+          },
+        }
+      );
+
+    const get = await getID.json();
+    return get.id;
+ }
+
+ const ToGetIDForTransaction = async (getName) =>
+ {
+    const getID = await fetch(
+        `http://localhost:8000/import_pdf/get_transaction_type_id/${getName}`,
+        {
+          method: "GET",
+          headers:
+          {
+            Authorization: `Bearer ${getToken()}`
+          },
+        }
+      );
+
+    const get = await getID.json();
+    return get.id;
+ }
+
+ const ToGetIDForNarrative = async (getName) =>
+ {
+    const getID = await fetch(
+      `http://localhost:8000/import_pdf/get_narrative_type_id/${getName}`,
+        {
+          method: "GET",
+          headers:
+          {
+            Authorization: `Bearer ${getToken()}`
+          },
+        }
+      );
+
+    const get = await getID.json();
+    return get.id;
+ }
+
+const Portfolio = () => {
+  const [convert, setConvert] = useState("");
+  const [values, setTheValues] = useState("");
+  const [theErrors, setTheErrors] = useState("");
 
 
-   const whenPressingTheFile = async (pdf) =>
-   {
-     const getTheFile = pdf.target.files[0];
+  const whenPressingTheFile = async (pdf) => {
 
-     if (getTheFile == null)
-     {
-       return
-     }
+    const getTheFile = pdf.target.files[0];
 
-     setTheErrors("");
-     setTheValues("");
-     setConvert("");
+    if (getTheFile == null) 
+    {
+      return
+    }
 
-     try
-     {
-       const convertPdf = await ShowPdf.getDocument({
-        data : await getTheFile.arrayBuffer(),
-        password : "Secret",
+    setTheErrors("");
+    setTheValues("");
+    setConvert("");
 
-       }).promise;
+    try {
+      const convertPdf = await ShowPdf.getDocument({
+        data: await getTheFile.arrayBuffer(),
+        password: "secret",
 
-       let gettingInfo = "";
+      }).promise;
 
-       for(let i = 1; i <= convertPdf.numPages;i++)
-       {
+      let gettingInfo = "";
+
+      for (let i = 1; i <= convertPdf.numPages; i++) 
+      {
         const page = await convertPdf.getPage(i);
         const content = await page.getTextContent();
 
         let PageInfo = "";
 
 
-        for(const items of content.items)
+        for (const items of content.items) 
         {
           PageInfo = PageInfo + items.str + " ";
         }
 
         gettingInfo = gettingInfo + PageInfo;
 
-       }
+      }
 
-       setConvert(gettingInfo);
+      setConvert(gettingInfo);
+
+      const uploadInvestmentStatements = await fetch(
+        "http://localhost:8000/import_pdf/",
+        {
+          method: "POST",
+          headers:
+          {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`
+          },
+
+          body: JSON.stringify({
+            file_name: getTheFile.name,
+            document_text: "Something special",
+            password: "0792571562",
+          })
+        }
+      );
+
+      const getUploadInvestmentStatements = await uploadInvestmentStatements.json();
+
+      const SplitingInArray = gettingInfo.split(" ");
+      const getAccountNumber = SplitingInArray.find( (word) => word.startsWith("EE") && word.includes("-"));
+      const getAccountNumberIndex = SplitingInArray.findIndex( (word) => word.startsWith("EE") && word.includes("-"));
+      const getPortfolioName = SplitingInArray[getAccountNumberIndex + 1];
 
 
-     }
-     catch(theErrors)
-     {
+      const uploadPortfolioRequest = await fetch(
+        "http://localhost:8000/import_pdf/save_portfolios/",
+        {
+          method: "POST",
+          headers:
+          {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`
+          },
+
+          body: JSON.stringify({
+            document_id: getUploadInvestmentStatements.document_id,
+            account_number: getAccountNumber,
+            portfolio_name: getPortfolioName,
+          })
+        }
+      );
+
+
+      const getuploadPortfolioRequest = await uploadPortfolioRequest.json();
+
+      const ReplacenstrumentName = gettingInfo.replaceAll("10X S&P 500 Exchange Traded Fund" , "10X_S&P_500_Exchange_Traded_Fund")
+      .replaceAll("10X S&P South Africa Top50 Index Exchange Traded Fund" , "10X_S&P_South_Africa_Top50_Index_Exchange_Traded_Fund")
+      .replaceAll("EasyETFs AI World Actively Managed ETF" , "EasyETFs_AI_World_Actively_Managed_ETF")
+      .replaceAll("Satrix MSCI Emerging Markets ETF" , "Satrix_MSCI_Emerging_Markets_ETF")
+      .replaceAll("Instrument Purchases and Sales","Instrument_Purchases_and_Sales")
+      .replaceAll("Detailed Transactions - Transaction Costs","Detailed_Transactions_-_Transaction_Costs")
+      .replaceAll("Detailed Transactions - Contributions and Withdrawals","Detailed_Transactions_-_Contributions_and_Withdrawals")
+      .replaceAll("Capital withdrawal", "Capital_withdrawal")
+      .replaceAll("Capital contribution", "Capital_contribution")
+      .replaceAll("Detailed Transactions - Dividends and Withholding Tax [4]","Detailed_Transactions_-_Dividends_and_Withholding_Tax_[4]")
+      .replaceAll("Cash investment interest received", "Cash_investment_interest_received")
+      .replaceAll("Securities Interest","Securities_Interest")
+      .replaceAll("Detailed Transactions - Interest", "Detailed_Transactions_-_Interest")
+      .replaceAll("Trust Account", "Trust_Account")
+      .replaceAll("Detailed Transactions - Expenses","Detailed_Transactions_-_Expenses")
+      .replaceAll("VAT on Cash Management Fee","VAT_on_Cash_Management_Fee")
+      .replaceAll("Cash Management Fee","Cash_Management_Fee")
+      .replaceAll("Value Added Tax on costs (VAT) for Early Settlement Fee","Value_Added_Tax_on_costs_(VAT)_for_Early_Settlement_Fee")
+      .replaceAll("Early settlement fee","Early_settlement_fee")
+      .replaceAll("Early Settlement Fee","Early_Settlement_Fee")
+      .replaceAll("Page 6", "Page_6")
+      .replaceAll("Page 7","Page_7")
+
+      const FixInstrumentName = ReplacenstrumentName.split(" ").filter((word) => word !== "");
+      const FixNumberComma = [];
+
+      for(let i = 0; i < FixInstrumentName.length;i++)
+      {
+         const FirstNumber = FixInstrumentName[i];
+         const SecondNumber = FixInstrumentName[i + 1];
+
+         if(FirstNumber != "Fee" && FirstNumber != "withdrawal" && FirstNumber != "Total" && FirstNumber.includes("_") != true && FirstNumber.includes(".") != true && SecondNumber != null && SecondNumber.includes("."))
+         {
+            FixNumberComma.push(FirstNumber + SecondNumber);
+            i = i + 1;
+         }
+         else
+         {
+           FixNumberComma.push(FirstNumber);
+         }
+
+      }
+
+      const startFrom = FixNumberComma.indexOf("Weight");
+      const allTotal = [];
+
+      for(let i = 0; i < FixNumberComma.length;i++)
+      {
+        if(FixNumberComma[i] === "Total")
+        {
+          allTotal.push(i);
+        }
+      }
+
+      const getIt = allTotal[2];
+      const StartingAndEnding = FixNumberComma.slice(startFrom + 1, getIt);
+      const FinalArray = [];
+
+      for(let i = 0; i < StartingAndEnding.length; i = i + 14)
+      {
+        FinalArray.push({
+          instrument_name: StartingAndEnding[i],
+          quantity: StartingAndEnding[i + 8],
+          total_cost: StartingAndEnding[i + 9],
+          cost_price: StartingAndEnding[i + 10],
+          current_price: StartingAndEnding[i + 11],
+          current_value: StartingAndEnding[i + 12],
+          weight_percentage: StartingAndEnding[i + 13],
+        })
+      }
+
+      for(const eachItems of FinalArray)
+      { 
+       const uploadHoldingsRequest = await fetch(
+        "http://localhost:8000/import_pdf/save_holdings/",
+        {
+          method: "POST",
+          headers:
+          {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`
+          },
+
+          body: JSON.stringify({
+            portfolio_id: getuploadPortfolioRequest.portfolio_id,
+            instrument_name: eachItems.instrument_name.replaceAll("_"," "),
+            quantity: eachItems.quantity,
+            total_cost: eachItems.total_cost,
+            cost_price: eachItems.cost_price,
+            current_price: eachItems.current_price,
+            current_value: eachItems.current_value,
+            weight_percentage: eachItems.weight_percentage.replace("%"," "),
+          })
+        }
+       );
+
+        const getuploadHoldingsRequest = uploadHoldingsRequest.json();
+
+      }
+
+
+      console.log("FixNumberComma" , FixNumberComma);
+
+      const StartingFullPurchaseAndInvestment = FixNumberComma.indexOf("Instrument_Purchases_and_Sales");
+      const EndingFullPurchaseAndInvestment =  allTotal[3];
+      const fullPurchaseAndInvestment = FixNumberComma.slice(StartingFullPurchaseAndInvestment,EndingFullPurchaseAndInvestment);
+      const FinalArrayPurchaseAndInvestment = [];
+
+      for(let i = 13; i < fullPurchaseAndInvestment.length; i = i + 7)
+      {
+        
+        const transactionID = await ToGetIDForTransaction(fullPurchaseAndInvestment[i + 1].replaceAll("_"," "));
+        const instrumentID = await ToGetIDForInstrument(fullPurchaseAndInvestment[i + 2].replaceAll("_"," "));
+
+
+        FinalArrayPurchaseAndInvestment.push({
+          transactions_date: fullPurchaseAndInvestment[i],
+          transaction_type_id: transactionID,
+          instrument_type_id: instrumentID,
+          price: fullPurchaseAndInvestment[i + 3],
+          quantity: fullPurchaseAndInvestment[i + 4],
+          transactions_cost: fullPurchaseAndInvestment[i + 5],
+          value_zar: fullPurchaseAndInvestment[i + 6],
+        })
+        
+      }
+
+      console.table(FinalArrayPurchaseAndInvestment);
+
+
+      const StartingTransactionCosts = FixNumberComma.indexOf("Detailed_Transactions_-_Transaction_Costs");
+      const EndingTransactionCosts =  allTotal[4];
+      const fullTransactionCosts = FixNumberComma.slice(StartingTransactionCosts,EndingTransactionCosts);
+      const FinalTransactionCosts = [];
+
+      for(let i = 7; i < fullTransactionCosts.length; i = i + 3)
+      {
+        
+        const instrumentID = await ToGetIDForInstrument(fullTransactionCosts[i].replaceAll("_"," "));
+
+
+        FinalTransactionCosts.push({
+          instrument_type_id: instrumentID,
+          brokerage: fullTransactionCosts[i + 1],
+          other_trading_costs: fullTransactionCosts[i + 2],
+        })
+        
+      }
+
+      console.table(FinalTransactionCosts);
+
+      const StartingContributionsAndWithdrawals = FixNumberComma.indexOf("Detailed_Transactions_-_Contributions_and_Withdrawals");
+      const EndingContributionsAndWithdrawals =  FixNumberComma.indexOf("Page_6");
+      const fullContributionsAndWithdrawals = FixNumberComma.slice(StartingContributionsAndWithdrawals,(EndingContributionsAndWithdrawals - 1));
+      const FinalContributionsAndWithdrawals = [];
+
+      for(let i = 8; i < fullContributionsAndWithdrawals.length; i = i + 4)
+      {
+
+        const transactionID = await ToGetIDForTransaction(fullContributionsAndWithdrawals[i + 2].replaceAll("_"," "));
+
+        
+        FinalContributionsAndWithdrawals.push({
+          transaction_date: fullContributionsAndWithdrawals[i],
+          settlement_date: fullContributionsAndWithdrawals[i + 1],
+          transaction_type_id: transactionID,
+          value_zar: fullContributionsAndWithdrawals[i + 3],
+        })
+        
+      }
+
+      console.table(FinalContributionsAndWithdrawals);
+
+
+      const StartingDividendsAndWithholdingTax = FixNumberComma.indexOf("Detailed_Transactions_-_Dividends_and_Withholding_Tax_[4]");
+      const EndingDividendsAndWithholdingTax =   allTotal[5];
+      const fullDividendsAndWithholdingTax = FixNumberComma.slice(StartingDividendsAndWithholdingTax,EndingDividendsAndWithholdingTax);
+      const FinalDividendsAndWithholdingTax = [];
+
+
+      for(let i = 11; i < fullDividendsAndWithholdingTax.length; i = i + 6)
+      {
+
+        const instrumentID = await ToGetIDForInstrument(fullDividendsAndWithholdingTax[i + 1].replaceAll("_"," "));
+
+        
+        FinalDividendsAndWithholdingTax.push({
+          transaction_date: fullDividendsAndWithholdingTax[i],
+          instrument_type_id: instrumentID,
+          gross_dividend: fullDividendsAndWithholdingTax[i + 2],
+          withholding_tax: fullDividendsAndWithholdingTax[i + 3],
+          net_dividend: fullDividendsAndWithholdingTax[i + 4],
+          tax_rate: fullDividendsAndWithholdingTax[i + 5],
+        })
+        
+      }
+
+      console.table(FinalDividendsAndWithholdingTax);
+
+      const StartingTransactionInterest = FixNumberComma.indexOf("Detailed_Transactions_-_Interest");
+      const EndingTransactionInterest =   allTotal[6];
+      const fullTransactionInterest = FixNumberComma.slice(StartingTransactionInterest,EndingTransactionInterest);
+      const FinalTransactionInterest = [];
+
+
+      for(let i = 9; i < fullTransactionInterest.length; i = i + 5)
+      {
+        
+        const transactionID = await ToGetIDForTransaction(fullTransactionInterest[i + 2].replaceAll("_"," "));
+        const instrumentID = await ToGetIDForInstrument(fullTransactionInterest[i + 3].replaceAll("_"," "));
+
+
+        FinalTransactionInterest.push({
+          transaction_date: fullTransactionInterest[i],
+          settlement_date: fullTransactionInterest[i + 1],
+          transaction_type_id: transactionID,
+          instrument_type_id: instrumentID,
+          value_zar: fullTransactionInterest[i + 4],
+        })
+        
+      }
+
+      console.table(FinalTransactionInterest);
+
+
+      const StartingTransactionExpenses = FixNumberComma.indexOf("Detailed_Transactions_-_Expenses");
+      const EndingTransactionExpenses =   FixNumberComma.indexOf("Page_7");
+      const fullTransactionExpenses = FixNumberComma.slice(StartingTransactionExpenses,(EndingTransactionExpenses - 1));
+      const FinalTransactionExpenses = [];
+
+
+      for(let i = 9; i < fullTransactionExpenses.length; i = i + 5)
+      {
+        
+        const transactionID = await ToGetIDForTransaction(fullTransactionExpenses[i + 2].replaceAll("_"," "));
+        const narrativeID = await ToGetIDForNarrative(fullTransactionExpenses[i + 3].replaceAll("_"," "));
+
+
+        FinalTransactionExpenses.push({
+          transaction_date: fullTransactionExpenses[i],
+          settlement_date: fullTransactionExpenses[i + 1],
+          transaction_type_id: transactionID,
+          narrative: narrativeID,
+          value_zar: fullTransactionExpenses[i + 4],
+        })
+        
+      }
+
+      console.table(FinalTransactionExpenses);
+    }
+    catch (theErrors) {
       setTheErrors("Failed to open your Pdf, Please try again");
-     }
-   }
+    }
+  }
 
 
-   return (
-     <div className="p-6">
-          <h1>Portfolio Analysis</h1>
-          <input
-            type = "file"
-            accept = "application/pdf"
-            onChange = {whenPressingTheFile}
-            
-          />
+  return (
 
-          {theErrors && <p> {theErrors} </p>}
+    <div className="p-6">
+      <h1>Portfolio Analysis</h1>
+      <input
+        type="file"
+        accept="application/pdf"
+        onChange={whenPressingTheFile}
 
-          {values && (
-            <div className="mt-4"> 
-             <h2>Portfolio Value</h2>
-             <p>R {values}</p>
-             </div>
-          )}
+      />
 
-          {convert && (<div>
-            <h2>Extracted text</h2>
+      {theErrors && <p> {theErrors} </p>}
 
-            <textarea 
-              value={convert}
-              readOnly
-              rows={15}
-              className="w-full border p-2"
-            />
-          </div>)}
+      {values && (
+        <div className="mt-4">
+          <h2>Portfolio Value</h2>
+          <p>R {values}</p>
+        </div>
+      )}
 
 
 
-     </div>
-   )
+    </div>
+  )
 
 
 
