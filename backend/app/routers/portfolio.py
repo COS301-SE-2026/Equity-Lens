@@ -1,154 +1,104 @@
-from fastapi import APIRouter, Depends
+from uuid import UUID
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.database import get_db
 from app.dependencies import get_current_user
-from app.schemas.auth import UserResponse
+from app.models.user import User
+from app.schemas.holding import HoldingCreate, HoldingUpdate, HoldingResponse
+from app.repositories.holding_repository import HoldingRepository
 
 router = APIRouter(prefix="/api/portfolio", tags=["portfolio"])
 
-MOCK_PORTFOLIO = {
-    "summary": {
-        "totalValue": 125430.50,
-        "totalCost": 98200.00,
-        "totalGain": 27230.50,
-        "totalGainPercent": 27.73,
-        "holdingsCount": 8,
-    },
-    "holdings": [
-        {
-            "ticker": "NPN",
-            "name": "Naspers",
-            "quantity": 10,
-            "purchasePrice": 2800,
-            "currentPrice": 3150,
-            "value": 31500,
-            "gain": 3500,
-            "gainPercent": 12.5,
-            "sector": "Technology",
-            "daily_change_pct": 1.4,
-        },
-        {
-            "ticker": "MTN",
-            "name": "MTN Group",
-            "quantity": 50,
-            "purchasePrice": 120,
-            "currentPrice": 138,
-            "value": 6900,
-            "gain": 900,
-            "gainPercent": 15.0,
-            "sector": "Telecommunications",
-            "daily_change_pct": -0.8,
-        },
-        {
-            "ticker": "SOL",
-            "name": "Sasol",
-            "quantity": 30,
-            "purchasePrice": 280,
-            "currentPrice": 245,
-            "value": 7350,
-            "gain": -1050,
-            "gainPercent": -12.5,
-            "sector": "Energy",
-            "daily_change_pct": -2.1,
-        },
-        {
-            "ticker": "FSR",
-            "name": "Firstrand",
-            "quantity": 100,
-            "purchasePrice": 65,
-            "currentPrice": 72,
-            "value": 7200,
-            "gain": 700,
-            "gainPercent": 10.8,
-            "sector": "Financials",
-            "daily_change_pct": 0.6,
-        },
-        {
-            "ticker": "AGL",
-            "name": "Anglo American",
-            "quantity": 20,
-            "purchasePrice": 550,
-            "currentPrice": 620,
-            "value": 12400,
-            "gain": 1400,
-            "gainPercent": 12.7,
-            "sector": "Mining",
-            "daily_change_pct": 0.9,
-        },
-        {
-            "ticker": "SBK",
-            "name": "Standard Bank",
-            "quantity": 80,
-            "purchasePrice": 155,
-            "currentPrice": 178,
-            "value": 14240,
-            "gain": 1840,
-            "gainPercent": 14.8,
-            "sector": "Financials",
-            "daily_change_pct": 1.1,
-        },
-        {
-            "ticker": "BHP",
-            "name": "BHP Group",
-            "quantity": 15,
-            "purchasePrice": 480,
-            "currentPrice": 510,
-            "value": 7650,
-            "gain": 450,
-            "gainPercent": 6.3,
-            "sector": "Mining",
-            "daily_change_pct": 0.3,
-        },
-        {
-            "ticker": "REM",
-            "name": "Remgro",
-            "quantity": 40,
-            "purchasePrice": 130,
-            "currentPrice": 145,
-            "value": 5800,
-            "gain": 600,
-            "gainPercent": 11.5,
-            "sector": "Financials",
-            "daily_change_pct": -0.4,
-        },
-    ],
-    "sectorAllocation": [
-        {"sector": "Technology", "value": 31500, "percentage": 25.1},
-        {"sector": "Financials", "value": 27240, "percentage": 21.7},
-        {"sector": "Mining", "value": 20050, "percentage": 16.0},
-        {"sector": "Telecommunications", "value": 6900, "percentage": 5.5},
-        {"sector": "Energy", "value": 7350, "percentage": 5.9},
-    ],
-    "performanceHistory": [
-        {"name": "Jan", "value": 98200,  "benchmark": 72000},
-        {"name": "Feb", "value": 100000, "benchmark": 73000},
-        {"name": "Mar", "value": 99000,  "benchmark": 73500},
-        {"name": "Apr", "value": 103000, "benchmark": 75000},
-        {"name": "May", "value": 107000, "benchmark": 74500},
-        {"name": "Jun", "value": 112300, "benchmark": 77000},
-        {"name": "Jul", "value": 111000, "benchmark": 78500},
-        {"name": "Aug", "value": 114000, "benchmark": 80000},
-        {"name": "Sep", "value": 112000, "benchmark": 78000},
-        {"name": "Oct", "value": 117000, "benchmark": 81000},
-        {"name": "Nov", "value": 121000, "benchmark": 83000},
-        {"name": "Dec", "value": 125430, "benchmark": 85000},
-    ],
-}
+def _holding_to_dict(h) -> dict:
+    current_price = h.avg_price  #Fallback until Ant implements yFinance / Alpha Vantage
+    value = h.quantity * current_price
+    gain = value - (h.quantity * h.avg_price)
+    gain_pct = (gain / (h.quantity * h.avg_price) * 100) if h.avg_price else 0.0
 
+    return {
+        "id": str(h.id),
+        "ticker": h.ticker,
+        "name": h.name,
+        "sector": h.sector,
+        "quantity": h.quantity,
+        "avg_price": h.avg_price,
+        "current_price": current_price,
+        "value": value,
+        "gain_loss": gain,
+        "gain_loss_pct": round(gain_pct, 2),
+        "daily_change_pct": 0.0, #No hsitory to base this off, set to 0.0 till live market data
+    }
+
+def _build_summary(holdings: list[dict]) -> dict:
+    total_value = sum(h["value"] for h in holdings)
+    total_cost = sum(h["quantity"] * h["avg_price"] for h in holdings)
+    total_gain = total_value - total_cost
+    total_gain_pct = (total_gain / total_cost * 100) if total_cost else 0.0
+
+    return {
+        "totalValue": round(total_value, 2),
+        "totalCost": round(total_cost, 2),
+        "totalGain": round(total_gain, 2),
+        "totalGainPercent": round(total_gain_pct, 2),
+        "holdingsCount": len(holdings),
+    }
+
+def _build_sector_allocation(holdings: list[dict]) -> list[dict]:
+    sector_values: dict[str, float] = {}
+    total_value = sum(h["value"] for h in holdings)
+
+    for h in holdings:
+        sector = h["sector"] or "Other"
+        sector_values[sector] = sector_values.get(sector, 0.0) + h["value"]
+
+    return [
+        {
+            "sector": sector,
+            "value": round(val, 2),
+            "percentage": round((val / total_value * 100) if total_value else 0.0, 2),
+        }
+        for sector, val in sorted(sector_values.items(), key=lambda x: x[1], reverse=True)
+    ]
 
 @router.get("")
-def get_portfolio(current_user: UserResponse = Depends(get_current_user)):
-    return MOCK_PORTFOLIO
+def get_portfolio(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    holdings = HoldingRepository(db).get_holdings_by_user(current_user.id)
+    holdings_data = [_holding_to_dict(h) for h in holdings]
 
+    return {
+        "summary": _build_summary(holdings_data),
+        "holdings": holdings_data,
+        "sectorAllocation": _build_sector_allocation(holdings_data),
+    }
 
 @router.get("/summary")
-def get_summary(current_user: UserResponse = Depends(get_current_user)):
-    return MOCK_PORTFOLIO["summary"]
-
+def get_summary(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    holdings = HoldingRepository(db).get_holdings_by_user(current_user.id)
+    return _build_summary([_holding_to_dict(h) for h in holdings])
 
 @router.get("/sectors")
-def get_sectors(current_user: UserResponse = Depends(get_current_user)):
-    return MOCK_PORTFOLIO["sectorAllocation"]
+def get_sectors(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    holdings = HoldingRepository(db).get_holdings_by_user(current_user.id)
+    return _build_sector_allocation([_holding_to_dict(h) for h in holdings])
 
+@router.post("/holdings", response_model=HoldingResponse, status_code=201)
+def create_holding(payload: HoldingCreate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    return HoldingRepository(db).create_holding(user_id=current_user.id, **payload.model_dump())
 
-@router.get("/performance")
-def get_performance(current_user: UserResponse = Depends(get_current_user)):
-    return MOCK_PORTFOLIO["performanceHistory"]
+@router.put("/holdings/{holding_id}", response_model=HoldingResponse)
+def update_holding(holding_id: UUID, payload: HoldingUpdate, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    repo = HoldingRepository(db)
+    holding = repo.get_holding_by_id(holding_id, current_user.id)
+    if not holding:
+        raise HTTPException(status_code=404, detail="Holding not found")
+        
+    return repo.update_holding(holding, **payload.model_dump(exclude_unset=True))
+
+@router.delete("/holdings/{holding_id}", status_code=204)
+def delete_holding(holding_id: UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    repo = HoldingRepository(db)
+    holding = repo.get_holding_by_id(holding_id, current_user.id)
+    if not holding:
+        raise HTTPException(status_code=404, detail="Holding not found")
+        
+    repo.delete_holding(holding)
