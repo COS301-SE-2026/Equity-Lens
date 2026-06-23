@@ -2,7 +2,7 @@ import { useState } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 import { getToken } from "../../services/authService"
-import { ArrowLeftRight, Wallet,CreditCard,Percent,TrendingUp,Landmark,Receipt,Briefcase } from "lucide-react"
+import { ArrowLeftRight, Wallet,CreditCard,Percent,TrendingUp,Landmark,Receipt,Briefcase,TriangleAlert,Bot } from "lucide-react"
 
 ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
 
@@ -700,6 +700,69 @@ const Portfolio = () => {
         </div>
 
       </div>
+
+
+      <div className="grid grid-cols-4 gap-8 mt-8">
+
+
+      </div>
+
+
+
+      <div className="grid grid-cols-2 gap-8 mt-8">
+
+        <div className="p-6 border border-red-700 rounded-2xl">
+
+          <div className="flex items-center gap-2">
+            <TriangleAlert size={24} className="text-red-500"></TriangleAlert>
+          <h2 className="text-xl font-bold text-red">
+            Lowest Holding
+          </h2>
+          </div>
+          
+
+          <p className= "text-gray-400 mb-5"> 
+            Your smallest holdings by weight in the portfolio
+          </p>
+
+          <div className="flex justify-between border border-gray-700 rounded-xl p-4">
+
+            <div>
+            <p className="text-gray-400 text-sm">Instrument</p>
+            <p className="text-xl text-white font-bold">Satrix</p>
+            </div>
+
+            <div>
+            <p className="text-gray-400 text-sm">weight</p>
+            <p className="text-xl text-red-400 font-bold">0.0%</p>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div className="p-6 border border-purple-500 rounded-2xl">
+
+           <div className="flex items-center gap-2">
+            <Bot size={24} className="text-purple-500"></Bot>
+          <h2 className="text-xl font-bold text-red">
+            AI Portfolio Assistant
+          </h2>
+          </div>
+
+          <p className= "text-gray-400 mb-5"> 
+            Ask questions about your portfolio and recivce AI-powered insights.
+          </p>
+
+          <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold">
+            Go To Assistant
+          </button>
+
+        </div>
+
+      </div>
+
+
 
       </div>
 
