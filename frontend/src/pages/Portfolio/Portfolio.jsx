@@ -2,6 +2,7 @@ import { useState } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 import { getToken } from "../../services/authService"
+import { ArrowLeftRight, Wallet,CreditCard,Percent,TrendingUp,Landmark,Receipt,Briefcase } from "lucide-react"
 
 ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
 
@@ -61,6 +62,7 @@ const Portfolio = () => {
   const [convert, setConvert] = useState("");
   const [values, setTheValues] = useState("");
   const [theErrors, setTheErrors] = useState("");
+  const [summary,setSummary] = useState("");
 
 
   const whenPressingTheFile = async (pdf) => {
@@ -79,7 +81,7 @@ const Portfolio = () => {
     try {
       const convertPdf = await ShowPdf.getDocument({
         data: await getTheFile.arrayBuffer(),
-        password: "",
+        password: "0509145305082",
 
       }).promise;
 
@@ -534,27 +536,42 @@ const Portfolio = () => {
        );
       }
 
+        const getSummaryRequest = await fetch(
+      `http://localhost:8000/import_pdf_summary/summary/${getuploadPortfolioRequest.portfolio_id}`,
+      {
+        method: "GET",
+          headers:
+          {
+            Authorization: `Bearer ${getToken()}`
+          },
+      }
+    )
+
+    const getSummary = await getSummaryRequest.json();
+     setSummary(getSummary);
+
       
     }
     catch (theErrors) {
       setTheErrors("Failed to open your Pdf, Please try again");
     }
+
+  
+
+
   }
 
 
     return (
       
-    <div className="p-10">
-      <h1 className="text-4xl font-bold text-white">Portfolio Analysis</h1>
+    <div className="p-2">
+      {/* <h1 className="text-4xl font-bold text-white">Portfolio Analysis</h1>
       <p className="text-gray-400 mt-2">
         Upload and analyse your portfolio statement
-      </p>
+      </p> */}
 
-
-
-      <div className="mt-10 flex justify-center">
+      <div className="mt-3 flex justify-center">
       <div className="w-full p-8 border border-gray-700 rounded-3xl text-center">
-
 
         <p className="text-2xl font-semibold text-white mb-2">
         Upload your portfolio statement
@@ -576,11 +593,117 @@ const Portfolio = () => {
       </div>
 
 
+      <div className="grid grid-cols-4 gap-8 mt-8">
+
+        <div className="p-5 border border-gray-700 rounded-2xl">
+
+          <div className="flex items-center gap-3 mb-2">
+
+          <Wallet size={20} className="text-yellow-500" />
+          <p className="text-gray-400">Portfolio Value</p>
+
+          </div>
+
+          <h2 className="text-2xl font-bold text-white">R{summary?.PortfolioValue || 0}</h2>
 
 
-    </div>
+        </div>
+
+        <div className="p-5 border border-gray-700 rounded-2xl">
+
+          <div className="flex items-center gap-3 mb-2">
+
+          <Briefcase size={20} className="text-blue-500" />
+          <p className="text-gray-400">Holdings</p>
+
+          </div>
+
+          <h2 className="text-2xl font-bold text-white">R{summary?.TotalHoldings || 0}</h2>
+
+        </div>
+
+        <div className="p-5 border border-gray-700 rounded-2xl">
+
+          <div className="flex items-center gap-3 mb-2">
+          <ArrowLeftRight size={20} className="text-green-500" />
+          <p className="text-gray-400">Purchase & Sales</p>
+          </div>
+
+          <h2 className="text-2xl font-bold text-white">R{summary?.TotalPurchasesAndSales || 0}</h2>
+
+        </div>
+
+        <div className="p-5 border border-gray-700 rounded-2xl">
+
+          <div className="flex items-center gap-3 mb-2">
+
+          <Receipt size={20} className="text-red-500" />
+          <p className="text-gray-400">Transaction COst</p>
+
+          </div>
+
+          <h2 className="text-2xl font-bold text-white">R{summary?.TotalTransactionCosts || 0}</h2>
+
+        </div>
+
+
+        <div className="p-5 border border-gray-700 rounded-2xl">
+
+          <div className="flex items-center gap-3 mb-2">
+
+          <Landmark size={20} className="text-purple-500" />
+          <p className="text-gray-400">Contributions</p>
+
+          </div>
+
+          <h2 className="text-2xl font-bold text-white">R{summary?.TotalContributionsAndWithdrawals || 0}</h2>
+
+        </div>
+
+        <div className="p-5 border border-gray-700 rounded-2xl">
+
+          <div className="flex items-center gap-3 mb-2">
+
+          <TrendingUp size={20} className="text-green-500" />
+          <p className="text-gray-400">Dividends</p>
+
+          </div>
+
+          <h2 className="text-2xl font-bold text-white">R{summary?.TotalDividendsAndWithholdingTax || 0}</h2>
+
+        </div>
+
+        <div className="p-5 border border-gray-700 rounded-2xl">
+
+          <div className="flex items-center gap-3 mb-2">
+
+          <Percent size={20} className="text-cyan-500" />
+          <p className="text-gray-400">Interest</p>
+
+          </div>
+
+          <h2 className="text-2xl font-bold text-white">R{summary?.TotalTransactionInterest || 0}</h2>
+
+        </div>
+
+        <div className="p-5 border border-gray-700 rounded-2xl">
+
+          <div className="flex items-center gap-3 mb-2">
+
+          <CreditCard size={20} className="text-orange-500" />
+          <p className="text-gray-400">Expenses</p>
+
+          </div>
+
+          <h2 className="text-2xl font-bold text-white">R{summary?.TotalTransactionExpenses || 0}</h2>
+
+        </div>
+
+      </div>
+
+      </div>
+
   )
-
 
 
 
