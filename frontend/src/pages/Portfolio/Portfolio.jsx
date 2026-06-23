@@ -64,7 +64,7 @@ const Portfolio = () => {
   const [summary, setSummary] = useState("");
   const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState([]);
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState([]);
-  const colours = ["#8B5CF6","#3B82F6","#22C55E","#F59E0B"];
+  const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
 
 
@@ -747,7 +747,7 @@ const Portfolio = () => {
                 innerRadius={50}
                 outerRadius={80}>
 
-                {summaGetTheTopAllocationImportPDFry.map((item, index) => (<Cell key={index} fill={colours[index % colours.length]}/>))}
+                {summaGetTheTopAllocationImportPDFry.map((item, index) => (<Cell key={index} fill={colours[index % colours.length]} />))}
               </Pie>
 
             </PieChart>
@@ -757,14 +757,14 @@ const Portfolio = () => {
                 <div key={index} className="flex justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full"
-                         style={{ backgroundColor: colours[index % colours.length]}}>
+                      style={{ backgroundColor: colours[index % colours.length] }}>
 
-                      </div>
+                    </div>
                     <p className="text-gray-400">
-                    {item.name}
-                  </p>
+                      {item.name}
+                    </p>
                   </div>
-                  
+
                   <p className="text-white font-bold">
                     {item.weight_percentage}
                   </p>
@@ -781,9 +781,52 @@ const Portfolio = () => {
 
         </div>
 
-      
+        <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white">
+            Top Holdings
+          </h2>
+
+          {GetTheTopHoldingsImportPDF.map((item, index) =>
+            <div key={index} className="mb-4">
+              <div className="flex justify-between mb-1">
+                <p className="text-gray-300">
+                  {item.name}
+                </p>
+
+                <p className="text-gray-300">
+                  R{item.value}
+                </p>
+              </div>
+
+
+              <div className="w-full bg-gray-600 rounded-full h-3">
+                <div className="h-3 rounded-full"
+                     style={{
+                      width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
+                      backgroundColor: colours[index % colours.length]
+                     }}>
+
+                </div>
+              </div>
+
+            </div>
+          )}
+
+
+
+        </div>
+
+
+
+
 
       </div>
+
+
+
+
+
+
 
 
 
