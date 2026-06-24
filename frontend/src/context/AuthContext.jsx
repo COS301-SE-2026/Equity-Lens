@@ -48,6 +48,54 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const login = async (email, password) => {
+    try {
+      const { nextStep } = await loginService(email, password);
+
+      if (nextStep?.signInStep === 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP') {
+        setMfaState({ type: 'SETUP', email });
+        return { challenge: 'MFA_SETUP', totpSetupDetails: nextStep.totpSetupDetails };
+      }
+
+      if (nextStep?.signInStep === 'CONFIRM_SIGN_IN_WITH_TOTP_CODE') {
+        setMfaState({ type: 'VERIFY', email });
+        return { challenge: 'SOFTWARE_TOKEN_MFA' };
+      }
+
+      if (nextStep?.signInStep === 'DONE') {
+        setUser(await getCurrentUserProfile());
+        setMfaState(null);
+        return { challenge: null };
+      }
+    } catch (err) {
+      throw new Error(err.message || 'Login failed');
+    }
+  };
+
+  const submitMFACode = async (totpCode) => {
+    try {
+      const result = await respondToMFA(totpCode);
+      if (result.isSignedIn || result.nextStep?.signInStep === 'DONE') {
+        setUser(await getCurrentUserProfile());
+        setMfaState(null);
+      }
+    } catch (err) {
+      throw new Error(err.message || 'Invalid MFA code');
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await logoutService();
+    } catch (err) {
+      console.error('Logout error:', err);
+    } finally {
+      setUser(null);
+      setMfaState(null);
+      setError(null);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -57,8 +105,10 @@ export const AuthProvider = ({ children }) => {
         mfaState,
         register,
         confirmEmail,
+        login,
         submitMFACode,
         activateTOTP: submitMFACode, //This is aliased to prevent breaking downstream UI
+        logout,
         isAuthenticated: !!user,
       }}
     >
