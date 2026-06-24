@@ -1,5 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { register as registerService, login as loginService, logout as logoutService, getCurrentUser, isAuthenticated,
+import {
+  register as registerService,
+  login as loginService,
+  logout as logoutService,
+  getCurrentUserProfile,
+  isAuthenticated,
+  confirmRegistration,
+  respondToMFA,
 } from '../services/authService';
 
 const AuthContext = createContext(null);
@@ -8,19 +15,19 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [mfaState, setMfaState] = useState(null);
 
   useEffect(() => {
     const initAuth = async () => {
-      if (isAuthenticated()) {
-        try {
-          const userData = await getCurrentUser();
-          setUser(userData);
-        } catch {
-          logoutService();
-          setUser(null);
+      try {
+        if (await isAuthenticated()) {
+          setUser(await getCurrentUserProfile());
         }
+      } catch (err) {
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     initAuth();
   }, []);
@@ -29,27 +36,16 @@ export const AuthProvider = ({ children }) => {
     try {
       await registerService(fullName, email, password);
     } catch (err) {
-      const message = err.response?.data?.detail || 'Registration failed. Please try again.';
-      throw new Error(message);
+      throw new Error(err.message || 'Registration failed');
     }
   };
 
-  const login = async (email, password) => {
+  const confirmEmail = async (email, code) => {
     try {
-      const data = await loginService(email, password);
-      const userData = await getCurrentUser();
-      setUser(userData);
-      return data;
+      await confirmRegistration(email, code);
     } catch (err) {
-      const message = err.response?.data?.detail || 'Login failed. Please try again.';
-      throw new Error(message);
+      throw new Error(err.message || 'Confirmation failed');
     }
-  };
-
-  const logout = () => {
-    logoutService();
-    setUser(null);
-    setError(null);
   };
 
   return (
@@ -58,9 +54,11 @@ export const AuthProvider = ({ children }) => {
         user,
         loading,
         error,
+        mfaState,
         register,
-        login,
-        logout,
+        confirmEmail,
+        submitMFACode,
+        activateTOTP: submitMFACode, //This is aliased to prevent breaking downstream UI
         isAuthenticated: !!user,
       }}
     >
@@ -71,6 +69,6 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuthContext must be used within AuthProvider');
+  if (!context) throw new Error('useAuthContext must be used in AuthProvider');
   return context;
 };
