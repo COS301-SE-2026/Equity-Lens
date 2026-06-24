@@ -1,32 +1,40 @@
 import axios from 'axios';
-import { API_BASE_URL, TOKEN_KEY } from '../utils/constants';
+import { fetchAuthSession, signOut } from 'aws-amplify/auth';
+import { API_BASE_URL } from '../utils/constants';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+  async (config) => {
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.accessToken?.toString();
+      
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (err) {
+      //Fails naturally so this can be empty
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (err) => Promise.reject(err)
 );
 
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem(TOKEN_KEY);
+  (res) => res,
+  async (err) => {
+    if (err.response?.status === 401) {
+      try {
+        await signOut();
+      } catch (e) {
+        console.error(e);
+      }
       window.location.href = '/login';
     }
-    return Promise.reject(error);
+    return Promise.reject(err);
   }
 );
 
