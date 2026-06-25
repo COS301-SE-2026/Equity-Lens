@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, portfolio
+from app.routers import auth, portfolio, ai_chat
 from app.database import create_tables
 from app.config import settings
 from app.models import user
