@@ -24,8 +24,6 @@ class SearchParams(BaseModel):
     
     query: str = Field(..., min_length=1, description="Search keyword, e.g. 'Apple'")
 
-# --- 响应 Schemas ---
-
 class CurrentPriceResponse(BaseModel):
     id: UUID
     ticker: str
