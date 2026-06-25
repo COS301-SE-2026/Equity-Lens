@@ -15,5 +15,5 @@ async def ai_chat(request: ChatRequest):
     try:
         reply = chat(request.message)
         return ChatResponse(reply = reply)
-    except Exeption as e:
+    except Exception as e:
         raise HTTPException(status_code = 500, detail = str(e))

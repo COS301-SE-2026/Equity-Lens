@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Button from '../../components/common/Button/Button';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { getMockResponse } from '../../services/aiService';
+import api from '../../services/api'
 import StockTickerCard from '../../components/dashboard/StockTickerCard/StockTickerCard';
 import useAuth from '../../hooks/useAuth';
 
@@ -34,17 +35,28 @@ const AIChat = () => {
     setInput('');
     setIsThinking(true);
 
-    // Simulate the assistant "thinking" before its reply lands.
-    setTimeout(() => {
-      const aiMessage = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        ...getMockResponse(text),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsThinking(false);
-    }, 900);
-  };
+    // The ai assistant replying now 
+    api.post('/ai_chat/', {message: text})
+      .then((res) => {
+        const responseMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          text: res.data.reply,
+        };
+        setMessages((prev) => [...prev, responseMessage]);
+      })
+
+      //Error checking incase ai call fails
+      .catch(() => {
+        const errorMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          text: "Something went wrong, try again.",          
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      })
+      .finally(() => setIsThinking(false));
+    };
 
   const handleSubmit = (e) => {
     e.preventDefault();

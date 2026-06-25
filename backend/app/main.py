@@ -38,3 +38,4 @@ async def health():
 
 
 app.include_router(news.router, prefix="/api")
+app.include_router(ai_chat.router)

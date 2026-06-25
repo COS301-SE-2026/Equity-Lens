@@ -5,9 +5,9 @@ from app.config import settings
 def get_bedrock_client():
     return boto3.client(
         "bedrock-runtime",
-        region = settings.aws_region
-        acces_key = settings.aws_access_key_id
-        secret_access_key = settings.aws_secret_access_key_id
+        region_name = settings.aws_region,
+        aws_access_key_id = settings.aws_access_key_id,
+        aws_secret_access_key = settings.aws_secret_access_key
     )
 
 #now for chat functionality 

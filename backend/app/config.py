@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     cors_origins: List[str] = ["http://localhost:5173"]
     aws_access_key_id: str = ""
-    aws_secret_access_key_id: str = ""
+    aws_secret_access_key: str = ""
     aws_region: str = "us-east-1"
     bedrock_model: str = "amazon.nova-micro-v1:0"
     model_config = {"env_file": ".env", "extra": "ignore"}
