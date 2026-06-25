@@ -41,6 +41,15 @@ def get_portfolio_news(db: Session = Depends(get_db), CurrentUser: UserResponse 
 
     return response.json()
 
+@router.get("/market_snapshot")
+def get_market_snapshot():
+  api_key=os.getenv("MARKETSTACK_API_KEY")
+
+  response = requests.get("https://api.marketstack.com/v1/eod/latest",
+    params={"access_key":api_key, "symbols" : "AAPL,MSFT,NVDA,GOOGL,AMZN,META,TSLA,NFLX,AMD,INTC,ORCL,IBM,CRM,ADBE,CSCO,QCOM,AVGO,PEP,KO,DIS,UBER,PYPL,COST,WMT,BA,BE,JPM"})
+
+  return response.json()
+
 
 
 

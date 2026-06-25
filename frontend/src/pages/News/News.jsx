@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { getToken } from "../../services/authService"
+import { TrendingUp, TrendingDown } from "lucide-react"
 
 const NewsInvestment = () => {
   const [articles, setArticles] = useState([]);
   const [articlesPortfolios, setarticlesPortfolios] = useState([]);
+  const [MarketSnapshot, setMarketSnapshot] = useState([]);
 
   const ToGetTheNews = async (getName) => {
     const gettingTheNews = await fetch(
@@ -28,15 +30,35 @@ const NewsInvestment = () => {
         },
       }
     );
-  
+
     const getImportNews = await gettingTheNews.json();
     setarticlesPortfolios(getImportNews.results);
+
+   }
+
+  const ToGetTheMarketSnapshot = async (getName) => {
+    const gettingTheNews = await fetch(
+      `http://localhost:8000/news/market_snapshot/`,
+      {
+        method: "GET",
+        headers:
+        {
+          Authorization: `Bearer ${getToken()}`
+        },
+      }
+    );
+  
+    const getImportNews = await gettingTheNews.json();
+    setMarketSnapshot(getImportNews.data);
+
+    console.log("test",getImportNews)
   }
 
   console.log("test",articles);
 
   useEffect(() => {ToGetTheNews()},[]);
   useEffect(() => {ToGetTheNewsPortfolio()},[]);
+  useEffect(() => {ToGetTheMarketSnapshot()},[]);
 
 
   return (
@@ -144,6 +166,37 @@ const NewsInvestment = () => {
 
        <div className="p-5 border border-gray-700 rounded-2xl">
         Market Snapshot
+      
+
+       <div className="flex flex-col">
+
+        {MarketSnapshot.map((stock) => (
+
+
+        <div key={stock.symbol} className="flex justify-between mb-4">
+          <div className="flex items-center gap-8">
+          <p className="text-lg font-semibold text-white"> {stock.symbol}</p>
+
+           <div className="flex items-center gap-1 ">
+            {stock.close >= stock.open ? (<TrendingUp className="w-4 h-4 text-green-500"></TrendingUp>) : (<TrendingDown className="w-4 h-4 text-red-500"></TrendingDown>)}
+
+          
+          <p className={stock.close >= stock.open ?  ("text-lg font-bold text-green-500") : ("text-lg font-bold text-red-500")}> {(((stock.close - stock.open)/stock.open) * 100).toFixed(2)}%</p>
+          </div>
+        </div>
+          
+
+        <button className="px-3 py-3 text-sm text-white border border-gray-600 rounded-lg">
+          + Watchlist
+        </button>
+       
+         </div>
+         
+
+           ))}
+          
+        </div>
+
        </div>
 
 
