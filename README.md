@@ -85,7 +85,7 @@ Third-year BSc Computer Science student at the University of Pretoria with a pas
 | Database | AWS RDS PostgreSQL, AWS S3 |
 | AI | AWS Bedrock |
 | Market Data | yfinance (primary), Alpha Vantage (fallback) |
-| News | NewsData |
+| News | NewsData & Marketstack |
 | File Handling | pdfjs-dist |
 | CI/CD | GitHub Actions, AWS SAM |
 
