@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { getToken } from "../../services/authService"
 
 const NewsInvestment = () => {
   const [articles, setArticles] = useState([]);
+  const [articlesPortfolios, setarticlesPortfolios] = useState([]);
 
   const ToGetTheNews = async (getName) => {
     const gettingTheNews = await fetch(
@@ -15,9 +17,26 @@ const NewsInvestment = () => {
     setArticles(getImportNews.results);
   }
 
+   const ToGetTheNewsPortfolio = async (getName) => {
+    const gettingTheNews = await fetch(
+      `http://localhost:8000/news/portfolio_news/`,
+      {
+        method: "GET",
+        headers:
+        {
+          Authorization: `Bearer ${getToken()}`
+        },
+      }
+    );
+  
+    const getImportNews = await gettingTheNews.json();
+    setarticlesPortfolios(getImportNews.results);
+  }
+
   console.log("test",articles);
 
   useEffect(() => {ToGetTheNews()},[]);
+  useEffect(() => {ToGetTheNewsPortfolio()},[]);
 
 
   return (
@@ -30,16 +49,16 @@ const NewsInvestment = () => {
 
       <div className="grid grid-cols-3 gap-8 mt-4">
 
-        <div className="p-6 border border-grey-700 rounded-2xl">
+        <div className="p-6 border border-gray-700 rounded-2xl">
           <h2 className="text-xl font-semibold text-white mb-2">Market Overview</h2>
           <p> To Do, to put a date</p>
         </div>
 
-        <div className="p-6 border border-grey-700 rounded-2xl">
+        <div className="p-6 border border-gray-700 rounded-2xl">
           <h2 className="text-xl font-semibold text-white mb-2">Market Overview</h2>
         </div>
 
-        <div className="p-6 border border-grey-700 rounded-2xl">
+        <div className="p-6 border border-gray-700 rounded-2xl">
           <h2 className="text-xl font-semibold text-white mb-2">My Watchlist</h2>
         </div>
 
@@ -53,7 +72,7 @@ const NewsInvestment = () => {
           <h2 className="text-xl font-semibold text-white mb-2">Latest News</h2>
 
           {articles.map((article) => (
-          <div key={article.article_id} className="flex items-center   border-b border-gray-700 p-5 gap-4">
+          <div key={article.article_id} className="flex items-center  border-b border-gray-700 p-5 gap-4">
 
             <div>
               <img
@@ -83,42 +102,56 @@ const NewsInvestment = () => {
 
         </div>
 
+      <div className="flex flex-col gap-6">
+
+     
         <div className="p-5 border border-gray-700 rounded-2xl">
 
-          <h2 className="text-xl font-semibold text-white mb-2">Top News For My Portfolio</h2>
+          <h2 className="text-xl font-semibold text-white mb-4">Top News For My Portfolio</h2>
+
+      
+      <div className="flex gap-4 mt-1">
+
+      {articlesPortfolios.slice(0, 3).map((article) => (
+        <div key={article.article_id}>
+
+        <div>
+          <p className="text-sm text-white font-medium">
+            {article.title}
+          </p>
+
+          <div >
+          <span className="text-xs text-green-400 font-medium">
+            {article.source_name}
+          </span>
+
+          <span className="text-xs ml-2 text-gray-500">
+            - {article.pubDate}
+          </span>
+          </div>
 
         </div>
+        </div>
+     
+      ))}
 
-      </div>
+       </div>
+        
 
 
-         
+       </div>
 
+
+       <div className="p-5 border border-gray-700 rounded-2xl">
+        Market Snapshot
+       </div>
+
+
+
+      </div> 
+       </div>
 
     </div>
-
-           
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
   );
