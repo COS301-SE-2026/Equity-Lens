@@ -1,7 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,Depends
 import os
 import requests
 from dotenv import load_dotenv
+from app.dependencies import get_current_user
+from app.database import get_db
+from app.schemas.auth import UserResponse
+from sqlalchemy.orm import Session
+
+from app.services.news_service import get_portfolio_new,clean_instrument_news
 
 load_dotenv()
 
@@ -18,5 +24,24 @@ def get_news(parameter: str="JSE"):
       })
 
 
+    return response.json()
+
+
+@router.get("/portfolio_news")
+def get_portfolio_news(db: Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):
+    api_key=os.getenv("NEWSDATA_API_KEY")
+
+    offunction = get_portfolio_new(db = db, CurrentUser = CurrentUser)
+
+    response = requests.get("https://newsdata.io/api/1/latest",
+      params={
+        "apikey": api_key,
+        "q": offunction
+      })
 
     return response.json()
+
+
+
+
+
