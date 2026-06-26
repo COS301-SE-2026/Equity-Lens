@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { getMockIndicatorData } from '../services/indicatorService';
+import { getIndicatorData } from '../services/indicatorService';
 
 const useIndicators = () => {
   const [stockData, setStockData] = useState({});
@@ -10,12 +10,8 @@ const useIndicators = () => {
     const fetchIndicators = async () => {
       setLoading(true);
       try {
-        // Use mock data for Demo 1
-        // Replace with actual API call when backend is ready:
-        // const res = await fetch('http://localhost:8000/api/indicators');
-        // const data = await res.json();
-
-        const data = getMockIndicatorData();
+       
+        const data = await getIndicatorData();
         const mapped = Object.fromEntries(
           data.map((stock) => [stock.ticker, { loading: false, results: stock }])
         );

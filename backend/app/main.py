@@ -9,7 +9,7 @@ import traceback
 from app.routers import news
 from app.routers import import_pdf
 from app.routers import pdf_summary
-
+from app.routers import indicators
 app = FastAPI(title="EquityLens API")
 
 app.add_middleware(
@@ -42,3 +42,5 @@ app.include_router(news.router)
 app.include_router(import_pdf.router)
 
 app.include_router(pdf_summary.router)
+
+app.include_router(indicators.router)
