@@ -1,10 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from app.services.ai_service import chat
 from app.database import get_db
-for app.dependencies import get_current_user
-from app.schemas.auth omport UserResponse
+from app.dependencies import get_current_user
+from app.schemas.auth import UserResponse
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 

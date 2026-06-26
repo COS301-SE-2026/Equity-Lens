@@ -20,13 +20,13 @@ def get_user_portfolio_context(db: Session, user_id):
         for info in portfolios:
             knowledge += f"Portfolio: {info.portfolio_name}, Account: {info.account_number}\n"
 
-            #documents
-            documents = db.query(Document).filter(Document.user_id == user_id).all()
-            if documents:
-                knowledge += "\nUploaded Documents\n"
-                for document in documents:
-                    if document.encrypted_document_text:
-                        knowledge += f"- {document.filename}- \n{document.encrypted_document_text}\n\n\n"                                                       
+    #documents
+    documents = db.query(Document).filter(Document.user_id == user_id).all()
+    if documents:
+        knowledge += "\nUploaded Documents\n"
+        for document in documents:
+            if document.encrypted_document_text:
+                knowledge += f"- {document.file_name}- \n{document.encrypted_document_text}\n\n\n"                                                       
             
     if not knowledge:
         return  "User has not uploaded portfolio data."
@@ -36,6 +36,15 @@ def get_user_portfolio_context(db: Session, user_id):
 #now for chat functionality 
 def chat(user_message: str, db: Session, user_id):
     client = get_bedrock_client()
+
+    portfolio_context = get_user_portfolio_context(db, user_id)
+
+    system_prompt = (
+        "You are an AI financial assistant for EquityLens. "
+        "Below is the user's portfolio data. Use it to answer their questions.\n\n"
+        f"{portfolio_context}"
+    )
+
     #response (using converse uses modelId and JSON format for messages)
     response = client.converse(
         modelId = settings.bedrock_model,
@@ -46,7 +55,7 @@ def chat(user_message: str, db: Session, user_id):
                 "content": [{"text": user_message}]
             }
         ],
-        system = [{"text": "You are an AI financial asistant for EquityLens."}],
+        system = [{"text": system_prompt}],
         inferenceConfig = {"maxTokens": 256}
     )
     return response["output"]["message"]["content"][0]["text"]
