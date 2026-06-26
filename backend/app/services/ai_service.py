@@ -1,6 +1,8 @@
 # adding boto3 to reach AWS services
 import boto3
+from sqlalchemy.orm import Session
 from app.config import settings
+from app.models.portfolio import Portfolios, Document
 
 def get_bedrock_client():
     return boto3.client(
@@ -10,8 +12,29 @@ def get_bedrock_client():
         aws_secret_access_key = settings.aws_secret_access_key
     )
 
+def get_user_portfolio_context(db: Session, user_id):
+    portfolios = db.query(Portfolios).filter(Portfolios.user_id == user_id).all()
+    knowledge = ""
+
+    if portfolios:
+        for info in portfolios:
+            knowledge += f"Portfolio: {info.portfolio_name}, Account: {info.account_number}\n"
+
+            #documents
+            documents = db.query(Document).filter(Document.user_id == user_id).all()
+            if documents:
+                knowledge += "\nUploaded Documents\n"
+                for document in documents:
+                    if document.encrypted_document_text:
+                        knowledge += f"- {document.filename}- \n{document.encrypted_document_text}\n\n\n"                                                       
+            
+    if not knowledge:
+        return  "User has not uploaded portfolio data."
+
+    return knowledge
+
 #now for chat functionality 
-def chat(user_message: str):
+def chat(user_message: str, db: Session, user_id):
     client = get_bedrock_client()
     #response (using converse uses modelId and JSON format for messages)
     response = client.converse(
