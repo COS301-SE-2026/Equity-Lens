@@ -229,6 +229,18 @@ CREATE TABLE IF NOT EXISTS  transaction_expenses
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS  chat_conversations
+(
+
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    title VARCHAR(255) NOT NULL DEFAULT 'New Chat',
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 
 
 
