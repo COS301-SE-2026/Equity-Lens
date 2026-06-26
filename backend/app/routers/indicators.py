@@ -16,11 +16,23 @@ from app.indicators.sortino_ratio import calculate_sortino_ratio
 router = APIRouter(prefix="/api/indicators", tags=["indicators"])
 
 
-def safe_calc(fn, stock):
-    try:
-        return fn(stock)
-    except Exception as e:
-        return {"status": "error", "reason": str(e)}
+def _extract_statement_value(statement, *candidate_keys):
+    if statement is None or statement.empty:
+        return None
+
+    for key in candidate_keys:
+        if key in statement.index:
+            value = statement.loc[key]
+            if hasattr(value, "iloc"):
+                value = value.iloc[0]
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                return None
+
+    return None
+
+
 
 def build_live_indicator_row(symbol: str, name: str) -> dict:
     try:
@@ -61,12 +73,47 @@ def build_live_indicator_row(symbol: str, name: str) -> dict:
             balance_sheet = getattr(ticker, "balance_sheet", None)
             financials = getattr(ticker, "financials", None)
             if balance_sheet is not None and financials is not None and not balance_sheet.empty and not financials.empty:
-                total_assets = balance_sheet.loc["totalAssets"].iloc[0] if "totalAssets" in balance_sheet.index else None
-                total_liabilities = balance_sheet.loc["totalLiab"].iloc[0] if "totalLiab" in balance_sheet.index else None
+                current_assets = _extract_statement_value(
+                    balance_sheet,
+                    "currentAssets",
+                    "totalCurrentAssets",
+                )
+                current_liabilities = _extract_statement_value(
+                    balance_sheet,
+                    "currentLiabilities",
+                    "totalCurrentLiabilities",
+                )
                 working_capital = None
-                retained_earnings = None
-                ebit = financials.loc["ebit"].iloc[0] if "ebit" in financials.index else None
-                sales = financials.loc["totalRevenue"].iloc[0] if "totalRevenue" in financials.index else None
+                if current_assets is not None and current_liabilities is not None:
+                    working_capital = current_assets - current_liabilities
+
+                retained_earnings = _extract_statement_value(
+                    balance_sheet,
+                    "retainedEarnings",
+                    "retainedEarningsAccumulatedDeficit",
+                    "retainedEarningsTotalEquity",
+                )
+                total_assets = _extract_statement_value(
+                    balance_sheet,
+                    "totalAssets",
+                    "totalAssetsReported",
+                )
+                total_liabilities = _extract_statement_value(
+                    balance_sheet,
+                    "totalLiab",
+                    "totalLiabilitiesNetMinorityInterest",
+                    "totalLiabilities",
+                )
+                ebit = _extract_statement_value(
+                    financials,
+                    "ebit",
+                    "operatingIncome",
+                )
+                sales = _extract_statement_value(
+                    financials,
+                    "totalRevenue",
+                    "revenue",
+                )
                 market_cap = info.get("marketCap")
 
                 if all(
