@@ -1,3 +1,4 @@
+import yfinance as yf
 import boto3
 import pandas as pd
 from io import BytesIO
@@ -13,7 +14,6 @@ def get_market_returns():
         return pd.read_parquet(BytesIO(obj['Body'].read()))
     except Exception as e:
         print(f"S3 cache miss, downloading live: {e}")
-        import yfinance as yf
         ticker = yf.Ticker("^GSPC")
         hist = ticker.history(period="1y", interval="1d", auto_adjust=True)
         return hist['Close'].pct_change().dropna()

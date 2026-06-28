@@ -12,6 +12,13 @@ from app.indicators.beta import calculate_beta
 from app.indicators.rsi import calculate_rsi        
 from app.indicators.sharpe_ratio import calculate_sharpe_ratio
 from app.indicators.sortino_ratio import calculate_sortino_ratio
+from app.utils.market_cache import get_market_returns
+import boto3
+from io import BytesIO
+import pandas as pd
+
+S3_BUCKET = "market-data-bucket-equitylens"      
+S3_KEY = "market_data/gspc_1y.parquet"
 
 router = APIRouter(prefix="/api/indicators", tags=["indicators"])
 
@@ -32,9 +39,7 @@ def _extract_statement_value(statement, *candidate_keys):
 
     return None
 
-
-
-def build_live_indicator_row(symbol: str, name: str) -> dict:
+def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) -> dict:
     try:
         ticker = yf.Ticker(symbol)
         hist = ticker.history(period="1y", interval="1d", auto_adjust=True)
@@ -44,9 +49,6 @@ def build_live_indicator_row(symbol: str, name: str) -> dict:
         close = hist["Close"].dropna()
         returns = close.pct_change().dropna()
 
-        market_hist = yf.Ticker("^GSPC").history(period="1y", interval="1d", auto_adjust=True)
-        market_close = market_hist["Close"].dropna()
-        market_returns = market_close.pct_change().dropna()
 
         returns, market_returns = returns.align(market_returns, join="inner")
 
@@ -170,6 +172,7 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
     portfolios = db.query(Portfolios).filter(Portfolios.user_id == current_user.id).all()
 
     tickers = []
+    market_returns = get_market_returns()
     for p in portfolios:
         holdings = db.query(Holdings).filter(Holdings.portfolio_id == p.id).all()
         for h in holdings:
@@ -178,6 +181,6 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
                 tickers.append(symbol)
     results = []
     for t in tickers:
-        row = build_live_indicator_row(t,t)
+        row = build_live_indicator_row(t,t,market_returns)
         results.append(row)
     return results
