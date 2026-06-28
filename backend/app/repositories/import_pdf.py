@@ -10,7 +10,7 @@ from app.models.portfolio import TransactionInterest
 from app.models.portfolio import TransactionExpenses
 
 
-def SaveDocument(database,user_id,data):
+def save_document(database,user_id,data):
 
     saving = Document(
         user_id = user_id,
@@ -26,7 +26,7 @@ def SaveDocument(database,user_id,data):
 
     return saving
 
-def SavePortfolios(database,user_id,data):
+def save_portfolios(database,user_id,data):
 
     saving = Portfolios(
         user_id = user_id,
@@ -42,7 +42,7 @@ def SavePortfolios(database,user_id,data):
 
     return saving
 
-def SaveHoldings(database,user_id,data,ticker):
+def save_holdings(database,user_id,data,ticker):
 
     saving = Holdings(
         instrument_name = data.instrument_name,
@@ -63,7 +63,7 @@ def SaveHoldings(database,user_id,data,ticker):
 
     return saving
 
-def SaveInstrumentPurchasesAndSales(database,user_id,data):
+def save_instrument_purchases_and_sales(database,user_id,data):
 
     saving = InstrumentPurchasesAndSales(
         portfolio_id = data.portfolio_id,
@@ -83,7 +83,7 @@ def SaveInstrumentPurchasesAndSales(database,user_id,data):
 
     return saving
 
-def SaveTransactionCosts(database,user_id,data):
+def save_transaction_costs(database,user_id,data):
 
     saving = TransactionCosts(
         portfolio_id = data.portfolio_id,
@@ -99,7 +99,7 @@ def SaveTransactionCosts(database,user_id,data):
 
     return saving
 
-def SaveContributionsAndWithdrawals(database,user_id,data):
+def save_contributions_and_withdrawals(database,user_id,data):
 
     saving = ContributionsAndWithdrawals(
         portfolio_id = data.portfolio_id,
@@ -117,7 +117,7 @@ def SaveContributionsAndWithdrawals(database,user_id,data):
 
     return saving
 
-def SaveDividendsAndWithholdingTax(database,user_id,data):
+def save_dividends_and_withholding_tax(database,user_id,data):
 
     saving = DividendsAndWithholdingTax(
         portfolio_id = data.portfolio_id,
@@ -136,7 +136,7 @@ def SaveDividendsAndWithholdingTax(database,user_id,data):
 
     return saving
 
-def SaveTransactionInterest(database,user_id,data):
+def save_transaction_interest(database,user_id,data):
 
     saving = TransactionInterest(
         portfolio_id = data.portfolio_id,
@@ -154,7 +154,7 @@ def SaveTransactionInterest(database,user_id,data):
 
     return saving
 
-def SaveTransactionExpenses(database,user_id,data):
+def save_transaction_expenses(database,user_id,data):
 
     saving = TransactionExpenses(
         portfolio_id = data.portfolio_id,

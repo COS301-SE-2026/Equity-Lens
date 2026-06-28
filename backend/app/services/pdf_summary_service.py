@@ -11,7 +11,7 @@ from app.models.portfolio import TransactionInterest
 from app.models.portfolio import TransactionExpenses
 
 
-def GetSummaryImportPDF(database,portfolioID):
+def get_summary_import_PDF(database,portfolioID):
     PortfolioValue = database.query(func.sum(Holdings.current_value)).filter(Holdings.portfolio_id == portfolioID).scalar() or 0
     TotalHoldings = database.query(Holdings).filter(Holdings.portfolio_id == portfolioID).count() 
     TotalPurchasesAndSales = database.query(func.sum(InstrumentPurchasesAndSales.value_zar)).filter(InstrumentPurchasesAndSales.portfolio_id == portfolioID).scalar() or 0
@@ -33,7 +33,7 @@ def GetSummaryImportPDF(database,portfolioID):
 
     }
 
-def GetTheTopHoldingsImportPDF(database,portfolioID):
+def get_the_top_holdings_import_PDF(database,portfolioID):
     getInfo = database.query(Holdings.instrument_name, Holdings.current_value).filter(Holdings.portfolio_id == portfolioID).order_by(Holdings.current_value.desc()).all()
 
     returnAllArray = []
@@ -43,7 +43,7 @@ def GetTheTopHoldingsImportPDF(database,portfolioID):
 
     return returnAllArray
 
-def GetTheTopAllocationImportPDF(database,portfolioID):
+def get_the_top_allocation_import_PDF(database,portfolioID):
     getInfo = database.query(Holdings.instrument_name, Holdings.weight_percentage).filter(Holdings.portfolio_id == portfolioID).order_by(Holdings.weight_percentage.desc()).all()
 
     returnAllArray = []
