@@ -107,6 +107,12 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           working-directory: backend
+        
+      - name: Run database migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/equitylens
+        run: alembic upgrade head
 
 
   trivy:
