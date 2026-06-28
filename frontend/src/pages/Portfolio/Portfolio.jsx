@@ -1,60 +1,28 @@
 import { useState } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
-import { getToken } from "../../services/authService"
 import { ArrowLeftRight, Wallet, CreditCard, Percent, TrendingUp, Landmark, Receipt, Briefcase, TriangleAlert, Bot } from "lucide-react"
 import { PieChart, Pie, Cell } from "recharts"
+import api from "../../services/api"
 
 
 ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
 
-
 const ToGetIDForInstrument = async (getName) => {
-  const getID = await fetch(
-    `http://localhost:8000/import_pdf/get_instrument_type_id/${getName}`,
-    {
-      method: "GET",
-      headers:
-      {
-        Authorization: `Bearer ${getToken()}`
-      },
-    }
-  );
-
-  const get = await getID.json();
-  return get.id;
+  const getID = await api.get(`/import_pdf/get_instrument_type_id/${getName}`);
+  return getID.data.id;
 }
 
-const ToGetIDForTransaction = async (getName) => {
-  const getID = await fetch(
-    `http://localhost:8000/import_pdf/get_transaction_type_id/${getName}`,
-    {
-      method: "GET",
-      headers:
-      {
-        Authorization: `Bearer ${getToken()}`
-      },
-    }
-  );
 
-  const get = await getID.json();
-  return get.id;
+
+const ToGetIDForTransaction = async (getName) => {
+  const getID = await api.get(`/import_pdf/get_transaction_type_id/${getName}`);
+  return getID.data.id;
 }
 
 const ToGetIDForNarrative = async (getName) => {
-  const getID = await fetch(
-    `http://localhost:8000/import_pdf/get_narrative_type_id/${getName}`,
-    {
-      method: "GET",
-      headers:
-      {
-        Authorization: `Bearer ${getToken()}`
-      },
-    }
-  );
-
-  const get = await getID.json();
-  return get.id;
+  const getID = await api.get(`/import_pdf/get_narrative_type_id/${getName}`);
+  return getID.data.id;
 }
 
 const Portfolio = () => {
@@ -106,25 +74,18 @@ const Portfolio = () => {
 
       setConvert(gettingInfo);
 
-      const uploadInvestmentStatements = await fetch(
-        "http://localhost:8000/import_pdf/",
-        {
-          method: "POST",
-          headers:
+      const uploadInvestmentStatements = await api.post(
+        "/import_pdf/",
+        
           {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getToken()}`
-          },
-
-          body: JSON.stringify({
             file_name: getTheFile.name,
             document_text: "Something special",
             password: "0792571562",
-          })
-        }
+          }
+        
       );
 
-      const getUploadInvestmentStatements = await uploadInvestmentStatements.json();
+      const getUploadInvestmentStatements = uploadInvestmentStatements.data;
 
       const SplitingInArray = gettingInfo.split(" ");
       const getAccountNumber = SplitingInArray.find((word) => word.startsWith("EE") && word.includes("-"));
@@ -132,26 +93,17 @@ const Portfolio = () => {
       const getPortfolioName = SplitingInArray[getAccountNumberIndex + 1];
 
 
-      const uploadPortfolioRequest = await fetch(
-        "http://localhost:8000/import_pdf/save_portfolios/",
+      const uploadPortfolioRequest = await api.post(
+        "/import_pdf/save_portfolios/",
         {
-          method: "POST",
-          headers:
-          {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${getToken()}`
-          },
-
-          body: JSON.stringify({
             document_id: getUploadInvestmentStatements.document_id,
             account_number: getAccountNumber,
             portfolio_name: getPortfolioName,
-          })
-        }
+          }
       );
 
 
-      const getuploadPortfolioRequest = await uploadPortfolioRequest.json();
+      const getuploadPortfolioRequest = uploadPortfolioRequest.data;
 
       const ReplacenstrumentName = gettingInfo.replaceAll("10X S&P 500 Exchange Traded Fund", "10X_S&P_500_Exchange_Traded_Fund")
         .replaceAll("10X S&P South Africa Top50 Index Exchange Traded Fund", "10X_S&P_South_Africa_Top50_Index_Exchange_Traded_Fund")
@@ -219,17 +171,9 @@ const Portfolio = () => {
       }
 
       for (const eachItems of FinalArray) {
-        const uploadHoldingsRequest = await fetch(
-          "http://localhost:8000/import_pdf/save_holdings/",
+        const uploadHoldingsRequest = await api.post(
+          "/import_pdf/save_holdings/",
           {
-            method: "POST",
-            headers:
-            {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${getToken()}`
-            },
-
-            body: JSON.stringify({
               portfolio_id: getuploadPortfolioRequest.portfolio_id,
               instrument_name: eachItems.instrument_name.replaceAll("_", " "),
               quantity: eachItems.quantity,
@@ -238,9 +182,8 @@ const Portfolio = () => {
               current_price: eachItems.current_price,
               current_value: eachItems.current_value,
               weight_percentage: eachItems.weight_percentage.replace("%", " "),
-            })
-          }
-        );
+            }
+          )
       }
 
 
@@ -268,17 +211,9 @@ const Portfolio = () => {
       }
 
       for (const eachItems of FinalArrayPurchaseAndInvestment) {
-        const uploadHoldingsRequest = await fetch(
-          "http://localhost:8000/import_pdf/save_instrument_purchases_and_sales/",
+        const uploadHoldingsRequest = await api.post(
+          "/import_pdf/save_instrument_purchases_and_sales/",
           {
-            method: "POST",
-            headers:
-            {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${getToken()}`
-            },
-
-            body: JSON.stringify({
               portfolio_id: getuploadPortfolioRequest.portfolio_id,
               transactions_date: eachItems.transactions_date,
               transaction_type_id: eachItems.transaction_type_id,
@@ -287,11 +222,8 @@ const Portfolio = () => {
               quantity: eachItems.quantity,
               transactions_cost: eachItems.transactions_cost,
               value_zar: eachItems.value_zar,
-            })
-          }
-        );
-
-
+            }
+          )
 
       }
 
@@ -314,23 +246,14 @@ const Portfolio = () => {
       }
 
       for (const eachItems of FinalTransactionCosts) {
-        const uploadHoldingsRequest = await fetch(
-          "http://localhost:8000/import_pdf/save_transaction_costs/",
+        const uploadHoldingsRequest = await api.post(
+          "/import_pdf/save_transaction_costs/",
           {
-            method: "POST",
-            headers:
-            {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${getToken()}`
-            },
-
-            body: JSON.stringify({
               portfolio_id: getuploadPortfolioRequest.portfolio_id,
               instrument_type_id: eachItems.instrument_type_id,
               brokerage: eachItems.brokerage,
               other_trading_costs: eachItems.other_trading_costs,
-            })
-          }
+            }
         );
 
       }
@@ -355,24 +278,15 @@ const Portfolio = () => {
       }
 
       for (const eachItems of FinalContributionsAndWithdrawals) {
-        const uploadHoldingsRequest = await fetch(
-          "http://localhost:8000/import_pdf/save_contributions_and_withdrawals/",
+        const uploadHoldingsRequest = await api.post(
+          "/import_pdf/save_contributions_and_withdrawals/",
           {
-            method: "POST",
-            headers:
-            {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${getToken()}`
-            },
-
-            body: JSON.stringify({
               portfolio_id: getuploadPortfolioRequest.portfolio_id,
               transaction_date: eachItems.transaction_date,
               settlement_date: eachItems.settlement_date,
               transaction_type_id: eachItems.transaction_type_id,
               value_zar: eachItems.value_zar,
-            })
-          }
+          } 
         );
       }
 
@@ -401,17 +315,9 @@ const Portfolio = () => {
       }
 
       for (const eachItems of FinalDividendsAndWithholdingTax) {
-        const uploadHoldingsRequest = await fetch(
-          "http://localhost:8000/import_pdf/save_dividends_and_withholding_tax/",
+        const uploadHoldingsRequest = await api.post(
+          "/import_pdf/save_dividends_and_withholding_tax/",
           {
-            method: "POST",
-            headers:
-            {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${getToken()}`
-            },
-
-            body: JSON.stringify({
               portfolio_id: getuploadPortfolioRequest.portfolio_id,
               transaction_date: eachItems.transaction_date,
               instrument_type_id: eachItems.instrument_type_id,
@@ -419,10 +325,11 @@ const Portfolio = () => {
               withholding_tax: eachItems.withholding_tax,
               net_dividend: eachItems.net_dividend,
               tax_rate: eachItems.tax_rate,
-            })
+            }
+           )
           }
-        );
-      }
+      
+      
 
 
       const StartingTransactionInterest = FixNumberComma.indexOf("Detailed_Transactions_-_Interest");
@@ -448,28 +355,21 @@ const Portfolio = () => {
       }
 
       for (const eachItems of FinalTransactionInterest) {
-        const uploadHoldingsRequest = await fetch(
-          "http://localhost:8000/import_pdf/save_transaction_interest/",
+        const uploadHoldingsRequest = await api.post(
+          "/import_pdf/save_transaction_interest/",
           {
-            method: "POST",
-            headers:
-            {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${getToken()}`
-            },
-
-            body: JSON.stringify({
               portfolio_id: getuploadPortfolioRequest.portfolio_id,
               transaction_date: eachItems.transaction_date,
               settlement_date: eachItems.settlement_date,
               transaction_type_id: eachItems.transaction_type_id,
               instrument_type_id: eachItems.instrument_type_id,
               value_zar: eachItems.value_zar,
-            })
-          }
+            }
         );
-
       }
+      
+
+      
 
 
       const StartingTransactionExpenses = FixNumberComma.indexOf("Detailed_Transactions_-_Expenses");
@@ -495,17 +395,9 @@ const Portfolio = () => {
       }
 
       for (const eachItems of FinalTransactionExpenses) {
-        const uploadHoldingsRequest = await fetch(
-          "http://localhost:8000/import_pdf/save_transaction_expenses/",
+        const uploadHoldingsRequest = await api.post(
+          "/import_pdf/save_transaction_expenses/",
           {
-            method: "POST",
-            headers:
-            {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${getToken()}`
-            },
-
-            body: JSON.stringify({
               portfolio_id: getuploadPortfolioRequest.portfolio_id,
               transaction_date: eachItems.transaction_date,
               settlement_date: eachItems.settlement_date,
@@ -513,56 +405,31 @@ const Portfolio = () => {
               narrative_type_id: eachItems.narrative_type_id,
               value_zar: eachItems.value_zar,
             })
+          
           }
-        );
-      }
+      
 
-      const getSummaryRequest = await fetch(
-        `http://localhost:8000/import_pdf_summary/summary/${getuploadPortfolioRequest.portfolio_id}`,
-        {
-          method: "GET",
-          headers:
-          {
-            Authorization: `Bearer ${getToken()}`
-          },
-        }
+      const getSummaryRequest = await api.get(
+        `/import_pdf_summary/summary/${getuploadPortfolioRequest.portfolio_id}`
       )
 
-      const getSummary = await getSummaryRequest.json();
+      const getSummary = getSummaryRequest.data;
       setSummary(getSummary);
 
-      const SummaGetTheTopAllocationImportPDFRequest = await fetch(
-        `http://localhost:8000/import_pdf_summary/top_holdings/${getuploadPortfolioRequest.portfolio_id}`,
-        {
-          method: "GET",
-          headers:
-          {
-            Authorization: `Bearer ${getToken()}`
-          },
-        }
+      const SummaGetTheTopAllocationImportPDFRequest = await api.get(
+        `/import_pdf_summary/top_holdings/${getuploadPortfolioRequest.portfolio_id}`,
       )
 
-      const getSummaGetTheTopAllocationImportPDFry = await SummaGetTheTopAllocationImportPDFRequest.json();
+      const getSummaGetTheTopAllocationImportPDFry = SummaGetTheTopAllocationImportPDFRequest.data;
       setGetTheTopHoldingsImportPDF(getSummaGetTheTopAllocationImportPDFry);
 
-      console.log("Testing: " + getSummaGetTheTopAllocationImportPDFry);
 
-
-      const getSummaryGetTheTopHoldingsImportPDFRequest = await fetch(
-        `http://localhost:8000/import_pdf_summary/portfolio_allocation/${getuploadPortfolioRequest.portfolio_id}`,
-        {
-          method: "GET",
-          headers:
-          {
-            Authorization: `Bearer ${getToken()}`
-          },
-        }
+      const getSummaryGetTheTopHoldingsImportPDFRequest = await api.get(
+        `/import_pdf_summary/portfolio_allocation/${getuploadPortfolioRequest.portfolio_id}`
       )
 
-      const getSummaryGetTheTopHoldingsImportPDF = await getSummaryGetTheTopHoldingsImportPDFRequest.json();
+      const getSummaryGetTheTopHoldingsImportPDF = getSummaryGetTheTopHoldingsImportPDFRequest.data;
       setGetTheTopAllocationImportPDF(getSummaryGetTheTopHoldingsImportPDF);
-
-      console.log("Testing: " + getSummaryGetTheTopHoldingsImportPDF);
 
 
 
