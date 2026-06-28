@@ -73,6 +73,8 @@ class Holdings(Base):
     portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id",ondelete="CASCADE"), nullable=False)
 
     instrument_name = Column(String(100), nullable=False)
+    ticker = Column(String(100))
+    sector = Column(String(100))
     quantity = Column(Numeric(18,4))
     total_cost = Column(Numeric(18,2))
     cost_price = Column(Numeric(18,2))

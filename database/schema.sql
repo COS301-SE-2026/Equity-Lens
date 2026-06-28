@@ -133,6 +133,8 @@ CREATE TABLE IF NOT EXISTS holdings
     portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
 
     instrument_name VARCHAR(100),
+    ticker VARCHAR(20),
+    sector VARCHAR(100),
     quantity NUMERIC(18,4),
     total_cost NUMERIC(18,2),
     cost_price NUMERIC(18,2),

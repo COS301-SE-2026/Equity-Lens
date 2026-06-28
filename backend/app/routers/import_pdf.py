@@ -26,7 +26,7 @@ from app.models.portfolio import NarrativeType
 from app.models.portfolio import TransactionType
 
 
-router = APIRouter(prefix="/import_pdf", tags=["Import PDF"])
+router = APIRouter(prefix="/api/import_pdf", tags=["Import PDF"])
 
 @router.post("/")
 def ImportPdfDataDB(data: ImportPdfRequest,db : Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):

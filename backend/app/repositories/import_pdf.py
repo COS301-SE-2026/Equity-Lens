@@ -42,11 +42,12 @@ def SavePortfolios(database,user_id,data):
 
     return saving
 
-def SaveHoldings(database,user_id,data):
+def SaveHoldings(database,user_id,data,ticker):
 
     saving = Holdings(
         instrument_name = data.instrument_name,
         portfolio_id = data.portfolio_id,
+        ticker = ticker,
         quantity = data.quantity,
         total_cost = data.total_cost,
         cost_price = data.cost_price,

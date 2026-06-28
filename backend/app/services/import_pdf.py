@@ -7,6 +7,27 @@ from app.repositories.import_pdf import SaveContributionsAndWithdrawals
 from app.repositories.import_pdf import SaveDividendsAndWithholdingTax
 from app.repositories.import_pdf import SaveTransactionInterest
 from app.repositories.import_pdf import SaveTransactionExpenses
+import yfinance as yf
+
+def searchTicketNumber(instrumentName: str):
+    instrumentName = instrumentName.replace("South Africa","SA")
+    instrumentName = instrumentName.replace("Exchange Traded Fund","")
+    instrumentName = instrumentName.replace("Index","")
+    
+    search = yf.Search(instrumentName)
+    gettingName = search.quotes
+
+    if not gettingName:
+        return { "Found": False, "ticker": "none", "sector": "none" }
+
+    ticker = gettingName[0]["symbol"]
+    sector = yf.Ticker(ticker).info.get("sector")
+
+    if not sector:
+        return { "Found": True, "ticker": gettingName[0]["symbol"], "sector": "none" }
+    else:
+        return { "Found": True, "ticker": gettingName[0]["symbol"], "sector": sector }
+
 
 def ImportPdfData(database,user_id,data):
     document = SaveDocument(database,user_id,data)
@@ -27,7 +48,8 @@ def SavePortfoliosImport(database,user_id,data):
     }
 
 def SaveHoldingsImport(database,user_id,data):
-    document = SaveHoldings(database,user_id,data)
+    ticker = searchTicketNumber(data.instrument_name)
+    document = SaveHoldings(database,user_id,data,ticker["ticker"])
 
     return {
         "Success": True,
