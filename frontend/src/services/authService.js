@@ -1,31 +1,60 @@
-import api from './api';
-import { TOKEN_KEY } from '../utils/constants';
+import {
+  signUp,
+  confirmSignUp,
+  signIn,
+  signOut,
+  getCurrentUser,
+  fetchAuthSession,
+  confirmSignIn,
+  setUpTOTP,
+  verifyTOTPSetup,
+  updateMFAPreference,
+} from 'aws-amplify/auth';
 
 export const register = async (fullName, email, password) => {
-  const response = await api.post('/auth/register', {
-    full_name: fullName,
-    email,
+  const { userId } = await signUp({
+    username: email,
     password,
+    options: { 
+      userAttributes: { email, name: fullName } 
+    },
   });
-  return response.data;
+  
+  return { userId, email };
 };
 
-export const login = async (email, password) => {
-  const response = await api.post('/auth/login', { email, password });
-  const { access_token } = response.data;
-  localStorage.setItem(TOKEN_KEY, access_token);
-  return response.data;
+export const confirmRegistration = (email, code) => confirmSignUp({ username: email, confirmationCode: code });
+export const login = (email, password) => signIn({ username: email, password });
+export const respondToMFA = (totpCode) => confirmSignIn({ challengeResponse: totpCode });
+export const initTOTPSetup = () => setUpTOTP();
+export const logout = () => signOut();
+
+export const confirmTOTPSetup = async (totpCode) => {
+  await verifyTOTPSetup({ code: totpCode });
+  await updateMFAPreference({ totp: 'PREFERRED' });
 };
 
-export const logout = () => {
-  localStorage.removeItem(TOKEN_KEY);
+export const getToken = async () => {
+  const session = await fetchAuthSession();
+  return session.tokens?.accessToken?.toString() || null;
 };
 
-export const getCurrentUser = async () => {
-  const response = await api.get('/auth/me');
-  return response.data;
+export const isAuthenticated = async () => {
+  const token = await getToken();
+  return !!token;
 };
 
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
-
-export const isAuthenticated = () => !!getToken();
+export const getCurrentUserProfile = async () => {
+  const [user, session] = await Promise.all([
+    getCurrentUser(),
+    fetchAuthSession()
+  ]);
+  
+  const payload = session.tokens?.idToken?.payload;
+  
+  return {
+    sub: user.userId,
+    email: payload?.email || '',
+    full_name: payload?.name || '',
+  };
+};
