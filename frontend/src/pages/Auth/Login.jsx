@@ -6,6 +6,7 @@ import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
 import Button from '../../components/common/Button/Button';
 import { validateEmail } from '../../utils/validators';
 import { ROUTES } from '../../utils/constants';
+import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
 
 const validate = (values) => 
@@ -42,12 +43,12 @@ const Login = () =>
   const { login, submitMFACode, activateTOTP } = useAuth();
   const navigate = useNavigate();
   
-  const [setView] = useState('login'); 
-  const [setServerError] = useState(null);
+  const [view, setView] = useState('login'); 
+  const [serverError, setServerError] = useState(null);
   const [mfaCode, setMfaCode] = useState('');
-  const [ setIsMfaLoading] = useState(false);
-  const [setTotpData] = useState({ secret: null, uri: null });
-  const [setEmail] = useState('');
+  const [isMfaLoading, setIsMfaLoading] = useState(false);
+  const [totpData, setTotpData] = useState({ secret: null, uri: null });
+  const [email, setEmail] = useState('');
 
   useEffect(() => 
     {
@@ -58,6 +59,8 @@ const Login = () =>
       sessionStorage.removeItem('login_error');
     }
   }, []);
+
+  const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm({ email: '', password: '' }, validate);
 
   const handleLoginSubmit = async (formValues) => 
     {
@@ -124,6 +127,130 @@ const Login = () =>
       setIsMfaLoading(false);
     }
   };
+
+  const renderMfaInput = (buttonText, actionType) => (
+    <div className="flex flex-col gap-5">
+      <input
+        type="text"
+        inputMode="numeric"
+        maxLength={6}
+        value={mfaCode}
+        onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
+        placeholder="000000"
+        autoFocus
+        className="w-full text-center tracking-[0.3em] text-2xl p-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-mono outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]"
+      />
+      <Button
+        variant="primary"
+        fullWidth
+        loading={isMfaLoading}
+        onClick={() => handleMfaSubmit(actionType)}
+        disabled={mfaCode.length !== 6}
+      >
+        {buttonText}
+      </Button>
+      
+      {view === 'setup-verify' && (
+        <button
+          onClick={() => { setMfaCode(''); setView('setup-qr'); }}
+          className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-center transition-colors"
+        >
+          Back to QR code
+        </button>
+      )}
+    </div>
+  );
+
+  if (view === 'mfa') {
+    return (
+      <Card title="Two-factor authentication" subtitle="Enter your 6-digit code." serverError={serverError}>
+        {renderMfaInput('Verify', 'verify')}
+      </Card>
+    );
+  }
+
+  if (view === 'setup-qr') {
+    return (
+      <Card title="Set up 2FA" subtitle="Scan the QR code." serverError={serverError}>
+        <div className="flex flex-col gap-5">
+          <p className="text-sm text-[var(--text-secondary)]">
+            Open your authenticator app and Scan the QR code.
+          </p>
+
+          {totpData.uri && (
+            <div className="flex justify-center p-4 bg-white rounded-lg border border-[var(--border-subtle)]">
+              <QRCodeSVG value={totpData.uri} size={180} level="M" />
+            </div>
+          )}
+
+          <details className="group cursor-pointer">
+            <summary className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors">
+              Enter key
+            </summary>
+            <div className="mt-2 bg-[var(--surface-inset)] border border-[var(--border-subtle)] rounded-md p-3">
+              <p className="text-xs text-[var(--text-dim)] mb-1">
+                Account: <strong>{email}</strong> &nbsp;·&nbsp; Type: <strong>Time based</strong>
+              </p>
+              <p className="text-xs font-mono text-[var(--text-primary)] break-all tracking-wide">
+                {totpData.secret}
+              </p>
+            </div>
+          </details>
+
+          <Button variant="primary" fullWidth onClick={() => { setMfaCode(''); setView('setup-verify'); }} disabled={!totpData.secret}>
+            Continue
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (view === 'setup-verify') {
+    return (
+      <Card title="Verify your authenticator" subtitle="Enter the 6-digit code your authenticator app is showing." serverError={serverError}>
+        {renderMfaInput('Activate MFA', 'setup')}
+      </Card>
+    );
+  }
+
+  return (
+    <Card title="Welcome back" subtitle="Sign in to your EquityLens account" serverError={serverError}>
+      <form onSubmit={handleSubmit(handleLoginSubmit)} noValidate aria-label="Login form">
+        <div className="flex flex-col gap-5">
+          <FormInput
+            label="Email Address"
+            name="email"
+            type="email"
+            value={values.email}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.email ? errors.email : undefined}
+            placeholder="your@email.com"
+            required
+          />
+          <PasswordInput
+            label="Password"
+            name="password"
+            value={values.password}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={touched.password ? errors.password : undefined}
+            placeholder="Enter your password"
+            required
+          />
+          <Button type="submit" variant="primary" fullWidth loading={isSubmitting}>
+            Sign In
+          </Button>
+        </div>
+      </form>
+      <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
+        Don&apos;t have an account?{' '}
+        <Link to={ROUTES.REGISTER} className="text-[var(--accent-primary)] hover:underline font-medium transition-all">
+          Create one
+        </Link>
+      </p>
+    </Card>
+  );
 };
 
 export default Login;
