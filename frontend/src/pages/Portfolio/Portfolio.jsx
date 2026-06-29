@@ -177,6 +177,8 @@ const Portfolio = () => {
               portfolio_id: getuploadPortfolioRequest.portfolio_id,
               instrument_name: eachItems.instrument_name.replaceAll("_", " "),
               quantity: eachItems.quantity,
+              ticker: "",
+              sector: "",
               total_cost: eachItems.total_cost,
               cost_price: eachItems.cost_price,
               current_price: eachItems.current_price,
