@@ -1,31 +1,55 @@
-from app.repositories.import_pdf import SaveDocument
-from app.repositories.import_pdf import SavePortfolios
-from app.repositories.import_pdf import SaveHoldings
-from app.repositories.import_pdf import SaveInstrumentPurchasesAndSales
-from app.repositories.import_pdf import SaveTransactionCosts
-from app.repositories.import_pdf import SaveContributionsAndWithdrawals
-from app.repositories.import_pdf import SaveDividendsAndWithholdingTax
-from app.repositories.import_pdf import SaveTransactionInterest
-from app.repositories.import_pdf import SaveTransactionExpenses
+from app.repositories.import_pdf import save_document
+from app.repositories.import_pdf import save_portfolios
+from app.repositories.import_pdf import save_holdings
+from app.repositories.import_pdf import save_instrument_purchases_and_sales
+from app.repositories.import_pdf import save_transaction_costs
+from app.repositories.import_pdf import save_contributions_and_withdrawals
+from app.repositories.import_pdf import save_dividends_and_withholding_tax
+from app.repositories.import_pdf import save_transaction_interest
+from app.repositories.import_pdf import save_transaction_expenses
+import yfinance as yf
 
-def ImportPdfData(database,user_id,data):
-    document = SaveDocument(database,user_id,data)
+def search_ticket_number(instrumentName: str):
+    instrumentName = instrumentName.replace("South Africa","SA")
+    instrumentName = instrumentName.replace("Exchange Traded Fund","")
+    instrumentName = instrumentName.replace("Index","")
+    
+    search = yf.Search(instrumentName)
+    gettingName = search.quotes
+
+    if not gettingName:
+        return { "Found": False, "ticker": "none", "sector": "none" }
+
+    ticker = gettingName[0]["symbol"]
+    sector = yf.Ticker(ticker).info.get("sector")
+
+    if not sector:
+        return { "Found": True, "ticker": gettingName[0]["symbol"], "sector": "none" }
+    else:
+        return { "Found": True, "ticker": gettingName[0]["symbol"], "sector": sector }
+
+
+def import_Pdf_data(database,user_id,data):
+    document = save_document(database,user_id,data)
 
     return {
         "Success": True,
-        "Message": "PDF has been saved successfully"
+        "Message": "PDF has been saved successfully",
+        "document_id": str(document.id)
     }
 
-def SavePortfoliosImport(database,user_id,data):
-    document = SavePortfolios(database,user_id,data)
+def save_portfolios_import(database,user_id,data):
+    document = save_portfolios(database,user_id,data)
 
     return {
         "Success": True,
-        "Message": "PDF has been saved successfully"
+        "Message": "PDF has been saved successfully",
+        "portfolio_id": str(document.id)
     }
 
-def SaveHoldingsImport(database,user_id,data):
-    document = SaveHoldings(database,user_id,data)
+def save_holdings_import(database,user_id,data):
+    ticker = search_ticket_number(data.instrument_name)
+    document = save_holdings(database,user_id,data,ticker["ticker"])
 
     return {
         "Success": True,
@@ -33,8 +57,8 @@ def SaveHoldingsImport(database,user_id,data):
     }
 
 
-def SaveInstrumentPurchasesAndSalesImport(database,user_id,data):
-    document = SaveInstrumentPurchasesAndSales(database,user_id,data)
+def save_instrument_purchases_and_sales_import(database,user_id,data):
+    document = save_instrument_purchases_and_sales(database,user_id,data)
 
     return {
         "Success": True,
@@ -42,8 +66,8 @@ def SaveInstrumentPurchasesAndSalesImport(database,user_id,data):
     }
 
 
-def SaveTransactionCostsImport(database,user_id,data):
-    document = SaveTransactionCosts(database,user_id,data)
+def save_transaction_costs_import(database,user_id,data):
+    document = save_transaction_costs(database,user_id,data)
 
     return {
         "Success": True,
@@ -51,8 +75,8 @@ def SaveTransactionCostsImport(database,user_id,data):
     }
 
 
-def SaveContributionsAndWithdrawalsImport(database,user_id,data):
-    document = SaveContributionsAndWithdrawals(database,user_id,data)
+def save_contributions_and_withdrawals_import(database,user_id,data):
+    document = save_contributions_and_withdrawals(database,user_id,data)
 
     return {
         "Success": True,
@@ -60,8 +84,8 @@ def SaveContributionsAndWithdrawalsImport(database,user_id,data):
     }
 
 
-def SaveDividendsAndWithholdingTaxImport(database,user_id,data):
-    document = SaveDividendsAndWithholdingTax(database,user_id,data)
+def save_dividends_and_withholding_tax_import(database,user_id,data):
+    document = save_dividends_and_withholding_tax(database,user_id,data)
 
     return {
         "Success": True,
@@ -69,8 +93,8 @@ def SaveDividendsAndWithholdingTaxImport(database,user_id,data):
     }
 
 
-def SaveTransactionInterestImport(database,user_id,data):
-    document = SaveTransactionInterest(database,user_id,data)
+def save_transaction_interest_import(database,user_id,data):
+    document = save_transaction_interest(database,user_id,data)
 
     return {
         "Success": True,
@@ -78,8 +102,8 @@ def SaveTransactionInterestImport(database,user_id,data):
     }
 
 
-def SaveTransactionExpensesImport(database,user_id,data):
-    document = SaveTransactionExpenses(database,user_id,data)
+def save_transaction_expenses_import(database,user_id,data):
+    document = save_transaction_expenses(database,user_id,data)
 
     return {
         "Success": True,

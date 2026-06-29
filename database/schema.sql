@@ -80,6 +80,18 @@ CREATE TABLE IF NOT EXISTS  instrument_types
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS  narrative_types
+(
+
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+
+    narrative_name varchar(100) UNIQUE NOT NULL,
+    narrative_description TEXT,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 
 CREATE TABLE IF NOT EXISTS documents 
 (
@@ -121,6 +133,8 @@ CREATE TABLE IF NOT EXISTS holdings
     portfolio_id UUID NOT NULL REFERENCES portfolios(id) ON DELETE CASCADE,
 
     instrument_name VARCHAR(100),
+    ticker VARCHAR(20),
+    sector VARCHAR(100),
     quantity NUMERIC(18,4),
     total_cost NUMERIC(18,2),
     cost_price NUMERIC(18,2),
@@ -222,7 +236,7 @@ CREATE TABLE IF NOT EXISTS  transaction_expenses
     transaction_date DATE,
     settlement_date DATE,
     transaction_type_id UUID REFERENCES transaction_types(id),
-    narrative TEXT,
+    narrative_type_id UUID REFERENCES narrative_types(id),
     value_zar NUMERIC(18,2),
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -253,6 +267,34 @@ CREATE TABLE IF NOT EXISTS  chat_messages
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+
+insert into narrative_types(narrative_name,narrative_description)
+VALUES
+('Cash Management Fee',' '),
+('VAT on Cash Management Fee',' '),
+('Early Settlement Fee',' '),
+('Value Added Tax on costs (VAT) for Early Settlement Fee',' ');
+
+insert into instrument_types(instrument_name,instrument_description)
+VALUES
+('10X S&P South Africa Top50 Index Exchange Traded Fund',' '),
+('10X S&P 500 Exchange Traded Fund',' '),
+('EasyETFs AI World Actively Managed ETF',' '),
+('Satrix MSCI Emerging Markets ETF',' '),
+('Trust Account',' ');
+
+insert into transaction_types(transaction_name,transaction_description)
+VALUES
+('Cash Management Fee',' '),
+('VAT on Cash Management Fee',' '),
+('Early settlement fee',' '),
+('VAT',' '),
+('Cash investment interest received',' '),
+('Securities Interest',' '),
+('Capital contribution',' '),
+('Capital withdrawal',' '),
+('Sales',' '),
+('Purchases',' ');
 
 
 

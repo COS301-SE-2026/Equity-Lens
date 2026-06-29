@@ -15,6 +15,17 @@ class TransactionType(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))
 
+class NarrativeType(Base):
+    __tablename__ = "narrative_types"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    narrative_name = Column(String(100), nullable=False)
+    narrative_description = Column(Text)
+
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))
+
 class InstrumentType(Base):
     __tablename__ = "instrument_types"
 
@@ -62,6 +73,8 @@ class Holdings(Base):
     portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id",ondelete="CASCADE"), nullable=False)
 
     instrument_name = Column(String(100), nullable=False)
+    ticker = Column(String(100))
+    sector = Column(String(100))
     quantity = Column(Numeric(18,4))
     total_cost = Column(Numeric(18,2))
     cost_price = Column(Numeric(18,2))
@@ -164,7 +177,7 @@ class TransactionExpenses(Base):
     transaction_date = Column(Date)
     settlement_date = Column(Date)
     transaction_type_id = Column(UUID(as_uuid=True), ForeignKey("transaction_types.id",ondelete="CASCADE"), nullable=False)
-    narrative = Column(Text)
+    narrative_type_id = Column(Text)
     value_zar = Column(Numeric(18,2))
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
