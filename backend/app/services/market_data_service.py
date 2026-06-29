@@ -16,7 +16,7 @@ def get_current_price(symbol: str) -> CurrentPriceResponse:
     ticker = yf.Ticker(symbol)
     
     info = ticker.info
-    previous_close = info.get('previousClose')
+    previous_close = info.get('previousClose') or info.get('regularMarketPreviousClose')
 
     if previous_close is None:
         hist = ticker.history(period="2d")
