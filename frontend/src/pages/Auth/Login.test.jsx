@@ -4,11 +4,16 @@ import { MemoryRouter } from 'react-router-dom';
 import Login from './Login';
 
 const mockLogin = vi.fn();
+const mockSubmitMFACode = vi.fn();
+const mockActivateTOTP = vi.fn();
 const mockNavigate = vi.fn();
 
 vi.mock('../../hooks/useAuth', () => ({
   default: () => ({
     login: mockLogin,
+    submitMFACode: mockSubmitMFACode,
+    activateTOTP: mockActivateTOTP,
+    mfaState: null,
     isAuthenticated: false,
     loading: false,
   }),
@@ -18,6 +23,8 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual, useNavigate: () => mockNavigate };
 });
+
+vi.mock('qrcode.react', () => ({ QRCodeSVG: () => null, }));
 
 const renderLogin = () =>
   render(<MemoryRouter><Login /></MemoryRouter>);
@@ -56,7 +63,7 @@ describe('Login Page', () => {
   });
 
   it('calls login with correct values', async () => {
-    mockLogin.mockResolvedValue({});
+    mockLogin.mockResolvedValue({ challenge: null });
     renderLogin();
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: 'test@test.com', name: 'email' },
@@ -71,7 +78,7 @@ describe('Login Page', () => {
   });
 
   it('navigates to dashboard on success', async () => {
-    mockLogin.mockResolvedValue({});
+    mockLogin.mockResolvedValue({ challenge: null });
     renderLogin();
     fireEvent.change(screen.getByLabelText(/email address/i), {
       target: { value: 'test@test.com', name: 'email' },
@@ -81,7 +88,7 @@ describe('Login Page', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /sign in/i }));
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/dashboard');
+      expect(mockNavigate).toHaveBeenCalledWith('/dashboard', { replace: true });
     });
   });
 
