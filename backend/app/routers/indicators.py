@@ -170,17 +170,35 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
 @router.get("")
 def get_indicators(current_user: UserResponse = Depends(get_current_user), db: Session = Depends(get_db)):
     portfolios = db.query(Portfolios).filter(Portfolios.user_id == current_user.id).all()
+    portfolio_ids = [p.id for p in portfolios]
+
+    if not portfolio_ids:
+        return []
 
     tickers = []
+    ticker_to_name = {}
+
     market_returns = get_market_returns()
-    for p in portfolios:
-        holdings = db.query(Holdings).filter(Holdings.portfolio_id == p.id).all()
-        for h in holdings:
-            symbol = (h.instrument_name or "").strip()
-            if symbol and symbol not in tickers:
-                tickers.append(symbol)
+    
+    holdings = db.query(Holdings).filter(Holdings.portfolio_id.in_(portfolio_ids)).all()
+
+    for h in holdings: 
+        ticker = (h.ticker or "").strip()
+        if not ticker:
+            continue
+        if ticker not in tickers:
+            tickers.append(ticker)
+            display_name = (h.instrument_name or ticker)
+            ticker_to_name[ticker] = display_name
+
+    if not tickers:
+        return []
+    
     results = []
+
     for t in tickers:
-        row = build_live_indicator_row(t,t,market_returns)
+        name = ticker_to_name.get(t, t)
+        row = build_live_indicator_row(t,name,market_returns)
         results.append(row)
+
     return results
