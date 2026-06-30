@@ -29,31 +29,6 @@ CREATE TRIGGER update_users_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 
--- all these will be used for RBAC
-
-CREATE TABLE IF NOT EXISTS roles
-(
-
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-
-    roles_name varchar(100) UNIQUE NOT NULL,
-    roles_description TEXT,
-
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS  user_roles
-(
-
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,    
-    role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,  
-
-    -- in here just to prevent any duplicates inside here
-    primary key(user_id,role_id)
-);
-
-
 -- all these will be used to import all the information for the pdf
 
 CREATE TABLE IF NOT EXISTS  transaction_types
@@ -238,6 +213,20 @@ CREATE TABLE IF NOT EXISTS  transaction_expenses
     transaction_type_id UUID REFERENCES transaction_types(id),
     narrative_type_id UUID REFERENCES narrative_types(id),
     value_zar NUMERIC(18,2),
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS  watchlist
+(
+
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
+    ticker VARCHAR(100) NOT NULL,
+    company_name VARCHAR(100),
+    sector VARCHAR(100),
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

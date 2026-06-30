@@ -13,42 +13,30 @@ load_dotenv()
 
 router = APIRouter(prefix="/news", tags=["importing news"])
 
+@router.get("/all")
+def get_news():
+    api_key=os.getenv("NEWSDATA_API_KEY")
+
+    response = requests.get("https://newsdata.io/api/1/latest",
+      params={
+        "apikey": api_key,
+      })
+
+    return response.json()
+
 @router.get("/")
-def get_news(parameter: str="JSE"):
+def get_news(category: str="business"):
     api_key=os.getenv("NEWSDATA_API_KEY")
 
     response = requests.get("https://newsdata.io/api/1/latest",
       params={
         "apikey": api_key,
-        "q": parameter
+        "category": category
       })
 
 
     return response.json()
 
-
-@router.get("/portfolio_news")
-def get_portfolio_news(db: Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):
-    api_key=os.getenv("NEWSDATA_API_KEY")
-
-    offunction = get_portfolio_new(db = db, CurrentUser = CurrentUser)
-
-    response = requests.get("https://newsdata.io/api/1/latest",
-      params={
-        "apikey": api_key,
-        "q": offunction
-      })
-
-    return response.json()
-
-@router.get("/market_snapshot")
-def get_market_snapshot():
-  api_key=os.getenv("MARKETSTACK_API_KEY")
-
-  response = requests.get("https://api.marketstack.com/v1/eod/latest",
-    params={"access_key":api_key, "symbols" : "AAPL,MSFT,NVDA,GOOGL,AMZN,META,TSLA,NFLX,AMD,INTC,ORCL,IBM,CRM,ADBE,CSCO,QCOM,AVGO,PEP,KO,DIS,UBER,PYPL,COST,WMT,BA,BE,JPM"})
-
-  return response.json()
 
 
 
