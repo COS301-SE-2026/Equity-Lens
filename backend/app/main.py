@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, portfolio
+from app.routers import auth, portfolio, news
 from app.database import create_tables
 from app.config import settings
 from app.models import user
@@ -37,7 +37,7 @@ app.include_router(portfolio.router)
 async def health():
     return {"status": "ok"}
 
-app.include_router(news.router)
+app.include_router(news.router, prefix="/api")
 
 app.include_router(import_pdf.router)
 

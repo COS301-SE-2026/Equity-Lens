@@ -13,6 +13,7 @@ import News from '../pages/News/News';
 import AIChat from '../pages/AIChat/AIChat';
 import { ROUTES } from '../utils/constants';
 import Analytics from '../pages/Analytics/Analytics';
+import ConfirmEmail from '../pages/Auth/ConfirmEmail';
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -56,6 +57,7 @@ const AppRouter = () => (
       <Route path={ROUTES.NEWS} element={<ProtectedRoute><News /></ProtectedRoute>} />
       <Route path={ROUTES.AI_CHAT} element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
       <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+      <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
 
       <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
       <Route path="*" element={<NotFound />} />

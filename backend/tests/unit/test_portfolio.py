@@ -1,44 +1,29 @@
-from coverage import data
+PORTFOLIO_URL = "/api/portfolio"
+SUMMARY_URL = "/api/portfolio/summary"
+SECTORS_URL = "/api/portfolio/sectors"
 
 
-def test_get_portfolio_authenticated(client, auth_headers):
-    response = client.get("/api/portfolio", headers=auth_headers)
+def test_portfolio_requires_auth(client):
+    response = client.get(PORTFOLIO_URL)
+    assert response.status_code == 403
+
+
+def test_portfolio_returns_empty_for_new_user(client, auth_headers):
+    response = client.get(PORTFOLIO_URL, headers=auth_headers)
     assert response.status_code == 200
-    data = response.json()
-    assert "summary" in data
-    assert "holdings" in data
-    assert "sectorAllocation" in data
-    assert "performanceHistory" in data
+    body = response.json()
+    assert body["holdings"] == []
+    assert body["summary"]["holdingsCount"] == 0
+    assert body["sectorAllocation"] == []
 
 
-def test_get_portfolio_unauthenticated(client):
-    response = client.get("/api/portfolio")
-    assert response.status_code == 422
-
-
-def test_get_portfolio_summary_authenticated(client, auth_headers):
-    response = client.get("/api/portfolio/summary", headers=auth_headers)
+def test_summary_endpoint(client, auth_headers):
+    response = client.get(SUMMARY_URL, headers=auth_headers)
     assert response.status_code == 200
-    data = response.json()
-    assert "totalValue" in data
-    assert "totalGain" in data
-    assert "holdingsCount" in data
+    assert response.json()["totalValue"] == 0.0
 
 
-def test_get_sector_allocation_authenticated(client, auth_headers):
-    response = client.get("/api/portfolio/sectors", headers=auth_headers)
+def test_sectors_endpoint(client, auth_headers):
+    response = client.get(SECTORS_URL, headers=auth_headers)
     assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)
-    assert len(data) > 0
-    assert "sector" in data[0]
-    assert "percentage" in data[0]
-
-
-def test_get_performance_history_authenticated(client, auth_headers):
-    response = client.get("/api/portfolio/performance", headers=auth_headers)
-    assert response.status_code == 200
-    data = response.json()
-    assert isinstance(data, list)
-    assert "name" in data[0]
-    assert "benchmark" in data[0]
+    assert response.json() == []

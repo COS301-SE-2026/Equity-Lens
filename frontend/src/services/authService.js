@@ -1,31 +1,79 @@
-import api from './api';
-import { TOKEN_KEY } from '../utils/constants';
+import {
+  signUp,
+  confirmSignUp,
+  signIn,
+  signOut,
+  getCurrentUser,
+  fetchAuthSession,
+  confirmSignIn,
+  setUpTOTP,
+  verifyTOTPSetup,
+  updateMFAPreference,
+} from "aws-amplify/auth";
 
-export const register = async (fullName, email, password) => {
-  const response = await api.post('/auth/register', {
-    full_name: fullName,
-    email,
-    password,
+export async function register(fullName, email, password) {
+  const result = await signUp({
+    username: email,
+    password: password,
+    options: {
+      userAttributes: { email: email, name: fullName, },
+    },
   });
-  return response.data;
-};
+  return { userId: result.userId, email: email };
+}
 
-export const login = async (email, password) => {
-  const response = await api.post('/auth/login', { email, password });
-  const { access_token } = response.data;
-  localStorage.setItem(TOKEN_KEY, access_token);
-  return response.data;
-};
 
-export const logout = () => {
-  localStorage.removeItem(TOKEN_KEY);
-};
+export const confirmRegistration = (email, code) => confirmSignUp({ username: email, confirmationCode: code });
+export const login = (email, password) => signIn({ username: email, password });
+export const respondToMFA = (totpCode) => confirmSignIn({ challengeResponse: totpCode });
+export const initTOTPSetup = () => setUpTOTP();
+export const logout = () => signOut();
 
-export const getCurrentUser = async () => {
-  const response = await api.get('/auth/me');
-  return response.data;
-};
+export async function confirmTOTPSetup(totpCode) {
+  await verifyTOTPSetup({ code: totpCode });
+  await updateMFAPreference({ totp: "PREFERRED" });
+}
 
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
+export async function getToken() {
+  try {
+    const session = await fetchAuthSession();
+    if (!session || !session.tokens || !session.tokens.accessToken) {
+      return null;
+    }
+    return session.tokens.accessToken.toString();
+  } catch (err) {
+    console.warn("getToken failed:", err);
+    return null;
+  }
+}
 
-export const isAuthenticated = () => !!getToken();
+export async function isAuthenticated() {
+  try {
+    const session = await fetchAuthSession();
+    if (session && session.tokens && session.tokens.accessToken) {
+      return true;
+    }
+    return false;
+  } catch (err) {
+    return false;
+  }
+}
+
+export async function getCurrentUserProfile() {
+  const user = await getCurrentUser();
+  const session = await fetchAuthSession();
+
+  let email = "";
+  let fullName = "";
+  if (session.tokens && session.tokens.idToken) {
+    const payload = session.tokens.idToken.payload;
+    email = payload.email || "";
+    fullName = payload.name || "";
+  }
+
+  return {
+    sub: user.userId,
+    email: email,
+    full_name: fullName,
+  };
+}

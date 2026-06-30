@@ -1,26 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { bypassAuth } from "./helpers/auth";
 
 test.describe("AI Assistant e2e testing", () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.route("**/api/auth/me", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          id: 1,
-          full_name: "Test User",
-          email: "test@test.com",
-        }),
-      });
-    });
-
-    await page.goto("/login");
-
-    await page.evaluate(() => {
-      localStorage.setItem("equitylens_token", "justmock");
-    });
-
+    await bypassAuth(page);
   });
 
   test("should render the AI Assistant page", async ({ page }) => {
@@ -40,7 +24,7 @@ test.describe("AI Assistant e2e testing", () => {
 
     await input.fill("How is Apple doing?");
     await page.getByRole("button", { name: /Send/i }).click();
-
+    
     await expect(page.locator("body")).toContainText(/How is Apple doing/i);
     
   });
