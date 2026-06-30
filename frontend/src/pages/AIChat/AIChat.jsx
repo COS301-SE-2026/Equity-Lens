@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Button from '../../components/common/Button/Button';
-import { TrendingUp, TrendingDown } from 'lucide-react';
-import { getMockResponse } from '../../services/aiService';
-import StockTickerCard from '../../components/dashboard/StockTickerCard/StockTickerCard';
+import api from '../../services/api'
 import useAuth from '../../hooks/useAuth';
 
 const SUGGESTED_PROMPTS = [
@@ -34,17 +32,28 @@ const AIChat = () => {
     setInput('');
     setIsThinking(true);
 
-    // Simulate the assistant "thinking" before its reply lands.
-    setTimeout(() => {
-      const aiMessage = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        ...getMockResponse(text),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsThinking(false);
-    }, 900);
-  };
+    // The ai assistant replying now 
+    api.post('/ai_chat/', {message: text})
+      .then((res) => {
+        const responseMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          text: res.data.reply,
+        };
+        setMessages((prev) => [...prev, responseMessage]);
+      })
+
+      //Error checking incase ai call fails
+      .catch(() => {
+        const errorMessage = {
+          id: Date.now() + 1,
+          role: 'assistant',
+          text: "Something went wrong, try again.",          
+        };
+        setMessages((prev) => [...prev, errorMessage]);
+      })
+      .finally(() => setIsThinking(false));
+    };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -109,27 +118,7 @@ const AIChat = () => {
                 <div className="max-w-[80%]">
                   <p className="text-sm text-[var(--text-secondary)]">
                     {message.text}
-                    {message.trend === 'up' && (
-                      <TrendingUp
-                        size={16}
-                        className="mr-1 inline text-[var(--color-success)]"
-                      />
-                    )}
-                    {message.trend === 'down' && (
-                      <TrendingDown
-                        size={16}
-                        className="mr-1 inline text-[var(--color-danger)]"
-                      />
-                    )}
-                    {message.changeText}
                   </p>
-                  {message.cards && (
-                    <div className="mt-3 grid grid-cols-2 gap-3">
-                      {message.cards.map((card) => (
-                        <StockTickerCard key={card.ticker} {...card} />
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
             </li>

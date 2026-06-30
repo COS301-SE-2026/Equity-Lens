@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, portfolio
+from app.routers import auth, portfolio, ai_chat
 from app.database import create_tables
 from app.config import settings
 from app.models import user
@@ -39,6 +39,10 @@ async def health():
 
 app.include_router(news.router)
 
+
+app.include_router(news.router, prefix="/api")
+app.include_router(ai_chat.router)
+app.include_router(import_pdf.router)
 app.include_router(import_pdf.router)
 
 app.include_router(pdf_summary.router)
