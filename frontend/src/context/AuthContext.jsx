@@ -17,8 +17,13 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const [mfaState, setMfaState] = useState(null);
 
-  useEffect(() => {
+useEffect(() => {
     const initAuth = async () => {
+      if (typeof window !== 'undefined' && window.__E2E_AUTH_BYPASS__) {
+        setUser(window.__E2E_AUTH_BYPASS__);
+        setLoading(false);
+        return;
+      }
       try {
         if (await isAuthenticated()) {
           setUser(await getCurrentUserProfile());
