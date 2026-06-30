@@ -18,9 +18,9 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 | | Link |
 |---|---|
-| Design Document | [View Design Doc](./Documentation/DESIGN_DOCUMENT.pdf) |
-| Software Requirement Specification (SRS) | [View SRS](./Documentation/Software_Requirement_Specification.pdf) |
-| Wireframes | [View Wireframes](./Documentation/Wireframes.pdf) |
+| Design Document | [View Design Doc](./Documentation/Demo_1/DESIGN_DOCUMENT.pdf) |
+| Software Requirement Specification (SRS) | [View SRS](./Documentation/Demo_1/Software_Requirement_Specification.pdf) |
+| Wireframes | [View Wireframes](./Documentation/Demo_1/Wireframes.pdf) |
 | GitHub Project Board | [View Board](https://github.com/orgs/COS301-SE-2026/projects/45) |
 
 ---
@@ -85,8 +85,8 @@ Third-year BSc Computer Science student at the University of Pretoria with a pas
 | Database | AWS RDS PostgreSQL, AWS S3 |
 | AI | AWS Bedrock |
 | Market Data | yfinance (primary), Alpha Vantage (fallback) |
-| News | MarketAux |
-| File Handling | pdfPlumber |
+| News | NewsData & Marketstack |
+| File Handling | pdfjs-dist |
 | CI/CD | GitHub Actions, AWS SAM |
 
 ---
