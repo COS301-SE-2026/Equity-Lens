@@ -1,10 +1,9 @@
-# adding boto3 to reach AWS services
-import boto3
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.portfolio import Portfolios, Document
 
 def get_bedrock_client():
+    import boto3
     return boto3.client(
         "bedrock-runtime",
         region_name = settings.aws_region,
