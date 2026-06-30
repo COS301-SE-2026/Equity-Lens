@@ -12,9 +12,10 @@ import { useState, useEffect } from 'react';
 const validate = (values) => 
   {
   const errors = {};
-  if (validateEmail(values.email)) errors.email = validateEmail(values.email);
+  const emailError = validateEmail(values.email);
+  if (emailError) errors.email = emailError;
   if (!values.password) errors.password = 'Password required';
-  return { errors };
+  return errors;
   };
 
 const Card = ({ title, subtitle, serverError, children }) => (
