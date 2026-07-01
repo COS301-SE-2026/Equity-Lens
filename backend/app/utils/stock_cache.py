@@ -2,6 +2,7 @@ import boto3
 import pandas as pd
 import yfinance as yf
 from io import BytesIO
+import pickle
 
 S3_BUCKET = "market-data-bucket-equitylens"
 s3 = boto3.client("s3")
@@ -19,3 +20,21 @@ def get_cached_price_history(ticker: str, period: str = "1y") -> pd.DataFrame:
         ticker_obj = yf.Ticker(ticker)
         df = ticker_obj.history(period=period, interval="1d", auto_adjust=True)
         return df if not df.empty else pd.DataFrame()
+    
+def get_cached_fundamentals(ticker: str) -> dict:
+    ticker = ticker.upper()
+    cache_key = f"statements/{ticker}.pkl"
+    try:
+        obj = s3.get_object(Bucket=S3_BUCKET, Key=cache_key)
+        data = pickle.loads(obj["Body"].read())
+        print(f"Statements cache hit: {ticker}")
+        return data
+    except Exception as e:
+        print(f"Statements cache miss for {ticker}, fetching from Yahoo: {e}")
+        ticker_obj = yf.Ticker(ticker)
+        data = {
+            "info": ticker_obj.info or {},
+            "balance_sheet": ticker_obj.balance_sheet,
+            "financials": ticker_obj.financials,
+        }
+        return data
