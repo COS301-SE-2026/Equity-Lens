@@ -35,7 +35,7 @@ def get_user_portfolio_context(db: Session, user_id):
 
 #now for chat functionality 
 #Working on saving the user and ai assistant reply messages to the database
-def chat(user_message: str, db: Session, logged_in_user_id):
+def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = None):
     client = get_bedrock_client()
 
     portfolio_context = get_user_portfolio_context(db, logged_in_user_id)
@@ -62,11 +62,18 @@ def chat(user_message: str, db: Session, logged_in_user_id):
     reply = response["output"]["message"]["content"][0]["text"]
     
     #Saving to the DB
-    #call model class 
-    chat_conversation = ChatConversation(user_id = logged_in_user_id)
-    db.add(chat_conversation)
-    #force to send insert into db to generate UUID 
-    db.flush()
+    #exitising conversatio?
+    if conversation_id = None:
+        chat_conversation = db.query(ChatConversation).filter(
+            ChatConversation.id == conversation_id,
+            ChatConversation.user_id == logged_in_user_id
+        ).first()
+    # else create a new one
+    else:
+        chat_conversation = ChatConversation(user_id = logged_in_user_id) 
+        db.add(chat_conversation)
+        #force to send insert into db to generate UUID 
+        db.flush()
 
     #user message
     db.add(ChatMessages(conversation_id = chat_conversation.id, role = "user", content = user_message))
@@ -76,4 +83,4 @@ def chat(user_message: str, db: Session, logged_in_user_id):
     #make it permanent 
     db.commit()
 
-    return reply
+    return reply, chat_conversation.id
