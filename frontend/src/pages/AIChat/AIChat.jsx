@@ -63,6 +63,22 @@ const AIChat = () => {
       })
       .finally(() => setIsThinking(false));
     };
+  
+  //now to load the messages
+  const loadCpnversation = (convo) => {
+    setConversationId(convo.id);
+    api.get('/ai_chat/conversations/${convo.id}/messages/')
+      .then((res) => {
+        setMessages(
+          res.data.map((m) => ({
+            id: m.id,
+            role: m.role,
+            text: m.content
+          }))
+        )
+      })
+      .catch(() => {})
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault();
