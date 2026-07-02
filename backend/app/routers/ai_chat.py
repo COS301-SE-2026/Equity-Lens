@@ -7,7 +7,7 @@ from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
-from app.models.chat import ChatConversation
+from app.models.chat import ChatConversation, ChatMessages
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 
@@ -49,4 +49,35 @@ async def get_conversations(
             "updated_at": c.updated_at
         }
         for c in chat_conversation
+    ]
+
+
+# now to return all messages for the logged user
+@router.get("/conversations/{conversation_id}/messages/")
+async def get_messages(
+    conversation_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)
+):
+    #verification of who conversation belongs to
+    chat_conversation = db.query(ChatConversation).filter(
+        ChatConversation.id == conversation_id,
+        ChatConversation.user_id == current_user.id
+    ).first()
+
+    if not chat_conversation:
+        raise HTTPException(status_code = 404, detail = "Conversation not found")
+    
+    messages = db.query(ChatMessages).filter(
+        ChatMessages.conversation_id == conversation_id
+    ).order_by(ChatMessages.created_at.asc()).all()
+
+    return [
+        {
+            "id": str(m.id),
+            "role": m.role,
+            "content": m.content,
+            "created_at": m.created_at
+        }
+        for m in messages
     ]
