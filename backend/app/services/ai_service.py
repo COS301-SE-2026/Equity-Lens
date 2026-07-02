@@ -63,7 +63,7 @@ def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = No
     
     #Saving to the DB
     #exitising conversatio?
-    if conversation_id = None:
+    if conversation_id:
         chat_conversation = db.query(ChatConversation).filter(
             ChatConversation.id == conversation_id,
             ChatConversation.user_id == logged_in_user_id

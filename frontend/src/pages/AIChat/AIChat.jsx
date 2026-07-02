@@ -14,6 +14,7 @@ const AIChat = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [conversationId, setConversationId] = useState(null);
   const { user } = useAuth();
   const firstName = user?.full_name?.split(' ')[0] ?? 'there';
   const bottomRef = useRef(null);
@@ -33,13 +34,14 @@ const AIChat = () => {
     setIsThinking(true);
 
     // The ai assistant replying now 
-    api.post('/ai_chat/', {message: text})
+    api.post('/ai_chat/', {message: text, conversation_id: conversationId})
       .then((res) => {
         const responseMessage = {
           id: Date.now() + 1,
           role: 'assistant',
           text: res.data.reply,
         };
+        setConversationId(res.data.conversation_id);
         setMessages((prev) => [...prev, responseMessage]);
       })
 
