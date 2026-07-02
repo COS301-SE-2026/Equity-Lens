@@ -1,17 +1,20 @@
-from fastapi import Depends, Header
+from fastapi import Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.services.auth_service import decode_token, AuthService
-from app.utils.exceptions import InvalidCredentialsException
+from app.services.cognito_service import cognito_get_user
+from app.repositories.user_repository import UserRepository
 
+auth_scheme = HTTPBearer()
 
-async def get_current_user(
-    authorization: str = Header(...),
+def get_current_user(
+    cred: HTTPAuthorizationCredentials = Depends(auth_scheme),
     db: Session = Depends(get_db),
-    ):
-    if not authorization.startswith("Bearer "):
-        raise InvalidCredentialsException()
-    token = authorization.split(" ")[1]
-    user_id = decode_token(token)
-    service = AuthService(db)
-    return service.get_user_by_id(user_id)
+):
+    user_info = cognito_get_user(cred.credentials)
+    
+    return UserRepository(db).get_or_create_cognito_user(
+        cognito_sub=user_info["sub"],
+        email=user_info["email"],
+        full_name=user_info.get("full_name", ""),
+    )
