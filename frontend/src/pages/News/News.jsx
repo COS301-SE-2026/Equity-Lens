@@ -40,6 +40,21 @@ const NewsInvestment = () => {
     setWishlistLowest(getWishList.lowest);
 
   }
+
+  const ToDeleteWishlist = async (WatchlistID) => {
+    const gettingTheNews = await fetch(
+      `http://localhost:8000/watchlist/${WatchlistID}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${getToken()}`
+        }
+      }
+    );
+
+    ToGetWishlist();
+
+  }
  
   useEffect(() => {ToGetTheNews()},[]);
   useEffect(() => {ToGetWishlist()},[]);
@@ -199,7 +214,7 @@ const NewsInvestment = () => {
               {items.change_percent}
             </td>
             <td className="text-center">
-             <button className="text-red-400 hover:text-red-300">Remove</button>
+             <button onClick={() => ToDeleteWishlist(items.id)}className="text-red-400 hover:text-red-300">Remove</button>
             </td>
           </tr>
           ))}
@@ -211,9 +226,15 @@ const NewsInvestment = () => {
         </div>
 
       
-       {/* <div className="p-5 border border-gray-700 rounded-2xl">
-        To Do Later
-       </div> */}
+       <div className="p-5 border border-gray-700 rounded-2xl">
+        <h2 className="text-2xl font-bold text-white mb-4">AI Suggestions</h2>
+        <div>
+          <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">Why is my top gainer up ?</button>
+          <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">Why is my top loser down ?</button>
+          <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">Which watchlist stock is the best ?</button>
+          <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">Summarise today's news</button>
+        </div>
+       </div>
        
 
       </div> 
