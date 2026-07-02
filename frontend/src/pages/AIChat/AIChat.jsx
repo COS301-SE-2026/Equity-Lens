@@ -65,9 +65,9 @@ const AIChat = () => {
     };
   
   //now to load the messages
-  const loadCpnversation = (convo) => {
+  const loadConversation = (convo) => {
     setConversationId(convo.id);
-    api.get('/ai_chat/conversations/${convo.id}/messages/')
+    api.get(`/ai_chat/conversations/${convo.id}/messages/`)
       .then((res) => {
         setMessages(
           res.data.map((m) => ({
@@ -78,7 +78,7 @@ const AIChat = () => {
         )
       })
       .catch(() => {})
-  }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -86,17 +86,22 @@ const AIChat = () => {
   };
 
   return (
-  <div className="flex h-full">
+  <div className="flex h-[calc(100vh-64px)] -m-4">
     <aside className = "flex w-64 flex-col border-r border-[var(--border-subtle)] p-3">
       <div className = "flex-1 overflow-y-auto">
         {conversations.map((convo) => (
-          <div key = {convo.id} className = "mb-1 truncate rounded-lg px-3 py-2 text-sm text-[var(--text-secondary)]">
-              {convo.title}
-            </div>
+          //Making it an actual button
+          <button key = {convo.id}
+                  type = "button"
+                  onClick = {() => loadConversation(convo)}
+                  className = {`mb-1 w-full truncate rounded-lg px-3 py-2 text-left text-sm
+                                ${conversationId === convo.id ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)]': 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}`}>
+                                  {convo.title}
+                                </button>
         ))}
       </div>
     </aside>
-    <div className = "flex flex-1 flex-col">
+    <div className = "flex flex-1 flex-col px-4">
     {/* Page heading */}
     <header className="border-b border-[var(--border-subtle)] pb-3">
       <h1 className="text-center text-lg font-semibold text-[var(--text-primary)]">
