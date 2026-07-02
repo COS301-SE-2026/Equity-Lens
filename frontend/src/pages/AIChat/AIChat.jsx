@@ -4,10 +4,9 @@ import api from '../../services/api'
 import useAuth from '../../hooks/useAuth';
 
 const SUGGESTED_PROMPTS = [
-  'Show all cards',
   'How is MTN doing?',
   "What's Sasol trading at?",
-  'How is my portfolio performing compared to the JSE benchmark?',
+  'How is my portfolio performing compared to the JSE benchmark?'
 ];
 
 const AIChat = () => {
@@ -15,14 +14,22 @@ const AIChat = () => {
   const [messages, setMessages] = useState([]);
   const [isThinking, setIsThinking] = useState(false);
   const [conversationId, setConversationId] = useState(null);
+  const [conversations, setConversations] = useState([]);
   const { user } = useAuth();
   const firstName = user?.full_name?.split(' ')[0] ?? 'there';
   const bottomRef = useRef(null);
 
-  // Keep the newest message (or the typing indicator) in view.
+  //scroll to bottom of new messages
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({behavior: 'smooth'});
   }, [messages, isThinking]);
+
+  // fetch conversations 
+  useEffect(() => {
+    api.get('/ai_chat/conversations/')
+      .then((res) => setConversations(res.data))
+      .catch(() => {});
+  }, []);
 
   const sendMessage = (rawText) => {
     if (isThinking) return;
@@ -63,7 +70,17 @@ const AIChat = () => {
   };
 
   return (
-  <div className="flex h-full flex-col">
+  <div className="flex h-full">
+    <aside className = "flex w-64 flex-col border-r border-[var(--border-subtle)] p-3">
+      <div className = "flex-1 overflow-y-auto">
+        {conversations.map((convo) => (
+          <div key = {convo.id} className = "mb-1 truncate rounded-lg px-3 py-2 text-sm text-[var(--text-secondary)]">
+              {convo.title}
+            </div>
+        ))}
+      </div>
+    </aside>
+    <div className = "flex flex-1 flex-col">
     {/* Page heading */}
     <header className="border-b border-[var(--border-subtle)] pb-3">
       <h1 className="text-center text-lg font-semibold text-[var(--text-primary)]">
@@ -170,6 +187,7 @@ const AIChat = () => {
       <p className="mt-2 text-[12px] text-[var(--text-dim)]">
         AI responses are informational only and not financial advice.
       </p>
+      </div>
     </div>
   </div>
   );
