@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getToken } from "../../services/authService"
 import { TrendingUp, TrendingDown, Bookmark } from "lucide-react"
+import api from "../../services/api"
 
 const NewsInvestment = () => {
   const [articles, setArticles] = useState([]);
@@ -11,49 +11,23 @@ const NewsInvestment = () => {
 
 
   const ToGetTheNews = async (getName = "business") => {
-    const gettingTheNews = await fetch(
-      `http://localhost:8000/news/?category=${getName}`,
-      {
-        method: "GET",
-      }
-    );
-  
-    const getImportNews = await gettingTheNews.json();
-    setArticles(getImportNews.results || []);
+    const gettingTheNews = await api.get(`/news/?category=${getName}`);
+    setArticles(gettingTheNews.data.results || []);
 
   }
 
-   const ToGetWishlist = async (getName = "business") => {
-    const wishlist = await fetch(
-      `http://localhost:8000/watchlist/`,
-      {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${getToken()}`
-        }
-      }
-    );
+   const ToGetWishlist = async () => {
+    const wishlist = await api.get(`/watchlist/`);
   
-    const getWishList = await wishlist.json();
-    setWishlist(getWishList.watchlist || []);
-    setWishlistHighest(getWishList.highest);
-    setWishlistLowest(getWishList.lowest);
+    setWishlist(wishlist.data.watchlist || []);
+    setWishlistHighest(wishlist.data.highest);
+    setWishlistLowest(wishlist.data.lowest);
 
   }
 
   const ToDeleteWishlist = async (WatchlistID) => {
-    const gettingTheNews = await fetch(
-      `http://localhost:8000/watchlist/${WatchlistID}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${getToken()}`
-        }
-      }
-    );
-
+     await api.delete(`/watchlist/${WatchlistID}`);
     ToGetWishlist();
-
   }
  
   useEffect(() => {ToGetTheNews()},[]);

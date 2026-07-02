@@ -11,7 +11,7 @@ from app.services.watchlist import add_watchlist_service,get_watchlist_service,r
 
 load_dotenv()
 
-router = APIRouter(prefix="/watchlist", tags=["watchlist"])
+router = APIRouter(prefix="/api/watchlist", tags=["watchlist"])
 
 @router.post("/")
 def add_watchlist(data:WatchListRequest, db : Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):

@@ -11,7 +11,7 @@ from app.services.news_service import get_portfolio_new,clean_instrument_news
 
 load_dotenv()
 
-router = APIRouter(prefix="/news", tags=["importing news"])
+router = APIRouter(prefix="/api/news", tags=["importing news"])
 
 @router.get("/all")
 def get_news():
