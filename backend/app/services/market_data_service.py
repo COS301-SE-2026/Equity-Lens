@@ -1,3 +1,4 @@
+from app.utils.stock_cache import get_cached_price_history, get_cached_fundamentals
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -13,8 +14,7 @@ from app.schemas.market_data import (
 
 
 def get_current_price(symbol: str) -> CurrentPriceResponse:
-    ticker = yf.Ticker(symbol)
-    history = ticker.history(period="1d")
+    history = get_cached_price_history(symbol, period="1y")
 
     if history.empty:
         raise ValueError(f"No data found for symbol: {symbol}")
@@ -22,10 +22,18 @@ def get_current_price(symbol: str) -> CurrentPriceResponse:
     latest = history.iloc[-1]
     price = float(latest["Close"])
     volume = int(latest["Volume"] or 0)
-    previous_close = float(latest["Open"])
-    change_percent = None
+    fundamentals = get_cached_fundamentals(symbol)
+    info = fundamentals.get("info", {})
+    previous_close = info.get("regularMarketPreviousClose") or info.get("previousClose")
 
-    if previous_close:
+    if previous_close is None:
+        if len(history) >= 2:
+            previous_close = float(history.iloc[-2]["Close"])
+        else:
+            previous_close = price
+
+    change_percent = None
+    if previous_close and previous_close != 0:
         change_percent = ((price - previous_close) / previous_close) * 100
 
     return CurrentPriceResponse(
@@ -39,8 +47,7 @@ def get_current_price(symbol: str) -> CurrentPriceResponse:
 
 
 def get_historical_data(symbol: str, period: str) -> HistoryResponse:
-    ticker = yf.Ticker(symbol)
-    history = ticker.history(period=period)
+    history = get_cached_price_history(symbol, period=period)
 
     if history.empty:
         raise ValueError(f"No historical data found for symbol: {symbol}")
