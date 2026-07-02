@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.portfolio import Portfolios, Document
+from app.models.chat import ChatConversation, ChatMessages
 
 def get_bedrock_client():
     import boto3
@@ -33,10 +34,11 @@ def get_user_portfolio_context(db: Session, user_id):
     return knowledge
 
 #now for chat functionality 
-def chat(user_message: str, db: Session, user_id):
+#Working on saving the user and ai assistant reply messages to the database
+def chat(user_message: str, db: Session, logged_in_user_id):
     client = get_bedrock_client()
 
-    portfolio_context = get_user_portfolio_context(db, user_id)
+    portfolio_context = get_user_portfolio_context(db, logged_in_user_id)
 
     system_prompt = (
         "You are an AI financial assistant for EquityLens. "
@@ -57,4 +59,21 @@ def chat(user_message: str, db: Session, user_id):
         system = [{"text": system_prompt}],
         inferenceConfig = {"maxTokens": 256}
     )
-    return response["output"]["message"]["content"][0]["text"]
+    reply = response["output"]["message"]["content"][0]["text"]
+    
+    #Saving to the DB
+    #call model class 
+    chat_conversation = ChatConversation(user_id = logged_in_user_id)
+    db.add(chat_conversation)
+    #force to send insert into db to generate UUID 
+    db.flush()
+
+    #user message
+    db.add(ChatMessages(conversation_id = chat_conversation.id, role = "user", content = user_message))
+    #reply message
+    db.add(ChatMessages(conversation_id = chat_conversation.id, role = "assistant", content = reply))
+
+    #make it permanent 
+    db.commit()
+
+    return reply
