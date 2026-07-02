@@ -7,6 +7,7 @@ from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
+from app.models.chat import ChatConversation
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 
@@ -29,3 +30,23 @@ async def ai_chat(
         return ChatResponse(reply = reply, conversation_id = conversation_id)
     except Exception as e:
         raise HTTPException(status_code = 500, detail = str(e))
+
+# now to return all conversations for the logged user
+@router.get("/conversations/")
+async def get_conversations(
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)
+):
+    chat_conversation = db.query(ChatConversation).filter(
+        ChatConversation.user_id == current_user.id
+    ).order_by(ChatConversation.updated_at.desc()).all()
+
+    return [
+        {
+            "id": str(c.id),
+            "title": c.title,
+            "created_at": c.created_at, 
+            "updated_at": c.updated_at
+        }
+        for c in chat_conversation
+    ]
