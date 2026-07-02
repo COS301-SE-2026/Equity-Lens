@@ -7,6 +7,7 @@ export const ROUTES = {
   ANALYTICS: '/analytics',
   NEWS: '/news',
   AI_CHAT: '/ai',
+  CONFIRM_EMAIL: '/confirm-email',
 };
 
 export const PASSWORD_MIN_LENGTH = 8;

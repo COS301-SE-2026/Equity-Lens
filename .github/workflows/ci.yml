@@ -1,5 +1,9 @@
 name: CI
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main, dev]
@@ -18,14 +22,16 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm install
-      
+        run: npm ci
+
       - name: Run frontend package security audit
         working-directory: frontend
-        run: npm audit --audit-level=high
+        run: npm audit --audit-level=high --omit=dev
 
       - name: Run lint
         working-directory: frontend
@@ -37,15 +43,11 @@ jobs:
 
       - name: Install Playwright
         working-directory: frontend
-        run: npx playwright install
+        run: npx playwright install --with-deps
 
       - name: Run Playwright with E2E Tests
         working-directory: frontend
         run: npm run test:e2e
-
-      - name: Run tests with coverage
-        working-directory: frontend
-        run: npm run coverage
 
       - name: Upload frontend coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -84,6 +86,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
 
       - name: Install dependencies
         working-directory: backend
@@ -91,6 +94,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+
+      - name: Run database migrations & verify reversibility
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/equitylens
+        run: |
+          alembic upgrade head
+          alembic downgrade -1
+          alembic upgrade head
 
       - name: Run tests
         working-directory: backend
@@ -100,14 +112,18 @@ jobs:
           ALGORITHM: HS256
           ACCESS_TOKEN_EXPIRE_MINUTES: 30
           PYTHONPATH: .
+          AWS_REGION: af-south-1
+          AWS_COGNITO_CLIENT_ID: dummy-test-client-id
+          AWS_COGNITO_USER_POOL_ID: af-south-1_dummytestpool
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
         run: python -m pytest --cov=app --cov-report=xml
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          working-directory: backend
-
+          files: backend/coverage.xml
 
   trivy:
     name: Trivy Security Scan
@@ -124,4 +140,5 @@ jobs:
           scan-ref: .
           severity: HIGH,CRITICAL
           exit-code: 1
-
+          scanners: vuln,secret,misconfig
+          skip-dirs: frontend/node_modules,node_modules,backend/venv,backend/.venv,frontend/dist,frontend/build

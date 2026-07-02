@@ -15,6 +15,7 @@ module.exports = {
 
     //to allow the import and export of these react classes
   parserOptions: {
+    "ecmaVersion": 2022,
     sourceType: 'module',
   },
 
