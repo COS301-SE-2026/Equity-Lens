@@ -7,15 +7,15 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     cors_origins: list[str] = ["http://localhost:5173"]
-    aws_region: str = "af-south-1"
-    aws_access_key_id: str | None = None
-    aws_secret_access_key: str | None = None
-    aws_cognito_user_pool_id: str | None = None
-    aws_cognito_client_id: str | None = None
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    aws_access_key_id: str = ""
+    aws_secret_access_key: str = ""
+    aws_region: str = "us-east-1"
+    bedrock_model: str = "amazon.nova-micro-v1:0"
+    model_config = {"env_file": ".env", "extra": "ignore"}
 
-@lru_cache
-def get_settings() -> Settings:
+
+@lru_cache()
+def get_settings():
     return Settings()
 
 settings = get_settings()
