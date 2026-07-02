@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.portfolio import Portfolios, Holdings
-import yfinance as yf
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
 from app.indicators.capm import calculate_capm
@@ -13,8 +12,7 @@ from app.indicators.rsi import calculate_rsi
 from app.indicators.sharpe_ratio import calculate_sharpe_ratio
 from app.indicators.sortino_ratio import calculate_sortino_ratio
 from app.utils.market_cache import get_market_returns
-import boto3
-from io import BytesIO
+from app.utils.stock_cache import get_cached_price_history, get_cached_fundamentals
 import pandas as pd
 
 S3_BUCKET = "market-data-bucket-equitylens"      
@@ -41,8 +39,7 @@ def _extract_statement_value(statement, *candidate_keys):
 
 def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) -> dict:
     try:
-        ticker = yf.Ticker(symbol)
-        hist = ticker.history(period="1y", interval="1d", auto_adjust=True)
+        hist = get_cached_price_history(symbol,period="1y")
         if hist.empty or "Close" not in hist:
             raise ValueError("no price data")
 
@@ -64,7 +61,12 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
         sortino = float(calculate_sortino_ratio(returns.values)) if len(returns) > 10 else None
         capm_val = calculate_capm(0.02, beta, 0.08) if beta is not None else None
 
-        info = getattr(ticker, "info", {}) or {}
+        fundamentals = get_cached_fundamentals(symbol)
+
+        info = fundamentals.get("info",{})
+        balance_sheet = fundamentals.get("balance_sheet")
+        financials = fundamentals.get("financials")
+
         eps = info.get("trailingEps") or info.get("epsTrailingTwelveMonths")
         pe = None
         if eps is not None and float(eps) != 0:
@@ -72,8 +74,6 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
 
         altman = None
         try:
-            balance_sheet = getattr(ticker, "balance_sheet", None)
-            financials = getattr(ticker, "financials", None)
             if balance_sheet is not None and financials is not None and not balance_sheet.empty and not financials.empty:
                 current_assets = _extract_statement_value(
                     balance_sheet,
