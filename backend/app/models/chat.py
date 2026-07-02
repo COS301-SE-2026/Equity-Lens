@@ -14,3 +14,15 @@ class ChatConversation(Base):
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+class ChatMessages(Base):
+    __tablename__ = "chat_messages"
+
+    id = Column(UUID(as_uuid=True), primary_key = True, default = uuid.uuid4)
+    conversation_id = Column(UUID(as_uuid=True), ForeignKey("chat_conversations.id", ondelete = "CASCADE"), nullable = False) 
+
+    role = Column(String(15), nullable = False)
+    content = Column(Text, nullable = False)
+
+
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
