@@ -80,6 +80,12 @@ const AIChat = () => {
       .catch(() => {})
   };
 
+  // Adding a new chat button
+  const createNewChat = () => {
+    setConversationId(null);
+    setMessages([]);
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault();
     sendMessage(input);
@@ -88,6 +94,13 @@ const AIChat = () => {
   return (
   <div className="flex h-[calc(100vh-64px)] -m-4">
     <aside className = "flex w-64 flex-col border-r border-[var(--border-subtle)] p-3">
+      <button type = "button"
+        onClick = {createNewChat}
+        className = {`mb-3 w-full truncate rounded-lg border border-[var(--border-default)]
+                     bg-[var(--bg-secondary)] px-3 py-2 text-sm font-medium
+                     text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]`}>
+          + New Chat                  
+      </button>
       <div className = "flex-1 overflow-y-auto">
         {conversations.map((convo) => (
           //Making it an actual button
@@ -97,7 +110,7 @@ const AIChat = () => {
                   className = {`mb-1 w-full truncate rounded-lg px-3 py-2 text-left text-sm
                                 ${conversationId === convo.id ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)]': 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}`}>
                                   {convo.title}
-                                </button>
+          </button>
         ))}
       </div>
     </aside>
