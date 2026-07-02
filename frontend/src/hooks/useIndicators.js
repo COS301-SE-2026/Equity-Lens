@@ -9,8 +9,8 @@ const useIndicators = () => {
   useEffect(() => {
     const fetchIndicators = async () => {
       setLoading(true);
+      setError(null);
       try {
-       
         const data = await getIndicatorData();
         const mapped = Object.fromEntries(
           data.map((stock) => [stock.ticker, { loading: false, results: stock }])

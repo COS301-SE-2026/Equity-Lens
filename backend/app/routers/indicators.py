@@ -15,11 +15,17 @@ from app.utils.market_cache import get_market_returns
 from app.utils.stock_cache import get_cached_price_history, get_cached_fundamentals
 import pandas as pd
 
-S3_BUCKET = "market-data-bucket-equitylens"      
-S3_KEY = "market_data/gspc_1y.parquet"
-
 router = APIRouter(prefix="/api/indicators", tags=["indicators"])
 
+INDICATOR_UNITS = {
+    "capm": "%",
+    "pe_ratio": "x",
+    "altman_z": "",
+    "beta": "",
+    "rsi": "",
+    "sharpe": "",
+    "sortino": "",
+}
 
 def _extract_statement_value(statement, *candidate_keys):
     if statement is None or statement.empty:
@@ -37,6 +43,39 @@ def _extract_statement_value(statement, *candidate_keys):
 
     return None
 
+def serialize_indicator_value(value, unit, fallback_reason="Data could not be retrieved. Check if ticker is delisted or if Lambda refresh job ran today."):
+    if isinstance(value, dict) and "status" in value:
+        return value
+
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return {
+            "status": "insufficient_data",
+            "reason": fallback_reason,
+        }
+
+    return {
+        "status": "ok",
+        "value": value,
+        "unit": unit,
+    }
+
+def serialize_indicator_row(row: dict) -> dict:
+    normalized = {
+        "ticker": row.get("ticker"),
+        "name": row.get("name"),
+    }
+
+    if row.get("error"):
+        for key in INDICATOR_UNITS:
+            normalized[key] = {"status": "error"}
+        normalized["error"] = row["error"]
+        return normalized
+
+    for key, unit in INDICATOR_UNITS.items():
+        normalized[key] = serialize_indicator_value(row.get(key), unit)
+
+    return normalized
+
 def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) -> dict:
     try:
         hist = get_cached_price_history(symbol,period="1y")
@@ -45,8 +84,9 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
 
         close = hist["Close"].dropna()
         returns = close.pct_change().dropna()
-
-
+        # We use 'inner' join here to drop dates where either the stock or the market
+        # was closed (e.g., NYSE holiday vs London holiday). Without this, Beta
+        # calculation would fail due to mismatched lengths.
         returns, market_returns = returns.align(market_returns, join="inner")
 
         beta = None
@@ -170,6 +210,10 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
 @router.get("")
 def get_indicators(current_user: UserResponse = Depends(get_current_user), db: Session = Depends(get_db)):
     portfolios = db.query(Portfolios).filter(Portfolios.user_id == current_user.id).all()
+    # NOTE: We are filtering out tickers that are empty strings or null.
+    # However, we decided NOT to filter out tickers with less than 1 year of history
+    # here because the build_live_indicator_row function handles that gracefully
+    # and returns a "insufficient_data" status for those specific tickers.
     portfolio_ids = [p.id for p in portfolios]
 
     if not portfolio_ids:
@@ -199,6 +243,6 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
     for t in tickers:
         name = ticker_to_name.get(t, t)
         row = build_live_indicator_row(t,name,market_returns)
-        results.append(row)
+        results.append(serialize_indicator_row(row))
 
     return results
