@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, portfolio, news
+from app.routers import auth, portfolio
 from app.database import create_tables
 from app.config import settings
 from app.models import user
@@ -9,6 +9,7 @@ import traceback
 from app.routers import news
 from app.routers import import_pdf
 from app.routers import pdf_summary
+from app.routers import ai_chat
 
 app = FastAPI(title="EquityLens API")
 
@@ -38,7 +39,6 @@ async def health():
     return {"status": "ok"}
 
 app.include_router(news.router, prefix="/api")
-
+app.include_router(ai_chat.router)
 app.include_router(import_pdf.router)
-
-app.include_router(pdf_summary.router)
+app.include_router(import_pdf.router)
