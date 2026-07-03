@@ -18,6 +18,8 @@ const AIChat = () => {
   const { user } = useAuth();
   const firstName = user?.full_name?.split(' ')[0] ?? 'there';
   const bottomRef = useRef(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
 
   //scroll to bottom of new messages
   useEffect(() => {
@@ -90,6 +92,19 @@ const AIChat = () => {
     setMessages([]);
   }
 
+  const renameConversation = (convoId) => {
+    const trimmed = editTitle.trim();
+    if (!trimmed) return;
+
+    api.put(`/ai_chat/conversations/${convoId}/`, {title: trimmed})
+      .then(() => {
+        setConversations((prev) => 
+          prev.map((c) => (c.id === convoId ? {...c, title: trimmed} : c)));
+          setEditingId(null);
+      })
+      .catch(() => {})
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     sendMessage(input);
@@ -107,16 +122,34 @@ const AIChat = () => {
       </button>
       <div className = "flex-1 overflow-y-auto">
         {conversations.map((convo) => (
-          //Making it an actual button
-          <button key = {convo.id}
-                  type = "button"
+          <div key = {convo.id} className = "group mb-1 flex items-center">
+            {editingId === convo.id ? (
+              <form className = "flex w-full gap-1"
+                    onSubmit = {(e) => {
+                      e.preventDefault();
+                      renameConversation(convo.id);
+                    }}>
+                <input autoFocus
+                       value = {editTitle}
+                       onChange = {(e) => setEditTitle(e.target.value)}
+                       onBlur = {() => setEditingId(null)}
+                       className = "min-w-0 flex-1 rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-2 py-1 text-sm text-[var(--text-primary)]" 
+                />    
+              </form>
+            ) : (
+              <>
+                {/* Making it an actual button */}
+                <button type = "button"
                   onClick = {() => loadConversation(convo)}
                   className = {`mb-1 w-full truncate rounded-lg px-3 py-2 text-left text-sm
                                 ${conversationId === convo.id ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)]': 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}`}>
-                                  {convo.title}
-          </button>
-        ))}
+                  {convo.title}
+                </button>
+        </>
+        )}
       </div>
+      ))}
+    </div>
     </aside>
     <div className = "flex flex-1 flex-col px-4">
     {/* Page heading */}
