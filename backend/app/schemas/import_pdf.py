@@ -18,6 +18,8 @@ class PortfolioRequest(BaseModel):
 class HoldingsRequest(BaseModel):
     portfolio_id: str
     instrument_name: str
+    ticker: str
+    sector: str
     quantity: Decimal
     total_cost: Decimal
     cost_price: Decimal

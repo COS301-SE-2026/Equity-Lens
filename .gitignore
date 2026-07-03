@@ -65,3 +65,5 @@ supabase/.temp/
 .nyc_output/
 frontend/coverage/
 backend/coverage/
+test-results/
+playwright-report/
