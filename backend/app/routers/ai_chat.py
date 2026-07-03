@@ -19,6 +19,9 @@ class ChatResponse(BaseModel):
     reply: str
     conversation_id: UUID
 
+class ChangeConversationName(BaseModel):
+    title: str
+
 @router.post("/", response_model = ChatResponse)
 async def ai_chat(
     request: ChatRequest,
@@ -81,3 +84,24 @@ async def get_messages(
         }
         for m in messages
     ]
+
+# to change the conversation name by editing it
+@router.put("/conversations/{conversation_id}/")
+async def update_conversation(
+    conversation_id: UUID,
+    request: ChangeConversationName,
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)
+    ):
+    chat_conversation = db.query(ChatConversation).filter(
+        ChatConversation.id == conversation_id,
+        ChatConversation.user_id == current_user.id
+    ).first()
+
+    if not chat_conversation:
+        raise HTTPException(status_code = 404, detail = "Conversation not found")
+    
+    chat_conversation.title = request.title
+    db.commit()
+
+    return {"id": str(chat_conversation.id), "title": chat_conversation.title}
