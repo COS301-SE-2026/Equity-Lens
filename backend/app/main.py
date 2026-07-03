@@ -39,7 +39,7 @@ app.include_router(portfolio.router)
 async def health():
     return {"status": "ok"}
 
-<<<<<<< HEAD
+
 app.include_router(news.router)
 
 app.include_router(import_pdf.router)
