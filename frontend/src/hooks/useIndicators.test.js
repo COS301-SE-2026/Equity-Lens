@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import useIndicators from "./useIndicators";
-import { getIndicatorData } from "../services/indicatorService";
+
 
 vi.mock("../utils/constants", () => ({
   API_BASE_URL: "http://localhost:8000",
@@ -11,6 +11,7 @@ vi.mock("../services/indicatorService", () => ({
   getIndicatorData: vi.fn(),
 }));
 
+import { getIndicatorData } from "../services/indicatorService";
 
 const mockStocks = [
   { ticker: "AAPL", name: "Apple Inc." },
