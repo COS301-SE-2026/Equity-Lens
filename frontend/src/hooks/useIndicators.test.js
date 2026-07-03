@@ -10,7 +10,7 @@ vi.mock("../utils/constants", () => ({
 vi.mock("../services/indicatorService", () => ({
   getIndicatorData: vi.fn(),
 }));
-import { getIndicatorData } from "../services/indicatorService";
+
 
 const mockStocks = [
   { ticker: "AAPL", name: "Apple Inc." },
