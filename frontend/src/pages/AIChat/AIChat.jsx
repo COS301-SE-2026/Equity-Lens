@@ -99,8 +99,9 @@ const AIChat = () => {
     api.put(`/ai_chat/conversations/${convoId}/`, {title: trimmed})
       .then(() => {
         setConversations((prev) => 
-          prev.map((c) => (c.id === convoId ? {...c, title: trimmed} : c)));
-          setEditingId(null);
+          prev.map((c) => (c.id === convoId ? {...c, title: trimmed} : c))
+        );
+        setEditingId(null);
       })
       .catch(() => {})
   };
@@ -144,6 +145,14 @@ const AIChat = () => {
                   className = {`mb-1 w-full truncate rounded-lg px-3 py-2 text-left text-sm
                                 ${conversationId === convo.id ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)]': 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}`}>
                   {convo.title}
+                </button>
+                <button type = "button"
+                        onClick = {() => {
+                          setEditingId(convo.id);
+                          setEditTitle(convo.title);
+                        }}
+                        className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-[var(--text-primary)] group-hover:visible">
+                  <i className="fa fa-pencil" aria-hidden="true"></i>
                 </button>
         </>
         )}
