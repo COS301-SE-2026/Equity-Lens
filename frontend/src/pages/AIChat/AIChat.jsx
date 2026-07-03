@@ -50,6 +50,10 @@ const AIChat = () => {
         };
         setConversationId(res.data.conversation_id);
         setMessages((prev) => [...prev, responseMessage]);
+
+        api.get('/ai_chat/conversations/')
+        .then((res) => setConversations(res.data))
+        .catch(() => {});
       })
 
       //Error checking incase ai call fails
