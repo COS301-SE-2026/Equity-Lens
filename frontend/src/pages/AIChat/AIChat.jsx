@@ -106,6 +106,20 @@ const AIChat = () => {
       .catch(() => {})
   };
 
+  const deleteConversation = (convoId) => {
+    api.delete(`/ai_chat/conversations/${convoId}/`)
+      .then(() => {
+        setConversations((prev) => 
+          prev.filter((c) => c.id !== convoId)
+        );
+        if (conversationId == convoId) {
+          setConversationId(null);
+          setMessages([]);
+        }
+      })
+      .catch(() => {});
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     sendMessage(input);
@@ -153,6 +167,11 @@ const AIChat = () => {
                         }}
                         className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-[var(--text-primary)] group-hover:visible">
                   <i className="fa fa-pencil" aria-hidden="true"></i>
+                </button>
+                <button type = "button"
+                        onClick = {() => deleteConversation(convo.id)}
+                        className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-red-500 group-hover:visible">
+                  <i class="fa fa-trash"></i>
                 </button>
         </>
         )}
