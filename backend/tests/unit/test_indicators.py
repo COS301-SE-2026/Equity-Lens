@@ -1,8 +1,8 @@
-from app.routers.indicators import serialize_indicator_row, _serialize_indicator_value
+from app.routers.indicators import serialize_indicator_row, serialize_indicator_value
 
 
 def test_serialize_indicator_value_marks_missing_data():
-    result = _serialize_indicator_value(None, "%")
+    result = serialize_indicator_value(None, "%")
 
     assert result["status"] == "insufficient_data"
     assert result["reason"] == "No cached indicator data available."
