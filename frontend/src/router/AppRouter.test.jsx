@@ -1,4 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+vi.mock("../utils/constants", () => ({
+  API_BASE_URL: "http://localhost:8000",
+}));
 import { render, screen, waitFor } from '@testing-library/react';
 import AppRouter from './AppRouter';
 
