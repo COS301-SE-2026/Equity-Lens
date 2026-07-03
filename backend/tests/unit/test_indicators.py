@@ -5,7 +5,7 @@ def test_serialize_indicator_value_marks_missing_data():
     result = serialize_indicator_value(None, "%")
 
     assert result["status"] == "insufficient_data"
-    assert result["reason"] == "No cached indicator data available."
+    assert result["reason"] == "Data could not be retrieved. Check if ticker is delisted or if Lambda refresh job ran today."
 
 
 def test_serialize_indicator_row_wraps_values_for_ui():
