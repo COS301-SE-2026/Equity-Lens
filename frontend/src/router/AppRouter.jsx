@@ -14,6 +14,8 @@ import AIChat from '../pages/AIChat/AIChat';
 import { ROUTES } from '../utils/constants';
 import Analytics from '../pages/Analytics/Analytics';
 import ConfirmEmail from '../pages/Auth/ConfirmEmail';
+import Landing from '../pages/Landing/Landing';
+import Help from '../pages/Help/Help';
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -59,7 +61,9 @@ const AppRouter = () => (
       <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
       <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
 
-      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
+      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />      
+      <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
+      <Route path={ROUTES.HELP} element={<Help />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>
