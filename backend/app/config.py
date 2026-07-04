@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     aws_secret_access_key: str | None = None
     aws_cognito_user_pool_id: str | None = None
     aws_cognito_client_id: str | None = None
+    bedrock_model: str = "anthropic.claude-sonnet-4-5-20250929-v1:0"
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 @lru_cache

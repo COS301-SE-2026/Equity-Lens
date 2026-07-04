@@ -218,7 +218,7 @@ CREATE TABLE IF NOT EXISTS  transaction_expenses
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE TABLE IF NOT EXISTS  watchlist
+CREATE TABLE IF NOT EXISTS  chat_conversations
 (
 
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -227,9 +227,22 @@ CREATE TABLE IF NOT EXISTS  watchlist
     ticker VARCHAR(100) NOT NULL,
     company_name VARCHAR(100),
     sector VARCHAR(100),
+    title VARCHAR(255) NOT NULL DEFAULT 'New Chat',
 
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS  chat_messages
+(
+
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    conversation_id UUID NOT NULL REFERENCES chat_conversations(id) ON DELETE CASCADE,
+
+    role VARCHAR(15) NOT NULL,
+    content TEXT NOT NULL,
+
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 
