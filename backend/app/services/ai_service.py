@@ -75,23 +75,33 @@ def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = No
         "|portfolio-context|"
     )
 
+    history = []
+    if conversation_id:
+        prev_messages = db.query(ChatMessages).filter(
+            ChatMessages.conversation_id == conversation_id
+        ).order_by(ChatMessages.created_at.asc()).all()
+
+        for prev in prev_messages:
+            history.append({
+                "role": prev.role,
+                "content": [{"text": prev.content}]
+            })
+
+    history.append({
+        "role": "user",
+        "content": [{"text": user_message}]
+    })
+
     #response (using converse uses modelId and JSON format for messages)
     response = client.converse(
         modelId = settings.bedrock_model,
-        #for user
-        messages = [
-            {
-                "role": "user",
-                "content": [{"text": user_message}]
-            }
-        ],
+        messages = history,
         system = [{"text": system_prompt}],
-        inferenceConfig = {"maxTokens": 256}
+        inferenceConfig = {"maxTokens": 1024}
     )
     reply = response["output"]["message"]["content"][0]["text"]
     
     #Saving to the DB
-    #exitising conversatio?
     if conversation_id:
         chat_conversation = db.query(ChatConversation).filter(
             ChatConversation.id == conversation_id,
