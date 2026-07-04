@@ -61,7 +61,7 @@ const AppRouter = () => (
       <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
       <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
 
-      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />      
+      <Route path={ROUTES.HOME} element={<Landing />} />  
       <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
       <Route path={ROUTES.HELP} element={<Help />} />
       <Route path="*" element={<NotFound />} />
