@@ -33,6 +33,21 @@ def get_user_portfolio_context(db: Session, user_id):
 
     return knowledge
 
+def title_creation(client, user_message):
+    response = client.converse(
+        modelId = settings.bedrock_model,
+        messages = [
+            {
+                "role": "user",
+                "content": [{"text": user_message}]
+            }
+        ],
+        system = [{"text": "Generate a title based off this message of max 5 words. Do not use any quotes or punctuation, just the title"}],
+        inferenceConfig = {"maxTokens": 25}
+    )
+    return response["output"]["message"]["content"][0]["text"].strip()
+
+
 #now for chat functionality 
 #Working on saving the user and ai assistant reply messages to the database
 def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = None):
@@ -106,7 +121,8 @@ def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = No
         ).first()
     # else create a new one
     else:
-        chat_conversation = ChatConversation(user_id = logged_in_user_id) 
+        title = title_creation(client, user_message)
+        chat_conversation = ChatConversation(user_id = logged_in_user_id, title = title) 
         db.add(chat_conversation)
         #force to send insert into db to generate UUID 
         db.flush()
