@@ -345,3 +345,161 @@ const Nav = () => {
     </nav>
   );
 };
+
+/** @param {{ label: string, href?: string, to?: string, onClick?: () => void }} props */
+const NavLink = ({ label, href, to, onClick }) => {
+  const cls =
+    'px-3 py-2 text-[14px] font-medium text-zinc-200 hover:text-white hover:bg-white/5 rounded-lg transition-colors';
+  if (to) return <Link to={to} className={cls} onClick={onClick}>{label}</Link>;
+  return <a href={href} className={cls} onClick={onClick}>{label}</a>;
+};
+
+const Logo = () => (
+  <div
+    aria-hidden="true"
+    className="w-8 h-8 rounded-lg flex items-center justify-center text-[14px] font-black text-black font-mono"
+    style={{
+      background: YELLOW,
+      boxShadow: `0 4px 16px ${YELLOW}55, inset 0 1px 0 rgba(255,255,255,0.35)`,
+    }}
+  >
+    //logo goes here when we have one
+  </div>
+);
+
+const Hero = () => (
+  <section className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-16 sm:pb-20">
+    <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-12 items-center">
+      <div>
+        <motion.p
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="text-[11px] font-mono tracking-widest text-zinc-300 mb-5 sm:mb-6 uppercase"
+        >
+          Institutional-grade portfolio intelligence for South African retail investors.
+        </motion.p>
+
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.05 }}
+          className="text-[clamp(36px,5.5vw,72px)] font-semibold leading-[1.02] tracking-[-0.035em] mb-5 sm:mb-6 text-white"
+        >
+          See past the surface<br />
+          of your portfolio.
+        </motion.h1>
+
+        <motion.p
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
+          className="text-[15px] sm:text-[17px] text-zinc-200 leading-relaxed max-w-lg mb-8 sm:mb-9"
+        >
+          Upload your portfolio and uncover hidden concentration, true ETF exposure, portfolio health and the market events driving your returns.
+        </motion.p>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.25 }}
+          className="flex flex-wrap gap-3"
+        >
+          <Link to={ROUTES.REGISTER}>
+            <YellowButton>
+              Analyse my portfolio
+            </YellowButton>
+          </Link>
+          <a
+            href="#simulator"
+            className="inline-flex items-center gap-2 px-6 py-3 text-[14px] font-medium text-white border border-white/15 rounded-lg hover:bg-white/5 transition-colors"
+          >
+            See how it works
+          </a>
+        </motion.div>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <HeroMockup />
+      </motion.div>
+    </div>
+  </section>
+);
+
+const HeroMockup = () => (
+  <div
+    role="img"
+    aria-label="Dashboard preview showing net worth, portfolio metrics, and top holdings"
+    className="relative"
+  >
+    <div
+      className="relative rounded-2xl border border-white/10 overflow-hidden bg-white/5 backdrop-blur-xl"
+      style={{ boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6)' }}
+    >
+      <div className="p-4 sm:p-5">
+        <div className="flex justify-between items-start mb-5 gap-3">
+          <div>
+            <div className="text-[10px] font-mono text-zinc-300 mb-1.5 tracking-widest">NET WORTH</div>
+            <div className="text-[22px] sm:text-[28px] font-semibold tracking-tight font-mono text-white">
+              R 847,231<span className="text-zinc-400">.04</span>
+            </div>
+            <div
+              className="text-[12px] mt-1 font-mono flex items-center gap-1"
+              style={{ color: '#22c55e' }}
+            >
+              <TrendingUp size={11} aria-hidden="true" />
+              +R 12,405 (+1.49%) today
+            </div>
+          </div>
+          <div className="w-28 sm:w-36 h-12 sm:h-14 shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={HERO_PERF}>
+                <YAxis hide domain={['auto', 'auto']} />
+                <Line type="monotone" dataKey="v" stroke={YELLOW} strokeWidth={2} dot={false} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-3 gap-2 mb-5">
+          {[
+            { l: 'SHARPE', v: '1.42' },
+            { l: 'BETA', v: '0.87' },
+            { l: 'ALPHA', v: '+2.1%' },
+          ].map((m) => (
+            <div key={m.l} className="p-2.5 rounded-lg border border-white/10 bg-black/40">
+              <div className="text-[9px] font-mono text-zinc-300 mb-0.5">{m.l}</div>
+              <div className="text-[14px] font-mono font-semibold text-white">{m.v}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="text-[10px] font-mono text-zinc-300 mb-2 tracking-widest">
+          LOOKED-THROUGH HOLDINGS
+        </div>
+        {[
+          { sym: 'NVDA', name: 'NVIDIA', pct: 8.4, chg: 2.14 },
+          { sym: 'MSFT', name: 'Microsoft', pct: 7.1, chg: 0.87 },
+          { sym: 'TSMC', name: 'Taiwan Semi', pct: 5.9, chg: 3.02 },
+          { sym: 'AAPL', name: 'Apple', pct: 5.2, chg: -0.41 },
+        ].map((h) => (
+          <div
+            key={h.sym}
+            className="grid grid-cols-[50px_1fr_50px_55px] gap-2 sm:gap-3 items-center py-2 px-2 rounded-md text-[11px] font-mono text-white"
+          >
+            <span className="font-bold">{h.sym}</span>
+            <span className="text-zinc-300 truncate">{h.name}</span>
+            <span className="text-right">{h.pct}%</span>
+            <span className="text-right" style={{ color: h.chg >= 0 ? '#22c55e' : '#ef4444' }}>
+              {h.chg >= 0 ? '+' : ''}{h.chg}%
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
