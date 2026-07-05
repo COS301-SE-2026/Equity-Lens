@@ -453,12 +453,26 @@ const Portfolio = () => {
       <div className="mt-3 flex justify-center">
         <div className="w-full p-8 border border-gray-700 rounded-3xl text-center">
 
-          <p className="text-2xl font-semibold text-white mb-2">
+          <h2 className="text-2xl font-semibold text-white mb-2">
             Upload your portfolio statement
-          </p>
+          </h2>
 
           <p className="text-gray-400 mb-8">
-            Select your portfolio statement
+            Choose a PDF statement to import your portfolio
+          </p>
+
+          <div className="flex flex-row gap-8 p-8">
+
+         
+
+          <div className="border border-dashed border-gray-600 rounded-2xl p-10">
+
+          <p className="text-white text-lg font-medium">
+            Select your PDF file
+          </p>
+
+          <p className="text-gray-500 text-sm mt-2 mb-6">
+            Supported format: PDF
           </p>
 
           <input
@@ -467,6 +481,51 @@ const Portfolio = () => {
             onChange={whenPressingTheFile}
             className="text-white file:bg-yellow-500 file:text-black file:border-0 file:px-4 file:py-2 file:rounded-lg file:font-medium"
           />
+
+           <p className="text-gray-500 text-sm mt-2 mb-6">
+            Your portfolio statement will be processed securely.
+          </p>
+
+          </div>
+
+
+
+           <div className="border border-dashed border-gray-600 rounded-2xl p-10">
+
+          <p className="text-white text-lg font-medium">
+            Select your Excel file
+          </p>
+
+          <p className="text-gray-500 text-sm mt-2 mb-6">
+            Supported format: Excel(.xlsx)
+          </p>
+
+          <a href="frontend/public/template/Book1.xlsx"
+          download
+          className="bg-blue-600 text-white px-5 py-2 rounded-lg font-medium">
+            Download Template
+          </a>
+
+
+
+          <input
+            type="file"
+            accept="application/pdf"
+            onChange={whenPressingTheFile}
+            className="text-white file:bg-yellow-500 file:text-black file:border-0 file:px-4 file:py-2 file:rounded-lg file:font-medium"
+          />
+
+           <p className="text-gray-500 text-sm mt-2 mb-6">
+            Your portfolio statement will be processed securely.
+          </p>
+
+          </div>
+
+           </div>
+
+
+
+
 
         </div>
 
