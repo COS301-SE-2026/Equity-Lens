@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Button from '../../components/common/Button/Button';
 import api from '../../services/api'
 import useAuth from '../../hooks/useAuth';
+import ReactMarkdown from 'react-markdown'
 
 const SUGGESTED_PROMPTS = [
   'How is MTN doing?',
@@ -210,8 +211,7 @@ const AIChat = () => {
                              hover:bg-[var(--bg-tertiary)]
                              hover:text-[var(--text-primary)]
                              focus-visible:outline-none focus-visible:ring-2
-                             focus-visible:ring-[var(--accent-primary)]"
-                >
+                             focus-visible:ring-[var(--accent-primary)]">
                   {prompt}
                 </button>
               ))}
@@ -235,7 +235,7 @@ const AIChat = () => {
               ) : (
                 <div className="max-w-[80%]">
                   <p className="text-sm text-[var(--text-secondary)]">
-                    {message.text}
+                    <ReactMarkdown>{message.text}</ReactMarkdown>
                   </p>
                 </div>
               )}
