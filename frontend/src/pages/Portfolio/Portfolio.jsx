@@ -4,6 +4,7 @@ import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 import { ArrowLeftRight, Wallet, CreditCard, Percent, TrendingUp, Landmark, Receipt, Briefcase, TriangleAlert, Bot } from "lucide-react"
 import { PieChart, Pie, Cell } from "recharts"
 import api from "../../services/api"
+import * as XLSX from "xlsx"
 
 
 ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
@@ -23,6 +24,30 @@ const ToGetIDForTransaction = async (getName) => {
 const ToGetIDForNarrative = async (getName) => {
   const getID = await api.get(`/import_pdf/get_narrative_type_id/${getName}`);
   return getID.data.id;
+}
+
+const whenUploadingExcel = async(event) => {
+
+  const file = event.target.files[0];
+
+  if(!file)
+  {
+    return;
+  }
+
+  const read = XLSX.read(await file.arrayBuffer());
+
+  const porfolio = XLSX.utils.sheet_to_json(read.Sheets["Portfolio"]);
+  const Instrument = XLSX.utils.sheet_to_json(read.Sheets["Instrument"]);
+  const PurchaseandSales = XLSX.utils.sheet_to_json(read.Sheets["Purchase and Sales"]);
+  const TransactionCosts = XLSX.utils.sheet_to_json(read.Sheets["Transaction Costs"]);
+  const ContributionsandWithdrawals = XLSX.utils.sheet_to_json(read.Sheets["Contributions and Withdrawals"]);
+  const DividendsandWithholdingTax = XLSX.utils.sheet_to_json(read.Sheets["Dividends and Withholding Tax"]);
+  const Interest = XLSX.utils.sheet_to_json(read.Sheets["Interest"]);
+  const Expenses = XLSX.utils.sheet_to_json(read.Sheets["Expenses"]);
+
+
+
 }
 
 const Portfolio = () => {
@@ -489,7 +514,6 @@ const Portfolio = () => {
           </div>
 
 
-
            <div className="border border-dashed border-gray-600 rounded-2xl p-10">
 
           <p className="text-white text-lg font-medium">
@@ -510,8 +534,8 @@ const Portfolio = () => {
 
           <input
             type="file"
-            accept="application/pdf"
-            onChange={whenPressingTheFile}
+            accept=".xlsx"
+            onChange={whenUploadingExcel}
             className="text-white file:bg-yellow-500 file:text-black file:border-0 file:px-4 file:py-2 file:rounded-lg file:font-medium"
           />
 
