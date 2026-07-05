@@ -1,19 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
-import {
-  ArrowRight, TrendingUp, TrendingDown, Github,
-  Upload, Layers, Newspaper, Sparkles, Menu, X, Bot,
-  Check, Shield, Lock, EyeOff, Trash2, FileCheck, Command, FileInput, Percent, Radio } from 'lucide-react';
+import { ArrowRight, TrendingUp, Github, Layers, Sparkles, Menu, X, Check, Shield, Lock, EyeOff, Trash2, Command, FileInput, Percent, Radio, ShieldCheck } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, YAxis, Tooltip, BarChart, Bar, XAxis, } from 'recharts';
 import { ROUTES } from '../../utils/constants';
 
 const YELLOW = '#FACC15';
+const EASE_SMOOTH = [0.16, 1, 0.3, 1];
 
 const PRESETS = {
   vooqqq: {
     label: '60% VOO + 40% QQQ',
+    caption: "The classic 'set and forget' combo every SA investor gets pitched. Feels diversified. Isn't.",
     exposure: [
       { name: 'AAPL', value: 12.4 },
       { name: 'MSFT', value: 11.9 },
@@ -28,6 +27,7 @@ const PRESETS = {
   },
   balanced: {
     label: '70% VOO + 30% VXUS',
+    caption: 'Adds international exposure through VXUS. Meaningfully lower single-name risk.',
     exposure: [
       { name: 'AAPL', value: 4.9 },
       { name: 'MSFT', value: 4.6 },
@@ -42,6 +42,7 @@ const PRESETS = {
   },
   ai: {
     label: '50% SMH + 30% QQQ + 20% ARKK',
+    caption: 'A concentrated bet on the AI theme. High upside, high correlation risk if the theme turns.',
     exposure: [
       { name: 'NVDA', value: 22.1 },
       { name: 'TSMC', value: 11.8 },
@@ -101,10 +102,10 @@ const FEATURES = [
 ];
 
 const TRUST_ITEMS = [
-  { icon: EyeOff,    text: 'Read-only portfolio analysis' },
-  { icon: Lock,      text: 'No trading permissions required' },
-  { icon: Shield,    text: 'Encrypted statement uploads' },
-  { icon: Trash2,    text: 'Statements deleted after processing' },
+  { icon: ShieldCheck,    text: 'Read-only portfolio analysis' },
+  { icon: Lock,      text: 'End-to-end encrypted uploads' },
+  { icon: Shield,    text: 'No trading permissions required' },
+  { icon: EyeOff,    text: 'Securely stored data' },
 ];
 
 const COMPARISON = [
@@ -114,3 +115,233 @@ const COMPARISON = [
   { legacy: 'Manual interpretation',  lens: 'Actionable portfolio insights' },
   { legacy: 'Basic allocation',       lens: 'Look-through exposure' },
 ];
+
+const SHOWCASE = [
+  {
+    id: 'import',
+    label: 'IMPORT PORTFOLIO',
+    heading: 'Start with a single upload.',
+    body: 'Submit a broker statement. We parse positions, quantities, and cost basis in seconds, no broker credentials required.',
+    bullets: ['Automatic statement parsing', 'Positions, quantities, cost basis', 'Multiple brokers supported'],
+    src: '/screens/portfolio.png',
+    alt: 'Portfolio import flow with broker statement upload',
+  },
+  {
+    id: 'lookthrough',
+    label: 'LOOK-THROUGH ANALYSIS',
+    heading: 'Every ETF, flattened to the tickers underneath.',
+    body: 'Reveal the companies inside every ETF and understand your portfolio\'s true exposure.',
+    bullets: ['ETFs decomposed into constituents', 'True underlying weightings', 'Sector-level concentration risk'],
+    src: '/screens/dashboard.png',
+    alt: 'Look-through exposure showing flattened ETF holdings',
+  },
+  {
+    id: 'dashboard',
+    label: 'PORTFOLIO DASHBOARD',
+    heading: 'Track performance. Monitor health. See why it moved.',
+    body: 'See everything that matters in one place, from performance and portfolio health to the drivers behind today\'s returns.',
+    bullets: ['Live market overview', 'Portfolio health score', 'Interactive portfolio insights'],
+    src: '/screens/dashboard.png',
+    alt: 'Portfolio dashboard with net worth, health score, and holdings table',
+  },
+  {
+    id: 'analytics',
+    label: 'PORTFOLIO ANALYTICS',
+    heading: 'Institutional-grade indicators, on your book.',
+    body: 'Weighted Sharpe, Beta, CAPM, Altman Z, P/E, ROE, and dividend yield computed across your look-through holdings.',
+    bullets: ['Portfolio-level indicators', 'Risk-adjusted return metrics', 'Per-holding drill-down'],
+    src: '/screens/portfolio.png',
+    alt: 'Analytics page with financial indicators',
+  },
+  {
+    id: 'news',
+    label: 'NEWS CORRELATION',
+    heading: 'When something moves, know exactly why.',
+    body: 'Anomaly detection flags unusual moves in your holdings and links them to the news story that caused it, giving you direct and instant context',
+    bullets: ['Anomaly detection on your holdings', 'Direct news-to-price correlation', 'Cross-referenced on the timeline'],
+    src: '/screens/ai.png',
+    alt: 'News feed correlated with portfolio anomalies',
+  },
+  {
+    id: 'ai',
+    label: 'AI PORTFOLIO ASSISTANT',
+    heading: 'Ask questions. Get answers.',
+    body: 'Ask about drawdown, sector concentration, or a specific holding. The assistant reads your look-through ledger and responds with real numbers.',
+    bullets: ['powered by your own portfolio', 'Explains financial concepts', 'Your own intelligent assistant'],
+    src: '/screens/ai.png',
+    alt: 'AI assistant answering a portfolio question',
+  },
+];
+
+const useRevealVariant = () => {
+  const reduce = useReducedMotion();
+  return {
+    initial: reduce ? { opacity: 0 } : { opacity: 0, y: 32 },
+    whileInView: reduce ? { opacity: 1 } : { opacity: 1, y: 0 },
+    viewport: { once: true, margin: '-60px' },
+    transition: { duration: 0.55, ease: EASE_SMOOTH },
+  };
+};
+
+const Landing = () => (
+  <>
+    <Helmet>
+      <title>Institutional-grade portfolio intelligence for South African retail investors.</title>
+      <meta
+        name="description"
+        content="Flatten your ETFs into their true underlying holdings. Built for South African retail investors on EasyEquities and similar platforms."
+      />
+      <meta property="og:title" content="Institutional-grade portfolio intelligence for South African retail investors." />
+      <meta
+        property="og:description"
+        content="Flatten your ETFs into their true underlying holdings."
+      />
+      <meta property="og:type" content="website" />
+      <meta name="theme-color" content="#050505" />
+    </Helmet>
+
+    <div
+    className="min-h-screen bg-[#050505] text-white overflow-x-hidden relative"
+    style={{ fontFamily: 'var(--font-primary)' }}>
+      <MicroGrid />
+      <Nav />
+      <main id="main">
+      <Hero />
+      <MissionStrip />
+      <Features />
+      <Simulator />
+      <Comparison />
+      <Showcase />
+      <FlatteningEngine />
+      <TrustBar />
+      <FinalCTA />
+      </main>
+      <Footer />
+    </div>
+
+    <style>{`
+      a:focus-visible, button:focus-visible, [role="button"]:focus-visible {
+        outline: 2px solid ${YELLOW};
+        outline-offset: 2px;
+        border-radius: 6px;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+        }
+      }
+    `}</style>
+  </>
+);
+
+const MicroGrid = () => (
+  <div
+    aria-hidden="true"
+    className="fixed inset-0 pointer-events-none z-0"
+    style={{
+      backgroundImage: `
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+      `,
+      backgroundSize: '48px 48px',
+      maskImage: 'radial-gradient(ellipse at center top, black 30%, transparent 80%)',
+      WebkitMaskImage: 'radial-gradient(ellipse at center top, black 30%, transparent 80%)',
+    }}
+  />
+);
+
+const Nav = () => {
+  const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <nav
+      aria-label="Primary"
+      className={`sticky top-0 z-50 transition-all duration-300 ${
+        scrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/10' : 'bg-black/40 backdrop-blur-md'
+      }`}
+    >
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:bg-yellow-400 focus:text-black focus:px-3 focus:py-1.5 focus:rounded-md focus:text-[13px] focus:font-semibold"
+      >
+        Skip to content
+      </a>
+
+      <div className="max-w-6xl mx-auto px-5 sm:px-8 py-4 flex items-center justify-between">
+        <Link to={ROUTES.HOME} className="flex items-center gap-3" aria-label="Equity-Lens home">
+          <Logo />
+          <span className="text-[16px] font-semibold tracking-tight text-white">Equity-Lens</span>
+        </Link>
+
+        <div className="hidden md:flex items-center gap-2">
+          <NavLink label="Features" href="#features" />
+          <NavLink label="How it works" href="#simulator" />
+          <NavLink label="Why it matters" href="#flatten" />
+          <NavLink label="Help Centre" to={ROUTES.HELP} />
+          <Link
+            to={ROUTES.LOGIN}
+            className="px-4 py-2 text-[14px] font-medium text-white hover:bg-white/5 rounded-lg transition-colors ml-2"
+          >
+            Log in
+          </Link>
+          <Link to={ROUTES.REGISTER} className="ml-1">
+            <span
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-[14px] font-semibold bg-yellow-400 text-black rounded-lg hover:bg-yellow-300 transition-colors"
+              style={{ boxShadow: `0 4px 16px ${YELLOW}40` }}
+            >
+              Sign up
+            </span>
+          </Link>
+        </div>
+
+        <button
+          type="button"
+          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md border border-white/10 text-white"
+          onClick={() => setMobileOpen((v) => !v)}
+          aria-expanded={mobileOpen}
+          aria-controls="mobile-nav"
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+        >
+          {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+      </div>
+
+      {mobileOpen && (
+        <div
+          id="mobile-nav"
+          className="md:hidden border-t border-white/10 bg-black/95 backdrop-blur-xl"
+        >
+          <div className="max-w-6xl mx-auto px-5 py-4 flex flex-col gap-1">
+            <NavLink label="How it works" href="#simulator" onClick={() => setMobileOpen(false)} />
+            <NavLink label="Features" href="#features" onClick={() => setMobileOpen(false)} />
+            <NavLink label="Why it matters" href="#flatten" onClick={() => setMobileOpen(false)} />
+            <NavLink label="Help Centre" to={ROUTES.HELP} onClick={() => setMobileOpen(false)} />
+            <Link
+              to={ROUTES.LOGIN}
+              onClick={() => setMobileOpen(false)}
+              className="px-3 py-2.5 text-[15px] font-medium text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              Sign in
+            </Link>
+            <Link
+              to={ROUTES.REGISTER}
+              onClick={() => setMobileOpen(false)}
+              className="px-3 py-2.5 text-[15px] font-semibold bg-yellow-400 text-black rounded-lg mt-1 text-center"
+            >
+              Get started
+            </Link>
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+};
