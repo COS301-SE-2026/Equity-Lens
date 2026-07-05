@@ -233,10 +233,8 @@ const AIChat = () => {
                   {message.text}
                 </p>
               ) : (
-                <div className="max-w-[80%]">
-                  <p className="text-sm text-[var(--text-secondary)]">
+                <div className="max-w-[80%] text-sm text-[var(--text-secondary)] [&>p]:mb-2 [&>ul]:mb-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:mb-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>h3]:font-semibold [&>h3]:mb-1 [&>strong]:font-semibold [&>p:last-child]:mb-0">
                     <ReactMarkdown>{message.text}</ReactMarkdown>
-                  </p>
                 </div>
               )}
             </li>
