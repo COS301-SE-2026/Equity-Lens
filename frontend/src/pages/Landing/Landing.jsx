@@ -663,3 +663,83 @@ const MissionStrip = () => {
     </section>
   );
 };
+
+const Features = () => {
+  const REVEAL = useRevealVariant();
+
+  return (
+    <section
+      id="features"
+      aria-labelledby="features-heading"
+      className="relative z-10 mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-24"
+    >
+      <motion.div {...REVEAL} className="mb-12 max-w-2xl">
+        <p className="mb-3 font-mono text-xs tracking-widest text-zinc-300">
+          FEATURES
+        </p>
+
+        <h2
+          id="features-heading"
+          className="text-3xl font-semibold leading-tight tracking-tight text-white sm:text-5xl"
+        >
+          Five features. One clearer portfolio.
+        </h2>
+      </motion.div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        {FEATURES.map((feature, index) => {
+          const spotlight = feature.isSpotlight;
+
+          return (
+            <motion.article
+              key={feature.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{
+                duration: 0.4,
+                delay: index * 0.06,
+              }}
+              className={[
+                "flex flex-col rounded-2xl border p-6 backdrop-blur-xl transition-colors",
+                spotlight
+                  ? "sm:col-span-2 border-yellow-400/30 bg-yellow-400/5 hover:border-yellow-400/50"
+                  : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10",
+              ].join(" ")}
+            >
+              <div
+                className={[
+                  "mb-4 flex items-center justify-center rounded-xl border border-yellow-400/25 bg-yellow-400/10",
+                  spotlight ? "h-12 w-12" : "h-10 w-10",
+                ].join(" ")}
+              >
+                <feature.icon
+                  size={spotlight ? 22 : 18}
+                  className="text-yellow-400"
+                />
+              </div>
+
+              <h3
+                className={[
+                  "mb-2 font-semibold tracking-tight text-white",
+                  spotlight ? "text-xl sm:text-2xl" : "text-base",
+                ].join(" ")}
+              >
+                {feature.title}
+              </h3>
+
+              <p
+                className={[
+                  "leading-relaxed text-zinc-200",
+                  spotlight ? "text-sm sm:text-base" : "text-sm",
+                ].join(" ")}
+              >
+                {feature.body}
+              </p>
+            </motion.article>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
