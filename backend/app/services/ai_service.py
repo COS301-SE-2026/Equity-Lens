@@ -42,7 +42,7 @@ def title_creation(client, user_message):
                 "content": [{"text": user_message}]
             }
         ],
-        system = [{"text": "Generate a title based off this message of max 5 words. Do not use any quotes or punctuation, just the title"}],
+        system = [{"text": "Generate a title based off this message of max 5 words. Do not use any quotes or punctuation, just the title. Never exceed 5 words and do not include any paranthesis. Focus on the main point of the message and if speaking about a stock name it based off of that."}],
         inferenceConfig = {"maxTokens": 25}
     )
     return response["output"]["message"]["content"][0]["text"].strip()
