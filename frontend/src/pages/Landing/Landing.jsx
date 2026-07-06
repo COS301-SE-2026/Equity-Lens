@@ -7,6 +7,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, YAxis, Toolt
 import { ROUTES } from '../../utils/constants';
 
 const YELLOW = '#FACC15';
+/** @type {[number, number, number, number]} */
 const EASE_SMOOTH = [0.16, 1, 0.3, 1];
 
 const PRESETS = {
@@ -167,11 +168,13 @@ const SHOWCASE = [
 
 const useRevealVariant = () => {
   const reduce = useReducedMotion();
+  /** @type {import('framer-motion').Transition} */
+  const transition = { duration: 0.55, ease: EASE_SMOOTH };
   return {
     initial: reduce ? { opacity: 0 } : { opacity: 0, y: 32 },
     whileInView: reduce ? { opacity: 1 } : { opacity: 1, y: 0 },
     viewport: { once: true, margin: '-60px' },
-    transition: { duration: 0.55, ease: EASE_SMOOTH },
+    transition,
   };
 };
 
@@ -498,7 +501,7 @@ const HeroMockup = () => (
 
 const lensCell = 'p-4 sm:p-5 border-l border-white/10 flex items-center gap-3';
 const brokerCell = "p-4 sm:p-5 flex items-center gap-3";
-const lensBG = { background: 'rgba(250,204,200,0.3)' };
+const lensBG = { background: 'rgba(250,200,200,0.3)' };
 const text1 = "text-[13px] sm:text-[16px] text-zinc-400"
 const text2 = "text-[13px] sm:text-[16px] text-white font-medium"
 const tick = (
@@ -611,6 +614,50 @@ const Comparison = () => {
             {tick}
             <span className={text2}>Look-through exposure</span>
           </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+};
+
+const MissionStrip = () => {
+  const REVEAL = useRevealVariant();
+
+  return (
+    <section
+      aria-labelledby="mission-heading"
+      className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8 lg:px-10"
+    >
+      <motion.div
+        {...REVEAL}
+        className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.03] via-white/[0.015] to-transparent backdrop-blur-2xl px-8 py-14 sm:px-14 sm:py-16"
+      >
+        <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-yellow-400/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 left-0 h-64 w-64 rounded-full bg-emerald-400/5 blur-3xl" />
+
+        <div className="relative max-w-4xl">
+          <div className="mb-6 flex items-center gap-4">
+            <p
+              id="mission-heading"
+              className="text-[14px] font-mono uppercase tracking-[0.60em] text-yellow-400"
+            >
+              Our Mission
+            </p>
+          </div>
+
+          <h2 className="text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
+            Every South African investor deserves{" "}
+            <span className="text-yellow-400">
+              institutional-grade portfolio intelligence.
+            </span>
+          </h2>
+
+          <p className="mt-6 max-w-3xl text-base leading-8 text-zinc-300 sm:text-lg">
+            Traditional brokerages stop at the fund level. Equity Lens reveals
+            the companies, concentration risk and portfolio insights hidden
+            beneath your investments, giving you the same clarity
+            traditionally reserved for institutional investment desks.
+          </p>
         </div>
       </motion.div>
     </section>
