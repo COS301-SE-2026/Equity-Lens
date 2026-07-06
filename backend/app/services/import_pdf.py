@@ -2,10 +2,8 @@ from app.repositories.import_pdf import save_document
 from app.repositories.import_pdf import save_portfolios
 from app.repositories.import_pdf import save_holdings
 from app.repositories.import_pdf import save_instrument_purchases_and_sales
-from app.repositories.import_pdf import save_transaction_costs
 from app.repositories.import_pdf import save_contributions_and_withdrawals
 from app.repositories.import_pdf import save_dividends_and_withholding_tax
-from app.repositories.import_pdf import save_transaction_interest
 from app.repositories.import_pdf import save_transaction_expenses
 import yfinance as yf
 
@@ -66,15 +64,6 @@ def save_instrument_purchases_and_sales_import(database,user_id,data):
     }
 
 
-def save_transaction_costs_import(database,user_id,data):
-    document = save_transaction_costs(database,user_id,data)
-
-    return {
-        "Success": True,
-        "Message": "Transaction costs has been saved successfully"
-    }
-
-
 def save_contributions_and_withdrawals_import(database,user_id,data):
     document = save_contributions_and_withdrawals(database,user_id,data)
 
@@ -90,15 +79,6 @@ def save_dividends_and_withholding_tax_import(database,user_id,data):
     return {
         "Success": True,
         "Message": "Dividends and withholding tax import has been saved successfully"
-    }
-
-
-def save_transaction_interest_import(database,user_id,data):
-    document = save_transaction_interest(database,user_id,data)
-
-    return {
-        "Success": True,
-        "Message": "Transaction interest has been saved successfully"
     }
 
 
