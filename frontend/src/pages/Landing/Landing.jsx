@@ -108,14 +108,6 @@ const TRUST_ITEMS = [
   { icon: EyeOff,    text: 'Securely stored data' },
 ];
 
-const COMPARISON = [
-  { legacy: 'Shows funds',           lens: 'Shows underlying companies' },
-  { legacy: 'Portfolio value',        lens: 'Portfolio health' },
-  { legacy: 'Generic market news',    lens: 'News linked to your holdings' },
-  { legacy: 'Manual interpretation',  lens: 'Actionable portfolio insights' },
-  { legacy: 'Basic allocation',       lens: 'Look-through exposure' },
-];
-
 const SHOWCASE = [
   {
     id: 'import',
@@ -503,3 +495,124 @@ const HeroMockup = () => (
     </div>
   </div>
 );
+
+const lensCell = 'p-4 sm:p-5 border-l border-white/10 flex items-center gap-3';
+const brokerCell = "p-4 sm:p-5 flex items-center gap-3";
+const lensBG = { background: 'rgba(250,204,200,0.3)' };
+const text1 = "text-[13px] sm:text-[16px] text-zinc-400"
+const text2 = "text-[13px] sm:text-[16px] text-white font-medium"
+const tick = (
+  <Check
+    size={15}
+    className="text-yellow-400 shrink-0"
+    aria-hidden="true"
+  />);
+  const cross = (
+  <X
+    size={15}
+    className="text-zinc-500 shrink-0"
+    aria-hidden="true"
+  />);
+
+const Comparison = () => {
+  const reveal = useRevealVariant();
+  return (
+    <section
+      aria-labelledby="compare-heading"
+      className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 py-16 sm:py-24"
+    >
+      <motion.div {...reveal} className="max-w-2xl mb-10 sm:mb-12">
+        <p className="text-[11px] font-mono tracking-widest text-zinc-300 mb-3">
+          WHY EQUITY-LENS
+        </p>
+        <h2
+          id="compare-heading"
+          className="text-[clamp(28px,4vw,52px)] font-semibold tracking-[-0.03em] leading-[1.05] text-white"
+        >
+          From fund labels<br />
+          <span className="text-yellow-400">to true exposure.</span>
+        </h2>
+      </motion.div>
+
+      <motion.div
+        {...reveal}
+        transition={{ ...reveal.transition, delay: 0.1 }}
+        className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden"
+      >
+        <div className="grid grid-cols-2 border-b border-white/10">
+          <div className="p-4 sm:p-5">
+            <p className="text-[10px] font-mono tracking-widest text-zinc-400 mb-1">
+              TRADITIONAL BROKERAGE
+            </p>
+            <p className="text-[14px] sm:text-[15px] font-semibold text-zinc-300">
+              What you see today
+            </p>
+          </div>
+          <div className="p-4 sm:p-5 border-l border-white/10" style={lensBG}>
+            <p className="text-[10px] font-mono tracking-widest text-yellow-400 mb-1">
+              EQUITY-LENS
+            </p>
+            <p className="text-[14px] sm:text-[15px] font-semibold text-white">
+              What you get instead
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 border-b border-white/5">
+          <div className={brokerCell}>
+            {cross}
+            <span className={text1}>Shows funds</span>
+          </div>
+          <div className={lensCell} style={lensBG}>
+            {tick}
+            <span className={text2}>Shows underlying companies</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 border-b border-white/5">
+          <div className={brokerCell}>
+            {cross}
+            <span className={text1}>Portfolio value</span>
+          </div>
+          <div className={lensCell} style={lensBG}>
+            {tick}
+            <span className={text2}>Portfolio health</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 border-b border-white/5">
+          <div className={brokerCell}>
+            {cross}
+            <span className={text1}>Generic market news</span>
+          </div>
+          <div className={lensCell} style={lensBG}>
+            {tick}
+            <span className={text2}>News linked to your holdings</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 border-b border-white/5">
+          <div className={brokerCell}>
+            {cross}
+            <span className={text1}>Manual interpretation</span>
+          </div>
+          <div className={lensCell} style={lensBG}>
+            {tick}
+            <span className={text2}>Actionable portfolio insights</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2">
+          <div className={brokerCell}>
+            {cross}
+            <span className={text1}>Basic allocation</span>
+          </div>
+          <div className={lensCell} style={lensBG}>
+            {tick}
+            <span className={text2}>Look-through exposure</span>
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
+};
