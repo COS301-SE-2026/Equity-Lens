@@ -6,25 +6,8 @@ import { PieChart, Pie, Cell } from "recharts"
 import api from "../../services/api"
 import * as XLSX from "xlsx"
 
-
 ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
 
-const ToGetIDForInstrument = async (getName) => {
-  const getID = await api.get(`/import_pdf/get_instrument_type_id/${getName}`);
-  return getID.data.id;
-}
-
-
-
-const ToGetIDForTransaction = async (getName) => {
-  const getID = await api.get(`/import_pdf/get_transaction_type_id/${getName}`);
-  return getID.data.id;
-}
-
-const ToGetIDForNarrative = async (getName) => {
-  const getID = await api.get(`/import_pdf/get_narrative_type_id/${getName}`);
-  return getID.data.id;
-}
 
 const whenUploadingExcel = async(event) => {
 
@@ -47,7 +30,14 @@ const whenUploadingExcel = async(event) => {
   const Expenses = XLSX.utils.sheet_to_json(read.Sheets["Expenses"]);
 
 
-
+  console.log("porfolio",porfolio);
+  console.log("Instrument",Instrument)
+  console.log("PurchaseandSales",PurchaseandSales)
+  console.log("TransactionCosts",TransactionCosts)
+  console.log("ContributionsandWithdrawals",ContributionsandWithdrawals)
+  console.log("DividendsandWithholdingTax",DividendsandWithholdingTax)
+  console.log("Interest",Interest)
+  console.log("Expenses",Expenses)
 }
 
 const Portfolio = () => {
@@ -130,28 +120,7 @@ const Portfolio = () => {
 
       const getuploadPortfolioRequest = uploadPortfolioRequest.data;
 
-      const ReplacenstrumentName = gettingInfo.replaceAll("10X S&P 500 Exchange Traded Fund", "10X_S&P_500_Exchange_Traded_Fund")
-        .replaceAll("10X S&P South Africa Top50 Index Exchange Traded Fund", "10X_S&P_South_Africa_Top50_Index_Exchange_Traded_Fund")
-        .replaceAll("EasyETFs AI World Actively Managed ETF", "EasyETFs_AI_World_Actively_Managed_ETF")
-        .replaceAll("Satrix MSCI Emerging Markets ETF", "Satrix_MSCI_Emerging_Markets_ETF")
-        .replaceAll("Instrument Purchases and Sales", "Instrument_Purchases_and_Sales")
-        .replaceAll("Detailed Transactions - Transaction Costs", "Detailed_Transactions_-_Transaction_Costs")
-        .replaceAll("Detailed Transactions - Contributions and Withdrawals", "Detailed_Transactions_-_Contributions_and_Withdrawals")
-        .replaceAll("Capital withdrawal", "Capital_withdrawal")
-        .replaceAll("Capital contribution", "Capital_contribution")
-        .replaceAll("Detailed Transactions - Dividends and Withholding Tax [4]", "Detailed_Transactions_-_Dividends_and_Withholding_Tax_[4]")
-        .replaceAll("Cash investment interest received", "Cash_investment_interest_received")
-        .replaceAll("Securities Interest", "Securities_Interest")
-        .replaceAll("Detailed Transactions - Interest", "Detailed_Transactions_-_Interest")
-        .replaceAll("Trust Account", "Trust_Account")
-        .replaceAll("Detailed Transactions - Expenses", "Detailed_Transactions_-_Expenses")
-        .replaceAll("VAT on Cash Management Fee", "VAT_on_Cash_Management_Fee")
-        .replaceAll("Cash Management Fee", "Cash_Management_Fee")
-        .replaceAll("Value Added Tax on costs (VAT) for Early Settlement Fee", "Value_Added_Tax_on_costs_(VAT)_for_Early_Settlement_Fee")
-        .replaceAll("Early settlement fee", "Early_settlement_fee")
-        .replaceAll("Early Settlement Fee", "Early_Settlement_Fee")
-        .replaceAll("Page 6", "Page_6")
-        .replaceAll("Page 7", "Page_7")
+      const ReplacenstrumentName = gettingInfo;
 
       const FixInstrumentName = ReplacenstrumentName.split(" ").filter((word) => word !== "");
       const FixNumberComma = [];
@@ -221,10 +190,6 @@ const Portfolio = () => {
 
       for (let i = 13; i < fullPurchaseAndInvestment.length; i = i + 7) {
 
-        const transactionID = await ToGetIDForTransaction(fullPurchaseAndInvestment[i + 1].replaceAll("_", " "));
-        const instrumentID = await ToGetIDForInstrument(fullPurchaseAndInvestment[i + 2].replaceAll("_", " "));
-
-
         FinalArrayPurchaseAndInvestment.push({
           transactions_date: fullPurchaseAndInvestment[i].replaceAll("/", "-"),
           transaction_type_id: transactionID,
@@ -260,9 +225,6 @@ const Portfolio = () => {
       const FinalTransactionCosts = [];
 
       for (let i = 7; i < fullTransactionCosts.length; i = i + 3) {
-
-        const instrumentID = await ToGetIDForInstrument(fullTransactionCosts[i].replaceAll("_", " "));
-
 
         FinalTransactionCosts.push({
           instrument_type_id: instrumentID,
@@ -327,9 +289,6 @@ const Portfolio = () => {
 
       for (let i = 11; i < fullDividendsAndWithholdingTax.length; i = i + 6) {
 
-        const instrumentID = await ToGetIDForInstrument(fullDividendsAndWithholdingTax[i + 1].replaceAll("_", " "));
-
-
         FinalDividendsAndWithholdingTax.push({
           transaction_date: fullDividendsAndWithholdingTax[i].replaceAll("/", "-"),
           instrument_type_id: instrumentID,
@@ -367,10 +326,6 @@ const Portfolio = () => {
 
       for (let i = 9; i < fullTransactionInterest.length; i = i + 5) {
 
-        const transactionID = await ToGetIDForTransaction(fullTransactionInterest[i + 2].replaceAll("_", " "));
-        const instrumentID = await ToGetIDForInstrument(fullTransactionInterest[i + 3].replaceAll("_", " "));
-
-
         FinalTransactionInterest.push({
           transaction_date: fullTransactionInterest[i].replaceAll("/", "-"),
           settlement_date: fullTransactionInterest[i + 1].replaceAll("/", "-"),
@@ -396,8 +351,6 @@ const Portfolio = () => {
       }
       
 
-      
-
 
       const StartingTransactionExpenses = FixNumberComma.indexOf("Detailed_Transactions_-_Expenses");
       const EndingTransactionExpenses = FixNumberComma.indexOf("Page_7");
@@ -406,10 +359,6 @@ const Portfolio = () => {
 
 
       for (let i = 9; i < fullTransactionExpenses.length; i = i + 5) {
-
-        const transactionID = await ToGetIDForTransaction(fullTransactionExpenses[i + 2].replaceAll("_", " "));
-        const narrativeID = await ToGetIDForNarrative(fullTransactionExpenses[i + 3].replaceAll("_", " "));
-
 
         FinalTransactionExpenses.push({
           transaction_date: fullTransactionExpenses[i].replaceAll("/", "-"),
@@ -421,19 +370,19 @@ const Portfolio = () => {
 
       }
 
-      for (const eachItems of FinalTransactionExpenses) {
-        const uploadHoldingsRequest = await api.post(
-          "/import_pdf/save_transaction_expenses/",
-          {
-              portfolio_id: getuploadPortfolioRequest.portfolio_id,
-              transaction_date: eachItems.transaction_date,
-              settlement_date: eachItems.settlement_date,
-              transaction_type_id: eachItems.transaction_type_id,
-              narrative_type_id: eachItems.narrative_type_id,
-              value_zar: eachItems.value_zar,
-            })
+      // for (const eachItems of FinalTransactionExpenses) {
+      //   const uploadHoldingsRequest = await api.post(
+      //     "/import_pdf/save_transaction_expenses/",
+      //     {
+      //         portfolio_id: getuploadPortfolioRequest.portfolio_id,
+      //         transaction_date: eachItems.transaction_date,
+      //         settlement_date: eachItems.settlement_date,
+      //         transaction_type_id: eachItems.transaction_type_id,
+      //         narrative_name: eachItems.narrative_type_id,
+      //         value_zar: eachItems.value_zar,
+      //       })
           
-          }
+      //     }
       
 
       const getSummaryRequest = await api.get(
@@ -462,7 +411,9 @@ const Portfolio = () => {
 
 
     }
-    catch (theErrors) {
+    catch (theErrors) 
+    {
+
       setTheErrors("Failed to open your Pdf, Please try again");
     }
 
@@ -766,20 +717,9 @@ const Portfolio = () => {
 
 
 
-        </div>
-
-
-
-
+        </div>  
 
       </div>
-
-
-
-
-
-
-
 
 
       <div className="grid grid-cols-2 gap-8 mt-8">
