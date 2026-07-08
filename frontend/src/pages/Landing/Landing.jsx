@@ -1,9 +1,36 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, useReducedMotion } from 'framer-motion';
-import { ArrowRight, TrendingUp, Github, Layers, Sparkles, Menu, X, Check, Shield, Lock, EyeOff, Trash2, Command, FileInput, Percent, Radio, ShieldCheck } from 'lucide-react';
+import {
+  TrendingUp,
+  Menu,
+  X,
+  Check,
+  Shield,
+  Lock,
+  EyeOff,
+  Command,
+  FileInput,
+  Percent,
+  Radio,
+  ShieldCheck,
+  Layers,
+  Github,
+} from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, YAxis, Tooltip, BarChart, Bar, XAxis, } from 'recharts';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  YAxis,
+  Tooltip,
+  BarChart,
+  Bar,
+  XAxis,
+} from 'recharts';
 import { ROUTES } from '../../utils/constants';
 
 const YELLOW = '#FACC15';
@@ -11,39 +38,43 @@ const YELLOW = '#FACC15';
 const EASE_SMOOTH = [0.16, 1, 0.3, 1];
 
 const PRESETS = {
-  vooqqq: {
-    label: '60% VOO + 40% QQQ',
-    caption: "The classic 'set and forget' combo every SA investor gets pitched. Feels diversified. Isn't.",
+  diversified: {
+    label: 'Well-Diversified Global Portfolio',
+    composition: '50% Satrix MSCI World · 30% CoreShares Total World · 20% Satrix Emerging Markets',
+    caption: 'Designed to spread investments across multiple countries and markets. Because the underlying holdings are more diverse, no single company has a significant influence on the overall portfolio.',
     exposure: [
-      { name: 'AAPL', value: 12.4 },
-      { name: 'MSFT', value: 11.9 },
-      { name: 'NVDA', value: 10.2 },
-      { name: 'GOOGL', value: 6.1 },
-      { name: 'AMZN', value: 5.8 },
-      { name: 'META', value: 4.7 },
-      { name: 'Other', value: 48.9 },
+      { name: 'AAPL', value: 4.4 },
+      { name: 'MSFT', value: 4.1 },
+      { name: 'NVDA', value: 3.8 },
+      { name: 'TSMC', value: 2.4 },
+      { name: 'Tencent', value: 2.1 },
+      { name: 'Samsung', value: 1.7 },
+      { name: 'Other', value: 81.5 },
     ],
-    concentration: 51.1,
-    top: 'top 6 holdings',
+    concentration: 18.5,
+    riskNote: 'No single company makes up more than 5% of this portfolio.',
+    insight: 'True diversification reduces your dependence on a small group of companies. This is what look-through analysis should show, not funds hiding behind other funds.',
   },
-  balanced: {
-    label: '70% VOO + 30% VXUS',
-    caption: 'Adds international exposure through VXUS. Meaningfully lower single-name risk.',
+  jseBlueChip: {
+    label: 'JSE Blue-Chip Portfolio',
+    composition: 'Naspers · Standard Bank · Capitec · Anglo American · BHP Group',
+    caption: "Five of the JSE's largest companies, held directly rather than through an ETF.",
     exposure: [
-      { name: 'AAPL', value: 4.9 },
-      { name: 'MSFT', value: 4.6 },
-      { name: 'NVDA', value: 4.0 },
-      { name: 'TSMC', value: 2.3 },
-      { name: 'GOOGL', value: 2.1 },
-      { name: 'NESN', value: 1.4 },
-      { name: 'Other', value: 80.7 },
+      { name: 'NPN', value: 11 },
+      { name: 'SBK', value: 8 },
+      { name: 'CPI', value: 7 },
+      { name: 'AGL', value: 7 },
+      { name: 'BHG', value: 6 },
+      { name: 'Other', value: 61 },
     ],
-    concentration: 19.3,
-    top: 'top 6 holdings',
+    concentration: 39,
+    riskNote: 'These five blue-chips make up under 40% of this portfolio, the rest is spread across other JSE holdings.',
+    insight: "Direct JSE holdings get the same look-through analysis as ETFs. This portfolio leans toward Financials and Resources, but isn't dangerously concentrated in any single position.",
   },
   ai: {
-    label: '50% SMH + 30% QQQ + 20% ARKK',
-    caption: 'A concentrated bet on the AI theme. High upside, high correlation risk if the theme turns.',
+    label: 'High Conviction AI',
+    composition: '50% SMH · 30% QQQ · 20% ARKK',
+    caption: 'Focused on companies expected to benefit from advances in artificial intelligence. This portfolio can deliver strong returns when the sector performs well, but many holdings move together, increasing risk during market downturns.',
     exposure: [
       { name: 'NVDA', value: 22.1 },
       { name: 'TSMC', value: 11.8 },
@@ -54,11 +85,27 @@ const PRESETS = {
       { name: 'Other', value: 40.5 },
     ],
     concentration: 59.5,
-    top: 'top 6 holdings',
+    riskNote: 'Top 6 holdings account for roughly 60% of this portfolio.',
+    insight: 'Your portfolio is heavily exposed to the AI sector. Strong performance is possible, but returns may become highly correlated during market downturns.',
   },
 };
 
 const PIE_COLORS = ['#FACC15', '#F59E0B', '#FDBA74', '#FCD34D', '#EAB308', '#CA8A04', '#52525b'];
+
+/**
+ * @param {{ name: string, value: number }} holding
+ * @param {number} i
+ */
+function getSliceColor(holding, i) {
+  return holding.name === 'Other' ? PIE_COLORS[PIE_COLORS.length - 1] : PIE_COLORS[i];
+}
+
+/** @param {number} concentration */
+function getConcentrationRisk(concentration) {
+  if (concentration < 25) return { label: 'Low', color: '#22c55e' };
+  if (concentration < 45) return { label: 'Moderate', color: '#f59e0b' };
+  return { label: 'High', color: '#ef4444' };
+}
 
 const NVDA_OVERLAP = [
   { etf: 'VOO', pct: 6.2, hint: 'VOO gives NVDA 6.2% weighting inside the S&P 500 basket.' },
@@ -103,10 +150,10 @@ const FEATURES = [
 ];
 
 const TRUST_ITEMS = [
-  { icon: ShieldCheck,    text: 'Read-only portfolio analysis' },
-  { icon: Lock,      text: 'End-to-end encrypted uploads' },
-  { icon: Shield,    text: 'No trading permissions required' },
-  { icon: EyeOff,    text: 'Securely stored data' },
+  { icon: ShieldCheck, text: 'Read-only portfolio analysis' },
+  { icon: Lock, text: 'End-to-end encrypted uploads' },
+  { icon: Shield, text: 'No trading permissions required' },
+  { icon: EyeOff, text: 'Securely stored data' },
 ];
 
 const SHOWCASE = [
@@ -115,7 +162,11 @@ const SHOWCASE = [
     label: 'IMPORT PORTFOLIO',
     heading: 'Start with a single upload.',
     body: 'Submit a broker statement. We parse positions, quantities, and cost basis in seconds, no broker credentials required.',
-    bullets: ['Automatic statement parsing', 'Positions, quantities, cost basis', 'Multiple brokers supported'],
+    bullets: [
+      'Automatic statement parsing',
+      'Positions, quantities, cost basis',
+      'Multiple brokers supported',
+    ],
     src: '/screens/portfolio.png',
     alt: 'Portfolio import flow with broker statement upload',
   },
@@ -123,8 +174,12 @@ const SHOWCASE = [
     id: 'lookthrough',
     label: 'LOOK-THROUGH ANALYSIS',
     heading: 'Every ETF, flattened to the tickers underneath.',
-    body: 'Reveal the companies inside every ETF and understand your portfolio\'s true exposure.',
-    bullets: ['ETFs decomposed into constituents', 'True underlying weightings', 'Sector-level concentration risk'],
+    body: "Reveal the companies inside every ETF and understand your portfolio's true exposure.",
+    bullets: [
+      'ETFs decomposed into constituents',
+      'True underlying weightings',
+      'Sector-level concentration risk',
+    ],
     src: '/screens/dashboard.png',
     alt: 'Look-through exposure showing flattened ETF holdings',
   },
@@ -132,7 +187,7 @@ const SHOWCASE = [
     id: 'dashboard',
     label: 'PORTFOLIO DASHBOARD',
     heading: 'Track performance. Monitor health. See why it moved.',
-    body: 'See everything that matters in one place, from performance and portfolio health to the drivers behind today\'s returns.',
+    body: "See everything that matters in one place, from performance and portfolio health to the drivers behind today's returns.",
     bullets: ['Live market overview', 'Portfolio health score', 'Interactive portfolio insights'],
     src: '/screens/dashboard.png',
     alt: 'Portfolio dashboard with net worth, health score, and holdings table',
@@ -142,7 +197,11 @@ const SHOWCASE = [
     label: 'PORTFOLIO ANALYTICS',
     heading: 'Institutional-grade indicators, on your book.',
     body: 'Weighted Sharpe, Beta, CAPM, Altman Z, P/E, ROE, and dividend yield computed across your look-through holdings.',
-    bullets: ['Portfolio-level indicators', 'Risk-adjusted return metrics', 'Per-holding drill-down'],
+    bullets: [
+      'Portfolio-level indicators',
+      'Risk-adjusted return metrics',
+      'Per-holding drill-down',
+    ],
     src: '/screens/portfolio.png',
     alt: 'Analytics page with financial indicators',
   },
@@ -151,7 +210,11 @@ const SHOWCASE = [
     label: 'NEWS CORRELATION',
     heading: 'When something moves, know exactly why.',
     body: 'Anomaly detection flags unusual moves in your holdings and links them to the news story that caused it, giving you direct and instant context',
-    bullets: ['Anomaly detection on your holdings', 'Direct news-to-price correlation', 'Cross-referenced on the timeline'],
+    bullets: [
+      'Anomaly detection on your holdings',
+      'Direct news-to-price correlation',
+      'Cross-referenced on the timeline',
+    ],
     src: '/screens/ai.png',
     alt: 'News feed correlated with portfolio anomalies',
   },
@@ -160,7 +223,11 @@ const SHOWCASE = [
     label: 'AI PORTFOLIO ASSISTANT',
     heading: 'Ask questions. Get answers.',
     body: 'Ask about drawdown, sector concentration, or a specific holding. The assistant reads your look-through ledger and responds with real numbers.',
-    bullets: ['powered by your own portfolio', 'Explains financial concepts', 'Your own intelligent assistant'],
+    bullets: [
+      'powered by your own portfolio',
+      'Explains financial concepts',
+      'Your own intelligent assistant',
+    ],
     src: '/screens/ai.png',
     alt: 'AI assistant answering a portfolio question',
   },
@@ -186,7 +253,10 @@ const Landing = () => (
         name="description"
         content="Flatten your ETFs into their true underlying holdings. Built for South African retail investors on EasyEquities and similar platforms."
       />
-      <meta property="og:title" content="Institutional-grade portfolio intelligence for South African retail investors." />
+      <meta
+        property="og:title"
+        content="Institutional-grade portfolio intelligence for South African retail investors."
+      />
       <meta
         property="og:description"
         content="Flatten your ETFs into their true underlying holdings."
@@ -196,20 +266,21 @@ const Landing = () => (
     </Helmet>
 
     <div
-    className="min-h-screen bg-[#050505] text-white overflow-x-hidden relative"
-    style={{ fontFamily: 'var(--font-primary)' }}>
+      className="relative min-h-screen overflow-x-hidden bg-[#050505] text-white"
+      style={{ fontFamily: 'var(--font-primary)' }}
+    >
       <MicroGrid />
       <Nav />
       <main id="main">
-      <Hero />
-      <MissionStrip />
-      <Features />
-      <Simulator />
-      <Comparison />
-      <Showcase />
-      <FlatteningEngine />
-      <TrustBar />
-      <FinalCTA />
+        <Hero />
+        <MissionStrip />
+        <Features />
+        <Simulator />
+        <Comparison />
+        <Showcase />
+        <FlatteningEngine />
+        <TrustBar />
+        <FinalCTA />
       </main>
       <Footer />
     </div>
@@ -234,7 +305,7 @@ const Landing = () => (
 const MicroGrid = () => (
   <div
     aria-hidden="true"
-    className="fixed inset-0 pointer-events-none z-0"
+    className="pointer-events-none fixed inset-0 z-0"
     style={{
       backgroundImage: `
         linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
@@ -261,36 +332,38 @@ const Nav = () => {
     <nav
       aria-label="Primary"
       className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-black/80 backdrop-blur-xl border-b border-white/10' : 'bg-black/40 backdrop-blur-md'
+        scrolled
+          ? 'border-b border-white/10 bg-black/80 backdrop-blur-xl'
+          : 'bg-black/40 backdrop-blur-md'
       }`}
     >
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50 focus:bg-yellow-400 focus:text-black focus:px-3 focus:py-1.5 focus:rounded-md focus:text-[13px] focus:font-semibold"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-yellow-400 focus:px-3 focus:py-1.5 focus:text-[13px] focus:font-semibold focus:text-black"
       >
         Skip to content
       </a>
 
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 py-4 flex items-center justify-between">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
         <Link to={ROUTES.HOME} className="flex items-center gap-3" aria-label="Equity-Lens home">
           <Logo />
           <span className="text-[16px] font-semibold tracking-tight text-white">Equity-Lens</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden items-center gap-2 md:flex">
           <NavLink label="Features" href="#features" />
           <NavLink label="How it works" href="#simulator" />
           <NavLink label="Why it matters" href="#flatten" />
           <NavLink label="Help Centre" to={ROUTES.HELP} />
           <Link
             to={ROUTES.LOGIN}
-            className="px-4 py-2 text-[14px] font-medium text-white hover:bg-white/5 rounded-lg transition-colors ml-2"
+            className="ml-2 rounded-lg px-4 py-2 text-[14px] font-medium text-white transition-colors hover:bg-white/5"
           >
             Log in
           </Link>
           <Link to={ROUTES.REGISTER} className="ml-1">
             <span
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-[14px] font-semibold bg-yellow-400 text-black rounded-lg hover:bg-yellow-300 transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-yellow-400 px-4 py-2 text-[14px] font-semibold text-black transition-colors hover:bg-yellow-300"
               style={{ boxShadow: `0 4px 16px ${YELLOW}40` }}
             >
               Sign up
@@ -300,7 +373,7 @@ const Nav = () => {
 
         <button
           type="button"
-          className="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-md border border-white/10 text-white"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-white/10 text-white md:hidden"
           onClick={() => setMobileOpen((v) => !v)}
           aria-expanded={mobileOpen}
           aria-controls="mobile-nav"
@@ -313,9 +386,9 @@ const Nav = () => {
       {mobileOpen && (
         <div
           id="mobile-nav"
-          className="md:hidden border-t border-white/10 bg-black/95 backdrop-blur-xl"
+          className="border-t border-white/10 bg-black/95 backdrop-blur-xl md:hidden"
         >
-          <div className="max-w-6xl mx-auto px-5 py-4 flex flex-col gap-1">
+          <div className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-4">
             <NavLink label="How it works" href="#simulator" onClick={() => setMobileOpen(false)} />
             <NavLink label="Features" href="#features" onClick={() => setMobileOpen(false)} />
             <NavLink label="Why it matters" href="#flatten" onClick={() => setMobileOpen(false)} />
@@ -323,14 +396,14 @@ const Nav = () => {
             <Link
               to={ROUTES.LOGIN}
               onClick={() => setMobileOpen(false)}
-              className="px-3 py-2.5 text-[15px] font-medium text-white hover:bg-white/5 rounded-lg transition-colors"
+              className="rounded-lg px-3 py-2.5 text-[15px] font-medium text-white transition-colors hover:bg-white/5"
             >
               Sign in
             </Link>
             <Link
               to={ROUTES.REGISTER}
               onClick={() => setMobileOpen(false)}
-              className="px-3 py-2.5 text-[15px] font-semibold bg-yellow-400 text-black rounded-lg mt-1 text-center"
+              className="mt-1 rounded-lg bg-yellow-400 px-3 py-2.5 text-center text-[15px] font-semibold text-black"
             >
               Get started
             </Link>
@@ -345,14 +418,23 @@ const Nav = () => {
 const NavLink = ({ label, href, to, onClick }) => {
   const cls =
     'px-3 py-2 text-[14px] font-medium text-zinc-200 hover:text-white hover:bg-white/5 rounded-lg transition-colors';
-  if (to) return <Link to={to} className={cls} onClick={onClick}>{label}</Link>;
-  return <a href={href} className={cls} onClick={onClick}>{label}</a>;
+  if (to)
+    return (
+      <Link to={to} className={cls} onClick={onClick}>
+        {label}
+      </Link>
+    );
+  return (
+    <a href={href} className={cls} onClick={onClick}>
+      {label}
+    </a>
+  );
 };
 
 const Logo = () => (
   <div
     aria-hidden="true"
-    className="w-8 h-8 rounded-lg flex items-center justify-center text-[14px] font-black text-black font-mono"
+    className="flex h-8 w-8 items-center justify-center rounded-lg font-mono text-[14px] font-black text-black"
     style={{
       background: YELLOW,
       boxShadow: `0 4px 16px ${YELLOW}55, inset 0 1px 0 rgba(255,255,255,0.35)`,
@@ -363,14 +445,14 @@ const Logo = () => (
 );
 
 const Hero = () => (
-  <section className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 pt-16 sm:pt-24 pb-16 sm:pb-20">
-    <div className="grid grid-cols-1 lg:grid-cols-[1.05fr_1fr] gap-10 lg:gap-12 items-center">
+  <section className="relative z-10 mx-auto max-w-6xl px-5 pb-16 pt-16 sm:px-8 sm:pb-20 sm:pt-24">
+    <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
       <div>
         <motion.p
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="text-[11px] font-mono tracking-widest text-zinc-300 mb-5 sm:mb-6 uppercase"
+          className="mb-5 font-mono text-[11px] uppercase tracking-widest text-zinc-300 sm:mb-6"
         >
           Institutional-grade portfolio intelligence for South African retail investors.
         </motion.p>
@@ -379,9 +461,10 @@ const Hero = () => (
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.05 }}
-          className="text-[clamp(36px,5.5vw,72px)] font-semibold leading-[1.02] tracking-[-0.035em] mb-5 sm:mb-6 text-white"
+          className="mb-5 text-[clamp(36px,5.5vw,72px)] font-semibold leading-[1.02] tracking-[-0.035em] text-white sm:mb-6"
         >
-          See past the surface<br />
+          See past the surface
+          <br />
           of your portfolio.
         </motion.h1>
 
@@ -389,9 +472,10 @@ const Hero = () => (
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.15 }}
-          className="text-[15px] sm:text-[17px] text-zinc-200 leading-relaxed max-w-lg mb-8 sm:mb-9"
+          className="mb-8 max-w-lg text-[15px] leading-relaxed text-zinc-200 sm:mb-9 sm:text-[17px]"
         >
-          Upload your portfolio and uncover hidden concentration, true ETF exposure, portfolio health and the market events driving your returns.
+          Upload your portfolio and uncover hidden concentration, true ETF exposure, portfolio
+          health and the market events driving your returns.
         </motion.p>
 
         <motion.div
@@ -401,13 +485,11 @@ const Hero = () => (
           className="flex flex-wrap gap-3"
         >
           <Link to={ROUTES.REGISTER}>
-            <YellowButton>
-              Analyse my portfolio
-            </YellowButton>
+            <YellowButton>Analyse my portfolio</YellowButton>
           </Link>
           <a
             href="#simulator"
-            className="inline-flex items-center gap-2 px-6 py-3 text-[14px] font-medium text-white border border-white/15 rounded-lg hover:bg-white/5 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg border border-white/15 px-6 py-3 text-[14px] font-medium text-white transition-colors hover:bg-white/5"
           >
             See how it works
           </a>
@@ -432,25 +514,27 @@ const HeroMockup = () => (
     className="relative"
   >
     <div
-      className="relative rounded-2xl border border-white/10 overflow-hidden bg-white/5 backdrop-blur-xl"
+      className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl"
       style={{ boxShadow: '0 40px 80px -20px rgba(0,0,0,0.6)' }}
     >
       <div className="p-4 sm:p-5">
-        <div className="flex justify-between items-start mb-5 gap-3">
+        <div className="mb-5 flex items-start justify-between gap-3">
           <div>
-            <div className="text-[10px] font-mono text-zinc-300 mb-1.5 tracking-widest">NET WORTH</div>
-            <div className="text-[22px] sm:text-[28px] font-semibold tracking-tight font-mono text-white">
+            <div className="mb-1.5 font-mono text-[10px] tracking-widest text-zinc-300">
+              NET WORTH
+            </div>
+            <div className="font-mono text-[22px] font-semibold tracking-tight text-white sm:text-[28px]">
               R 847,231<span className="text-zinc-400">.04</span>
             </div>
             <div
-              className="text-[12px] mt-1 font-mono flex items-center gap-1"
+              className="mt-1 flex items-center gap-1 font-mono text-[12px]"
               style={{ color: '#22c55e' }}
             >
               <TrendingUp size={11} aria-hidden="true" />
               +R 12,405 (+1.49%) today
             </div>
           </div>
-          <div className="w-28 sm:w-36 h-12 sm:h-14 shrink-0">
+          <div className="h-12 w-28 shrink-0 sm:h-14 sm:w-36">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={HERO_PERF}>
                 <YAxis hide domain={['auto', 'auto']} />
@@ -460,20 +544,20 @@ const HeroMockup = () => (
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 mb-5">
+        <div className="mb-5 grid grid-cols-3 gap-2">
           {[
             { l: 'SHARPE', v: '1.42' },
             { l: 'BETA', v: '0.87' },
             { l: 'ALPHA', v: '+2.1%' },
           ].map((m) => (
-            <div key={m.l} className="p-2.5 rounded-lg border border-white/10 bg-black/40">
-              <div className="text-[9px] font-mono text-zinc-300 mb-0.5">{m.l}</div>
-              <div className="text-[14px] font-mono font-semibold text-white">{m.v}</div>
+            <div key={m.l} className="rounded-lg border border-white/10 bg-black/40 p-2.5">
+              <div className="mb-0.5 font-mono text-[9px] text-zinc-300">{m.l}</div>
+              <div className="font-mono text-[14px] font-semibold text-white">{m.v}</div>
             </div>
           ))}
         </div>
 
-        <div className="text-[10px] font-mono text-zinc-300 mb-2 tracking-widest">
+        <div className="mb-2 font-mono text-[10px] tracking-widest text-zinc-300">
           LOOKED-THROUGH HOLDINGS
         </div>
         {[
@@ -484,13 +568,14 @@ const HeroMockup = () => (
         ].map((h) => (
           <div
             key={h.sym}
-            className="grid grid-cols-[50px_1fr_50px_55px] gap-2 sm:gap-3 items-center py-2 px-2 rounded-md text-[11px] font-mono text-white"
+            className="grid grid-cols-[50px_1fr_50px_55px] items-center gap-2 rounded-md px-2 py-2 font-mono text-[11px] text-white sm:gap-3"
           >
             <span className="font-bold">{h.sym}</span>
-            <span className="text-zinc-300 truncate">{h.name}</span>
+            <span className="truncate text-zinc-300">{h.name}</span>
             <span className="text-right">{h.pct}%</span>
             <span className="text-right" style={{ color: h.chg >= 0 ? '#22c55e' : '#ef4444' }}>
-              {h.chg >= 0 ? '+' : ''}{h.chg}%
+              {h.chg >= 0 ? '+' : ''}
+              {h.chg}%
             </span>
           </div>
         ))}
@@ -500,39 +585,28 @@ const HeroMockup = () => (
 );
 
 const lensCell = 'p-4 sm:p-5 border-l border-white/10 flex items-center gap-3';
-const brokerCell = "p-4 sm:p-5 flex items-center gap-3";
-const lensBG = { background: 'rgba(250,200,200,0.3)' };
-const text1 = "text-[13px] sm:text-[16px] text-zinc-400"
-const text2 = "text-[13px] sm:text-[16px] text-white font-medium"
-const tick = (
-  <Check
-    size={15}
-    className="text-yellow-400 shrink-0"
-    aria-hidden="true"
-  />);
-  const cross = (
-  <X
-    size={15}
-    className="text-zinc-500 shrink-0"
-    aria-hidden="true"
-  />);
+const brokerCell = 'p-4 sm:p-5 flex items-center gap-3';
+const lensBG = { background: 'rgba(255,192,0,0.65)' };
+const text1 = 'text-[13px] sm:text-[16px] text-zinc-400';
+const text2 = 'text-[13px] sm:text-[16px] text-white font-medium';
+const tick = <Check size={15} className="shrink-0 text-yellow-400" aria-hidden="true" />;
+const cross = <X size={15} className="shrink-0 text-zinc-500" aria-hidden="true" />;
 
 const Comparison = () => {
   const reveal = useRevealVariant();
   return (
     <section
       aria-labelledby="compare-heading"
-      className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 py-16 sm:py-24"
+      className="relative z-10 mx-auto max-w-6xl px-5 py-16 sm:px-8 sm:py-24"
     >
-      <motion.div {...reveal} className="max-w-2xl mb-10 sm:mb-12">
-        <p className="text-[11px] font-mono tracking-widest text-zinc-300 mb-3">
-          WHY EQUITY-LENS
-        </p>
+      <motion.div {...reveal} className="mb-10 max-w-2xl sm:mb-12">
+        <p className="mb-3 font-mono text-[11px] tracking-widest text-zinc-300">WHY EQUITY-LENS</p>
         <h2
           id="compare-heading"
-          className="text-[clamp(28px,4vw,52px)] font-semibold tracking-[-0.03em] leading-[1.05] text-white"
+          className="text-[clamp(28px,4vw,52px)] font-semibold leading-[1.05] tracking-[-0.03em] text-white"
         >
-          From fund labels<br />
+          From fund labels
+          <br />
           <span className="text-yellow-400">to true exposure.</span>
         </h2>
       </motion.div>
@@ -540,22 +614,22 @@ const Comparison = () => {
       <motion.div
         {...reveal}
         transition={{ ...reveal.transition, delay: 0.1 }}
-        className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl overflow-hidden"
+        className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl"
       >
         <div className="grid grid-cols-2 border-b border-white/10">
           <div className="p-4 sm:p-5">
-            <p className="text-[10px] font-mono tracking-widest text-zinc-400 mb-1">
+            <p className="mb-1 font-mono text-[10px] tracking-widest text-zinc-400">
               TRADITIONAL BROKERAGE
             </p>
-            <p className="text-[14px] sm:text-[15px] font-semibold text-zinc-300">
+            <p className="text-[14px] font-semibold text-zinc-300 sm:text-[15px]">
               What you see today
             </p>
           </div>
-          <div className="p-4 sm:p-5 border-l border-white/10" style={lensBG}>
-            <p className="text-[10px] font-mono tracking-widest text-yellow-400 mb-1">
+          <div className="border-l border-white/10 p-4 sm:p-5" style={lensBG}>
+            <p className="mb-1 font-mono text-[10px] tracking-widest text-yellow-400">
               EQUITY-LENS
             </p>
-            <p className="text-[14px] sm:text-[15px] font-semibold text-white">
+            <p className="text-[14px] font-semibold text-white sm:text-[15px]">
               What you get instead
             </p>
           </div>
@@ -626,11 +700,11 @@ const MissionStrip = () => {
   return (
     <section
       aria-labelledby="mission-heading"
-      className="relative z-10 max-w-6xl mx-auto px-6 sm:px-8 lg:px-10"
+      className="relative z-10 mx-auto max-w-6xl px-6 sm:px-8 lg:px-10"
     >
       <motion.div
         {...REVEAL}
-        className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.03] via-white/[0.015] to-transparent backdrop-blur-2xl px-8 py-14 sm:px-14 sm:py-16"
+        className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.03] via-white/[0.015] to-transparent px-8 py-14 backdrop-blur-2xl sm:px-14 sm:py-16"
       >
         <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-yellow-400/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 left-0 h-64 w-64 rounded-full bg-emerald-400/5 blur-3xl" />
@@ -639,24 +713,21 @@ const MissionStrip = () => {
           <div className="mb-6 flex items-center gap-4">
             <p
               id="mission-heading"
-              className="text-[14px] font-mono uppercase tracking-[0.60em] text-yellow-400"
+              className="font-mono text-[14px] uppercase tracking-[0.60em] text-yellow-400"
             >
               Our Mission
             </p>
           </div>
 
           <h2 className="text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
-            Every South African investor deserves{" "}
-            <span className="text-yellow-400">
-              institutional-grade portfolio intelligence.
-            </span>
+            Every South African investor deserves{' '}
+            <span className="text-yellow-400">institutional-grade portfolio intelligence.</span>
           </h2>
 
           <p className="mt-6 max-w-3xl text-base leading-8 text-zinc-300 sm:text-lg">
-            Traditional brokerages stop at the fund level. Equity Lens reveals
-            the companies, concentration risk and portfolio insights hidden
-            beneath your investments, giving you the same clarity
-            traditionally reserved for institutional investment desks.
+            Traditional brokerages stop at the fund level. Equity Lens reveals the companies,
+            concentration risk and portfolio insights hidden beneath your investments, giving you
+            the same clarity traditionally reserved for institutional investment desks.
           </p>
         </div>
       </motion.div>
@@ -674,15 +745,14 @@ const Features = () => {
       className="relative z-10 mx-auto max-w-5xl px-5 py-16 sm:px-8 sm:py-24"
     >
       <motion.div {...REVEAL} className="mb-12 max-w-2xl">
-        <p className="mb-3 font-mono text-xs tracking-widest text-zinc-300">
-          FEATURES
-        </p>
+        <p className="mb-3 font-mono text-xs tracking-widest text-zinc-300">FEATURES</p>
 
         <h2
           id="features-heading"
           className="text-3xl font-semibold leading-tight tracking-tight text-white sm:text-5xl"
         >
-          Five features. One clearer portfolio.
+          Multiple features. 
+          One clearer portfolio.
         </h2>
       </motion.div>
 
@@ -695,44 +765,41 @@ const Features = () => {
               key={feature.title}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
+              viewport={{ once: true, margin: '-40px' }}
               transition={{
                 duration: 0.4,
                 delay: index * 0.06,
               }}
               className={[
-                "flex flex-col rounded-2xl border p-6 backdrop-blur-xl transition-colors",
+                'flex flex-col rounded-2xl border p-6 backdrop-blur-xl transition-colors',
                 spotlight
-                  ? "sm:col-span-2 border-yellow-400/30 bg-yellow-400/5 hover:border-yellow-400/50"
-                  : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10",
-              ].join(" ")}
+                  ? 'border-yellow-400/30 bg-yellow-400/5 hover:border-yellow-400/50 sm:col-span-2'
+                  : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10',
+              ].join(' ')}
             >
               <div
                 className={[
-                  "mb-4 flex items-center justify-center rounded-xl border border-yellow-400/25 bg-yellow-400/10",
-                  spotlight ? "h-12 w-12" : "h-10 w-10",
-                ].join(" ")}
+                  'mb-4 flex items-center justify-center rounded-xl border border-yellow-400/25 bg-yellow-400/10',
+                  spotlight ? 'h-12 w-12' : 'h-10 w-10',
+                ].join(' ')}
               >
-                <feature.icon
-                  size={spotlight ? 22 : 18}
-                  className="text-yellow-400"
-                />
+                <feature.icon size={spotlight ? 22 : 18} className="text-yellow-400" />
               </div>
 
               <h3
                 className={[
-                  "mb-2 font-semibold tracking-tight text-white",
-                  spotlight ? "text-xl sm:text-2xl" : "text-base",
-                ].join(" ")}
+                  'mb-2 font-semibold tracking-tight text-white',
+                  spotlight ? 'text-xl sm:text-2xl' : 'text-base',
+                ].join(' ')}
               >
                 {feature.title}
               </h3>
 
               <p
                 className={[
-                  "leading-relaxed text-zinc-200",
-                  spotlight ? "text-sm sm:text-base" : "text-sm",
-                ].join(" ")}
+                  'leading-relaxed text-zinc-200',
+                  spotlight ? 'text-sm sm:text-base' : 'text-sm',
+                ].join(' ')}
               >
                 {feature.body}
               </p>
@@ -743,3 +810,233 @@ const Features = () => {
     </section>
   );
 };
+
+const Simulator = () => {
+  const REVEAL = useRevealVariant();
+  const [selectedPreset, setSelectedPreset] = useState('diversified');
+ const portfolio = PRESETS[/** @type {keyof typeof PRESETS} */ (selectedPreset)];
+  const concentrationRisk = getConcentrationRisk(portfolio.concentration);
+
+  return (
+    <section
+      id="simulator"
+      className="relative z-10 max-w-6xl mx-auto px-5 sm:px-8 py-16 sm:py-24"
+      aria-labelledby="simulator-heading"
+    >
+      <motion.div {...REVEAL} className="max-w-2xl mb-10 sm:mb-12">
+        <p className="text-[11px] font-mono tracking-widest text-zinc-300 mb-3">
+          HOW IT WORKS
+        </p>
+        <h2
+          id="simulator-heading"
+          className="text-[clamp(28px,4vw,52px)] font-semibold tracking-[-0.03em] leading-[1.05] text-white"
+        >
+          Pick a portfolio.<br />
+          See what you actually own.
+        </h2>
+      </motion.div>
+
+      <motion.div
+        {...REVEAL}
+        transition={{ ...REVEAL.transition, delay: 0.1 }}
+        className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+      >
+        <PresetSelector selectedPreset={selectedPreset} onSelect={setSelectedPreset} />
+
+        <div className="lg:col-span-7 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 sm:p-8">
+          <p className="text-[10px] font-mono tracking-widest text-zinc-300 mb-1">
+            LOOKED-THROUGH EXPOSURE
+          </p>
+          <p className="text-[18px] sm:text-[20px] font-semibold tracking-tight text-white mb-6">
+            Your true holdings
+          </p>
+
+          <ConcentrationSummary portfolio={portfolio} concentrationRisk={concentrationRisk} />
+
+          <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-6 items-start mb-6">
+            <ExposureChart holdings={portfolio.exposure} />
+            <HoldingsBreakdown holdings={portfolio.exposure} />
+          </div>
+
+          <InsightCard text={portfolio.insight} presetKey={selectedPreset} />
+        </div>
+      </motion.div>
+    </section>
+  );
+};
+
+/** @param {{ text?: string, presetKey?: string }} props */
+const InsightCard = ({ text, presetKey }) => (
+  <motion.div
+    key={presetKey}
+    initial={{ opacity: 0, y: 6 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.35 }}
+    className="rounded-xl border border-yellow-400/25 bg-yellow-400/[0.04] px-4 py-3.5 flex items-start gap-3"
+  >
+    <p className="text-[13px] text-zinc-200 leading-relaxed">{text}</p>
+  </motion.div>
+);
+
+/** @param {{ holdings?: any[] }} props */
+const HoldingsBreakdown = ({ holdings }) => (
+  <div>
+    <p className="text-[10px] font-mono tracking-widest text-zinc-300 mb-3">
+      LARGEST UNDERLYING HOLDINGS
+    </p>
+    <div className="flex flex-col gap-2.5">
+      {holdings.map((holding, i) => (
+        <div key={holding.name} className="flex items-center gap-3">
+          <span className="font-mono text-[11px] text-zinc-500 w-3 shrink-0">{i + 1}</span>
+          <span className="font-mono text-sm font-bold text-white w-20 shrink-0 truncate">{holding.name}</span>
+          <div className="h-1.5 rounded-full bg-white/10 overflow-hidden flex-1">
+            <div
+              className="h-full rounded-full transition-[width] duration-300 ease-out"
+              style={{ width: `${holding.value}%`, background: getSliceColor(holding, i) }}
+            />
+          </div>
+          <span className="font-mono text-sm text-zinc-300 w-10 text-right shrink-0">{holding.value}%</span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+/** @param {{ holdings?: any[] }} props */
+const ExposureChart = ({ holdings }) => (
+  <div className="relative h-52 mx-auto w-full max-w-[220px]">
+    <ResponsiveContainer width="100%" height="100%">
+      <PieChart>
+        <Pie
+          data={holdings}
+          dataKey="value"
+          cx="50%"
+          cy="50%"
+          innerRadius="65%"
+          outerRadius="85%"
+          paddingAngle={2}
+          animationDuration={500}
+          animationEasing="ease-out"
+          isAnimationActive
+        >
+          {holdings.map((holding, i) => (
+            <Cell
+              key={i}
+              fill={getSliceColor(holding, i)}
+              stroke="rgba(0,0,0,0.65)"
+              strokeWidth={2}
+            />
+          ))}
+        </Pie>
+        <Tooltip content={<PieHoverTip />} />
+      </PieChart>
+    </ResponsiveContainer>
+  </div>
+);
+
+/** @param {{ portfolio?: any, concentrationRisk?: { label: string, color: string } }} props */
+const ConcentrationSummary = ({ portfolio, concentrationRisk }) => (
+  <div className="mb-6">
+    <div className="text-[10px] font-mono tracking-widest text-zinc-300 mb-1">
+      PORTFOLIO CONCENTRATION
+    </div>
+    <div className="flex items-center gap-3 mb-2">
+      <motion.span
+        animate={{ color: concentrationRisk.color }}
+        transition={{ duration: 0.3 }}
+        className="font-mono text-3xl sm:text-4xl font-bold tracking-tight"
+      >
+        {portfolio.concentration}%
+      </motion.span>
+      <span
+        className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold transition-colors duration-300"
+        style={{
+          color: concentrationRisk.color,
+          background: `${concentrationRisk.color}1a`,
+          border: `1px solid ${concentrationRisk.color}40`,
+        }}
+      >
+        {concentrationRisk.label}
+      </span>
+    </div>
+    <p className="text-[13px] text-zinc-300 leading-relaxed">{portfolio.riskNote}</p>
+  </div>
+);
+
+
+/** @param {{ selectedPreset?: string, onSelect?: (key: string) => void }} props */
+const PresetSelector = ({ selectedPreset, onSelect }) => (
+  <div className="lg:col-span-5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 sm:p-7">
+    <p className="text-[10px] font-mono tracking-widest text-zinc-300 mb-3">WHY IT MATTERS</p>
+    <p className="text-[14px] text-zinc-200 leading-relaxed mb-6">
+      Most investors think they're diversified because they own multiple ETFs. In reality, those funds often contain the same underlying companies. Traditional brokerages stop at the fund level, hiding your true exposure and making portfolio risk difficult to understand.
+    </p>
+    <p className="text-[12px] font-mono tracking-widest text-zinc-300 mb-3">Explore Example Portfolios</p>
+    <div className="flex flex-col gap-2.5" role="radiogroup" aria-label="Portfolio allocation">
+      {Object.entries(PRESETS).map(([key, preset]) => (
+        <PresetButton
+          key={key}
+          active={selectedPreset === key}
+          onClick={() => onSelect(key)}
+          preset={preset}
+        />
+      ))}
+    </div>
+  </div>
+);
+
+/** @param {{ active?: boolean, payload?: any[] }} props */
+const PieHoverTip = ({ active, payload }) => {
+  if (!active || !payload?.length) {
+    return null;
+  }
+
+  const data = payload[0];
+  const colour = data.payload.fill ?? data.color;
+
+  return (
+    <div className="rounded-lg border border-white/15 bg-black/90 px-3 py-2 backdrop-blur-xl">
+      <div className="flex items-center gap-2 font-mono text-[12px] text-white">
+        <span
+          className="h-2 w-2 rounded-sm"
+          style={{ backgroundColor: colour }}
+          aria-hidden="true"
+        />
+        <span className="font-semibold">{data.payload.name}</span>
+        <span className="ml-auto text-yellow-400">
+          {data.value}%
+        </span>
+      </div>
+    </div>
+  );
+};
+
+/** @param {{ active?: boolean, onClick?: () => void, preset?: any }} props */
+const PresetButton = ({ active, onClick, preset }) => (
+  <button
+    type="button"
+    role="radio"
+    aria-checked={active}
+    onClick={onClick}
+    className={`text-left p-4 rounded-xl transition-colors border ${
+      active
+        ? 'border-yellow-400/80 bg-yellow-400/[0.03]'
+        : 'border-white/10 bg-white/5 hover:bg-white/[0.08] hover:border-white/20'
+    }`}
+  >
+    <div className="flex items-center justify-between mb-1">
+      <span className={`text-[14px] font-semibold ${active ? 'text-yellow-400' : 'text-white'}`}>
+        {preset.label}
+      </span>
+      {active && (
+        <span
+          aria-hidden="true"
+          className="w-1.5 h-1.5 rounded-full"
+          style={{ background: YELLOW, boxShadow: `0 0 8px ${YELLOW}` }}
+        />
+      )}
+    </div>
+    <div className="font-mono text-[11px] text-zinc-400 mb-1.5">{preset.composition}</div>
+    <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{preset.caption}</div>
+  </button>
+);
