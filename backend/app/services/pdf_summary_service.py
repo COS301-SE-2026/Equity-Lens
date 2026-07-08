@@ -10,7 +10,7 @@ from app.models.portfolio import TransactionExpenses
 
 
 def get_summary_import_PDF(database,portfolioID):
-    PortfolioValue = database.query(func.sum(Holdings.current_value)).filter(Holdings.portfolio_id == portfolioID).scalar() or 0
+    PortfolioValue = database.query(func.sum(Holdings.total_cost)).filter(Holdings.portfolio_id == portfolioID).scalar() or 0
     TotalHoldings = database.query(Holdings).filter(Holdings.portfolio_id == portfolioID).count() 
     TotalPurchasesAndSales = database.query(func.sum(InstrumentPurchasesAndSales.value_zar)).filter(InstrumentPurchasesAndSales.portfolio_id == portfolioID).scalar() or 0
     TotalContributionsAndWithdrawals = database.query(func.sum(ContributionsAndWithdrawals.value_zar)).filter(ContributionsAndWithdrawals.portfolio_id == portfolioID).scalar() or 0
@@ -21,21 +21,21 @@ def get_summary_import_PDF(database,portfolioID):
         "PortfolioValue" : float(PortfolioValue),
         "TotalHoldings" : TotalHoldings,
         "TotalPurchasesAndSales" : float(TotalPurchasesAndSales),
-        "TotalTransactionCosts" : "",
+        "TotalTransactionCosts" : 0,
         "TotalContributionsAndWithdrawals" : float(TotalContributionsAndWithdrawals),
         "TotalDividendsAndWithholdingTax" : float(TotalDividendsAndWithholdingTax),
-        "TotalTransactionInterest" : "",
+        "TotalTransactionInterest" : 0,
         "TotalTransactionExpenses" : float(TotalTransactionExpenses),
 
     }
 
 def get_the_top_holdings_import_PDF(database,portfolioID):
-    getInfo = database.query(Holdings.instrument_name, Holdings.current_value).filter(Holdings.portfolio_id == portfolioID).order_by(Holdings.current_value.desc()).all()
+    getInfo = database.query(Holdings.instrument_name, Holdings.total_cost).filter(Holdings.portfolio_id == portfolioID).order_by(Holdings.total_cost.desc()).all()
 
     returnAllArray = []
 
     for allItems in getInfo:
-        returnAllArray.append({"name": allItems.instrument_name, "value": float(allItems.current_value or 0)})
+        returnAllArray.append({"name": allItems.instrument_name, "value": float(allItems.total_cost or 0)})
 
     return returnAllArray
 

@@ -47,7 +47,7 @@ def save_portfolios_import(database,user_id,data):
 
 def save_holdings_import(database,user_id,data):
     ticker = search_ticket_number(data.instrument_name)
-    document = save_holdings(database,user_id,data,ticker["ticker"])
+    document = save_holdings(database,user_id,data,ticker["ticker"],ticker["sector"])
 
     return {
         "Success": True,
@@ -56,7 +56,8 @@ def save_holdings_import(database,user_id,data):
 
 
 def save_instrument_purchases_and_sales_import(database,user_id,data):
-    document = save_instrument_purchases_and_sales(database,user_id,data)
+    ticker = search_ticket_number(data.instrument_name)
+    document = save_instrument_purchases_and_sales(database,user_id,data,ticker["ticker"],ticker["sector"])
 
     return {
         "Success": True,
@@ -74,7 +75,8 @@ def save_contributions_and_withdrawals_import(database,user_id,data):
 
 
 def save_dividends_and_withholding_tax_import(database,user_id,data):
-    document = save_dividends_and_withholding_tax(database,user_id,data)
+    ticker = search_ticket_number(data.instrument_name)
+    document = save_dividends_and_withholding_tax(database,user_id,data,ticker["ticker"],ticker["sector"])
 
     return {
         "Success": True,

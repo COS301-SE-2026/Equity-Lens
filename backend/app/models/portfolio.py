@@ -57,14 +57,13 @@ class InstrumentPurchasesAndSales(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
     portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id",ondelete="CASCADE"), nullable=False, index=True)
-    transactions_date = Column(Date)
+    transaction_date = Column(Date)
     transaction_name = Column(String(100))
     instrument_name = Column(String(100))
     ticker = Column(String(100))
     sector = Column(String(100))
     price = Column(Numeric(18,2))
     quantity = Column(Numeric(18,4))
-    transactions_cost = Column(Numeric(18,2))
     value_zar = Column(Numeric(18,2))
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -90,11 +89,12 @@ class DividendsAndWithholdingTax(Base):
     portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id", ondelete="CASCADE"), nullable=False, index=True)
     transaction_date = Column(Date)
     instrument_name = Column(String(100))
+    ticker = Column(String(100))
+    sector = Column(String(100))
     gross_dividend = Column(Numeric(18,2))
     withholding_tax = Column(Numeric(18,2))
     net_dividend = Column(Numeric(18,2))
     tax_rate = Column(Numeric(18,2))
-
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))
 
@@ -105,7 +105,6 @@ class TransactionExpenses(Base):
     portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id",ondelete="CASCADE"), nullable=False, index=True)
     transaction_date = Column(Date)
     settlement_date = Column(Date)
-    transaction_name = Column(String(100))
     narrative_name = Column(String(100))
     value_zar = Column(Numeric(18,2))
 

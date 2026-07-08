@@ -122,7 +122,6 @@ def upgrade() -> None:
         sa.Column("portfolio_id", sa.UUID(), nullable=False),
         sa.Column("transaction_date", sa.Date(), nullable=True),
         sa.Column("settlement_date", sa.Date(), nullable=True),
-        sa.Column("transaction_name", sa.String(length=100), nullable=False),
         sa.Column("narrative_name", sa.String(length=100), nullable=False),
         sa.Column("value_zar", sa.Numeric(precision=18, scale=2), nullable=True),
         sa.Column("created_at", sa.DateTime(), nullable=True),

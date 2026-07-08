@@ -23,20 +23,17 @@ class HoldingsRequest(BaseModel):
     quantity: Decimal
     total_cost: Decimal
     cost_price: Decimal
-    current_price: Decimal
-    current_value: Decimal
     weight_percentage: Decimal
 
 class InstrumentPurchasesAndSalesRequest(BaseModel):
     portfolio_id: str
-    transactions_date: date
+    transaction_date: date
     transaction_name: str
     instrument_name: str
     ticker: str
     sector: str
     price: Decimal
     quantity: Decimal
-    transactions_cost: Decimal
     value_zar: Decimal
 
 class ContributionsAndWithdrawalsRequest(BaseModel):
@@ -61,7 +58,6 @@ class TransactionExpensesRequest(BaseModel):
     portfolio_id: str
     transaction_date: date
     settlement_date: date
-    transaction_name: str
     narrative_name: str
     value_zar: Decimal
 
