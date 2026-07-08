@@ -18,17 +18,48 @@ const ReadingExcelFile = async(file) => {
 
   const read = XLSX.read(await file.arrayBuffer());
 
-  const Portfolio = XLSX.utils.sheet_to_json(read.Sheets["Portfolio"]);
-  const Holdings = XLSX.utils.sheet_to_json(read.Sheets["Holdings"]);
-  const PurchaseandSales = XLSX.utils.sheet_to_json(read.Sheets["Purchase and Sales"]);
-  const ContributionsandWithdrawals = XLSX.utils.sheet_to_json(read.Sheets["Contributions and Withdrawals"]);
-  const DividendsandWithholdingTax = XLSX.utils.sheet_to_json(read.Sheets["Dividends and Withholding Tax"]);
-  const Expenses = XLSX.utils.sheet_to_json(read.Sheets["Expenses"]);
+  const Portfolio = XLSX.utils.sheet_to_json(read.Sheets["Portfolio"]).map((item) =>({
+          account_number: item.Account_Number,
+          portfolio_name: item.Portfolio_Name,
+          statement_date: item.Statement_Date,
+          portfolio_value: item.Portfolio_Value,
+  }));
+  const Holdings = XLSX.utils.sheet_to_json(read.Sheets["Holdings"]).map((item) =>({
+         instrument_name: item.Instrument_Name,
+          quantity: item.Quantity,
+          total_cost: item.Total_Cost,
+  }));
+  const PurchaseandSales = XLSX.utils.sheet_to_json(read.Sheets["Purchase and Sales"]).map((item) =>({
+          transaction_date: item.Transaction_Date,
+          transaction_name: item.Transaction_Type,
+          instrument_name: item.Instrument_Name,
+          price: item.Price,
+          quantity: item.Quantity
+  }));
+  const ContributionsandWithdrawals = XLSX.utils.sheet_to_json(read.Sheets["Contributions and Withdrawals"]).map((item) =>({
+              transaction_date: item.Transaction_Date,
+              statement_date: item.Settlement_Date,
+              transaction_name: item.Transaction_Type,
+              value: item.Value,
+  }));
+  const DividendsandWithholdingTax = XLSX.utils.sheet_to_json(read.Sheets["Dividends and Withholding Tax"]).map((item) =>({
+              transaction_date: item.Transaction_Date,
+              instrument_name: item.Instrument_Name,
+              gross_dividend: item.Gross_Dividend,
+              tax_rate: item["Tax_Rate(%)"],
+  }));
+  const Expenses = XLSX.utils.sheet_to_json(read.Sheets["Expenses"]).map((item) =>({
+              transaction_date: item.Transaction_Date,
+              settlement_date: item.Settlement_Date,
+              narrative: item.Narrative,
+              value: item.Value,
+  }));
 
 
   return {
     Portfolio,Holdings,PurchaseandSales,ContributionsandWithdrawals,DividendsandWithholdingTax,Expenses
   }
+
 }
 
 
@@ -88,7 +119,7 @@ const ReadingPDFFile = async(file) => {
   const Expenses = []
 
 
-  for (let x = 0; x < PortfolioLength.length; x = x + 4) 
+  for (let x = 5; x < PortfolioLength.length; x = x + 4) 
   {
         Portfolio.push({
           account_number: PortfolioLength[x],
@@ -99,7 +130,7 @@ const ReadingPDFFile = async(file) => {
   }
 
 
-  for (let x = 0; x < HoldingsLength.length; x = x + 3) 
+  for (let x = 3; x < HoldingsLength.length; x = x + 3) 
   {
         Holdings.push({
           instrument_name: HoldingsLength[x],
@@ -108,7 +139,7 @@ const ReadingPDFFile = async(file) => {
         })
   }
 
-   for (let x = 0; x < PurchaseandSalesLength.length; x = x + 5) 
+   for (let x = 5; x < PurchaseandSalesLength.length; x = x + 5) 
   {
         PurchaseandSales.push({
           transaction_date: PurchaseandSalesLength[x],
@@ -119,7 +150,7 @@ const ReadingPDFFile = async(file) => {
         })
   }
 
-   for (let x = 0; x < ContributionsandWithdrawalsLength.length; x = x + 4) 
+   for (let x = 4; x < ContributionsandWithdrawalsLength.length; x = x + 4) 
   {
         ContributionsandWithdrawals.push({
           transaction_date: ContributionsandWithdrawalsLength[x],
@@ -129,7 +160,7 @@ const ReadingPDFFile = async(file) => {
         })
   }
 
-   for (let x = 0; x < DividendsandWithholdingTaxLength.length; x = x + 4) 
+   for (let x = 4; x < DividendsandWithholdingTaxLength.length; x = x + 4) 
   {
         DividendsandWithholdingTax.push({
           transaction_date: DividendsandWithholdingTaxLength[x],
@@ -139,7 +170,7 @@ const ReadingPDFFile = async(file) => {
         })
   }
 
-  for (let x = 0; x < ExpensesLength.length; x = x + 4) 
+  for (let x = 4; x < ExpensesLength.length; x = x + 4) 
   {
         Expenses.push({
           transaction_date: ExpensesLength[x],
@@ -162,9 +193,7 @@ const Portfolio = () => {
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState([]);
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
-
-
-  const SavePortfolio = async (data) => {
+  const SavePortfolio = async (data, file) => {
 
     try {
 
@@ -172,117 +201,135 @@ const Portfolio = () => {
         "/import_pdf/",
         
           {
-            file_name: getTheFile.name,
-            document_text: " ",
-            password: " ",
+            file_name: file.name,
+            document_text: "testing",
+            password: "",
           }
         
       );
 
-      const getUploadInvestmentStatements = uploadInvestmentStatements.data;
+      const document = uploadInvestmentStatements.data;
+      const portfolio = data.Portfolio[0];
 
       const uploadPortfolioRequest = await api.post(
         "/import_pdf/save_portfolios/",
         {
-            document_id: " ",
-            account_number: " ",
-            portfolio_name: " ",
+            document_id: document.document_id,
+            account_number: portfolio.account_number,
+            portfolio_name: portfolio.portfolio_name,
           }
       );
 
+      const savedPortfolio = uploadPortfolioRequest.data;
 
+      const PortfolioValue = parseFloat(data.Portfolio[0].portfolio_value.replace("R","").replace(",",""));
 
-      for (const eachItems of FinalArray) {
+      for (const eachItems of data.Holdings) {
+        const totalCost = parseFloat(eachItems.total_cost.replace("R","").replace(",",""));
+        const quantity = parseFloat(eachItems.quantity);
+
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_holdings/",
           {
-              portfolio_id: getuploadPortfolioRequest.portfolio_id,
-              instrument_name: " ",
-              quantity: " ",
+              portfolio_id: savedPortfolio.portfolio_id,
+              instrument_name: eachItems.instrument_name,
+              quantity: eachItems.quantity,
               ticker: " ",
               sector: " ",
-              total_cost: " ",
-              cost_price: " ",
-              current_price: " ",
-              current_value: " ",
-              weight_percentage: " ",
+              total_cost: totalCost,
+              cost_price: (totalCost / quantity),
+              weight_percentage: ((totalCost / PortfolioValue) * 100),
             }
           )
       }
 
 
-      for (const eachItems of FinalArrayPurchaseAndInvestment) {
+      for (const eachItems of data.PurchaseandSales) {
+
+        const price = parseFloat(eachItems.price.replace("R","").replace(",",""));
+        const quantity = parseFloat(eachItems.quantity);
+
+
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_instrument_purchases_and_sales/",
           {
-              portfolio_id: " ",
-              transactions_date: " ",
-              transaction_name: " ",
-              instrument_name: " ",
-              price: " ",
-              quantity: " ",
-              transactions_cost: " ",
-              value_zar: " ",
+              portfolio_id: savedPortfolio.portfolio_id,
+              transaction_date: eachItems.transaction_date,
+              transaction_name: eachItems.transaction_name,
+              instrument_name: eachItems.instrument_name,
+              ticker: " ",
+              sector: " ",
+              price: price,
+              quantity: quantity,
+              value_zar: (price * quantity),
             }
           )
 
       }
 
 
-      for (const eachItems of FinalContributionsAndWithdrawals) {
+      for (const eachItems of data.ContributionsandWithdrawals) {
+        const value_zar = parseFloat(eachItems.value.replace("R","").replace(",",""));
+
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_contributions_and_withdrawals/",
           {
-              portfolio_id: " ",
-              transaction_date: " ",
-              settlement_date: " ",
-              transaction_name: " ",
-              value_zar: " ",
+              portfolio_id: savedPortfolio.portfolio_id,
+              transaction_date: eachItems.transaction_date,
+              settlement_date: eachItems.statement_date,
+              transaction_name: eachItems.transaction_name,
+              value_zar: value_zar,
           } 
         );
       }
 
-      for (const eachItems of FinalDividendsAndWithholdingTax) {
+      for (const eachItems of data.DividendsandWithholdingTax) {
+        const gross_dividend = parseFloat(eachItems.gross_dividend.replace("R","").replace(",",""));
+        const tax_rate = parseFloat(eachItems.tax_rate.replace("%",""));
+        const net_dividend = parseFloat((gross_dividend - (gross_dividend *  (tax_rate/100))));
+
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_dividends_and_withholding_tax/",
           {
-              portfolio_id: " ",
-              transaction_date: " ",
-              instrument_name: " ",
-              gross_dividend: " ",
-              withholding_tax: " ",
-              net_dividend: " ",
-              tax_rate: " ",
+              portfolio_id: savedPortfolio.portfolio_id,
+              transaction_date: eachItems.transaction_date,
+              instrument_name: eachItems.instrument_name,
+              ticker: " ",
+              sector: " ",
+              gross_dividend: gross_dividend,
+              withholding_tax: (gross_dividend *  (tax_rate/100)),
+              net_dividend: net_dividend,
+              tax_rate: tax_rate,
             }
            )
           }
       
 
-      for (const eachItems of FinalTransactionInterest) {
+      for (const eachItems of data.Expenses) {
+        const value_zar = parseFloat(eachItems.value.replace("R","").replace(",",""));
+
         const uploadHoldingsRequest = await api.post(
-          "/import_pdf/save_transaction_interest/",
+          "/import_pdf/save_transaction_expenses/",
           {
-              portfolio_id: " ",
-              transaction_date: " ",
-              settlement_date: " ",
-              transaction_type_id: " ",
-              instrument_type_id: " ",
-              value_zar: " ",
+              portfolio_id: savedPortfolio.portfolio_id,
+              transaction_date: eachItems.transaction_date,
+              settlement_date: eachItems.settlement_date,
+              narrative_name: eachItems.narrative,
+              value_zar: value_zar,
             }
         );
       }
     
       
-
       const getSummaryRequest = await api.get(
-        `/import_pdf_summary/summary/${getuploadPortfolioRequest.portfolio_id}`
+        `/import_pdf_summary/summary/${savedPortfolio.portfolio_id}`
       )
 
       const getSummary = getSummaryRequest.data;
       setSummary(getSummary);
 
       const SummaGetTheTopAllocationImportPDFRequest = await api.get(
-        `/import_pdf_summary/top_holdings/${getuploadPortfolioRequest.portfolio_id}`,
+        `/import_pdf_summary/top_holdings/${savedPortfolio.portfolio_id}`,
       )
 
       const getSummaGetTheTopAllocationImportPDFry = SummaGetTheTopAllocationImportPDFRequest.data;
@@ -290,7 +337,7 @@ const Portfolio = () => {
 
 
       const getSummaryGetTheTopHoldingsImportPDFRequest = await api.get(
-        `/import_pdf_summary/portfolio_allocation/${getuploadPortfolioRequest.portfolio_id}`
+        `/import_pdf_summary/portfolio_allocation/${savedPortfolio.portfolio_id}`
       )
 
       const getSummaryGetTheTopHoldingsImportPDF = getSummaryGetTheTopHoldingsImportPDFRequest.data;
@@ -302,8 +349,7 @@ const Portfolio = () => {
     }
     catch (theErrors) 
     {
-
-      console.log("not working");
+      
     }
 
 
@@ -339,6 +385,7 @@ const Portfolio = () => {
                   return;
                 }
 
+
                 try
                 {
                 let data;
@@ -357,16 +404,15 @@ const Portfolio = () => {
                   return;
                 }
 
-                console.log(data);
 
-                // await SavePortfolio(data);
+                await SavePortfolio(data,file);
               }
             
             catch(theError)
             {
-              console.log(theError);
               alert("Not working...")
             }
+
             }
           }
             />
@@ -375,7 +421,6 @@ const Portfolio = () => {
         </div>
 
       </div>
-
 
       <div className="grid grid-cols-4 gap-8 mt-8">
 
