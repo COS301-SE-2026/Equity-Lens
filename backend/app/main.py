@@ -10,6 +10,7 @@ from app.routers import news
 from app.routers import import_pdf
 from app.routers import pdf_summary
 from app.routers import watchlist
+from app.routers import indicators
 from app.routers import ai_chat
 
 
@@ -45,3 +46,7 @@ app.include_router(watchlist.router)
 app.include_router(news.router, prefix="/api")
 app.include_router(ai_chat.router)
 app.include_router(import_pdf.router)
+
+app.include_router(pdf_summary.router)
+
+app.include_router(indicators.router)
