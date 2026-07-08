@@ -6,14 +6,6 @@ from app.schemas.market_data import CurrentPriceResponse, HistoryResponse, Searc
 
 router = APIRouter(prefix="/api/stocks", tags=["stocks"])
 
-@router.get("/preview")
-def preview_stock(
-    symbol: str,
-    current_user: UserResponse = Depends(get_current_user)
-):
-    """Get current stock price preview"""
-    return get_current_price(symbol)
-
 @router.get("/details")
 def stock_details(
     symbol: str,
