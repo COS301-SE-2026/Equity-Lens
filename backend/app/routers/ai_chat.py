@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 from app.services.ai_service import chat
 from app.database import get_db
@@ -14,6 +14,13 @@ router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[UUID] = None
+
+    @field_validator("message")
+    @classmethod
+    def no_empty_messages(cls, v):
+        if not v or not v.strip():
+            raise ValueError("You cannot send an empty message.")
+        return v.strip()
 
 class ChatResponse(BaseModel):
     reply: str

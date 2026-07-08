@@ -2,6 +2,8 @@ from app.services.ai_service import get_user_portfolio_context, chat
 from app.models.portfolio import Portfolios, Document
 from unittest.mock import MagicMock, patch
 from app.models.chat import ChatMessages
+import pytest
+from app.routers.ai_chat import ChatRequest
 
 def test_portfolio_linked_no_data(db_session, test_user):
     ai_reply = get_user_portfolio_context(db_session, test_user.id)
@@ -98,4 +100,8 @@ def test_existing_chat(mock_bedrock_client, db_session, test_user):
     assert messages[3].role == "assistant"
     assert messages[2].content == "A second question?"
     assert messages[3].content == "A second response."
-    
+
+
+def test_empty_message():
+    with pytest.raises(ValueError):
+        ChatRequest(message = "", conversation_id = None)    
