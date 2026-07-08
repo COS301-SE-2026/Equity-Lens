@@ -66,4 +66,36 @@ def test_new_chat(mock_bedrock_client, db_session, test_user):
     assert messages[1].content == "A response."
 
 
+@patch("app.services.ai_service.get_bedrock_client")
+def test_existing_chat(mock_bedrock_client, db_session, test_user):
+    mocked_client = MagicMock()
+    mocked_client.converse.return_value = {
+        "output": {"message": {"content": [{"text": "A response."}] }}
+    }
+    
+    mock_bedrock_client.return_value = mocked_client
+    reply, conversation_id = chat("A question?" ,db_session, test_user.id)
+
+    assert reply == "A response."
+    assert conversation_id is not None
+
+    mocked_client.converse.return_value = {
+        "output": {"message": {"content": [{"text": "A second response."}] }}
+    }
+    
+    reply2, conversation_id2 = chat("A second question?" ,db_session, test_user.id, conversation_id)
+
+    assert reply2 == "A second response."
+    assert conversation_id2 == conversation_id
+
+    messages = db_session.query(ChatMessages).filter_by(conversation_id = conversation_id).all()
+    assert len(messages) == 4
+    assert messages[0].role == "user"
+    assert messages[1].role == "assistant"
+    assert messages[0].content == "A question?"
+    assert messages[1].content == "A response."
+    assert messages[2].role == "user"
+    assert messages[3].role == "assistant"
+    assert messages[2].content == "A second question?"
+    assert messages[3].content == "A second response."
     
