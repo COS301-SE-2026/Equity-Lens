@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Layers,
   Github,
+  KeyRound,
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import {
@@ -108,13 +109,25 @@ function getConcentrationRisk(concentration) {
   return { label: 'High', color: '#ef4444' };
 }
 
-const NVDA_OVERLAP = [
-  { etf: 'VOO', pct: 6.2, hint: 'VOO gives NVDA 6.2% weighting inside the S&P 500 basket.' },
-  { etf: 'QQQ', pct: 8.9, hint: 'QQQ leans tech-heavy and gives NVDA 8.9%.' },
-  { etf: 'SMH', pct: 21.4, hint: 'SMH is a semis fund. NVDA sits at 21.4% of it.' },
+const AI_DRAWDOWN = [
+  { ticker: 'NVDA', weight: 22.1, move: -25.0 },
+  { ticker: 'TSMC', weight: 11.8, move: -18.0 },
+  { ticker: 'AVGO', weight: 9.4, move: -16.0 },
+  { ticker: 'AMD', weight: 6.2, move: -21.0 },
+  { ticker: 'MSFT', weight: 5.1, move: -6.0 },
+  { ticker: 'TSLA', weight: 4.9, move: -9.0 },
+  { ticker: 'Other', weight: 40.5, move: -4.0 },
 ];
 
-const NVDA_FLATTENED = 12.4;
+/** @param {{ ticker: string, weight: number, move: number }} holding */
+function costOf(holding) {
+  return (holding.weight * Math.abs(holding.move)) / 100;
+}
+
+// NVDA sits first, the whole section is built around it
+const NVDA_COST = costOf(AI_DRAWDOWN[0]);
+const TOTAL_DRAWDOWN = AI_DRAWDOWN.reduce((sum, h) => sum + costOf(h), 0);
+const DRAWDOWN_MULTIPLE = TOTAL_DRAWDOWN / NVDA_COST;
 
 const HERO_PERF = Array.from({ length: 30 }, (_, i) => ({
   d: i,
@@ -148,13 +161,6 @@ const FEATURES = [
     title: 'News correlation',
     body: 'When a holding moves more than expected, we pull the news story that caused it.',
   },
-];
-
-const TRUST_ITEMS = [
-  { icon: ShieldCheck, text: 'Read-only portfolio analysis' },
-  { icon: Lock, text: 'End-to-end encrypted uploads' },
-  { icon: Shield, text: 'No trading permissions required' },
-  { icon: EyeOff, text: 'Securely stored data' },
 ];
 
 const SHOWCASE = [
@@ -252,7 +258,7 @@ const Landing = () => (
       <title>Institutional-grade portfolio intelligence for South African retail investors.</title>
       <meta
         name="description"
-        content="Flatten your ETFs into their true underlying holdings. Built for South African retail investors on EasyEquities and similar platforms."
+        content="Flatten your ETFs into their true underlying holdings. Built for South African retail investors using investing and trading platforms."
       />
       <meta
         property="og:title"
@@ -277,9 +283,9 @@ const Landing = () => (
         <MissionStrip />
         <Features />
         <Simulator />
+        <FlatteningEngine />
         <Comparison />
         <Showcase />
-        <FlatteningEngine />
         <TrustBar />
         <FinalCTA />
       </main>
@@ -1142,5 +1148,74 @@ const ShowcaseFrame = ({ src, alt }) => {
         </div>
       </div>
     </div>
+  );
+};
+
+const TrustBar = () => {
+  const REVEAL = useRevealVariant();
+
+  return (
+    <section
+      aria-labelledby="security-heading"
+      className="relative z-10 mx-auto max-w-6xl px-4 py-24 sm:px-6 lg:px-8"
+    >
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-start">
+        <motion.div {...REVEAL} className="lg:col-span-5">
+
+          <h2
+            id="security-heading"
+            className="mt-4 text-3xl font-bold tracking-tight text-white sm:text-4xl"
+          >
+            Your data stays yours.
+          </h2>
+
+          <p className="mt-4 text-[15px] leading-relaxed text-zinc-300">
+            Equity-Lens reads your holdings to analyse them and never touches your broker account. Statement uploads and portfolio data are encrypted and handled in line with the POPI Act.
+          </p>
+        </motion.div>
+
+        <motion.div
+          {...REVEAL}
+          transition={{ ...REVEAL.transition, delay: 0.1 }}
+          className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:col-span-7"
+        >
+          <div className="relative overflow-hidden rounded-2xl border border-yellow-400/20 bg-gradient-to-br from-yellow-400/[0.03] to-transparent p-6 backdrop-blur-xl sm:col-span-2">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-yellow-400/30 bg-yellow-400/[0.08] text-yellow-400">
+              <KeyRound size={18} aria-hidden="true" />
+            </div>
+            <h3 className="mt-4 text-base font-semibold text-white">
+              Read-only. No broker credentials.
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-300">
+              We never ask for your personal brokerage platform login information. Portfolio data comes in through user entry, so no trading permissions are requested and no orders can be placed on your behalf.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-300">
+              <Lock size={18} aria-hidden="true" />
+            </div>
+            <h3 className="mt-4 text-sm font-semibold text-white">
+              Encrypted in transit and at rest
+            </h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-zinc-400 sm:text-sm">
+              Uploads travel over TLS and are stored with AES-256 encryption. Statements are deleted once the holdings have been parsed out of them.
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-zinc-300">
+              <EyeOff size={18} aria-hidden="true" />
+            </div>
+            <h3 className="mt-4 text-sm font-semibold text-white">
+              Private to your account
+            </h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-zinc-400 sm:text-sm">
+              Your holdings are scoped to your account and visible to no other user. We don't sell your data or share it with advertisers.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    </section>
   );
 };
