@@ -11,9 +11,6 @@ class Document(Base):
 
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id",ondelete="CASCADE"), nullable=False, index=True)
     file_name = Column(String(100), nullable=False)
-    encrypted_file_path = Column(Text, nullable=False)
-    encrypted_document_text = Column(Text)
-    extracted_password = Column(Text)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))

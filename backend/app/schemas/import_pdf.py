@@ -6,8 +6,6 @@ from uuid import UUID
 
 class ImportPdfRequest(BaseModel):
     file_name: str
-    document_text: str
-    password: str
 
 class PortfolioRequest(BaseModel):
     document_id: str

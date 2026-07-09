@@ -13,9 +13,6 @@ def save_document(database,user_id,data):
     saving = Document(
         user_id = user_id,
         file_name = data.file_name,
-        encrypted_file_path = "Frontend",
-        encrypted_document_text = data.document_text,
-        extracted_password = data.password
     )
 
     database.add(saving)

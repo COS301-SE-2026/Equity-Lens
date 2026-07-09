@@ -39,6 +39,14 @@ def get_the_top_holdings_import_PDF(database,portfolioID):
 
     return returnAllArray
 
+def get_the_lowest_holdings_import_PDF(database,portfolioID):
+    getInfo = database.query(Holdings.instrument_name, Holdings.total_cost).filter(Holdings.portfolio_id == portfolioID).order_by(Holdings.total_cost.asc()).first()
+
+    return {
+        "name": getInfo.instrument_name,
+        "value": float(getInfo.total_cost),
+    }
+
 def get_the_top_allocation_import_PDF(database,portfolioID):
     getInfo = database.query(Holdings.instrument_name, Holdings.weight_percentage).filter(Holdings.portfolio_id == portfolioID).order_by(Holdings.weight_percentage.desc()).all()
 
