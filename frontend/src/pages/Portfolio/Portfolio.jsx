@@ -191,6 +191,7 @@ const Portfolio = () => {
   const [summary, setSummary] = useState("");
   const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState([]);
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState([]);
+  const [GetTheLowest, setGetTheLowest] = useState([]);
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
   const SavePortfolio = async (data, file) => {
@@ -202,8 +203,6 @@ const Portfolio = () => {
         
           {
             file_name: file.name,
-            document_text: "testing",
-            password: "",
           }
         
       );
@@ -343,13 +342,20 @@ const Portfolio = () => {
       const getSummaryGetTheTopHoldingsImportPDF = getSummaryGetTheTopHoldingsImportPDFRequest.data;
       setGetTheTopAllocationImportPDF(getSummaryGetTheTopHoldingsImportPDF);
 
+      const LowestHoldingsRequest = await api.get(
+        `/import_pdf_summary/lowest_holdings/${savedPortfolio.portfolio_id}`
+      )
+
+      const LowestHoldings = LowestHoldingsRequest.data;
+      setGetTheLowest(LowestHoldings);
+
 
 
 
     }
     catch (theErrors) 
     {
-      
+
     }
 
 
@@ -422,7 +428,7 @@ const Portfolio = () => {
 
       </div>
 
-      <div className="grid grid-cols-4 gap-8 mt-8">
+      { summary && <div className="grid grid-cols-6 gap-8 mt-8">
 
         <div className="p-5 border border-gray-700 rounded-2xl">
 
@@ -447,7 +453,7 @@ const Portfolio = () => {
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalHoldings || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">{summary?.TotalHoldings || 0}</h2>
 
         </div>
 
@@ -459,19 +465,6 @@ const Portfolio = () => {
           </div>
 
           <h2 className="text-2xl font-bold text-white">R{summary?.TotalPurchasesAndSales || 0}</h2>
-
-        </div>
-
-        <div className="p-5 border border-gray-700 rounded-2xl">
-
-          <div className="flex items-center gap-3 mb-2">
-
-            <Receipt size={20} className="text-red-500" />
-            <p className="text-gray-400">Transaction COst</p>
-
-          </div>
-
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalTransactionCosts || 0}</h2>
 
         </div>
 
@@ -506,19 +499,6 @@ const Portfolio = () => {
 
           <div className="flex items-center gap-3 mb-2">
 
-            <Percent size={20} className="text-cyan-500" />
-            <p className="text-gray-400">Interest</p>
-
-          </div>
-
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalTransactionInterest || 0}</h2>
-
-        </div>
-
-        <div className="p-5 border border-gray-700 rounded-2xl">
-
-          <div className="flex items-center gap-3 mb-2">
-
             <CreditCard size={20} className="text-orange-500" />
             <p className="text-gray-400">Expenses</p>
 
@@ -530,19 +510,21 @@ const Portfolio = () => {
 
       </div>
 
+      }
+
 
       <div className="grid grid-cols-4 gap-8 mt-8">
-
+         
       </div>
 
 
       <div className="grid grid-cols-2 gap-8">
-
+        
 
       </div>
 
 
-      <div className="grid grid-cols-4 gap-8 ">
+      { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-4 gap-8 ">
 
         <div className="border border-gray-700 rounded-2xl p-4">
           <h2 className="text-xl font-bold text-white">
@@ -597,7 +579,11 @@ const Portfolio = () => {
 
           </div>
 
+      
+
         </div>
+
+      
 
         <div className="border border-gray-700 rounded-2xl p-4">
           <h2 className="text-xl font-bold text-white">
@@ -636,8 +622,10 @@ const Portfolio = () => {
 
       </div>
 
+      }
 
-      <div className="grid grid-cols-2 gap-8 mt-8">
+
+       { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-2 gap-8 mt-8">
 
         <div className="p-6 border border-red-700 rounded-2xl">
 
@@ -656,13 +644,11 @@ const Portfolio = () => {
           <div className="flex justify-between border border-gray-700 rounded-xl p-4">
 
             <div>
-              <p className="text-gray-400 text-sm">Instrument</p>
-              <p className="text-xl text-white font-bold">Satrix</p>
+              <p className="text-xl text-white font-bold">{GetTheLowest.name}</p>
             </div>
 
             <div>
-              <p className="text-gray-400 text-sm">weight</p>
-              <p className="text-xl text-red-400 font-bold">0.0%</p>
+              <p className="text-xl text-red-400 font-bold">{GetTheLowest.value}</p>
             </div>
 
           </div>
@@ -673,7 +659,7 @@ const Portfolio = () => {
 
           <div className="flex items-center gap-2">
             <Bot size={24} className="text-purple-500"></Bot>
-            <h2 className="text-xl font-bold text-red">
+            <h2 className="text-xl font-bold">
               AI Portfolio Assistant
             </h2>
           </div>
@@ -690,9 +676,13 @@ const Portfolio = () => {
 
       </div>
 
+       }
+       
+
 
 
     </div>
+       
 
   )
 
