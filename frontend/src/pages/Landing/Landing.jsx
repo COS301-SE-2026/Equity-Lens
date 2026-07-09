@@ -32,6 +32,7 @@ import {
   XAxis,
 } from 'recharts';
 import { ROUTES } from '../../utils/constants';
+import { data } from 'framer-motion/m';
 
 const YELLOW = '#FACC15';
 /** @type {[number, number, number, number]} */
@@ -865,7 +866,7 @@ const Simulator = () => {
   );
 };
 
-/** @param {{ text?: string, presetKey?: string }} props */
+/** @param {{ text: string, presetKey: string }} props */
 const InsightCard = ({ text, presetKey }) => (
   <motion.div
     key={presetKey}
@@ -878,7 +879,7 @@ const InsightCard = ({ text, presetKey }) => (
   </motion.div>
 );
 
-/** @param {{ holdings?: any[] }} props */
+/** @param {{ holdings: any[] }} props */
 const HoldingsBreakdown = ({ holdings }) => (
   <div>
     <p className="text-[10px] font-mono tracking-widest text-zinc-300 mb-3">
@@ -902,7 +903,7 @@ const HoldingsBreakdown = ({ holdings }) => (
   </div>
 );
 
-/** @param {{ holdings?: any[] }} props */
+/** @param {{ holdings: any[] }} props */
 const ExposureChart = ({ holdings }) => (
   <div className="relative h-52 mx-auto w-full max-w-[220px]">
     <ResponsiveContainer width="100%" height="100%">
@@ -934,7 +935,7 @@ const ExposureChart = ({ holdings }) => (
   </div>
 );
 
-/** @param {{ portfolio?: any, concentrationRisk?: { label: string, color: string } }} props */
+/** @param {{ portfolio: any, concentrationRisk: { label: string, color: string } }} props */
 const ConcentrationSummary = ({ portfolio, concentrationRisk }) => (
   <div className="mb-6">
     <div className="text-[10px] font-mono tracking-widest text-zinc-300 mb-1">
@@ -964,7 +965,7 @@ const ConcentrationSummary = ({ portfolio, concentrationRisk }) => (
 );
 
 
-/** @param {{ selectedPreset?: string, onSelect?: (key: string) => void }} props */
+/** @param {{ selectedPreset: string, onSelect: (key: string) => void }} props */
 const PresetSelector = ({ selectedPreset, onSelect }) => (
   <div className="lg:col-span-5 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 sm:p-7">
     <p className="text-[10px] font-mono tracking-widest text-zinc-300 mb-3">WHY IT MATTERS</p>
@@ -1011,7 +1012,7 @@ const PieHoverTip = ({ active, payload }) => {
   );
 };
 
-/** @param {{ active?: boolean, onClick?: () => void, preset?: any }} props */
+/** @param {{ active: boolean, onClick: () => void, preset?: any }} props */
 const PresetButton = ({ active, onClick, preset }) => (
   <button
     type="button"
@@ -1040,3 +1041,106 @@ const PresetButton = ({ active, onClick, preset }) => (
     <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed">{preset.caption}</div>
   </button>
 );
+
+const Showcase = () => {
+  const REVEAL = useRevealVariant();
+  return (
+  <section className="relative z-10 mx-auto max-w-6xl px-4 py-20 sm:px-6 lg:px-8">
+      <motion.div {...REVEAL} className="mb-16 max-w-2xl sm:mb-24">
+        <p className="mb-3 font-mono text-[11px] tracking-widest text-zinc-300">
+          PRODUCT WALKTHROUGH
+        </p>
+        <h2
+          id="showcase-heading"
+          className="text-[clamp(28px,4vw,52px)] font-semibold leading-[1.05] tracking-[-0.03em] text-white"
+        >
+          From portfolio
+          <br />
+          to institutional insight.
+        </h2>
+      </motion.div>
+
+      <div className="flex flex-col gap-24 sm:gap-36">
+        {SHOWCASE.map((row, i) => (
+          <ShowcaseRow key={row.id} row={row} flipped={i % 2 !== 0}/>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** @param {{ row: { label: string, heading: string, body: string, bullets: string[], src: string, alt: string }, flipped: boolean }} props */
+const ShowcaseRow = ({ row, flipped }) => {
+  const fadeInProps = useRevealVariant();
+  return (
+    <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-2 lg:gap-16">
+      <motion.div
+        {...fadeInProps}
+        className={`flex flex-col justify-center ${flipped ? 'lg:order-last' : ''}`}
+      >
+        <span className="font-mono text-xs font-semibold tracking-widest text-yellow-400 uppercase">{row.label}</span>
+        <h3 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">{row.heading}</h3>
+        <p className="mt-4 max-w-lg text-sm leading-relaxed text-zinc-400 sm:text-base">{row.body}</p>
+        
+        <ul className="mt-6 space-y-3">
+          {row.bullets.map((bullet) => (
+            <li key={bullet} className="flex items-center gap-3">
+              <span 
+                className="h-1.5 w-1.5 shrink-0 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)]" 
+                aria-hidden="true"
+              />
+              <span className="text-sm text-zinc-300">{bullet}</span>
+            </li>
+          ))}
+        </ul>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '-60px' }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <ShowcaseFrame src={row.src} alt={row.alt} />
+      </motion.div>
+    </div>
+  );
+};
+
+/** @param {{ src: string, alt: string }} props */
+const ShowcaseFrame = ({ src, alt }) => {
+  const [hasError, setHasError] = useState(false);
+  return (
+    <div className="group relative">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-8 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(250,204,21,0.12),transparent_65%)] opacity-60 blur-3xl transition-opacity duration-300 group-hover:opacity-80"
+      />
+      <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-transform duration-300 ease-out group-hover:-translate-y-1">
+        <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-zinc-900/60">
+          
+          {hasError ? (
+            <div className="flex flex-col items-center gap-2">
+            </div>
+          ) : (
+            <>
+              <img
+                src={src}
+                alt={alt}
+                loading="lazy"
+                className="h-full w-full object-cover object-top"
+                onError={() => {
+                  console.warn('showcase image missing:', src);
+                  setHasError(true);
+                }}
+              />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.4)_100%)]"
+              />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
