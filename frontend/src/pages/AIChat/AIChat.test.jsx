@@ -38,7 +38,7 @@ describe("AIChat", () => {
 
   it("adds the typed message to the conversation and clears input", () => {
     render(<AIChat />);
-    const input = screen.getByPlaceholderText("Ask the assistant…");
+    const input = screen.getByPlaceholderText("Ask the assistant...");
     const sendButton = screen.getByRole("button", {name: /send/i})
 
     fireEvent.change(input, {target: {value: "what is NPN?"}});
@@ -50,7 +50,7 @@ describe("AIChat", () => {
 
     it("disables the send button while the assistant is thinking", () => {
        render(<AIChat />);
-       const input = screen.getByPlaceholderText("Ask the assistant…");
+       const input = screen.getByPlaceholderText("Ask the assistant...");
        const sendButton = screen.getByRole("button", { name: /send/i });
 
        fireEvent.change(input, { target: { value: "hi" } });
@@ -61,7 +61,7 @@ describe("AIChat", () => {
 
   it("renders the assistant's reply after the thinking delay", async () => {
     render(<AIChat/>)
-    const input = screen.getByPlaceholderText("Ask the assistant…");
+    const input = screen.getByPlaceholderText("Ask the assistant...");
     const sendButton = screen.getByRole("button", {name: /send/i});
 
     fireEvent.change(input, { target: { value: "hi" } });
@@ -73,7 +73,7 @@ describe("AIChat", () => {
 
     it("ignores submissions that are empty or only whitespace", () => {
       render(<AIChat />);
-      const input = screen.getByPlaceholderText("Ask the assistant…");
+      const input = screen.getByPlaceholderText("Ask the assistant...");
       const sendButton = screen.getByRole("button", { name: /send/i });
 
       fireEvent.change(input, { target: { value: "   " } });
@@ -83,6 +83,17 @@ describe("AIChat", () => {
       expect(screen.queryByRole("list")).toBeNull();
       expect(api.post).not.toHaveBeenCalled();
     });
+
+    it("the send button gets enabled when a user types a letter into the text box.", () => {
+      render(<AIChat/>);
+      const input = screen.getByPlaceholderText("Ask the assistant...");
+      const sendButton = screen.getByRole("button", {name: /send/i});
+
+      expect(sendButton.disabled).toBe(true);
+
+      fireEvent.change(input, {target: {value: "hello"}});
+      expect(sendButton.disabled).toBe(false);
+    })
   
 
   describe("suggested prompts", () => {
