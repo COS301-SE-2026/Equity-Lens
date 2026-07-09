@@ -199,6 +199,19 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
 
+    op.create_table(
+        "watchlist",
+        sa.Column("id", sa.UUID(), server_default=sa.text("uuid_generate_v4()"), nullable=False),
+        sa.Column("user_id", sa.UUID(), nullable=False),
+        sa.Column("ticker", sa.String(length=100), nullable=True),
+        sa.Column("company_name", sa.String(length=100), nullable=True),
+        sa.Column("sector", sa.String(length=100), nullable=False),
+        sa.Column("created_at", sa.DateTime(), nullable=True),
+        sa.Column("updated_at", sa.DateTime(), nullable=True),
+        sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
+        sa.PrimaryKeyConstraint("id"),
+    )
+
     # explicit indexes for query performance
     op.create_index("ix_documents_user_id", "documents", ["user_id"])
     op.create_index("ix_portfolios_user_id", "portfolios", ["user_id"])
