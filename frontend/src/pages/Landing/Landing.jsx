@@ -6,16 +6,13 @@ import {
   Menu,
   X,
   Check,
-  Shield,
   Lock,
   EyeOff,
   Command,
   FileInput,
   Percent,
   Radio,
-  ShieldCheck,
   Layers,
-  Github,
   KeyRound,
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
@@ -28,12 +25,8 @@ import {
   Line,
   YAxis,
   Tooltip,
-  BarChart,
-  Bar,
-  XAxis,
 } from 'recharts';
 import { ROUTES } from '../../utils/constants';
-import { data } from 'framer-motion/m';
 
 const YELLOW = '#FACC15';
 /** @type {[number, number, number, number]} */
@@ -1307,3 +1300,125 @@ const LedgerRow = ({ holding }) => {
     </div>
   );
 };
+
+const FinalCTA = () => {
+  const reveal = useRevealVariant();
+
+  return (
+    <section className="relative z-10 mx-auto max-w-3xl px-4 py-20 text-center sm:px-6 lg:py-32">
+      <motion.h2
+        {...reveal}
+        className="mb-6 text-4xl font-bold tracking-tight text-white sm:text-6xl"
+      >
+        Ready to understand
+        <br />
+        your portfolio?
+      </motion.h2>
+      
+      <motion.p
+        {...reveal}
+        transition={{ ...reveal.transition, delay: 0.1 }}
+        className="mx-auto mb-10 max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg"
+      >
+        Upload your broker statement to understand the ecosystem that makes your portfolio..
+      </motion.p>
+      
+      <motion.div 
+        {...reveal} 
+        transition={{ ...reveal.transition, delay: 0.2 }}
+      >
+        <Link to={ROUTES.REGISTER} className="group inline-block">
+          <YellowButton large>Analyse my portfolio</YellowButton>
+        </Link>
+      </motion.div>
+    </section>
+  );
+};
+
+const Footer = () => {
+  const handleContactClick = (e) => {
+    e.preventDefault();
+    navigator.clipboard.writeText('thebigfivetb5@gmail.com');
+    alert('Email address copied to clipboard: thebigfivetb5@gmail.com'); 
+  };
+  return (
+    <footer className="relative z-10 border-t border-white/10 bg-black/40 backdrop-blur-xl">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+        <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-[1.5fr_1fr_1fr]">
+
+          <div>
+            <div className="mb-3 flex items-center gap-3">
+              <Logo />
+              <span className="text-base font-semibold text-white">Equity-Lens</span>
+            </div>
+            <p className="max-w-xs text-xs leading-relaxed text-zinc-400">
+              A COS 301 capstone project. Built by The Big Five (TB5) at the University of Pretoria in
+              partnership with AWS.
+            </p>
+          </div>
+
+          <div>
+            <p className="mb-3 font-mono text-xs font-medium tracking-widest text-zinc-500 uppercase">
+              Product
+            </p>
+            <div className="flex flex-col gap-2">
+              <a href="#features" className="text-sm text-zinc-400 transition-colors hover:text-white">
+                Features
+              </a>
+              <a href="#simulator" className="text-sm text-zinc-400 transition-colors hover:text-white">
+                Try the simulator
+              </a>
+              <a href="#flatten" className="text-sm text-zinc-400 transition-colors hover:text-white">
+                Why it matters
+              </a>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-3 font-mono text-xs font-medium tracking-widest text-zinc-500 uppercase">
+              Resources
+            </p>
+            <div className="flex flex-col gap-2">
+              <Link to={ROUTES.HELP} className="text-sm text-zinc-400 transition-colors hover:text-white">
+                Help Centre
+              </Link>
+              <a
+                href="https://github.com/COS301-SE-2026/Equity-Lens"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm text-zinc-400 transition-colors hover:text-white"
+              >
+                GitHub
+              </a>
+              <a
+                href="mailto:thebigfivetb5@gmail.com"
+                onClick={handleContactClick}
+                className="text-sm text-zinc-400 transition-colors hover:text-white cursor-pointer"
+              >
+                Contact
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+/** @param {{ children: any, large?: boolean }} props */
+const YellowButton = ({ children, large }) => {
+  const sizeClasses = large ? 'px-7 py-3.5 text-base' : 'px-6 py-3 text-sm';
+  
+  return (
+    <motion.span
+      whileHover={{ scale: 1.1 }}
+      whileTap={{ scale: 0.9 }}
+      className={`inline-flex items-center gap-2 rounded-lg bg-yellow-400 font-semibold text-black shadow-[0_8px_24px_rgba(250,204,21,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] ${sizeClasses}`}
+    >
+      {children}
+    </motion.span>
+  );
+};
+
+export default Landing;
