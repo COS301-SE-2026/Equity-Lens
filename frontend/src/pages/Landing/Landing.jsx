@@ -124,10 +124,7 @@ function costOf(holding) {
   return (holding.weight * Math.abs(holding.move)) / 100;
 }
 
-// NVDA sits first, the whole section is built around it
-const NVDA_COST = costOf(AI_DRAWDOWN[0]);
 const TOTAL_DRAWDOWN = AI_DRAWDOWN.reduce((sum, h) => sum + costOf(h), 0);
-const DRAWDOWN_MULTIPLE = TOTAL_DRAWDOWN / NVDA_COST;
 
 const HERO_PERF = Array.from({ length: 30 }, (_, i) => ({
   d: i,
@@ -1217,5 +1214,96 @@ const TrustBar = () => {
         </motion.div>
       </div>
     </section>
+  );
+};
+
+const FlatteningEngine = () => {
+  const REVEAL = useRevealVariant();
+  return (
+    <section
+      id="flatten"
+      aria-labelledby="flatten-heading"
+      className="relative z-10 mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-32">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center">
+        <motion.div {...REVEAL} className="lg:col-span-5">
+          <h2
+            id="flatten-heading"
+            className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+            One market event can hit your whole portfolio.
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+            The AI portfolio above holds three different ETFs, which sounds diversified. But SMH,
+            QQQ and ARKK own many of the same companies, so if AI stocks fall, many of your
+            largest holdings fall at the same time with a loss much larger than the headline
+            weighting suggests.
+          </p>
+          <div className="mt-8 rounded-xl border border-rose-500/10 bg-rose-500/[0.02] p-6">
+            <span className="block font-mono text-xs font-medium uppercase tracking-wider text-zinc-500">
+              Estimated portfolio loss
+            </span>
+            <div className="mt-1 font-mono text-4xl font-bold tracking-tight text-rose-500 sm:text-5xl">
+              -{TOTAL_DRAWDOWN.toFixed(2)}%
+            </div>
+            <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-400">
+              <li>NVIDIA alone causes {' '}
+                <span className="font-semibold text-white">43%</span>.</li>
+              <li>
+                Other AI companies in the same ETFs cause another{' '}
+                <span className="font-semibold text-white">44%</span>.
+              </li>
+              <li className="text-zinc-500" >You would not see this by looking at the three funds on their own.</li>
+            </ul>
+          </div>
+        </motion.div>
+        <motion.div
+          {...REVEAL}
+          transition={{ ...REVEAL.transition, delay: 0.1 }}
+          className="lg:col-span-7">
+          <DrawdownLedger />
+        </motion.div>
+      </div>
+    </section>
+  );
+};
+
+const DrawdownLedger = () => (
+  <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl">
+    <div className="border-b border-white/5 bg-white/[0.02] px-6 py-4">
+      <span className="font-mono text-xs font-semibold tracking-wider text-zinc-300 uppercase">
+        IF NVIDIA FALLS 25%, AI STOCKS FALL WITH IT
+      </span>
+    </div>
+
+    <div className="divide-y divide-white/5 px-6 font-mono text-xs">
+      <div className="grid grid-cols-4 py-3 font-medium uppercase tracking-wider text-zinc-500">
+        <div>Company</div>
+        <div className="text-right">Price change</div>
+        <div className="text-right">Effect on you</div>
+        <div className="text-right">Share of loss</div>
+      </div>
+
+      {AI_DRAWDOWN.map((holding) => (
+        <LedgerRow key={holding.ticker} holding={holding} />
+      ))}
+    </div>
+  </div>
+);
+
+/** @param {{ holding: { ticker: string, weight: number, move: number } }} props */
+const LedgerRow = ({ holding }) => {
+  const cost = costOf(holding);
+  const shareOfLoss = Math.round((cost / TOTAL_DRAWDOWN) * 100);
+  const isAnchor = holding.ticker === 'NVDA';
+
+  return (
+    <div
+      className={`grid grid-cols-4 items-center py-3.5 transition-colors hover:bg-white/[0.02] ${
+        isAnchor ? 'bg-rose-500/[0.02] font-semibold' : ''}`}>
+      <div className={isAnchor ? 'text-rose-400' : 'text-white'}>{holding.ticker}</div>
+      <div className="text-right text-zinc-400">{holding.move}%</div>
+      <div className={`text-right font-bold ${isAnchor ? 'text-rose-500' : 'text-zinc-200'}`}>-{cost.toFixed(2)}%
+      </div>
+      <div className="text-right text-zinc-500">{shareOfLoss}%</div>
+    </div>
   );
 };
