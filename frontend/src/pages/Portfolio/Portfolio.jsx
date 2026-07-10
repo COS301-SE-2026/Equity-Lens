@@ -2,7 +2,7 @@ import { useState } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 import { ArrowLeftRight, Wallet, CreditCard, Percent, TrendingUp, Landmark, Receipt, Briefcase, TriangleAlert, Bot } from "lucide-react"
-import { PieChart, Pie, Cell } from "recharts"
+import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend } from "recharts"
 import api from "../../services/api"
 import * as XLSX from "xlsx"
 
@@ -192,6 +192,11 @@ const Portfolio = () => {
   const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState([]);
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState([]);
   const [GetTheLowest, setGetTheLowest] = useState([]);
+  const [GetTradingActivity, setGetTradingActivity] = useState([]);
+  const [GetCashFlow, setGetCashFlow] = useState([]);
+  const [GetDividendIncome, setGetDividendIncome] = useState([]);
+  const [GetExpenses, setGetExpenses] = useState([]);
+
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
   const SavePortfolio = async (data, file) => {
@@ -349,6 +354,37 @@ const Portfolio = () => {
       const LowestHoldings = LowestHoldingsRequest.data;
       setGetTheLowest(LowestHoldings);
 
+
+
+
+
+       const TradingActivity = await api.get(
+        `/import_pdf_summary/trading_activity/${savedPortfolio.portfolio_id}`
+      )
+
+      const TradingActivityImport = TradingActivity.data;
+      setGetTradingActivity(TradingActivityImport);
+
+       const CashFlow = await api.get(
+        `/import_pdf_summary/cash_flow/${savedPortfolio.portfolio_id}`
+      )
+
+      const CashFlowImport = CashFlow.data;
+      setGetCashFlow(CashFlowImport);
+
+       const Income = await api.get(
+        `/import_pdf_summary/dividend_income/${savedPortfolio.portfolio_id}`
+      )
+
+      const IncomeImport = Income.data;
+      setGetDividendIncome(IncomeImport);
+
+       const Expenses = await api.get(
+        `/import_pdf_summary/expenses/${savedPortfolio.portfolio_id}`
+      )
+
+      const ExpensesImport = Expenses.data;
+      setGetExpenses(ExpensesImport);
 
 
 
@@ -524,69 +560,117 @@ const Portfolio = () => {
       </div>
 
 
-      { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-4 gap-8 ">
+      { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 mb-7">
 
         <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white">
-            Portfolio Value Over Time
+          <h2 className="text-xl font-bold text-white text-center mb-4">
+            Trading Activity
           </h2>
+
+          <div className="flex justify-center">
+          <BarChart width={300} height={200} data={GetTradingActivity}>
+            <XAxis dataKey="name"/>
+            <YAxis/>
+            <Tooltip/>
+            <Bar dataKey="value" fill="blue"/>
+          </BarChart>
+          </div>
+          
         </div>
 
-        <div className="border border-gray-700 rounded-2xl p-4 col-span-2">
-          <h2 className="text-xl font-bold text-white">
+        <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center mb-4">
+            Cash flow
+          </h2>
+
+          <div className="flex justify-center">
+           <PieChart width={250} height={250}>
+              <Pie
+                data={GetCashFlow}
+                dataKey="value"
+                nameKey="name"
+                innerRadius={50}
+                outerRadius={80}>
+
+                {GetCashFlow.map((item, index) => (<Cell key={index} fill={colours[index % colours.length]} />))}
+              </Pie>
+              <Tooltip/>
+              <Legend/>
+            </PieChart>
+            </div>
+
+        </div>
+
+         <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center mb-4">
+            Dividend Income
+          </h2>
+
+        <div className="flex justify-center">
+          <BarChart width={250} height={250} data={GetDividendIncome}>
+            <XAxis dataKey="name"/>
+            <YAxis/>
+            <Tooltip/>
+            <Legend/>
+
+            <Bar dataKey="gross_dividend" fill="blue" />
+            <Bar dataKey="withholding_tax" fill="red" />
+            <Bar dataKey="net_dividend" fill="green" />
+
+          </BarChart>
+          </div>
+        </div>
+
+        </div>
+
+      }
+
+
+       { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 ">
+
+       
+
+        <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center">
             Assert allocation
           </h2>
 
-          <div className="flex items-center gap-6">
-
-
+          <div className="flex justify-center">
             <PieChart width={250} height={250}>
               <Pie
                 data={summaGetTheTopAllocationImportPDFry}
                 dataKey="weight_percentage"
                 innerRadius={50}
                 outerRadius={80}>
-
                 {summaGetTheTopAllocationImportPDFry.map((item, index) => (<Cell key={index} fill={colours[index % colours.length]} />))}
               </Pie>
-
+              <Tooltip/>
+              <Legend/>
             </PieChart>
-
-            <div className="flex flex-col justify-center gap-3">
-              {summaGetTheTopAllocationImportPDFry.map((item, index) => (
-                <div key={index} className="flex justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: colours[index % colours.length] }}>
-
-                    </div>
-                    <p className="text-gray-400">
-                      {item.name}
-                    </p>
-                  </div>
-
-                  <p className="text-white font-bold">
-                    {item.weight_percentage}
-                  </p>
-
-                </div>
-              ))}
-            </div>
+          </div>
 
           </div>
 
-          <div>
 
-          </div>
 
-      
+         <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center">
+            Expense breakdown
+          </h2>
 
+          <BarChart width={300} height={220} data={GetExpenses} layout="vertical">
+            <XAxis type = "number"/>
+            <YAxis type="category" dataKey="name"/>
+            <Tooltip/>
+            <Bar dataKey="value" fill="orange"/>
+
+          </BarChart>
         </div>
 
       
 
         <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white">
+          <h2 className="text-xl font-bold text-white text-center">
             Top Holdings
           </h2>
 
@@ -677,9 +761,6 @@ const Portfolio = () => {
       </div>
 
        }
-       
-
-
 
     </div>
        
