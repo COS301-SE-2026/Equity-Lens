@@ -36,17 +36,17 @@ describe("AIChat", () => {
         api.post.mockResolvedValue({data: {reply: "mock reply", conversation_id: 1}});
     });
 
-  it("adds the typed message to the conversation and clears input", () => {
-    render(<AIChat />);
-    const input = screen.getByPlaceholderText("Ask the assistant...");
-    const sendButton = screen.getByRole("button", {name: /send/i})
+    it("adds the typed message to the conversation and clears input", () => {
+      render(<AIChat />);
+      const input = screen.getByPlaceholderText("Ask the assistant...");
+      const sendButton = screen.getByRole("button", {name: /send/i})
 
-    fireEvent.change(input, {target: {value: "what is NPN?"}});
-    fireEvent.click(sendButton)
+      fireEvent.change(input, {target: {value: "what is NPN?"}});
+      fireEvent.click(sendButton)
 
-    expect(screen.getByText("what is NPN?")).toBeDefined();
-    expect(input.value).toBe("");
-  });
+      expect(screen.getByText("what is NPN?")).toBeDefined();
+      expect(input.value).toBe("");
+    });
 
     it("disables the send button while the assistant is thinking", () => {
        render(<AIChat />);
@@ -59,17 +59,17 @@ describe("AIChat", () => {
        expect(sendButton.disabled).toBe(true);
      });
 
-  it("renders the assistant's reply after the thinking delay", async () => {
-    render(<AIChat/>)
-    const input = screen.getByPlaceholderText("Ask the assistant...");
-    const sendButton = screen.getByRole("button", {name: /send/i});
+    it("renders the assistant's reply after the thinking delay", async () => {
+      render(<AIChat/>)
+      const input = screen.getByPlaceholderText("Ask the assistant...");
+      const sendButton = screen.getByRole("button", {name: /send/i});
 
-    fireEvent.change(input, { target: { value: "hi" } });
-    fireEvent.click(sendButton);
+      fireEvent.change(input, { target: { value: "hi" } });
+      fireEvent.click(sendButton);
 
-    expect(await screen.findByText("mock reply")).toBeDefined();
-    expect(api.post).toHaveBeenCalledWith("/ai_chat/", {message: "hi", conversation_id: null});
-  });
+      expect(await screen.findByText("mock reply")).toBeDefined();
+      expect(api.post).toHaveBeenCalledWith("/ai_chat/", {message: "hi", conversation_id: null});
+    });
 
     it("ignores submissions that are empty or only whitespace", () => {
       render(<AIChat />);
@@ -94,7 +94,17 @@ describe("AIChat", () => {
       fireEvent.change(input, {target: {value: "hello"}});
       expect(sendButton.disabled).toBe(false);
     })
-  
+    
+    it("loading indicator appears while waiting for a response from the assistant.", () => {
+      render(<AIChat />);
+      const input = screen.getByPlaceholderText("Ask the assistant...");
+      const sendButton = screen.getByRole("button", {name: /send/i});  
+      
+      fireEvent.change(input, {target: {value: "hello"}});
+      fireEvent.click(sendButton);
+
+      expect(document.querySelectorAll(".animate-bounce").length).toBe(3);
+    })
 
   describe("suggested prompts", () => {
     it("Renders all three suggested prompts to the user when they first click the page or start a new chat", () => {
