@@ -2,10 +2,16 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import useIndicators from "./useIndicators";
 
-vi.mock("../services/indicatorService", () => ({
-  getMockIndicatorData: vi.fn(),
+
+vi.mock("../utils/constants", () => ({
+  API_BASE_URL: "http://localhost:8000",
 }));
-import { getMockIndicatorData } from "../services/indicatorService";
+
+vi.mock("../services/indicatorService", () => ({
+  getIndicatorData: vi.fn(),
+}));
+
+import { getIndicatorData } from "../services/indicatorService";
 
 const mockStocks = [
   { ticker: "AAPL", name: "Apple Inc." },
@@ -14,7 +20,7 @@ const mockStocks = [
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getMockIndicatorData.mockReturnValue(mockStocks);
+  getIndicatorData.mockResolvedValue(mockStocks);
 });
 
 describe("useIndicators", () => {
@@ -41,18 +47,14 @@ describe("useIndicators", () => {
   });
 
   it("sets error when getMockIndicatorData throws", async () => {
-    getMockIndicatorData.mockImplementation(() => {
-      throw new Error("Service failed");
-    });
+    getIndicatorData.mockRejectedValue(new Error("Service failed"));
     const { result } = renderHook(() => useIndicators());
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.error).toBe("Service failed");
   });
 
   it("sets a fallback error message when the error has no message", async () => {
-    getMockIndicatorData.mockImplementation(() => {
-      throw {};
-    });
+    getIndicatorData.mockRejectedValue({});
     const { result } = renderHook(() => useIndicators());
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.error).toBe("Failed to load indicators");
