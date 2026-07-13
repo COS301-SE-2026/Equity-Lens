@@ -1,12 +1,16 @@
 import { useState } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
-import { ArrowLeftRight, Wallet, CreditCard, Percent, TrendingUp, Landmark, Receipt, Briefcase, TriangleAlert, Bot } from "lucide-react"
-import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend } from "recharts"
+import { ArrowLeftRight, Wallet, CreditCard, Percent, TrendingUp, Landmark, Receipt, Briefcase, TriangleAlert, Bot, Download } from "lucide-react"
+import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
 import api from "../../services/api"
 import * as XLSX from "xlsx"
 
 ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
+
+
+const DownloadPDF = () => { window.open("/template/EquityLens PDF Import Template.pdf")}
+const DownloadEXCEL = () =>{ window.open("/template/EquityLens Portfolio Excel Template.xlsx") }
 
 
 const ReadingExcelFile = async(file) => {
@@ -391,7 +395,7 @@ const Portfolio = () => {
     }
     catch (theErrors) 
     {
-
+      
     }
 
 
@@ -405,15 +409,26 @@ const Portfolio = () => {
 
       <div className="p-6 border border-gray-700 rounded-3xl">
 
-        <div className="grid grid-cols-2 gap-8">
+        <div className="flex flex-col items-center">
 
-          <div>
-            <h2 className="text-2xl font-bold text-white">
+            <h2 className="text-2xl font-bold text-white text-center">
               Upload Portfolio
             </h2>
-            <p className="text-gray-400 mt-2 mb-3">
+            <p className="text-gray-400 mt-2 mb-3 text-center">
               Upload your a PDF or Excel file to import your portfolio
             </p>
+
+            <div className="flex gap-4 mt-6">
+
+            <button onClick={DownloadPDF} className="bg-red-600 text-white px-5 py-2 rounded-lg">
+                Download PDF Template
+            </button>
+
+            <button onClick={DownloadEXCEL} className="bg-green-600 text-white px-5 py-2 rounded-lg">
+              Download Excel Template
+            </button>
+
+             </div>
 
             <input
               type="file"
@@ -458,7 +473,6 @@ const Portfolio = () => {
             }
           }
             />
-          </div>
 
         </div>
 
@@ -567,13 +581,15 @@ const Portfolio = () => {
             Trading Activity
           </h2>
 
-          <div className="flex justify-center">
-          <BarChart width={300} height={200} data={GetTradingActivity}>
+          <div className="flex justify-center w-full h-80">
+          <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={GetTradingActivity}>
             <XAxis dataKey="name"/>
             <YAxis/>
             <Tooltip/>
             <Bar dataKey="value" fill="blue"/>
           </BarChart>
+          </ResponsiveContainer>
           </div>
           
         </div>
@@ -583,8 +599,9 @@ const Portfolio = () => {
             Cash flow
           </h2>
 
-          <div className="flex justify-center">
-           <PieChart width={250} height={250}>
+          <div className="flex justify-center w-full h-80">
+            <ResponsiveContainer width="100%" height="100%">
+           <PieChart>
               <Pie
                 data={GetCashFlow}
                 dataKey="value"
@@ -597,6 +614,7 @@ const Portfolio = () => {
               <Tooltip/>
               <Legend/>
             </PieChart>
+            </ResponsiveContainer>
             </div>
 
         </div>
@@ -606,18 +624,20 @@ const Portfolio = () => {
             Dividend Income
           </h2>
 
-        <div className="flex justify-center">
-          <BarChart width={250} height={250} data={GetDividendIncome}>
+        <div className="flex justify-center w-full h-80">
+          <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={GetDividendIncome}>
             <XAxis dataKey="name"/>
             <YAxis/>
             <Tooltip/>
             <Legend/>
 
-            <Bar dataKey="gross_dividend" fill="blue" />
-            <Bar dataKey="withholding_tax" fill="red" />
-            <Bar dataKey="net_dividend" fill="green" />
+            <Line dataKey="gross_dividend" stroke="blue" />
+            <Line dataKey="withholding_tax" stroke="red" />
+            <Line dataKey="net_dividend" stroke="green" />
 
-          </BarChart>
+          </LineChart>
+          </ResponsiveContainer>
           </div>
         </div>
 
@@ -635,8 +655,9 @@ const Portfolio = () => {
             Assert allocation
           </h2>
 
-          <div className="flex justify-center">
-            <PieChart width={250} height={250}>
+          <div className="flex justify-center w-full h-80">
+            <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
               <Pie
                 data={summaGetTheTopAllocationImportPDFry}
                 dataKey="weight_percentage"
@@ -647,6 +668,7 @@ const Portfolio = () => {
               <Tooltip/>
               <Legend/>
             </PieChart>
+            </ResponsiveContainer>
           </div>
 
           </div>
@@ -657,14 +679,16 @@ const Portfolio = () => {
           <h2 className="text-xl font-bold text-white text-center">
             Expense breakdown
           </h2>
-
-          <BarChart width={300} height={220} data={GetExpenses} layout="vertical">
+          <div className="flex justify-center w-full h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={GetExpenses} layout="vertical">
             <XAxis type = "number"/>
             <YAxis type="category" dataKey="name"/>
             <Tooltip/>
             <Bar dataKey="value" fill="orange"/>
-
           </BarChart>
+          </ResponsiveContainer>
+          </div>
         </div>
 
       
