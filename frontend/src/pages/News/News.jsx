@@ -43,24 +43,13 @@ const NewsInvestment = () => {
 
       <p className="text-gray-400 mt-2">Stay updated with the latest market news and insights</p>
 
-      <div className="grid grid-cols-4 gap-8 mt-4">
-
-        <div className="p-6 border border-gray-700 rounded-2xl">
-              <h2 className="text-xl font-bold text-white mb-2">Market Overview</h2>
-              <p>test</p>
-              <p>testing</p>
-           <div>
-          </div>
-          
-        
-        </div>
+      <div className="grid grid-cols-3 gap-8 mt-4">
 
         <div className="p-6 border border-gray-700 rounded-2xl">
           <div className="flex justify-between">
             <div>
               <h2 className="text-xl font-bold text-white mb-2">Top Gainer</h2>
-              <p>{wishlistHighest.ticker}({wishlistHighest.sector})</p>
-              <p className="text-green-500">+{wishlistHighest.change_percent}</p>
+              {wishlist.length === 0 ? (<p className="text-gray-400"> No Watchlist added</p>) : (<> <p>{wishlistHighest.ticker}({wishlistHighest.sector})</p> <p className="text-green-500">+{wishlistHighest.change_percent}</p> </>)}
             </div>
            <div>
           <TrendingUp className="w-10 h-10 text-green-500"></TrendingUp>
@@ -74,8 +63,7 @@ const NewsInvestment = () => {
           <div className="flex justify-between">
             <div>
               <h2 className="text-xl font-bold text-white mb-2">Top Loser</h2>
-              <p>{wishlistLowest.ticker}({wishlistLowest.sector})</p>
-              <p className="text-red-500">{wishlistLowest.change_percent}</p>
+              {wishlist.length == 0 ? (<p className="text-gray-400">No Watchlist added</p>) : (<> <p>{wishlistLowest.ticker} {wishlistLowest.sector})</p> <p className="text-red-500">{wishlistLowest.change_percent}</p> </>)}
             </div>
            <div>
           <TrendingDown className="w-10 h-10 text-red-500"></TrendingDown>
@@ -99,9 +87,6 @@ const NewsInvestment = () => {
         </div>
         
         </div>
-
-       
-
         
 
       </div>
@@ -175,7 +160,9 @@ const NewsInvestment = () => {
           </thead>
 
             <tbody>
-              {wishlist.map((items) => (         
+              {wishlist.length === 0 ? (<tr><td className="text-gray-400">No watchlist stocks added </td></tr>) : 
+              (
+              wishlist.map((items) => (         
             <tr key={items} className="border-b border-gray-400 mb-7">
             <td>
               <p className="text-white-400">{items.ticker}</p>
@@ -191,7 +178,7 @@ const NewsInvestment = () => {
              <button onClick={() => ToDeleteWishlist(items.id)}className="text-red-400 hover:text-red-300">Remove</button>
             </td>
           </tr>
-          ))}
+          )) )}
 
 
           </tbody>
