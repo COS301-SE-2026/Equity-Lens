@@ -14,7 +14,7 @@ jobs:
   frontend:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
 
@@ -64,7 +64,7 @@ jobs:
   backend:
     name: Backend Build & Test
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     services:
       db:
         image: postgres:16-alpine
@@ -137,7 +137,7 @@ jobs:
   trivy:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 2
 
     steps:
       - uses: actions/checkout@v4
