@@ -22,7 +22,7 @@ def get_news():
         "apikey": api_key,
         "language" : "en",
       },
-      timeout=4
+      timeout=4,
   )
 
     return response.json()
@@ -36,8 +36,8 @@ def get_news(category: str="business"):
         "apikey": api_key,
         "category": category,
         "language" : "en",
-      }
-      timeout=4
+      },
+      timeout=4,
     )
 
 
