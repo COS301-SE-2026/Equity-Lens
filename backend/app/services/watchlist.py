@@ -3,7 +3,12 @@ import yfinance as yf
 from app.repositories.watchlist import add_watchlist,get_watchlist,remove_watchlist
 
 def add_watchlist_service(database,user_id,data):
-    add_watchlist(database,user_id,data)
+    stock_info = yf.Ticker(data.ticker).info
+
+    company_name = stock_info.get("longName")
+    sector = stock_info.get("sector")
+
+    add_watchlist(database,user_id,data.ticker,company_name,sector)
 
     return {
         "success": True,
@@ -27,6 +32,15 @@ def get_watchlist_service(database,user_id):
             "change_percent": getInfo.get("regularMarketChangePercent"),
 
         })
+
+    if len(AllResults) == 0:
+        return{
+            "success": True,
+            "Message": "All the users watchlist",
+            "watchlist": [],
+            "highest": {},
+            "lowest": {}
+        }
 
     TheHighest = AllResults[0]
     Thelowest = AllResults[0]

@@ -2,11 +2,31 @@ import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown, Bookmark } from "lucide-react"
 import api from "../../services/api"
 
+
 const NewsInvestment = () => {
   const [articles, setArticles] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [wishlistLowest, setWishlistLowest] = useState([]);
   const [wishlistHighest, setWishlistHighest] = useState([]);
+  const [ticker, setTicker] = useState("");
+
+
+
+  const AddStock = async (ticker) => {
+  if(ticker === "")
+  {
+    return;
+  }
+
+  await api.post("/watchlist/",{
+    ticker: ticker,
+  }
+  )
+
+  setTicker("");
+  ToGetWishlist();
+  
+}
 
 
 
@@ -49,7 +69,7 @@ const NewsInvestment = () => {
           <div className="flex justify-between">
             <div>
               <h2 className="text-xl font-bold text-white mb-2">Top Gainer</h2>
-              {wishlist.length === 0 ? (<p className="text-gray-400"> No Watchlist added</p>) : (<> <p>{wishlistHighest.ticker}({wishlistHighest.sector})</p> <p className="text-green-500">+{wishlistHighest.change_percent}</p> </>)}
+              {wishlist.length === 0 ? (<p className="text-gray-400"> No Watchlist added</p>) : wishlistHighest.change_percent > 0 ? (<> <p>{wishlistHighest.ticker}({wishlistHighest.sector})</p> <p className="text-green-500">+{wishlistHighest.change_percent}</p> </>) : (<p>No Top Gainer</p>)}
             </div>
            <div>
           <TrendingUp className="w-10 h-10 text-green-500"></TrendingUp>
@@ -63,7 +83,7 @@ const NewsInvestment = () => {
           <div className="flex justify-between">
             <div>
               <h2 className="text-xl font-bold text-white mb-2">Top Loser</h2>
-              {wishlist.length == 0 ? (<p className="text-gray-400">No Watchlist added</p>) : (<> <p>{wishlistLowest.ticker} {wishlistLowest.sector})</p> <p className="text-red-500">{wishlistLowest.change_percent}</p> </>)}
+              {wishlist.length == 0 ? (<p className="text-gray-400">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker} {wishlistLowest.sector})</p> <p className="text-red-500">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
             </div>
            <div>
           <TrendingDown className="w-10 h-10 text-red-500"></TrendingDown>
@@ -144,9 +164,17 @@ const NewsInvestment = () => {
         <h2 className="text-white text-3xl">
           My Watchlist
         </h2>
-        <button  className="p-4 py-2 bg-green-700 text-white item-center rounded-full">
-          + Add Stock
+       <div className="flex items-center gap-3">
+        <input
+          type="text"
+          placeholder="Ticker"
+          value={ticker}
+          onChange={(e) => setTicker(e.target.value)}
+          className="p-2 rounded bg-gray-800 text-white"/>
+        <button onClick={() => AddStock(ticker)} className="px-4 bg-blue-600 text-white rounded-lg">
+          Add
         </button>
+       </div>
       </div>
        <table className="w-full">
         
