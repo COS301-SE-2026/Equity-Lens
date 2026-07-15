@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import NewsInvestment from "./News"
 import api from "../../services/api"
+import userEvent from "@testing-library/user-event"
 
 vi.mock("../../services/api", () => ({
     default: {
@@ -256,6 +257,46 @@ describe("This testing is for the News Page", () =>
 
 
   });
+
+
+   it("Calls the correct API when a news category is pressed", async () => {
+
+    const userTyping = userEvent.setup();
+
+    render(<NewsInvestment />);
+
+    await userTyping.click(screen.getByText("All"))
+    expect(api.get).toHaveBeenCalledWith("/news/?category=business")
+
+    await userTyping.click(screen.getByText("Top"))
+    expect(api.get).toHaveBeenCalledWith("/news/?category=Top")
+
+    await userTyping.click(screen.getByText("Technology"))
+    expect(api.get).toHaveBeenCalledWith("/news/?category=Technology")
+
+    await userTyping.click(screen.getByText("Politics"))
+    expect(api.get).toHaveBeenCalledWith("/news/?category=Politics")
+
+    await userTyping.click(screen.getByText("Crime"))
+    expect(api.get).toHaveBeenCalledWith("/news/?category=Crime")
+
+
+     });
+
+
+     it("To add a stock in the database", async () => {
+
+    const userTyping = userEvent.setup();
+
+    render(<NewsInvestment />);
+
+    await userTyping.type(screen.getByPlaceholderText("Ticker"), "AAPL")
+    await userTyping.click(screen.getByText("Add"))
+    expect(api.post).toHaveBeenCalledWith("/watchlist/",{ticker: "AAPL"})
+
+ 
+
+     });
 
 
 });

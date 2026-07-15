@@ -13,11 +13,7 @@ const NewsInvestment = () => {
 
 
   const AddStock = async (ticker) => {
-  // if(ticker === "")
-  // {
-  //   return;
-  // }
-
+    
   await api.post("/watchlist/",{
     ticker: ticker,
   }
