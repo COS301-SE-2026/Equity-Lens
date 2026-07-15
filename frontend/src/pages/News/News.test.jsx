@@ -19,9 +19,9 @@ describe("This testing is for the News Page", () =>
         {
             return Promise.resolve({
                 data: {
-                    watchlist:[],
-                    highest:[],
-                    lowest:[]
+                    watchlist:[{id: 1, ticker: "AAPL",company_name: "Apple INC",current_price: 215.50, change_percent: 2.15,}],
+                    highest:{ticker:"AAPL", sector:"Technology",current_price: 215.30, change_percent: 2.15},
+                    lowest:{ticker: "TSLA", sector:"Politics",current_price: 310.50, change_percent: -1.35}
                 }
             })
         }
@@ -30,7 +30,7 @@ describe("This testing is for the News Page", () =>
         {
             return Promise.resolve({
                 data: {
-                    results:[],
+                    results:[{article_id: 1, title:"The stocks of today", description: "today was high", source_name: "source 1", image_url:"url_test", pubDate: "2026-07-15", category: ["Business"]}],
                 }
             })
         }
@@ -185,7 +185,77 @@ describe("This testing is for the News Page", () =>
 
   });
 
-  
+  it("To Show the data of the top gainer and top loser", async () => {
+    render(<NewsInvestment />);
+
+    expect(
+      await screen.findByText("AAPL(Technology)")
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("+2.15")
+    ).toBeInTheDocument();
+
+
+     expect(
+      await screen.findByText("TSLA(Politics)")
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("-1.35")
+    ).toBeInTheDocument();
+
+   });
+
+
+    it("To Show how many watchlist he has", async () => {
+
+    render(<NewsInvestment />);
+
+    expect(
+      await screen.findByText("My Watchlists")
+    ).toBeInTheDocument();
+     expect(
+      await screen.findByText("1")
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("Stocks")
+    ).toBeInTheDocument();
+
+     });
+
+      it("To Show both the watchlist and news data of the user", async () => {
+
+    render(<NewsInvestment />);
+
+     expect(
+      await screen.findByText("AAPL")
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("Apple INC")
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("215.5")
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("2.15")
+    ).toBeInTheDocument();
+
+
+     expect(
+      await screen.findByText("The stocks of today")
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("today was high")
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("source 1")
+    ).toBeInTheDocument();
+
+     expect(
+      await screen.findByText("2026-07-15")
+    ).toBeInTheDocument();
+
+
+  });
 
 
 });
