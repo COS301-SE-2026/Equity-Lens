@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Button from '../../components/common/Button/Button';
 import api from '../../services/api'
 import useAuth from '../../hooks/useAuth';
+import ReactMarkdown from 'react-markdown'
 
 const SUGGESTED_PROMPTS = [
   'How is MTN doing?',
@@ -106,6 +107,20 @@ const AIChat = () => {
       .catch(() => {})
   };
 
+  const deleteConversation = (convoId) => {
+    api.delete(`/ai_chat/conversations/${convoId}/`)
+      .then(() => {
+        setConversations((prev) => 
+          prev.filter((c) => c.id !== convoId)
+        );
+        if (conversationId == convoId) {
+          setConversationId(null);
+          setMessages([]);
+        }
+      })
+      .catch(() => {});
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     sendMessage(input);
@@ -154,6 +169,11 @@ const AIChat = () => {
                         className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-[var(--text-primary)] group-hover:visible">
                   <i className="fa fa-pencil" aria-hidden="true"></i>
                 </button>
+                <button type = "button"
+                        onClick = {() => deleteConversation(convo.id)}
+                        className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-red-500 group-hover:visible">
+                  <i class="fa fa-trash"></i>
+                </button>
         </>
         )}
       </div>
@@ -191,8 +211,7 @@ const AIChat = () => {
                              hover:bg-[var(--bg-tertiary)]
                              hover:text-[var(--text-primary)]
                              focus-visible:outline-none focus-visible:ring-2
-                             focus-visible:ring-[var(--accent-primary)]"
-                >
+                             focus-visible:ring-[var(--accent-primary)]">
                   {prompt}
                 </button>
               ))}
@@ -214,10 +233,8 @@ const AIChat = () => {
                   {message.text}
                 </p>
               ) : (
-                <div className="max-w-[80%]">
-                  <p className="text-sm text-[var(--text-secondary)]">
-                    {message.text}
-                  </p>
+                <div className="max-w-[80%] text-sm text-[var(--text-secondary)] [&>p]:mb-2 [&>ul]:mb-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:mb-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>h3]:font-semibold [&>h3]:mb-1 [&>strong]:font-semibold [&>p:last-child]:mb-0">
+                    <ReactMarkdown>{message.text}</ReactMarkdown>
                 </div>
               )}
             </li>
