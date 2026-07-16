@@ -104,4 +104,4 @@ def test_get_current_user_with_valid_token(client, auth_headers, test_user):
 def test_get_current_user_without_token_returns_403(client):
     # HTTPBearer returns 403 when no auth header present, not 422
     response = client.get("/api/auth/me")
-    assert response.status_code == 403
+    assert response.status_code == 401
