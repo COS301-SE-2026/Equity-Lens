@@ -20,6 +20,7 @@ def get_news():
     response = requests.get("https://newsdata.io/api/1/latest",
       params={
         "apikey": api_key,
+        "language" : "en",
       })
 
     return response.json()
@@ -31,7 +32,8 @@ def get_news(category: str="business"):
     response = requests.get("https://newsdata.io/api/1/latest",
       params={
         "apikey": api_key,
-        "category": category
+        "category": category,
+        "language" : "en",
       })
 
 

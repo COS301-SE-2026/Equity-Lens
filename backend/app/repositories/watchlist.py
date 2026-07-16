@@ -1,12 +1,12 @@
 from app.models.portfolio import Watchlist
 
-def add_watchlist(database,user_id,data):
+def add_watchlist(database,user_id,ticker,company_name,sector):
 
     saving = Watchlist(
         user_id = user_id,
-        ticker = data.ticker,
-        company_name = data.company_name,
-        sector = data.sector
+        ticker = ticker,
+        company_name = company_name,
+        sector = sector
     )
 
     database.add(saving)
