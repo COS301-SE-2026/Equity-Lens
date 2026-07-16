@@ -11,24 +11,24 @@
 }
 
 :root {
-  --surface-base: #080A0C;
-  --surface-raised: #0C0F14;
-  --surface-card: #0F1318;
-  --surface-inset: #080A0C;
+  --surface-base: #080a0c;
+  --surface-raised: #0c0f14;
+  --surface-card: #0f1318;
+  --surface-inset: #080a0c;
   --surface-hover: rgba(255, 255, 255, 0.015);
 
-  --border-subtle: #1C2028;
-  --border-mid: #2A3040;
-  --border-accent: #D4A017;
+  --border-subtle: #1c2028;
+  --border-mid: #2a3040;
+  --border-accent: #d4a017;
 
-  --text-primary: #E8EAF0;
-  --text-secondary: #8A94A8;
-  --text-dim: #5A6480;
-  --text-ghost: #3D4455;
+  --text-primary: #e8eaf0;
+  --text-secondary: #8a94a8;
+  --text-dim: #5a6480;
+  --text-ghost: #3d4455;
 
-  --signal-gold: #D4A017;
-  --accent-primary: #D4A017;
-  --accent-hover: #C49010;
+  --signal-gold: #d4a017;
+  --accent-primary: #d4a017;
+  --accent-hover: #c49010;
   --accent-subtle: rgba(212, 160, 23, 0.08);
 
   --signal-positive: #34d399;
@@ -70,26 +70,30 @@
   --font-primary: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
   --font-ui: var(--font-primary);
+
+  --glass-bg: rgba(0, 0, 0, 0.02);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-hover: rgba(0, 0, 0, 0.04);
 }
 
-[data-theme="light"] {
-  --surface-base: #F0F2F5;
-  --surface-raised: #FFFFFF;
-  --surface-card: #FFFFFF;
-  --surface-inset: #F0F2F5;
+[data-theme='light'] {
+  --surface-base: #f0f2f5;
+  --surface-raised: #ffffff;
+  --surface-card: #ffffff;
+  --surface-inset: #f0f2f5;
   --surface-hover: rgba(0, 0, 0, 0.02);
 
-  --border-subtle: #E2E5EC;
-  --border-mid: #C8CDD8;
+  --border-subtle: #e2e5ec;
+  --border-mid: #c8cdd8;
 
-  --text-primary: #0D1117;
-  --text-secondary: #5A6480;
-  --text-dim: #8A94A8;
-  --text-ghost: #B0B8C8;
+  --text-primary: #0d1117;
+  --text-secondary: #5a6480;
+  --text-dim: #8a94a8;
+  --text-ghost: #b0b8c8;
 
-  --chart-grid: #E5E5E5;
-  --chart-axis-text: #9B9B9B;
-  --chart-tooltip-bg: #FFFFFF;
+  --chart-grid: #e5e5e5;
+  --chart-axis-text: #9b9b9b;
+  --chart-tooltip-bg: #ffffff;
 
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.15);
@@ -101,6 +105,15 @@
   --bg-hover: var(--surface-hover);
   --border-default: var(--border-subtle);
   --text-muted: var(--text-dim);
+}
+
+[data-theme='dark'] {
+  --surface-elevated: #151519;
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --accent-subtle: rgba(255, 179, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hover: rgba(255, 255, 255, 0.08);
 }
 
 body {
