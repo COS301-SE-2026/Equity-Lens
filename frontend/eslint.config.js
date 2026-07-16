@@ -33,6 +33,11 @@ export default [
     },
     settings: {
       react: { version: 'detect' },
+      'import-x/resolver': {
+        node: {
+          extensions: ['.js', '.jsx', '.json'],
+        },
+      },
     },
     rules: {
       'react-hooks/rules-of-hooks': 'error',
