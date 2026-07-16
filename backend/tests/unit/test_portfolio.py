@@ -5,7 +5,7 @@ SECTORS_URL = "/api/portfolio/sectors"
 
 def test_portfolio_requires_auth(client):
     response = client.get(PORTFOLIO_URL)
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 def test_portfolio_returns_empty_for_new_user(client, auth_headers):

@@ -14,7 +14,7 @@ jobs:
   frontend:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
 
@@ -64,7 +64,7 @@ jobs:
   backend:
     name: Backend Build & Test
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 3
     services:
       db:
         image: postgres:16-alpine
@@ -94,6 +94,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+
+      - name: Run pip-audit to check the packages
+        working-directory: backend
+        run: pip-audit
+
+      - name: Run Bandit to scan for the backend code
+        working-directory: backend
+        run: bandit -r app
 
       - name: Run database migrations & verify reversibility
         working-directory: backend
@@ -125,10 +133,11 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: backend/coverage.xml
 
+    
   trivy:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 2
 
     steps:
       - uses: actions/checkout@v4
