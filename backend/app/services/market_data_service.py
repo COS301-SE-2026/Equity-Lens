@@ -1,3 +1,4 @@
+from app.utils.stock_cache import get_cached_price_history, get_cached_fundamentals
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -13,19 +14,7 @@ from app.schemas.market_data import (
 
 
 def get_current_price(symbol: str) -> CurrentPriceResponse:
-    ticker = yf.Ticker(symbol)
-    
-    info = ticker.info
-    previous_close = info.get('previousClose') or info.get('regularMarketPreviousClose')
-
-    if previous_close is None:
-        hist = ticker.history(period="2d")
-        if len(hist) >= 2:
-            previous_close = float(hist.iloc[-2]['Close'])
-        else:
-            previous_close = float(hist.iloc[-1]['Open'])
-    
-    history = ticker.history(period="1d")
+    history = get_cached_price_history(symbol, period="1y")
 
     if history.empty:
         raise ValueError(f"No data found for symbol: {symbol}")
@@ -33,8 +22,17 @@ def get_current_price(symbol: str) -> CurrentPriceResponse:
     latest = history.iloc[-1]
     price = float(latest["Close"])
     volume = int(latest["Volume"] or 0)
-    change_percent = None
+    fundamentals = get_cached_fundamentals(symbol)
+    info = fundamentals.get("info", {})
+    previous_close = info.get("regularMarketPreviousClose") or info.get("previousClose")
 
+    if previous_close is None:
+        if len(history) >= 2:
+            previous_close = float(history.iloc[-2]["Close"])
+        else:
+            previous_close = price
+
+    change_percent = None
     if previous_close and previous_close != 0:
         change_percent = ((price - previous_close) / previous_close) * 100
 
@@ -46,3 +44,38 @@ def get_current_price(symbol: str) -> CurrentPriceResponse:
         change_percent=round(change_percent, 4) if change_percent is not None else None,
         fetched_at=datetime.now(timezone.utc),
     )
+
+
+def get_historical_data(symbol: str, period: str) -> HistoryResponse:
+    history = get_cached_price_history(symbol, period=period)
+
+    if history.empty:
+        raise ValueError(f"No historical data found for symbol: {symbol}")
+
+    data = [
+        HistoryDataPoint(
+            date=index.to_pydatetime(),
+            open=float(row["Open"]),
+            high=float(row["High"]),
+            low=float(row["Low"]),
+            close=float(row["Close"]),
+            volume=int(row["Volume"] or 0),
+        )
+        for index, row in history.iterrows()
+    ]
+
+    return HistoryResponse(symbol=symbol.upper(), period=period, data=data)
+
+
+def search_stocks(query: str) -> SearchResponse:
+    search_results = yf.Search(query, max_results=10)
+    results = [
+        SearchResultItem(
+            symbol=quote.get("symbol", "N/A"),
+            name=quote.get("longname") or quote.get("shortname") or quote.get("name", "N/A"),
+        )
+        for quote in getattr(search_results, "quotes", []) or []
+        if quote.get("symbol")
+    ]
+
+    return SearchResponse(query=query, results=results)

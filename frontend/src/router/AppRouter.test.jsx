@@ -47,7 +47,7 @@ describe('landing route', () => {
     renderAt('/');
     expect(screen.getByText('Landing Page')).toBeInTheDocument();
   });
-  });
+});
 
 describe('public routes', () => {
   it('renders Login when unauthenticated', () => {

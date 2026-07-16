@@ -134,7 +134,15 @@ jobs:
         working-directory: backend
         run: mypy app
         continue-on-error: true
-        #Need to flip these to false when errors cleared
+        # flip these to false once mypy/ruff baseline is cleared
+
+      - name: Run pip-audit to check the packages
+        working-directory: backend
+        run: pip-audit
+
+      - name: Run Bandit to scan for the backend code
+        working-directory: backend
+        run: bandit -r app
 
       - name: Run database migrations & verify reversibility
         working-directory: backend
@@ -167,6 +175,7 @@ jobs:
           files: backend/coverage.xml
           flags: backend
 
+    
   trivy:
     name: Trivy Security Scan
     runs-on: ubuntu-latest
