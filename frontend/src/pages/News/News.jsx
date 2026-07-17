@@ -13,11 +13,7 @@ const NewsInvestment = () => {
 
 
   const AddStock = async (ticker) => {
-  if(ticker === "")
-  {
-    return;
-  }
-
+    
   await api.post("/watchlist/",{
     ticker: ticker,
   }
@@ -83,7 +79,7 @@ const NewsInvestment = () => {
           <div className="flex justify-between">
             <div>
               <h2 className="text-xl font-bold text-white mb-2">Top Loser</h2>
-              {wishlist.length == 0 ? (<p className="text-gray-400">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker} {wishlistLowest.sector})</p> <p className="text-red-500">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
+              {wishlist.length == 0 ? (<p className="text-gray-400">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker}({wishlistLowest.sector})</p> <p className="text-red-500">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
             </div>
            <div>
           <TrendingDown className="w-10 h-10 text-red-500"></TrendingDown>
@@ -96,7 +92,7 @@ const NewsInvestment = () => {
         <div className="p-6 border border-gray-700 rounded-2xl">
           <div className="flex justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white mb-2">My Watchlist</h2>
+              <h2 className="text-xl font-bold text-white mb-2">My Watchlists</h2>
               <p>{wishlist.length}</p>
               <p>Stocks</p>
             </div>
