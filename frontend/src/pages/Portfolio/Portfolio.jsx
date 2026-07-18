@@ -66,128 +66,102 @@ const ReadingExcelFile = async(file) => {
 
 }
 
-
-const ReadingPDFFile = async(file) => {
-
-
+const ReadingPDFFile = async(file) =>
+{
   if(!file)
   {
-    return;
+    return
   }
 
-        const convertPdf = await ShowPdf.getDocument({
+  const convertPdf = await ShowPdf.getDocument({
         data: await file.arrayBuffer(),
+        password: "test",
       }).promise;
 
-      let gettingInfo = "";
 
-      for (let i = 1; i <= convertPdf.numPages; i++) {
-        const page = await convertPdf.getPage(i);
-        const content = await page.getTextContent();
+  const allRows = [];
 
-        let PageInfo = "";
+  for(let x = 1; x <= convertPdf.numPages;x++)
+  {
+      const toGetThePage = await convertPdf.getPage(x);
+      const ToGetTheContent = await toGetThePage.getTextContent();
 
 
-        for (const items of content.items) 
-        {
-          PageInfo = PageInfo + items.str + " ";
-        }
+      console.log("all", ToGetTheContent)
 
-        gettingInfo = gettingInfo + PageInfo;
-
-      }
-
-      const words = gettingInfo.split(" ").filter((word) => word !== "");
-
-      const findAllSections = (start, end) =>
+      for(const items of ToGetTheContent.items)
       {
-        const starting = words.indexOf(start);
-        const ending = words.indexOf(end);
 
-        return words.slice(starting + 1, ending);
+        allRows.push({text: items.str, x:items.transform[4], y:items.transform[5], page: x})
       }
 
 
-  const PortfolioLength = findAllSections("Portfolio","Holdings")
-  const HoldingsLength = findAllSections("Holdings","Purchase_and_Sales")
-  const PurchaseandSalesLength = findAllSections("Purchase_and_Sales","Contributions_and_Withdrawals")
-  const ContributionsandWithdrawalsLength = findAllSections("Contributions_and_Withdrawals","Dividends_and_Withholding_Tax")
-  const DividendsandWithholdingTaxLength = findAllSections("Dividends_and_Withholding_Tax","Expenses")
-  const ExpensesLength = words.slice(words.indexOf("Expenses") + 1)
+  }
 
-  const Portfolio = []
-  const Holdings = []
-  const PurchaseandSales = []
-  const ContributionsandWithdrawals = []
-  const DividendsandWithholdingTax = []
-  const Expenses = []
+  const allRowsTogther = []
 
-
-  for (let x = 5; x < PortfolioLength.length; x = x + 4) 
+  for(const items of allRows)
   {
-        Portfolio.push({
-          account_number: PortfolioLength[x],
-          portfolio_name: PortfolioLength[x + 1],
-          statement_date: PortfolioLength[x + 2],
-          portfolio_value: PortfolioLength[x + 3],
-        })
+    const ExistRow = allRowsTogther.find((row) => row.y === items.y && row.page === items.page)
+
+    if(ExistRow)
+    {
+      ExistRow.items.push(items);
+    }
+    else
+    {
+      allRowsTogther.push({page: items.page, y: items.y, items: [items]})
+    }
+
+    
   }
 
+  console.log("allRowsTogther:", allRowsTogther )
 
-  for (let x = 3; x < HoldingsLength.length; x = x + 3) 
+  for(const row of allRowsTogther)
   {
-        Holdings.push({
-          instrument_name: HoldingsLength[x],
-          quantity: HoldingsLength[x + 1],
-          total_cost: HoldingsLength[x + 2],
-        })
+     row.text = row.items.map((item) => item.text).join(" ")
   }
 
-   for (let x = 5; x < PurchaseandSalesLength.length; x = x + 5) 
-  {
-        PurchaseandSales.push({
-          transaction_date: PurchaseandSalesLength[x],
-          transaction_name: PurchaseandSalesLength[x + 1],
-          instrument_name: PurchaseandSalesLength[x + 2],
-          price: PurchaseandSalesLength[x + 3],
-          quantity: PurchaseandSalesLength[x + 4],
-        })
+  console.log("allRowsTogther text :", allRowsTogther )
+
+  const getTheTable = (starting,ending) => {
+    const table = []
+    let addingRows = false
+
+    for(const row of allRowsTogther)
+    {
+      if(row.text.toLowerCase().includes(starting.toLowerCase()))
+      {
+        addingRows = true
+        continue
+      }
+
+      if(addingRows && row.text.toLowerCase().includes(ending.toLowerCase()))
+      {
+        break
+      }
+
+      if(addingRows)
+      {
+        table.push({page:row.page, text: row.text})
+      }
+    }
+
+    return table
   }
 
-   for (let x = 4; x < ContributionsandWithdrawalsLength.length; x = x + 4) 
-  {
-        ContributionsandWithdrawals.push({
-          transaction_date: ContributionsandWithdrawalsLength[x],
-          statement_date: ContributionsandWithdrawalsLength[x + 1],
-          transaction_name: ContributionsandWithdrawalsLength[x + 2],
-          value: ContributionsandWithdrawalsLength[x + 3],
-        })
-  }
+  const HoldingsTable = getTheTable("Holdings","Detailed Transactions - Instrument Purchases and Sales")
+  const PurchaseAndSalesTable = getTheTable("Detailed Transactions - Instrument Purchases and Sales","Detailed Transactions - Transaction Costs")
+  const ContributionsTable = getTheTable("Detailed Transactions - Contributions and Withdrawals","Detailed Transactions - Dividends and Withholding Tax")
+  const TaxTable = getTheTable("Detailed Transactions - Dividends and withholding Tax","Detailed Transactions - Interest")
+  const ExpensesTable = getTheTable("Detailed Transactions - Expenses","Notes")
 
-   for (let x = 4; x < DividendsandWithholdingTaxLength.length; x = x + 4) 
-  {
-        DividendsandWithholdingTax.push({
-          transaction_date: DividendsandWithholdingTaxLength[x],
-          instrument_name: DividendsandWithholdingTaxLength[x + 1],
-          gross_dividend: DividendsandWithholdingTaxLength[x + 2],
-          tax_rate: DividendsandWithholdingTaxLength[x + 3],
-        })
-  }
+  const results = {HoldingsTable,PurchaseAndSalesTable,TaxTable,ContributionsTable,ExpensesTable}
 
-  for (let x = 4; x < ExpensesLength.length; x = x + 4) 
-  {
-        Expenses.push({
-          transaction_date: ExpensesLength[x],
-          settlement_date: ExpensesLength[x + 1],
-          narrative: ExpensesLength[x + 2],
-          value: ExpensesLength[x + 3],
-        })
-  }
+  console.log("Check all the data.", JSON.stringify(results,null,2))
 
-  return {
-    Portfolio,Holdings,PurchaseandSales,ContributionsandWithdrawals,DividendsandWithholdingTax,Expenses
-  }
-
+  return results;
 
 }
 
