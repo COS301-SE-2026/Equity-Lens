@@ -51,7 +51,7 @@ def test_duplicate_registration_fails(client, sample_user_data):
 def test_cannot_access_protected_route_without_token(client):
     # HTTPBearer 403s on missing auth, not 422
     response = client.get("/api/auth/me")
-    assert response.status_code == 403
+    assert response.status_code == 401
 
 
 def test_health_check(client):
