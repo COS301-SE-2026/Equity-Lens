@@ -72,7 +72,7 @@ jobs:
                 key: ${{ secrets.THE_PRIVATE_SSH_KEY }}
                 script: |
                   aws ecr get-login-password --region ${{ vars.AWS_REGION }}
-                  docker login --username AWS --password-stdin ${{ steps.login-to-store-credtials.outputs.registry }}
+                  docker login --username AWS --password-stdin ${{ steps.login-to-store-credentials.outputs.registry }}
 
                   docker stop equity-lens-frontend
                   docker rm equity-lens-frontend

@@ -151,3 +151,16 @@ jobs:
           exit-code: 1
           scanners: vuln,secret,misconfig
           skip-dirs: frontend/node_modules,node_modules,backend/venv,backend/.venv,frontend/dist,frontend/build
+
+  gitleaks:
+      name: Github Scan any leaked secret code
+      runs-on: ubuntu-latest
+      timeout-minutes: 3
+      steps:
+        - uses: actions/checkout@v4
+
+        - name: Scan any leaked secret code in all the env files
+          uses: gitleaks/gitleaks-action@v2
+          env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
