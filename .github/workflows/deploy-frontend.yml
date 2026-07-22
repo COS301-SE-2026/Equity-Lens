@@ -63,6 +63,21 @@ jobs:
                 docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:$IMAGE_TAG
                 docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:latest
 
+            - name: to automatically deploy the frontend to the ec2
+              if: github.event_name == 'push'
+              uses: appleboy/ssh-action@v1
+              with:
+                host: ${{ secrets.EC2_PUBLIC_ADDRESS }}
+                username: ${{ secrets.EC2_USERNAME }}
+                key: ${{ secrets.THE_PRIVATE_SSH_KEY }}
+                script: |
+                  aws ecr get-login-password --region ${{ vars.AWS_REGION }}
+                  docker login --username AWS --password-stdin ${{ steps.login-to-store-credtials.outputs.registry }}
+
+                  docker stop equity-lens-frontend
+                  docker rm equity-lens-frontend
+
+
               
               
     
