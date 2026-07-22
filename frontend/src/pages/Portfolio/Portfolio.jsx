@@ -1,17 +1,14 @@
 import { useState } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
-import { ArrowLeftRight, Wallet, CreditCard, Percent, TrendingUp, Landmark, Receipt, Briefcase, TriangleAlert, Bot, Download } from "lucide-react"
+import { ArrowLeftRight, Wallet, CreditCard, Percent, TrendingUp, Landmark, Receipt, Briefcase, TriangleAlert, Bot, Download,LoaderCircle } from "lucide-react"
 import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
 import api from "../../services/api"
 import * as XLSX from "xlsx"
 
 ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
 
-
-const DownloadPDF = () => { window.open("/template/EquityLens PDF Import Template.pdf")}
-const DownloadEXCEL = () =>{ window.open("/template/EquityLens Portfolio Excel Template.xlsx") }
-
+const DownloadEXCEL = () =>{ window.open("/template/EquityLens_Portfolio_Excel_Template.xlsx") }
 
 const ReadingExcelFile = async(file) => {
 
@@ -23,39 +20,39 @@ const ReadingExcelFile = async(file) => {
   const read = XLSX.read(await file.arrayBuffer());
 
   const Portfolio = XLSX.utils.sheet_to_json(read.Sheets["Portfolio"]).map((item) =>({
-          account_number: item.Account_Number,
-          portfolio_name: item.Portfolio_Name,
-          statement_date: item.Statement_Date,
+          account_number: item["Account Number"],
+          portfolio_name: item["Portfolio Name"],
+          statement_date: item["Statement Date"],
   }));
   const Holdings = XLSX.utils.sheet_to_json(read.Sheets["Holdings"]).map((item) =>({
-         instrument_name: item.Instrument_Name,
-          quantity: item.Quantity,
-          total_cost: item.Total_Cost,
+         instrument_name: item["Instrument Name"],
+          quantity: item["Quantity"],
+          total_cost: item["Total Cost"],
   }));
   const PurchaseandSales = XLSX.utils.sheet_to_json(read.Sheets["Purchase and Sales"]).map((item) =>({
-          transaction_date: item.Transaction_Date,
-          transaction_name: item.Transaction_Type,
-          instrument_name: item.Instrument_Name,
+          transaction_date: item["Transaction Date"],
+          transaction_name: item["Transaction Type"],
+          instrument_name: item["Instrument Name"],
           price: item.Price,
           quantity: item.Quantity
   }));
   const ContributionsandWithdrawals = XLSX.utils.sheet_to_json(read.Sheets["Contributions and Withdrawals"]).map((item) =>({
-              transaction_date: item.Transaction_Date,
-              statement_date: item.Settlement_Date,
-              transaction_name: item.Transaction_Type,
+              transaction_date: item["Transaction Date"],
+              statement_date: item["Settlement Date"],
+              transaction_name: item["Transaction Type"],
               value: item.Value,
   }));
   const DividendsandWithholdingTax = XLSX.utils.sheet_to_json(read.Sheets["Dividends and Withholding Tax"]).map((item) =>({
-              transaction_date: item.Transaction_Date,
-              instrument_name: item.Instrument_Name,
-              gross_dividend: item.Gross_Dividend,
-              tax_rate: item["Tax_Rate(%)"],
+              transaction_date: item["Transaction Date"],
+              instrument_name: item["Instrument Name"],
+              gross_dividend: item["Gross Dividend"],
+              tax_rate: item["Tax Rate(%)"],
   }));
   const Expenses = XLSX.utils.sheet_to_json(read.Sheets["Expenses"]).map((item) =>({
-              transaction_date: item.Transaction_Date,
-              settlement_date: item.Settlement_Date,
-              narrative: item.Narrative,
-              value: item.Value,
+              transaction_date: item["Transaction Date"],
+              settlement_date: item["Settlement Date"],
+              narrative: item["Narrative"],
+              value: item["Value"],
   }));
 
 
@@ -85,9 +82,6 @@ const ReadingPDFFile = async(file, password) =>
       const toGetThePage = await convertPdf.getPage(x);
       const ToGetTheContent = await toGetThePage.getTextContent();
 
-
-      console.log("all", ToGetTheContent)
-
       for(const items of ToGetTheContent.items)
       {
 
@@ -114,14 +108,10 @@ const ReadingPDFFile = async(file, password) =>
     
   }
 
-  console.log("allRowsTogther:", allRowsTogther )
-
   for(const row of allRowsTogther)
   {
      row.text = row.items.map((item) => item.text).join(" ")
   }
-
-  console.log("allRowsTogther text :", allRowsTogther )
 
   const getTheTable = (starting,ending) => {
     const table = []
@@ -155,8 +145,6 @@ const ReadingPDFFile = async(file, password) =>
   const TaxTable = getTheTable("Detailed Transactions - Dividends and withholding Tax","Detailed Transactions - Interest")
   const ExpensesTable = getTheTable("Detailed Transactions - Expenses","Notes")
 
-  console.log("Holding Table", HoldingsTable)
-
   const accountIndex = allRowsTogther.findIndex((row) => {return row.text.trim().startsWith("EE")})
   const statementIndex = allRowsTogther.find((row) => {return row.text.trim().includes(" to ")})
   const accountRow = allRowsTogther[accountIndex]
@@ -165,9 +153,6 @@ const ReadingPDFFile = async(file, password) =>
   const gettingthData = statementIndex.text.split("to")[1].trim()
   let date = new Date(gettingthData).toISOString().split("T")[0]
 
-  
-
-  console.log("Test", accountRow.text)
 
   const Portfolio = [{
 
@@ -285,7 +270,7 @@ const ReadingPDFFile = async(file, password) =>
     return {
       transaction_date: splitParts[0].replaceAll("/","-"),
       statement_date: splitParts[1].replaceAll("/","-"),
-      transaction_name: splitParts.slice(2,chackThousands ? -2 : -1).join(" "),
+      transaction_name: splitParts.slice(2,chackThousands ? -2 : -1).join(" ").replaceAll("Capital",""),
       value: chackThousands ? secondLast + last : last
     }
 
@@ -325,8 +310,6 @@ const ReadingPDFFile = async(file, password) =>
 
   const results = {Portfolio,Holdings,PurchaseandSales,ContributionsandWithdrawals,DividendsandWithholdingTax,Expenses}
 
-  console.log("Check all the data.", JSON.stringify(results,null,2))
-
   return results;
 
 }
@@ -339,6 +322,7 @@ const Portfolio = () => {
   const [GetTradingActivity, setGetTradingActivity] = useState([]);
   const [GetCashFlow, setGetCashFlow] = useState([]);
   const [GetDividendIncome, setGetDividendIncome] = useState([]);
+  const [LoadingPage, setLoadingPage] = useState(false);
 
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
@@ -400,7 +384,7 @@ const Portfolio = () => {
 
       for (const eachItems of data.PurchaseandSales) {
 
-        const price = parseFloat(eachItems.price.replace("R","").replace(",",""));
+        const price = parseFloat(eachItems.price);
         const quantity = parseFloat(eachItems.quantity);
 
 
@@ -423,7 +407,7 @@ const Portfolio = () => {
 
 
       for (const eachItems of data.ContributionsandWithdrawals) {
-        const value_zar = parseFloat(eachItems.value.replace("R","").replace(",",""));
+        const value_zar = parseFloat(eachItems.value);
 
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_contributions_and_withdrawals/",
@@ -438,8 +422,8 @@ const Portfolio = () => {
       }
 
       for (const eachItems of data.DividendsandWithholdingTax) {
-        const gross_dividend = parseFloat(eachItems.gross_dividend.replace("R","").replace(",",""));
-        const tax_rate = parseFloat(eachItems.tax_rate.replace("%",""));
+        const gross_dividend = parseFloat(eachItems.gross_dividend);
+        const tax_rate = parseFloat(eachItems.tax_rate);
         const net_dividend = parseFloat((gross_dividend - (gross_dividend *  (tax_rate/100))));
 
         const uploadHoldingsRequest = await api.post(
@@ -460,7 +444,7 @@ const Portfolio = () => {
       
 
       for (const eachItems of data.Expenses) {
-        const value_zar = parseFloat(eachItems.value.replace("R","").replace(",",""));
+        const value_zar = parseFloat(eachItems.value);
 
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_transaction_expenses/",
@@ -540,12 +524,30 @@ const Portfolio = () => {
     }
     catch (theErrors) 
     {
+      if(file.name.toLowerCase().endsWith(".pdf"))
+      {
        alert("Incorrect PDF Password or unsupported EasyQuities statement. Please use the Excel template")
+      }
+      else
+      {
+        alert("Invalid or unsupported Excel file. Please can you make sure to use the Excel template")
+      }
     }
 
 
   }
 
+    if (LoadingPage)
+    {
+      return(
+        <div className="flex flex-col items-center mt-30">
+        <LoaderCircle className="w-20 h-16 animate-spin" />     
+        <h2 className="text-2xl text-white">Loading Portfolio</h2>
+        <p className="text-gray-400">Please wait until we import your portfolio</p>
+        </div>
+      )
+    }
+  
   return (
 
     <div className="p-2">
@@ -584,30 +586,20 @@ const Portfolio = () => {
                   return;
                 }
 
+                setLoadingPage(true)
                 try
                 {
                 let data;
 
                 if(file.name.toLowerCase().endsWith(".pdf"))
                 {
-                  try{
-                      const Passwords = prompt("Enter the PDF password");
-                      data = await ReadingPDFFile(file, Passwords);
-                  }
-                  catch
-                  {
-                    alert("Incorrect PDF Password or unsupported EasyEquities statement. Please use the Excel template.")
-                  }
+                  const Passwords = prompt("Enter the PDF password");
+                  data = await ReadingPDFFile(file, Passwords);
                    
                 }
                 else if(file.name.toLowerCase().endsWith(".xlsx"))
                 {
                   data = await ReadingExcelFile(file);
-                }
-                else
-                {
-                  alert("Please select a PDF or Excel file");
-                  return;
                 }
 
 
@@ -616,7 +608,22 @@ const Portfolio = () => {
             
             catch(theError)
             {
-              alert("Incorrect PDF Password or unsupported EasyEquities statement. Please use the Excel template")
+              if(file.name.toLowerCase().endsWith(".pdf"))
+              {
+                alert("Incorrect PDF Password or unsupported EasyEquities statement. Please use the Excel template")
+              }
+              else if(file.name.toLowerCase().endsWith(".xlsx"))
+              {
+                alert("Invalid or unsupported Excel file. Please can you make sure to use the Excel template")
+              }
+              else
+              {
+                alert("Please make sure you either upload a pdf or Excel")
+              }
+            }
+            finally
+            {
+              setLoadingPage(false)
             }
 
             }
@@ -863,12 +870,17 @@ const Portfolio = () => {
         </div> 
 
         <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center">
+          <h2 className="text-xl font-bold text-white text-center mb-6">
             AI Portfolio Assistant
           </h2>
+          <div>
+            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">Summrise my portfolio ?</button>
+            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">What is my largest holding ?</button>
+            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">How much have i earned in dividends ?</button>
+            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4"> How active is my trading ?</button>
         </div> 
-
       </div>
+    </div>
 
       }
 
