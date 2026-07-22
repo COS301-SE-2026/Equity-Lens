@@ -1,7 +1,7 @@
 import { useState } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
-import { ArrowLeftRight, Wallet, CreditCard, Percent, TrendingUp, Landmark, Receipt, Briefcase, TriangleAlert, Bot, Download,LoaderCircle } from "lucide-react"
+import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, TriangleAlert, Bot ,LoaderCircle } from "lucide-react"
 import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
 import api from "../../services/api"
 import * as XLSX from "xlsx"
@@ -10,6 +10,9 @@ ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
 
 const DownloadEXCEL = () =>{ window.open("/template/EquityLens_Portfolio_Excel_Template.xlsx") }
 
+/**
+ * @param {File} file
+ */
 const ReadingExcelFile = async(file) => {
 
   if(!file)
@@ -62,7 +65,11 @@ const ReadingExcelFile = async(file) => {
 
 }
 
-const ReadingPDFFile = async(file, password) =>
+/**
+ * @param {File} file
+ * @param {string } password
+ */
+const ReadingPDFFile = async(file,password) =>
 {
   if(!file)
   {
@@ -79,17 +86,26 @@ const ReadingPDFFile = async(file, password) =>
 
   for(let x = 1; x <= convertPdf.numPages;x++)
   {
+   
       const toGetThePage = await convertPdf.getPage(x);
       const ToGetTheContent = await toGetThePage.getTextContent();
 
       for(const items of ToGetTheContent.items)
       {
+        if("str" in items && "transform" in items)
+        {
 
-        allRows.push({text: items.str, x:items.transform[4], y:items.transform[5], page: x})
+          allRows.push({text: items.str , x:items.transform[4], y:items.transform[5], page: x})
+      
+        }
       }
+    
 
   }
 
+  /**
+   * @type {{ y: number, page: number, text: string, items: {text: string, x: number, y: number, page: number}[]}[]}
+   */
   const allRowsTogther = []
 
   for(const items of allRows)
@@ -102,7 +118,7 @@ const ReadingPDFFile = async(file, password) =>
     }
     else
     {
-      allRowsTogther.push({page: items.page, y: items.y, items: [items]})
+      allRowsTogther.push({page: items.page,text: "", y: items.y, items: [items]})
     }
 
     
@@ -113,6 +129,12 @@ const ReadingPDFFile = async(file, password) =>
      row.text = row.items.map((item) => item.text).join(" ")
   }
 
+  /**
+   * 
+   * @param {string} starting 
+   * @param {string} ending 
+   * @returns 
+   */
   const getTheTable = (starting,ending) => {
     const table = []
     let addingRows = false
@@ -150,6 +172,11 @@ const ReadingPDFFile = async(file, password) =>
   const accountRow = allRowsTogther[accountIndex]
   const PortfolioRow = allRowsTogther[accountIndex + 1].text.trim()
 
+  if(!statementIndex)
+  {
+    throw("error for the statementIndex")
+  }
+
   const gettingthData = statementIndex.text.split("to")[1].trim()
   let date = new Date(gettingthData).toISOString().split("T")[0]
 
@@ -173,7 +200,7 @@ const ReadingPDFFile = async(file, password) =>
       return null
     }
 
-   const firstNumberIndex = splitParts.findIndex((item) => { return item.includes(".") && !isNaN(item);})
+   const firstNumberIndex = splitParts.findIndex((item) => { return item.includes(".") && !Number.isNaN(item);})
 
    if(firstNumberIndex === -1)
    {
@@ -187,10 +214,16 @@ const ReadingPDFFile = async(file, password) =>
 
    const getNumber = () => {
     let numbers = values.pop();
+    const check = values.at(-1);
 
-    if(values.length > 0 && !values.at(-1).includes("."))
+    if(values.length > 0 && check && !check.includes("."))
     {
-      numbers = values.pop() + numbers;
+      const checkSecond = values.pop();
+
+      if(checkSecond)
+      {
+        numbers = checkSecond + numbers;
+      }
     }
 
     return numbers;
@@ -229,9 +262,16 @@ const ReadingPDFFile = async(file, password) =>
     const getNumber = () => {
     let numbers = values.pop();
 
-    if(values.length > 0 && !values.at(-1).includes("."))
+    const check = values.at(-1);
+
+    if(values.length > 0 && check && !check.includes("."))
     {
-      numbers = values.pop() + numbers;
+      const CheckSecond = values.pop();
+
+      if(CheckSecond)
+      {
+        numbers = CheckSecond + numbers;
+      }
     }
 
     return numbers;
@@ -262,10 +302,10 @@ const ReadingPDFFile = async(file, password) =>
       return null
     }
 
-    const last = splitParts.at(-1);
-    const secondLast = splitParts.at(-2);
+    const last = splitParts.at(-1) || "";
+    const secondLast = splitParts.at(-2) || "";
 
-    const chackThousands = !isNaN(secondLast)
+    const chackThousands = !Number.isNaN(secondLast)
 
     return {
       transaction_date: splitParts[0].replaceAll("/","-"),
@@ -276,8 +316,9 @@ const ReadingPDFFile = async(file, password) =>
 
   }).filter((item) => item != null)
 
+  
    const DividendsandWithholdingTax = TaxTable.map((row) => {
-    const splitParts = row.text.split(" ").filter((item => item !== ""))
+    const splitParts = row.text.split(" ").filter((item) => item !== "")
 
     if(!splitParts[0].includes("/"))
     {
@@ -315,17 +356,43 @@ const ReadingPDFFile = async(file, password) =>
 }
 
 const Portfolio = () => {
-  const [summary, setSummary] = useState("");
+  const [summary, setSummary] = useState({PortfolioValue: 0, TotalHoldings: 0, TotalPurchasesAndSales: 0, TotalContributionsAndWithdrawals: 0, TotalDividendsAndWithholdingTax: 0, TotalTransactionExpenses: 0});
+  /**
+   * @type {[any[], function]}
+   */
   const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState([]);
+  /**
+   * @type {[any[], function]}
+   */
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState([]);
+  /**
+   * @type {[any[], function]}
+   */
   const [GetTheLowest, setGetTheLowest] = useState([]);
+  /**
+   * @type {[any[], function]}
+   */
   const [GetTradingActivity, setGetTradingActivity] = useState([]);
+  /**
+   * @type {[any[], function]}
+   */
   const [GetCashFlow, setGetCashFlow] = useState([]);
+  /**
+   * @type {[any[], function]}
+   */
   const [GetDividendIncome, setGetDividendIncome] = useState([]);
+  /**
+   * @type {[boolean,function]}
+   */
   const [LoadingPage, setLoadingPage] = useState(false);
 
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
+  /**
+   * 
+   * @param {any} data
+   * @param {File} file
+   */
   const SavePortfolio = async (data, file) => {
 
     try {
@@ -424,7 +491,7 @@ const Portfolio = () => {
       for (const eachItems of data.DividendsandWithholdingTax) {
         const gross_dividend = parseFloat(eachItems.gross_dividend);
         const tax_rate = parseFloat(eachItems.tax_rate);
-        const net_dividend = parseFloat((gross_dividend - (gross_dividend *  (tax_rate/100))));
+        const net_dividend = ((gross_dividend - (gross_dividend *  (tax_rate/100))));
 
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_dividends_and_withholding_tax/",
@@ -579,7 +646,7 @@ const Portfolio = () => {
               accept=".pdf,.xlsx"
               className="hidden"
               onChange={async (event) => { 
-                const file = event.target.files[0];
+                const file = event.target.files?.[0];
 
                 if(!file)
                 {
@@ -593,7 +660,7 @@ const Portfolio = () => {
 
                 if(file.name.toLowerCase().endsWith(".pdf"))
                 {
-                  const Passwords = prompt("Enter the PDF password");
+                  const Passwords = prompt("Enter the PDF password") || "";
                   data = await ReadingPDFFile(file, Passwords);
                    
                 }
@@ -904,11 +971,11 @@ const Portfolio = () => {
           <div className="flex justify-between border border-gray-700 rounded-xl p-4">
 
             <div>
-              <p className="text-xl text-white font-bold">{GetTheLowest.name}</p>
+              <p className="text-xl text-white font-bold">{GetTheLowest[0]?.name}</p>
             </div>
 
             <div>
-              <p className="text-xl text-red-400 font-bold">{GetTheLowest.value}</p>
+              <p className="text-xl text-red-400 font-bold">{GetTheLowest[0]?.value}</p>
             </div>
 
           </div>
