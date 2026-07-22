@@ -26,7 +26,6 @@ const ReadingExcelFile = async(file) => {
           account_number: item.Account_Number,
           portfolio_name: item.Portfolio_Name,
           statement_date: item.Statement_Date,
-          portfolio_value: item.Portfolio_Value,
   }));
   const Holdings = XLSX.utils.sheet_to_json(read.Sheets["Holdings"]).map((item) =>({
          instrument_name: item.Instrument_Name,
@@ -94,7 +93,6 @@ const ReadingPDFFile = async(file, password) =>
 
         allRows.push({text: items.str, x:items.transform[4], y:items.transform[5], page: x})
       }
-
 
   }
 
@@ -180,20 +178,92 @@ const ReadingPDFFile = async(file, password) =>
   }]
 
 
+  let instrumentName = "";
+
+  const Holdings = HoldingsTable.map((row) => {
+    const splitParts = row.text.split(" ").filter((item => item !== ""))
+
+    if(row.text.includes("Opening Balance") || row.text.includes("Instrument") || row.text.includes("Total") || row.text.includes("Page"))
+    {
+      return null
+    }
+
+   const firstNumberIndex = splitParts.findIndex((item) => { return item.includes(".") && !isNaN(item);})
+
+   if(firstNumberIndex === -1)
+   {
+    instrumentName = instrumentName + " " + row.text;
+    return null;
+   }
+
+   instrumentName = instrumentName + " " + splitParts.slice(0,firstNumberIndex).join(" ");
+
+   const values = splitParts.slice(firstNumberIndex);
+
+   const getNumber = () => {
+    let numbers = values.pop();
+
+    if(values.length > 0 && !values.at(-1).includes("."))
+    {
+      numbers = values.pop() + numbers;
+    }
+
+    return numbers;
+   }
+
+   getNumber()
+   getNumber()
+   getNumber()
+   const CostPrice = getNumber()
+   const cost = getNumber()
+   const quantity = getNumber()
+
+    const holdings =  {
+      instrument_name: instrumentName.trim(),
+      quantity: quantity,
+      total_cost: (cost),
+    }
+
+    instrumentName = "";
+
+    return holdings;
+
+  }).filter((item) => item != null)
+
+
    const PurchaseandSales = PurchaseAndSalesTable.map((row) => {
+
     const splitParts = row.text.split(" ").filter((item => item !== ""))
 
     if(!splitParts[0].includes("/"))
     {
       return null
     }
+    const values = splitParts.slice(2)
+
+    const getNumber = () => {
+    let numbers = values.pop();
+
+    if(values.length > 0 && !values.at(-1).includes("."))
+    {
+      numbers = values.pop() + numbers;
+    }
+
+    return numbers;
+   }
+
+   getNumber()
+   getNumber()
+   const quantity = getNumber()
+   const price = getNumber()
+   const instrumentname = values.join(" ")
 
     return {
       transaction_date: splitParts[0].replaceAll("/","-"),
       transaction_name: splitParts[1],
-      instrument_name: splitParts.slice(2,-2).join(" "),
-      price: splitParts[splitParts.length - 2],
-      quantity: splitParts[splitParts.length - 1],
+      instrument_name: instrumentname,
+      price: price,
+      quantity: quantity,
     }
 
   }).filter((item) => item != null)
@@ -269,7 +339,6 @@ const Portfolio = () => {
   const [GetTradingActivity, setGetTradingActivity] = useState([]);
   const [GetCashFlow, setGetCashFlow] = useState([]);
   const [GetDividendIncome, setGetDividendIncome] = useState([]);
-  const [GetExpenses, setGetExpenses] = useState([]);
 
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
@@ -300,11 +369,16 @@ const Portfolio = () => {
 
       const savedPortfolio = uploadPortfolioRequest.data;
 
-      const PortfolioValue = parseFloat(data.Portfolio[0].portfolio_value.replace("R","").replace(",",""));
+      let PortfolioValue = 0;
+
+      for(const holding of data.Holdings)
+      {
+          PortfolioValue = PortfolioValue + parseFloat(holding.total_cost)
+      }
 
       for (const eachItems of data.Holdings) {
-        const totalCost = parseFloat(eachItems.total_cost.replace("R","").replace(",",""));
-        const quantity = parseFloat(eachItems.quantity);
+        const totalCost = parseFloat(eachItems.total_cost);
+        const quantity = parseFloat(eachItems.quantity || 0);
 
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_holdings",
@@ -460,19 +534,14 @@ const Portfolio = () => {
       )
 
       const ExpensesImport = Expenses.data;
-      setGetExpenses(ExpensesImport);
 
 
 
     }
     catch (theErrors) 
     {
-      console.log("Saving issues ", theErrors.response?.data)
-      console.log("Saving issues ", theErrors.message)
-       console.log("Response ", theErrors.response)
+       alert("Incorrect PDF Password or unsupported EasyQuities statement. Please use the Excel template")
     }
-
-
 
 
   }
@@ -481,7 +550,7 @@ const Portfolio = () => {
 
     <div className="p-2">
 
-      <div className="p-6 border border-gray-700 rounded-3xl">
+      <div className="max-w-4xl mx-auto p-6 border border-gray-700 rounded-3xl bg-gray-900">
 
         <div className="flex flex-col items-center">
 
@@ -489,23 +558,24 @@ const Portfolio = () => {
               Upload Portfolio
             </h2>
 
-            <p className="text-gray-400 mt-2 mb-3 text-center">
+            <p className="text-gray-400 mt-2 mb-3 text-center max-w-2xl">
               Download your portfolio statement from EasyEquities as a PDF, or use the Excel 
               template to enter your portfolio manually if the PDF import is unavailable
             </p>
 
-            <div className="flex gap-4 mt-6">
+            <div className="flex flex-col items-center gap-4 mt-8">
 
             <button onClick={DownloadEXCEL} className="bg-green-600 text-white px-5 py-2 rounded-lg">
               Download Excel Template
             </button>
 
-             </div>
+            <label className="bg-blue-600 text-white px-6 py-3 rounded-lg">
+              choose PDF or Excel File
 
             <input
               type="file"
               accept=".pdf,.xlsx"
-              className="mt-6 text-gray-600"
+              className="hidden"
               onChange={async (event) => { 
                 const file = event.target.files[0];
 
@@ -526,7 +596,7 @@ const Portfolio = () => {
                   }
                   catch
                   {
-                    alert("Incorrect PDF Password")
+                    alert("Incorrect PDF Password or unsupported EasyEquities statement. Please use the Excel template.")
                   }
                    
                 }
@@ -546,16 +616,21 @@ const Portfolio = () => {
             
             catch(theError)
             {
-              alert("Not working...")
+              alert("Incorrect PDF Password or unsupported EasyEquities statement. Please use the Excel template")
             }
 
             }
           }
             />
+          </label>
+
+          </div>
 
         </div>
 
       </div>
+
+      
 
       { summary && <div className="grid grid-cols-6 gap-8 mt-8">
 
@@ -568,7 +643,7 @@ const Portfolio = () => {
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.PortfolioValue || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">R {summary?.PortfolioValue || 0}</h2>
 
 
         </div>
@@ -593,7 +668,7 @@ const Portfolio = () => {
             <p className="text-gray-400">Purchase & Sales</p>
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalPurchasesAndSales || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">R {summary?.TotalPurchasesAndSales || 0}</h2>
 
         </div>
 
@@ -607,7 +682,7 @@ const Portfolio = () => {
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalContributionsAndWithdrawals || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">R {summary?.TotalContributionsAndWithdrawals || 0}</h2>
 
         </div>
 
@@ -620,7 +695,7 @@ const Portfolio = () => {
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalDividendsAndWithholdingTax || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">R {summary?.TotalDividendsAndWithholdingTax || 0}</h2>
 
         </div>
 
@@ -633,7 +708,7 @@ const Portfolio = () => {
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalTransactionExpenses || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">R {summary?.TotalTransactionExpenses || 0}</h2>
 
         </div>
 
@@ -752,23 +827,6 @@ const Portfolio = () => {
 
           </div>
 
-
-         <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center">
-            Expense breakdown
-          </h2>
-          <div className="flex justify-center w-full h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={GetExpenses} layout="vertical">
-            <XAxis type = "number"/>
-            <YAxis type="category" dataKey="name"/>
-            <Tooltip/>
-            <Bar dataKey="value" fill="orange"/>
-          </BarChart>
-          </ResponsiveContainer>
-          </div>
-        </div>
-
         <div className="border border-gray-700 rounded-2xl p-4">
           <h2 className="text-xl font-bold text-white text-center">
             Top Holdings
@@ -802,7 +860,13 @@ const Portfolio = () => {
 
 
 
-        </div>  
+        </div> 
+
+        <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center">
+            AI Portfolio Assistant
+          </h2>
+        </div> 
 
       </div>
 
