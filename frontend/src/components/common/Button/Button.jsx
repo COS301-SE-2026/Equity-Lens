@@ -17,10 +17,10 @@ const Button = ({
   `;
 
   const variants = {
-    primary: 'bg-[var(--accent-primary)] text-[#0A0A0A] hover:bg-[var(--accent-hover)]',
+    primary: 'bg-[var(--accent-primary)] text-[var(--text-on-accent)] hover:bg-[var(--accent-hover)]',
     secondary: 'bg-transparent text-[var(--accent-primary)] border border-[var(--accent-primary)] hover:bg-[var(--accent-subtle)]',
     ghost: 'bg-transparent text-[var(--text-primary)] border border-[var(--border-default)] hover:bg-[var(--bg-secondary)]',
-    danger: 'bg-[var(--color-danger)] text-white hover:bg-red-600',
+    danger: 'bg-[var(--color-danger)] text-white hover:bg-red-700',
   };
 
   const sizes = {

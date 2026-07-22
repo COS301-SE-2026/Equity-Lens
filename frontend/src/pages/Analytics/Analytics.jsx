@@ -59,9 +59,9 @@ const Tooltip = ({ text, children, align = 'left' }) => {
           style={{
             left: align === 'left' ? 0 : 'auto',
             right: align === 'right' ? 0 : 'auto',
-            background: '#2a2a2a',
-            color: '#e5e5e5',
-            border: '1px solid #444',
+            background: 'var(--surface-elevated)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-mid)',
             boxShadow: '0 12px 32px rgba(0,0,0,0.6), 0 2px 8px rgba(0,0,0,0.4)',
             whiteSpace: 'normal',
             fontSize: '11px',
@@ -79,7 +79,7 @@ const Tooltip = ({ text, children, align = 'left' }) => {
 };
 
 const InfoIcon = () => (
-  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ color: 'var(--text-ghost,#444)', flexShrink: 0 }}>
+  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ color: 'var(--text-ghost)', flexShrink: 0 }}>
     <circle cx="6" cy="6" r="5.5" stroke="currentColor"/>
     <path d="M6 5.5v3M6 4h.01" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
   </svg>
@@ -88,28 +88,28 @@ const InfoIcon = () => (
 const IndicatorCell = ({ indicatorKey, result, loading }) => {
   const meta = INDICATORS[indicatorKey];
   const color = (sig) =>
-    sig === 'positive' ? 'var(--signal-positive,#22c55e)'
-    : sig === 'negative' ? 'var(--signal-negative,#ef4444)'
-    : 'var(--text-primary,#e5e5e5)';
+    sig === 'positive' ? 'var(--signal-positive)'
+    : sig === 'negative' ? 'var(--signal-negative)'
+    : 'var(--text-primary)';
 
   if (loading) return (
     <div className="flex flex-col gap-1.5 animate-pulse pt-1">
-      <div className="h-4 w-12 rounded" style={{ background: 'var(--border-subtle,#2a2a2a)' }}/>
-      <div className="h-2.5 w-16 rounded" style={{ background: 'var(--border-subtle,#2a2a2a)' }}/>
+      <div className="h-4 w-12 rounded" style={{ background: 'var(--border-subtle)' }}/>
+      <div className="h-2.5 w-16 rounded" style={{ background: 'var(--border-subtle)' }}/>
     </div>
   );
 
   if (!result || result.status === 'error') return (
     <div className="flex flex-col gap-0.5 pt-1">
-      <span className="text-[11px] font-mono" style={{ color: 'var(--signal-negative,#ef4444)' }}>Error</span>
-      <span className="text-[9px]" style={{ color: 'var(--text-ghost,#444)' }}>Calc failed</span>
+      <span className="text-[11px] font-mono" style={{ color: 'var(--signal-negative)' }}>Error</span>
+      <span className="text-[9px]" style={{ color: 'var(--text-ghost)' }}>Calc failed</span>
     </div>
   );
 
   if (result.status === 'insufficient_data') return (
     <div className="flex flex-col gap-0.5 pt-1">
-      <span className="text-[11px] font-mono" style={{ color: 'var(--text-ghost,#444)' }}>N/A</span>
-      <span className="text-[9px] leading-tight" style={{ color: 'var(--text-ghost,#444)' }}>
+      <span className="text-[11px] font-mono" style={{ color: 'var(--text-ghost)' }}>N/A</span>
+      <span className="text-[9px] leading-tight" style={{ color: 'var(--text-ghost)' }}>
         {result.reason?.split('.')[0]}
       </span>
     </div>
@@ -122,7 +122,7 @@ const IndicatorCell = ({ indicatorKey, result, loading }) => {
         style={{ color: color(sig), letterSpacing: '-0.02em' }}>
         {result.value}{result.unit}
       </span>
-      <span className="text-[9px] leading-tight" style={{ color: 'var(--text-ghost,#444)' }}>
+      <span className="text-[9px] leading-tight" style={{ color: 'var(--text-ghost)' }}>
         {meta.describe(result.value)}
       </span>
     </div>
@@ -133,22 +133,22 @@ const StockRow = ({ stock, loading, results, index }) => (
   <div className="terminal-card"
     style={{ animation: 'fadeSlideIn 0.3s ease both', animationDelay: `${index * 70}ms` }}>
     <div className="flex items-center gap-3 px-4 py-3"
-      style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)' }}>
+      style={{ borderBottom: '1px solid var(--border-subtle)' }}>
       <div className="w-8 h-8 rounded flex items-center justify-center text-[10px] font-mono font-bold flex-shrink-0"
-        style={{ background: 'var(--border-subtle,#2a2a2a)', color: 'var(--text-primary,#e5e5e5)' }}>
+        style={{ background: 'var(--border-subtle)', color: 'var(--text-primary)' }}>
         {stock.ticker.slice(0, 2)}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium" style={{ color: 'var(--text-primary,#e5e5e5)' }}>{stock.ticker}</p>
-        <p className="text-[10px]" style={{ color: 'var(--text-ghost,#444)' }}>{stock.name}</p>
+        <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{stock.ticker}</p>
+        <p className="text-[10px]" style={{ color: 'var(--text-ghost)' }}>{stock.name}</p>
       </div>
     </div>
     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7" style={{ overflow: 'visible' }}>
       {Object.keys(INDICATORS).map((key, i) => (
-        <div key={key} className="px-3 pb-3" style={{ position: 'relative', overflow: 'visible', borderRight: i < 6 ? '1px solid var(--border-subtle,#2a2a2a)' : 'none' }}>
+        <div key={key} className="px-3 pb-3" style={{ position: 'relative', overflow: 'visible', borderRight: i < 6 ? '1px solid var(--border-subtle)' : 'none' }}>
           <Tooltip text={INDICATORS[key].tooltip} align={i >= 4 ? 'right' : 'left'}>
             <span className="text-[9px] uppercase tracking-widest font-medium flex items-center gap-1 pt-3"
-              style={{ color: 'var(--text-ghost,#444)' }}>
+              style={{ color: 'var(--text-ghost)' }}>
               {INDICATORS[key].label} <InfoIcon />
             </span>
           </Tooltip>
@@ -174,26 +174,26 @@ export default function Analytics() {
       `}</style>
       <div className="p-4 flex flex-col gap-4 max-w-[1600px] mx-auto w-full" aria-label="Analytics page">
         <div className="flex items-center justify-between pb-3"
-          style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)' }}>
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <div>
             <h1 className="text-xs font-medium uppercase tracking-widest"
-              style={{ color: 'var(--text-primary,#e5e5e5)' }}>Analytics</h1>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost,#444)' }}>
+              style={{ color: 'var(--text-primary)' }}>Analytics</h1>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost)' }}>
               Financial indicators calculated per holding - hover any label for an explanation
             </p>
           </div>
           <span className="text-[10px] px-2 py-1 rounded font-mono"
-            style={{ color: 'var(--text-ghost,#444)', border: '1px solid var(--border-subtle,#2a2a2a)' }}>
+            style={{ color: 'var(--text-ghost)', border: '1px solid var(--border-subtle)' }}>
             {stocks.length} holdings
           </span>
         </div>
 
         {error && (
           <div className="terminal-card text-center p-8" role="alert">
-            <p className="text-xs font-medium" style={{ color: 'var(--signal-negative,#ef4444)' }}>
+            <p className="text-xs font-medium" style={{ color: 'var(--signal-negative)' }}>
               Failed to load indicators
             </p>
-            <p className="text-[10px] mt-1" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>{error}</p>
+            <p className="text-[10px] mt-1" style={{ color: 'var(--text-secondary)' }}>{error}</p>
           </div>
         )}
 
@@ -201,13 +201,13 @@ export default function Analytics() {
           {loading
             ? Array.from({ length: 2 }).map((_, i) => (
                 <div key={i} className="terminal-card overflow-hidden animate-pulse">
-                  <div className="h-14 px-4 py-3" style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)' }}>
-                    <div className="h-3 w-16 rounded mb-2" style={{ background: 'var(--border-subtle,#2a2a2a)' }}/>
-                    <div className="h-2.5 w-24 rounded" style={{ background: 'var(--border-subtle,#2a2a2a)' }}/>
+                  <div className="h-14 px-4 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                    <div className="h-3 w-16 rounded mb-2" style={{ background: 'var(--border-subtle)' }}/>
+                    <div className="h-2.5 w-24 rounded" style={{ background: 'var(--border-subtle)' }}/>
                   </div>
                   <div className="grid grid-cols-7 p-3 gap-3">
                     {Array.from({ length: 7 }).map((_, j) => (
-                      <div key={j} className="h-10 rounded" style={{ background: 'var(--border-subtle,#2a2a2a)' }}/>
+                      <div key={j} className="h-10 rounded" style={{ background: 'var(--border-subtle)' }}/>
                     ))}
                   </div>
                 </div>

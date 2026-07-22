@@ -41,8 +41,8 @@ const FormInput = ({
           placeholder:text-[var(--text-secondary)]
           disabled:opacity-40 disabled:cursor-not-allowed
           ${error
-            ? 'border-[var(--color-danger)] focus:shadow-[0_0_0_3px_rgba(239,68,68,0.15)]'
-            : 'border-[var(--border-default)] focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_rgba(255,184,0,0.15)]'
+            ? 'border-[var(--color-danger)] focus:shadow-[0_0_0_3px_rgba(220,38,38,0.15)]'
+            : 'border-[var(--border-default)] focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_rgba(193,98,44,0.15)]'
           }
           focus:outline-none
         `}

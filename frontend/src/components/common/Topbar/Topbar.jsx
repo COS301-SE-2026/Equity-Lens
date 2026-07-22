@@ -122,7 +122,7 @@ const Topbar = ({ onMenuClick }) => {
           border: '1px solid var(--border-accent)',
           fontSize: '9px',
           fontWeight: 700,
-          color: 'var(--signal-gold)',
+          color: 'var(--accent-primary)',
           fontFamily: 'var(--font-mono)',
           flexShrink: 0,
         }}>

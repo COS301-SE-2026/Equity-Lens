@@ -171,7 +171,7 @@ const AIChat = () => {
                 </button>
                 <button type = "button"
                         onClick = {() => deleteConversation(convo.id)}
-                        className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-red-500 group-hover:visible">
+                        className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-[var(--signal-negative)] group-hover:visible">
                   <i class="fa fa-trash"></i>
                 </button>
         </>
