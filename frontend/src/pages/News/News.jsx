@@ -220,7 +220,7 @@ const NewsInvestment = () => {
                  * @param {any} items
                  */
                 (items) => (         
-            <tr key={items} className="border-b border-gray-400 mb-7">
+            <tr key={items.id} className="border-b border-gray-400 mb-7">
             <td>
               <p className="text-white-400">{items.ticker}</p>
               <p className="text-gray-400">{items.company_name}</p>
