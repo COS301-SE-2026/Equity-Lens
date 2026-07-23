@@ -105,3 +105,26 @@ async def update_conversation(
     db.commit()
 
     return {"id": str(chat_conversation.id), "title": chat_conversation.title}
+
+
+@router.delete("/conversations/{conversation_id}/")
+async def delete_conversation(
+    conversation_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)
+    ):
+    chat_conversation = db.query(ChatConversation).filter(
+        ChatConversation.id == conversation_id,
+        ChatConversation.user_id == current_user.id
+    ).first()
+
+    if not chat_conversation:
+        raise HTTPException(status_code = 404, detail = "Conversation not found")
+    
+    db.query(ChatMessages).filter(
+        ChatMessages.conversation_id == conversation_id
+    ).delete()
+    db.delete(chat_conversation)
+    db.commit()
+
+    return {"detail": "Conversation deleted"}

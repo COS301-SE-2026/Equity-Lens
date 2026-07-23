@@ -7,7 +7,7 @@ from app.schemas.auth import UserResponse
 from app.services.indicator_service import build_live_indicator_row, serialize_indicator_row
 from app.utils.market_cache import get_market_returns
 
-router = APIRouter(prefix="/api/indicators", tags=["indicators"])
+# router = APIRouter(prefix="/api/indicators", tags=["indicators"])
 
 @router.get("")
 def get_indicators(current_user: UserResponse = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -18,8 +18,8 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
     # and returns a "insufficient_data" status for those specific tickers.
     portfolio_ids = [p.id for p in portfolios]
 
-    if not portfolio_ids:
-        return []
+#     if not portfolio_ids:
+#         return []
 
     tickers = []
     ticker_to_name = {}
@@ -34,8 +34,8 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
             tickers.append(ticker)
             ticker_to_name[ticker] = h.instrument_name or ticker
 
-    if not tickers:
-        return []
+#     if not tickers:
+#         return []
     
     results = []
     for ticker in tickers:
@@ -43,4 +43,4 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
         row = build_live_indicator_row(ticker,name,market_returns)
         results.append(serialize_indicator_row(row))
 
-    return results
+#     return results
