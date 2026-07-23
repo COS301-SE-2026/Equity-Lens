@@ -5,7 +5,7 @@ const useMarketData = () => {
     const [currentPrice, setCurrentPrice] = useState(null);
     const [stockDetails, setStockDetails] = useState(null);
     const [history, setHistory] = useState(null);
-    const [searchResults, setSearchResults] = useState(false);
+    const [searchResults, setSearchResults] = useState([]);
     const [loading, setLoading] = useState(null);
     const [error, setError] = useState(null);
 
@@ -24,7 +24,7 @@ const useMarketData = () => {
         }
     }, []);
 
-    const fetchStockDetails = useCallback((symbol) => runRequest(() => getStockDetails(symbol), stockDetails), [runRequest]);
+    const fetchStockDetails = useCallback((symbol) => runRequest(() => getStockDetails(symbol), setStockDetails), [runRequest]);
     const fetchHistoricalData = useCallback((symbol, period = '1mo') => runRequest(() => getHistorialData(symbol, period), setHistory), [runRequest]);
     const fetchSearchResults = useCallback((query) => runRequest(() => searchStocks(query), setSearchResults), [runRequest]);
 
@@ -40,3 +40,4 @@ const useMarketData = () => {
         stockDetails, history, searchResults, loading, error, fetchStockDetails, fetchSearchResults, fetchHistoricalData, reset,
     };
 }
+export {useMarketData};
