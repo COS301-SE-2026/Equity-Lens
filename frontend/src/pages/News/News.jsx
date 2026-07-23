@@ -4,20 +4,34 @@ import api from "../../services/api"
 
 
 const NewsInvestment = () => {
+  /**
+   * @type {[any[], function]}
+   */
   const [articles, setArticles] = useState([]);
+  /**
+   * @type {[any, function]}
+   */
   const [wishlist, setWishlist] = useState([]);
+  /**
+   * @type {[any, function]}
+   */
   const [wishlistLowest, setWishlistLowest] = useState([]);
+  /**
+   * @type {[any, function]}
+   */
   const [wishlistHighest, setWishlistHighest] = useState([]);
+  /**
+   * @type {[any, function]}
+   */
   const [ticker, setTicker] = useState("");
 
-
+  /**
+   * 
+   * @param {string} ticker
+   */
 
   const AddStock = async (ticker) => {
-  if(ticker === "")
-  {
-    return;
-  }
-
+    
   await api.post("/watchlist/",{
     ticker: ticker,
   }
@@ -45,6 +59,10 @@ const NewsInvestment = () => {
 
   }
 
+  /**
+   * 
+   * @param {string} WatchlistID
+   */
   const ToDeleteWishlist = async (WatchlistID) => {
      await api.delete(`/watchlist/${WatchlistID}`);
     ToGetWishlist();
@@ -83,7 +101,7 @@ const NewsInvestment = () => {
           <div className="flex justify-between">
             <div>
               <h2 className="text-xl font-bold text-white mb-2">Top Loser</h2>
-              {wishlist.length == 0 ? (<p className="text-gray-400">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker} {wishlistLowest.sector})</p> <p className="text-red-500">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
+              {wishlist.length == 0 ? (<p className="text-gray-400">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker}({wishlistLowest.sector})</p> <p className="text-red-500">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
             </div>
            <div>
           <TrendingDown className="w-10 h-10 text-red-500"></TrendingDown>
@@ -96,7 +114,7 @@ const NewsInvestment = () => {
         <div className="p-6 border border-gray-700 rounded-2xl">
           <div className="flex justify-between">
             <div>
-              <h2 className="text-xl font-bold text-white mb-2">My Watchlist</h2>
+              <h2 className="text-xl font-bold text-white mb-2">My Watchlists</h2>
               <p>{wishlist.length}</p>
               <p>Stocks</p>
             </div>
@@ -126,6 +144,7 @@ const NewsInvestment = () => {
             <button onClick={() => ToGetTheNews("Crime")} className="px-3 py-1 rounded-full bg-gray-800 text-gray-300 ml-4"> Crime </button>
           </div>
 
+          
           {articles.map((article) => (
           <div key={article.article_id} className="flex items-center  border-b border-gray-700 p-5 gap-4">
 
@@ -144,11 +163,17 @@ const NewsInvestment = () => {
               <p className="text-sm text-gray-500 mt-1">{article.source_name}</p>
             </div>
 
-            {article.category.map((article) => (
+            {article.category.map(
+              /**
+               * @param {any} article
+               */
+               (article) => (
               <p key={article} className="px-3 py-1 text-sm rounded-full bg-green-900 text-green-400">
                 {article}
               </p>
             ))}
+
+            
 
 
           </div>
@@ -190,7 +215,11 @@ const NewsInvestment = () => {
             <tbody>
               {wishlist.length === 0 ? (<tr><td className="text-gray-400">No watchlist stocks added </td></tr>) : 
               (
-              wishlist.map((items) => (         
+              wishlist.map(
+                /**
+                 * @param {any} items
+                 */
+                (items) => (         
             <tr key={items} className="border-b border-gray-400 mb-7">
             <td>
               <p className="text-white-400">{items.ticker}</p>

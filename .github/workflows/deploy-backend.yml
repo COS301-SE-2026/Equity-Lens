@@ -1,16 +1,105 @@
-name: CI 
+# name: CI 
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
 
-jobs:
+# permissions:
+#   contents: read
+#   id-token: write
+
+# jobs:
+#     backend:
+#         runs-on: ubuntu-latest
+#         timeout-minutes: 3
+#         environment:
+#            name: ${{ github.ref_name == 'main' && 'production' || 'staging'}}
+#         steps:
+#             - name: To checkout the repository
+#               uses: actions/checkout@v4
+
+#             - name: To install all python package for backend
+#               uses: actions/setup-python@v5
+#               with:
+#                 python-version: "3.11"
+
+#             - name: Install all the backend dependencies
+#               working-directory: backend
+#               run: |
+#                 python -m pip install --upgrade pip
+#                 pip install -r requirements.txt
+
+#             - name: Run all the backend tests
+#               working-directory: backend
+#               run: pytest
+
+#             - name: To Build backend Docker image
+#               run: docker build -t equity-lens-backend ./backend
+
+#             - name: To make the Configure AWS credentials
+#               if: github.event_name == 'push'
+#               uses: aws-actions/configure-aws-credentials@v6
+#               with:
+#                 role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+#                 aws-region: ${{ vars.AWS_REGION }}
+
+#             - name: To Log in to Amazon ECR
+#               if: github.event_name == 'push'
+#               id: login-to-store-credentials
+#               uses: aws-actions/amazon-ecr-login@v2
+
+#             - name: To make a tag and to also push all the backend and all the image from the docker to Amazon ECR
+#               if: github.event_name == 'push'
+#               env:
+#                 TO_STORE_THE_ECR_REGISTRY: ${{ steps.login-to-store-credentials.outputs.registry }}
+#                 TO_STORE_THE_ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+#                 IMAGE_TAG: ${{ github.sha }}
+#               run: |
+#                 docker tag equity-lens-backend $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:$IMAGE_TAG
+#                 docker tag equity-lens-backend $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:latest
+
+#                 docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:$IMAGE_TAG
+#                 docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:latest
+
+#             - name: to automatically deploy the backed to the EC2
+#               if: github.event_name == 'push'
+#               uses: appleboy/ssh-action@v1
+#               with:
+#                 host: ${{ secrets.EC2_PUBLIC_ADDRESS}}
+#                 username: ${{ secrets.EC2_USERNAME }}
+#                 key: ${{ secrets.THE_PRIVATE_SSH_KEY }}
+#                 script: |
+#                   aws ecr get-login-password --region ${{ vars.AWS_REGION }} |
+#                   docker login --username AWS  --password-stdin ${{ steps.login-to-store-credentials.outputs.registry }}
+
+#                   docker pull ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:latest
+
+#                   docker stop equity-lens-backend 
+#                   docker rm equity-lens-backend 
+
+  name: ci
+
+  on:
+    push:
+      branches: [main]
+    pull_request:
+      branches: [main]
+  
+  jobs:
     backend:
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
-        steps:
-            - name: just to run
-              run: echo "Will be empty for now"
+      runs-on: ubunta-latest
+      timeout-minutes: 1
+      steps:
+        - name: just to run
+          run: echo "empty for now"
+
+
+
+
+            
+
+
+
     

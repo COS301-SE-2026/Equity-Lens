@@ -6,8 +6,12 @@ from app.repositories.import_pdf import save_contributions_and_withdrawals
 from app.repositories.import_pdf import save_dividends_and_withholding_tax
 from app.repositories.import_pdf import save_transaction_expenses
 import yfinance as yf
+from yfinance.exceptions import YFRateLimitError
+from requests.exceptions import ReadTimeout
 
 def search_ticket_number(instrumentName: str):
+  try:
+
     instrumentName = instrumentName.replace("South Africa","SA")
     instrumentName = instrumentName.replace("Exchange Traded Fund","")
     instrumentName = instrumentName.replace("Index","")
@@ -25,6 +29,11 @@ def search_ticket_number(instrumentName: str):
         return { "Found": True, "ticker": gettingName[0]["symbol"], "sector": "none" }
     else:
         return { "Found": True, "ticker": gettingName[0]["symbol"], "sector": sector }
+
+  except YFRateLimitError:
+         return { "Found": True, "ticker": "MTN_LIMIT_ISSUE", "sector": "Testing_LIMIT_ISSUE" }
+  except ReadTimeout:
+         return { "Found": True, "ticker": "MTN_LIMIT_ISSUE", "sector": "Testing_LIMIT_ISSUE" }
 
 
 def import_Pdf_data(database,user_id,data):

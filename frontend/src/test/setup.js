@@ -29,7 +29,7 @@ vi.mock('aws-amplify/auth', () => { const defaultSignInState = { isSignedIn: tru
     signUp: vi.fn().mockResolvedValue({ userId: 'mock-user-id', isSignUpComplete: false }),
     confirmSignUp: vi.fn().mockResolvedValue({ isSignUpComplete: true }),
     signIn: vi.fn().mockResolvedValue(defaultSignInState),
-    signOut: vi.fn().mockResolvedValue(),
+    signOut: vi.fn().mockResolvedValue(undefined),
     getCurrentUser: vi.fn().mockResolvedValue({ userId: 'mock-user-id', username: 'mock@test.com' }),
     fetchAuthSession: vi.fn().mockResolvedValue({
       tokens: {
@@ -39,9 +39,17 @@ vi.mock('aws-amplify/auth', () => { const defaultSignInState = { isSignedIn: tru
     }),
     confirmSignIn: vi.fn().mockResolvedValue(defaultSignInState),
     setUpTOTP: vi.fn().mockResolvedValue({ sharedSecret: 'JBSWY3DPEHPK3PXP' }),
-    verifyTOTPSetup: vi.fn().mockResolvedValue(),
-    updateMFAPreference: vi.fn().mockResolvedValue(),
+    verifyTOTPSetup: vi.fn().mockResolvedValue(undefined),
+    updateMFAPreference: vi.fn().mockResolvedValue(undefined),
   };
 });
 
 vi.mock('aws-amplify', () => ({Amplify: { configure: vi.fn() },}));
+
+Element.prototype.scrollTo = vi.fn();
+class MockIntersectionObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+global.IntersectionObserver = MockIntersectionObserver;
