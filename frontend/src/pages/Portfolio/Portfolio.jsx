@@ -232,9 +232,14 @@ const ReadingPDFFile = async(file,password) =>
    getNumber()
    getNumber()
    getNumber()
-   const CostPrice = getNumber()
+   getNumber()
    const cost = getNumber()
    const quantity = getNumber()
+
+   if(cost == undefined || quantity == undefined)
+   {
+      return null;
+   }
 
     const holdings =  {
       instrument_name: instrumentName.trim(),
@@ -305,7 +310,7 @@ const ReadingPDFFile = async(file,password) =>
     const last = splitParts.at(-1) || "";
     const secondLast = splitParts.at(-2) || "";
 
-    const chackThousands = !Number.isNaN(secondLast)
+    const chackThousands = !Number.isNaN(Number(secondLast))
 
     return {
       transaction_date: splitParts[0].replaceAll("/","-"),
@@ -356,7 +361,10 @@ const ReadingPDFFile = async(file,password) =>
 }
 
 const Portfolio = () => {
-  const [summary, setSummary] = useState({PortfolioValue: 0, TotalHoldings: 0, TotalPurchasesAndSales: 0, TotalContributionsAndWithdrawals: 0, TotalDividendsAndWithholdingTax: 0, TotalTransactionExpenses: 0});
+  /**
+   * @type {[any, function]}
+   */
+  const [summary, setSummary] = useState(null);
   /**
    * @type {[any[], function]}
    */
