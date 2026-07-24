@@ -85,11 +85,11 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
         
         sharpe = None
         if len(returns) > 10:
-            sharpe = calculate_sharpe_ratio(returns.value)
+            sharpe = calculate_sharpe_ratio(returns.values)
         
         sortino = None
         if len(returns) > 10:
-            sortino = calculate_sortino_ratio(returns.value)
+            sortino = calculate_sortino_ratio(returns.values)
 
         capm_value = None
         if beta is not None:
