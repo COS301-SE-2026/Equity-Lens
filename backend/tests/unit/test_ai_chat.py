@@ -59,3 +59,22 @@ def test_renaming_conversations(client, db_session, test_user, auth_headers):
 
     db_session.refresh(conversation)
     assert conversation.title == "Renamed"
+
+
+def test_load_all_converastions(client, db_session, test_user, auth_headers):
+    db_session.add(ChatConversation(user_id = test_user.id, title = "1"))
+    db_session.add(ChatConversation(user_id = test_user.id, title = "2"))
+    db_session.commit()
+
+    output = client.get("/api/ai_chat/conversations/", headers = auth_headers)
+    assert output.status_code == 200
+
+    all_convs = output.json()
+    assert len(all_convs) == 2
+
+    name = []
+    for c in all_convs:
+        name.append(c["title"])
+
+    assert "1" in name
+    assert "2" in name
