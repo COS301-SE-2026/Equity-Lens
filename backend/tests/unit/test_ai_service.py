@@ -34,8 +34,7 @@ def test_portfolio_with_data(db_session, test_user):
 @patch("app.services.ai_service.get_bedrock_client")
 def test_new_chat(mock_bedrock_client, db_session, test_user):
     mocked_client = MagicMock()
-    mocked_client.converse.return_value = {
-        "output": {"message": {"content": [{"text": "A response."}] }}}
+    mocked_client.converse.return_value = {"output": {"message": {"content": [{"text": "A response."}] }}}
     
     mock_bedrock_client.return_value = mocked_client
     reply, conversation_id = chat("A question?" ,db_session, test_user.id)

@@ -43,3 +43,19 @@ def test_get_messages(client, db_session, test_user, auth_headers):
     assert msgs[0]["content"] == "Question."
     assert msgs[1]["role"] == "assistant"
     assert msgs[1]["content"] == "Answer."
+
+
+def test_renaming_conversations(client, db_session, test_user, auth_headers):
+    conversation = ChatConversation(user_id = test_user.id, title = "Current")
+
+    db_session.add(conversation)
+    db_session.commit()
+
+    conv_id = conversation.id
+
+    output = client.put(f"/api/ai_chat/conversations/{conv_id}/", json = {"title": "Renamed"}, headers = auth_headers)
+    assert output.status_code == 200 
+    assert output.json() == {"id": str(conv_id), "title": "Renamed"}
+
+    db_session.refresh(conversation)
+    assert conversation.title == "Renamed"
