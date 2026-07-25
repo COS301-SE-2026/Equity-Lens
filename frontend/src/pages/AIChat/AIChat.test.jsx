@@ -104,7 +104,7 @@ describe("AIChat", () => {
       fireEvent.click(sendButton);
 
       expect(document.querySelectorAll(".animate-bounce").length).toBe(3);
-    })
+    });
 
   describe("suggested prompts", () => {
     it("Renders all three suggested prompts to the user when they first click the page or start a new chat", () => {
