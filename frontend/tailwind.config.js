@@ -10,6 +10,15 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Courier New', 'monospace'],
       },
+      colors: {
+        'bg-primary': 'var(--bg-primary)',
+        'text-primary': 'var(--text-primary)',
+        'text-secondary': 'var(--text-secondary)',
+        'text-ghost': 'var(--text-ghost)',
+        'surface-raised': 'var(--surface-raised)',
+        'glass-bg': 'var(--glass-bg)',
+        'glass-border': 'var(--glass-border)',
+      },
       gridTemplateColumns: {
         'bento': 'repeat(12, 1fr)',
       },

@@ -1,16 +1,99 @@
-name: CI 
+# name: CI 
 
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
 
-jobs:
-    backend:
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
+# permissions:
+#   contents: read
+#   id-token: write
+
+# jobs:
+#     frontend:
+#         runs-on: ubuntu-latest
+#         timeout-minutes: 3
+#         environment:
+#           name: ${{ github.ref_name == 'main' && 'production' || 'staging'}}
+#         steps:
+#             - name: To checkout the repository
+#               uses: actions/checkout@v4
+
+#             - name: To set up the Node.js
+#               uses: actions/setup-node@v4
+#               with:
+#                 node-version: "20"
+#                 cache: npm
+#                 cache-dependency-path: frontend/package-lock.json
+
+#             - name: Install all the frontend dependencies
+#               working-directory: frontend
+#               run: npm ci
+
+#             - name: Run all the frontend tests
+#               working-directory: frontend
+#               run: npm test
+
+#             - name: To Build frontend Docker image
+#               run: docker build -t equity-lens-frontend ./frontend
+
+#             - name: To make the Configure AWS credentials
+#               if: github.event_name == 'push'
+#               uses: aws-actions/configure-aws-credentials@v6
+#               with:
+#                 role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+#                 aws-region: ${{ vars.AWS_REGION }}
+
+#             - name: To log in to Amazon ECR
+#               if: github.event_name == 'push'
+#               id: login-to-store-credentials
+#               uses: aws-actions/amazon-ecr-login@v2
+
+#             - name: To make a Tag and to also push all the frontend and all the image from the docker to Amazon ECR
+#               if: github.event_name == 'push'
+#               env:
+#                 TO_STORE_THE_ECR_REGISTRY: ${{ steps.login-to-store-credentials.outputs.registry }}
+#                 TO_STORE_THE_ECR_REPOSITORY: ${{vars.FRONTEND_ECR_REPOSITORY }}
+#                 IMAGE_TAG: ${{github.sha}}
+#               run: |
+#                 docker tag equity-lens-frontend $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:$IMAGE_TAG
+#                 docker tag equity-lens-frontend $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:latest
+
+#                 docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:$IMAGE_TAG
+#                 docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:latest
+
+#             - name: to automatically deploy the frontend to the ec2
+#               if: github.event_name == 'push'
+#               uses: appleboy/ssh-action@v1
+#               with:
+#                 host: ${{ secrets.EC2_PUBLIC_ADDRESS }}
+#                 username: ${{ secrets.EC2_USERNAME }}
+#                 key: ${{ secrets.THE_PRIVATE_SSH_KEY }}
+#                 script: |
+#                   aws ecr get-login-password --region ${{ vars.AWS_REGION }}
+#                   docker login --username AWS --password-stdin ${{ steps.login-to-store-credentials.outputs.registry }}
+
+#                   docker stop equity-lens-frontend
+#                   docker rm equity-lens-frontend
+
+    name: ci
+
+    on:
+      push:
+        branches: [main]
+      pull_request:
+        branches: [main]
+
+    jobs:
+      frontend:
+        runs-on: ubunta-latest
+        timeout-minutes: 1
         steps:
-            - name: just to run
-              run: echo "Will be empty for now"
+          - name: just to run
+            run: echo "will be empty"
+            
+
+              
+              
     

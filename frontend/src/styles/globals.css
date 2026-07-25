@@ -82,6 +82,10 @@
   --font-primary: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
   --font-ui: var(--font-primary);
+
+  --glass-bg: rgba(0, 0, 0, 0.02);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-hover: rgba(0, 0, 0, 0.04);
 }
 
 [data-theme="light"] {
@@ -123,6 +127,15 @@
   --bg-hover: var(--surface-hover);
   --border-default: var(--border-subtle);
   --text-muted: var(--text-dim);
+}
+
+[data-theme='dark'] {
+  --surface-elevated: #151519;
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --accent-subtle: rgba(255, 179, 0, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-hover: rgba(255, 255, 255, 0.08);
 }
 
 body {
