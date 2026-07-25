@@ -19,9 +19,7 @@ def test_portfolio_with_data(db_session, test_user):
 
     document = Document(
         user_id = test_user.id,
-        file_name = "portfolio.pdf",
-        encrypted_file_path = "example/path/portfolio.pdf",
-        encrypted_document_text = "Amount: R3 000"
+        file_name = "portfolio.pdf"
     )
     db_session.add(document)
 
@@ -31,21 +29,6 @@ def test_portfolio_with_data(db_session, test_user):
     assert "The invesment portfolio of mine from Easy Equities" in output
     assert "U23-536" in output
     assert "portfolio.pdf" in output
-    assert "Amount: R3 000" in output
-
-def test_portfolio_data_extraction_fail(db_session, test_user):
-    document = Document(
-        user_id = test_user.id,
-        file_name = "portfolio.pdf",
-        encrypted_file_path = "example/path/portfolio.pdf",
-        encrypted_document_text = None
-    )
-    db_session.add(document)
-
-    db_session.commit()
-
-    output = get_user_portfolio_context(db_session, test_user.id)
-    assert "portfolio.pdf" not in output
 
 
 @patch("app.services.ai_service.get_bedrock_client")

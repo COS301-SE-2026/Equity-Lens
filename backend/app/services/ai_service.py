@@ -25,8 +25,7 @@ def get_user_portfolio_context(db: Session, user_id):
     if documents:
         knowledge += "\nUploaded Documents\n"
         for document in documents:
-            if document.encrypted_document_text:
-                knowledge += f"- {document.file_name}- \n{document.encrypted_document_text}\n\n\n"                                                       
+                knowledge += f"- {document.file_name}\n"                                                       
             
     if not knowledge:
         return  "User has not uploaded portfolio data."
