@@ -78,3 +78,17 @@ def test_load_all_converastions(client, db_session, test_user, auth_headers):
 
     assert "1" in name
     assert "2" in name
+
+
+@patch("app.services.ai_service.get_bedrock_client")
+def test_send_message(mock_bedrock_client, client, db_session, test_user, auth_headers):
+    mocked_client = MagicMock()
+    mocked_client.converse.return_value = {"output": {"message": {"content": [{"text": "A response."}]}}}
+    mock_bedrock_client.return_value = mocked_client
+
+    output = client.post("/api/ai_chat/", json = {"message": "Question"}, headers = auth_headers)
+    assert output.status_code == 200
+
+    msg = output.json()
+    assert msg["reply"] == "A response."
+    assert msg["conversation_id"] is not None
