@@ -1,15 +1,20 @@
-FROM node:20-alpine
+FROM node:20-alpine AS build
 
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm install \
-    && chown -R node:node /app
 
-COPY --chown=node:node . .
+RUN npm install
 
-USER node
+COPY . .
 
-EXPOSE 5173
+#in here to copy it to the dist files that why i added it(dist folder)
+RUN npm run build
 
-CMD ["npm", "run", "dev", "--", "--host"]
+#start the engine for the nginx
+FROM nginx:alpine
+
+#in here to copy all the dist files, that file to the engine
+COPY --from=build /app/dist /usr/share/nginx/html 
+
+EXPOSE 80
