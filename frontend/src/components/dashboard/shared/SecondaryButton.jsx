@@ -8,6 +8,19 @@ const SIZE_CLASS = {
 };
 const STYLE = { border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' };
 
+
+/**
+ * @param {{
+ *   to?: string,
+ *   onClick?: () => void,
+ *   icon?: React.ReactNode,
+ *   trailing?: React.ReactNode,
+ *   expanded?: boolean,
+ *   size?: 'md'|'sm',
+ *   className?: string,
+ *   children: React.ReactNode,
+ * }} props
+ */
 const SecondaryButton = ({ to, onClick, icon, trailing, expanded, size = 'md', className = '', children }) => {
   const classes = `${BASE_CLASS} ${SIZE_CLASS[size]} ${className}`.trim();
 
