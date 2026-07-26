@@ -77,11 +77,9 @@ jobs:
                   docker stop equity-lens-backend || true
                   docker rm equity-lens-backend || true
 
-                  docker run -d --name equity-lens-backend -p 8000:8000 ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.BACKEND_ECR_REPOSITORY }}:latest
+                  docker run --rm --env-file /home/ubuntu/backend.env ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.BACKEND_ECR_REPOSITORY }}:latest alembic upgrade head
 
-
-
-
+                  docker run -d --name equity-lens-backend -p 8000:8000 --env-file /home/ubuntu/backend.env ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.BACKEND_ECR_REPOSITORY }}:latest
 
 
 
