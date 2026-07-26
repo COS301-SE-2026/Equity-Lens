@@ -10,7 +10,6 @@ from app.routers import news
 from app.routers import import_pdf
 from app.routers import pdf_summary
 from app.routers import watchlist
-from app.routers import ai_chat
 from app.routers import indicators
 from app.routers import ai_chat
 

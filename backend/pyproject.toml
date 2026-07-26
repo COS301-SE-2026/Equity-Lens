@@ -1,0 +1,41 @@
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "C4", "UP", "SIM", "RUF", "S", "N", "PT", "T20", "ARG"]
+ignore = [
+    "S101",
+    "RUF012",
+    "SIM108",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101", "S105", "S106"]
+"alembic/versions/*" = ["E501", "F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "."
+explicit_package_bases = true
+plugins = ["sqlalchemy.ext.mypy.plugin"]
+warn_return_any = true
+warn_unused_ignores = true
+warn_unreachable = true
+check_untyped_defs = true
+no_implicit_optional = true
+exclude = ["alembic/versions/", "venv/", ".venv/"]
+
+# disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["boto3.*", "botocore.*", "yfinance.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["app.routers.*", "app.services.*"]
+disallow_untyped_defs = true

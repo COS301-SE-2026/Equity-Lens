@@ -6,11 +6,82 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
-    backend:
+    frontend:
         runs-on: ubuntu-latest
-        timeout-minutes: 5
+        timeout-minutes: 10
+        environment:
+          name: ${{ github.ref_name == 'main' && 'production' || 'staging'}}
         steps:
-            - name: just to run
-              run: echo "Will be empty for now"
+            - name: To checkout the repository
+              uses: actions/checkout@v4
+
+            - name: To set up the Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: "20"
+                cache: npm
+                cache-dependency-path: frontend/package-lock.json
+
+            - name: Install all the frontend dependencies
+              working-directory: frontend
+              run: npm ci
+
+            - name: Run all the frontend tests
+              working-directory: frontend
+              run: npm test -- --run
+
+            - name: To Build frontend Docker image
+              run: docker build -t equity-lens-frontend ./frontend
+
+            - name: To make the Configure AWS credentials
+              if: github.event_name == 'push'
+              uses: aws-actions/configure-aws-credentials@v6
+              with:
+                role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+                aws-region: ${{ vars.AWS_REGION }}
+
+            - name: To log in to Amazon ECR
+              if: github.event_name == 'push'
+              id: login-to-store-credentials
+              uses: aws-actions/amazon-ecr-login@v2
+
+            - name: To make a Tag and to also push all the frontend and all the image from the docker to Amazon ECR
+              if: github.event_name == 'push'
+              env:
+                TO_STORE_THE_ECR_REGISTRY: ${{ steps.login-to-store-credentials.outputs.registry }}
+                TO_STORE_THE_ECR_REPOSITORY: ${{vars.FRONTEND_ECR_REPOSITORY }}
+                IMAGE_TAG: ${{github.sha}}
+              run: |
+                docker tag equity-lens-frontend $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:$IMAGE_TAG
+                docker tag equity-lens-frontend $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:latest
+
+                docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:$IMAGE_TAG
+                docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:latest
+
+            - name: to automatically deploy the frontend to the ec2
+              if: github.event_name == 'push'
+              uses: appleboy/ssh-action@v1
+              with:
+                host: ${{ secrets.EC2_PUBLIC_ADDRESS }}
+                username: ${{ secrets.EC2_USERNAME }}
+                key: ${{ secrets.THE_PRIVATE_SSH_KEY }}
+                script: |
+                  aws ecr get-login-password --region ${{ vars.AWS_REGION }} |
+                  docker login --username AWS --password-stdin ${{ steps.login-to-store-credentials.outputs.registry }}
+
+                  docker pull ${{ steps.login-to-store-credentials.outputs.registry }}/${{  vars.FRONTEND_ECR_REPOSITORY }}:latest
+
+                  docker stop equity-lens-frontend || true
+                  docker rm equity-lens-frontend || true
+
+                  docker run -d --name equity-lens-frontend -p 80:80 ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.FRONTEND_ECR_REPOSITORY }}:latest
+
+
+              
+              
     
