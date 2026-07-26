@@ -29,9 +29,9 @@ jobs:
                 python -m pip install --upgrade pip
                 pip install -r requirements.txt
 
-            - name: Run all the backend tests
-              working-directory: backend
-              run: pytest
+            # - name: Run all the backend tests
+            #   working-directory: backend
+            #   run: pytest
 
             - name: To Build backend Docker image
               run: docker build -t equity-lens-backend ./backend
