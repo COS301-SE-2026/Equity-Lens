@@ -69,15 +69,17 @@ jobs:
                 username: ${{ secrets.EC2_USERNAME }}
                 key: ${{ secrets.THE_PRIVATE_SSH_KEY }}
                 script: |
+                  set -e
+                  
                   aws ecr get-login-password --region ${{ vars.AWS_REGION }} |
                   docker login --username AWS  --password-stdin ${{ steps.login-to-store-credentials.outputs.registry }}
 
                   docker pull ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.BACKEND_ECR_REPOSITORY }}:latest
 
+                  docker run --rm --env-file /home/ubuntu/backend.env ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.BACKEND_ECR_REPOSITORY }}:latest alembic upgrade head
+
                   docker stop equity-lens-backend || true
                   docker rm equity-lens-backend || true
-
-                  docker run --rm --env-file /home/ubuntu/backend.env ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.BACKEND_ECR_REPOSITORY }}:latest alembic upgrade head
 
                   docker run -d --name equity-lens-backend -p 8000:8000 --env-file /home/ubuntu/backend.env ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.BACKEND_ECR_REPOSITORY }}:latest
 
