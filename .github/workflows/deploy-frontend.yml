@@ -14,8 +14,8 @@ jobs:
     frontend:
         runs-on: ubuntu-latest
         timeout-minutes: 10
-        environment:
-          name: ${{ github.event_name == 'pull_request' && github.ref_name == 'main' && 'production' || 'staging'}}
+        # environment:
+        #   name: ${{ github.event_name == 'pull_request' && github.ref_name == 'main' && 'production' || 'staging'}}
         steps:
             - name: To checkout the repository
               uses: actions/checkout@v4
