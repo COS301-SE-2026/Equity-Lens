@@ -17,9 +17,9 @@ class MarketData(Base):
     volume = Column(Integer, nullable=False)
     fetched_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
-    __table_args__ = {
+    __table_args__ = (
         Index("ix_market_data_ticker_date", "ticker", date),
-    }
+    )
 
     def __repr__(self):
         return f"MarketData(id={self.id!r}, ticker={self.ticker!r}, date={self.date!r}, close={self.close!r})"
