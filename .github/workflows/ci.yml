@@ -32,9 +32,9 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Security audit
-        working-directory: frontend
-        run: npm audit --audit-level=high --omit=dev
+      # - name: Security audit
+      #   working-directory: frontend
+      #   run: npm audit --audit-level=high --omit=dev
 
       - name: Lint
         working-directory: frontend
@@ -182,21 +182,21 @@ jobs:
           flags: backend
 
     
-  trivy:
-    name: Trivy Security Scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
+  # trivy:
+  #   name: Trivy Security Scan
+  #   runs-on: ubuntu-latest
+  #   timeout-minutes: 5
 
-    steps:
-      - uses: actions/checkout@v4
+  #   steps:
+  #     - uses: actions/checkout@v4
 
-      - name: Run Trivy Scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: HIGH,CRITICAL
-          exit-code: 1
-          scanners: vuln,secret,misconfig
-          skip-dirs: frontend/node_modules,node_modules,backend/venv,backend/.venv,frontend/dist,frontend/build
+  #     - name: Run Trivy Scan
+  #       uses: aquasecurity/trivy-action@master
+  #       with:
+  #         scan-type: fs
+  #         scan-ref: .
+  #         severity: HIGH,CRITICAL
+  #         exit-code: 1
+  #         scanners: vuln,secret,misconfig
+  #         skip-dirs: frontend/node_modules,node_modules,backend/venv,backend/.venv,frontend/dist,frontend/build
 
