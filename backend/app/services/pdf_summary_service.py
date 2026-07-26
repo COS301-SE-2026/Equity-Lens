@@ -7,6 +7,26 @@ from app.models.portfolio import InstrumentPurchasesAndSales
 from app.models.portfolio import ContributionsAndWithdrawals
 from app.models.portfolio import DividendsAndWithholdingTax
 from app.models.portfolio import TransactionExpenses
+from app.service.instrument import REGION_UNKNOWN, resolve_known_instrument
+
+def _iso_or_none(portfolio, field: str):
+    if portfolio:
+        value = getattr(portfolio, field, None)
+    else:
+        value = None
+    
+    if value:
+        return value.isoformat()
+    else:
+        None
+
+def ticker_or_name(instrument_name: str | None):
+    Known = resolve_known_instrument(instrument_name or "")
+
+    if Known:
+        return Known.ticker
+    else:
+        return instrument_name
 
 
 def get_summary_import_PDF(database,portfolioID):
