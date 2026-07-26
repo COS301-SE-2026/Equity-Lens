@@ -4,6 +4,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     database_url: str = "postgresql://postgres:postgres@localhost:5432/equitylens"
     allow_live_market_fallback: bool = False
+    alpha_vantage_api_key: str | None = None
+    market_data_refresh_ttl_hours: int = 24
     secret_key: str = "to-be-changed-later"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30

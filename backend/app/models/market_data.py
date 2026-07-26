@@ -18,7 +18,7 @@ class MarketData(Base):
     fetched_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     __table_args__ = {
-        Index("ix_market_data_ticker_date","ticker",date),
+        Index("ix_market_data_ticker_date", "ticker", date),
     }
 
     def __repr__(self):

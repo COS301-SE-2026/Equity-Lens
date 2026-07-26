@@ -1,16 +1,30 @@
-import boto3
 import pandas as pd
 import yfinance as yf
-from io import BytesIO
-import pickle
-from datetime import datetime, timezone
-from botocore.config import Config
+from datetime import datetime, timezone, timedelta
+import requests
 from app.config import settings
 from app.database import SessionLocal
 from app.models.market_data import MarketData
 
-S3_BUCKET = "market-data-bucket-equitylens"
-s3 = boto3.client("s3", config = Config(connect_timeout = 2, read_timeout = 2, retries = {"max_attempts": 1}))
+_REFRESH_LOCKS = set()
+
+def should_refresh_market_data(last_fetched_at, ttl_hours: int | None = None) -> bool:
+    if ttl_hours is not None:
+        ttl_hours = ttl_hours
+    else:
+        ttl_hours = settings.market_data_refresh_ttl_hours
+
+    if last_fetched_at is None:
+        return True
+    
+    if isinstance(last_fetched_at, str):
+        last_fetched_at = datetime.fromisoformat(last_fetched_at.replace("Z","+00:00"))
+
+    if last_fetched_at.tzinfo is None:
+        last_fetched_at = last_fetched_at.replace(tzinfo=timezone.utc)
+
+    now = datetime.now(timezone.utc)
+    return (now - last_fetched_at) > timedelta(hours=ttl_hours)
 
 def _get_latest_market_row(ticker:str, data_type:str):
     db = SessionLocal()
