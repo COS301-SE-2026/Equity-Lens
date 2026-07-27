@@ -10,23 +10,22 @@ import re
 from yfinance.exceptions import YFRateLimitError
 import time
 from app.repositories.import_pdf import get_latest_portfolio, save_portfolios
-from app.services.instrument import resolve_known_instrument
-from request.exceptions import ReadTimeout
+# from app.services.instrument import resolve_known_instrument
+from requests.exceptions import ReadTimeout
 
-SECONDS_In_HOUR = 3600
-Cache: dic[str,tuple[float,dic]] = {}
+# SECONDS_In_HOUR = 3600
+# Cache: dic[str,tuple[float,dic]] = {}
+
+# def search_ticket_number(instrumentName: str):
+#     The_Keys = instrumentName.strip().lower()
+
+#     TheKnownsOne = resolve_known_instrument(instrumentName)
+
+#     if TheKnownsOne:
+#         return {"Found": True, "ticker":TheKnownsOne.ticker, "sector":TheKnownsOne.sector}
+
 
 def search_ticket_number(instrumentName: str):
-    The_Keys = instrumentName.strip().lower()
-
-    TheKnownsOne = resolve_known_instrument(instrumentName)
-
-    if TheKnownsOne:
-        return {"Found": True, "ticker":TheKnownsOne.ticker, "sector":TheKnownsOne.sector}
-
-
-def search_ticket_number(instrumentName: str):
-  try:
     
     cached = Cache.get(The_Keys)
 
@@ -47,10 +46,7 @@ def search_ticket_number(instrumentName: str):
 
 def _search_ticker_number_uncached(instrument_name: str):
     try:
-        quotes = []
-        query = []
-
-        query = _search_queries(instrument_name)
+        query = search_queries(instrument_name)
         quotes = yf.Search(query).quotes
             
         if not quotes:
@@ -63,7 +59,7 @@ def _search_ticker_number_uncached(instrument_name: str):
         gettingTicker = quotes[0]["symbol"]
         gettingTheInfo = yf.Ticker(gettingTicker).info
 
-        if(quotes[0].get("quoteType") or "").upper() == "EFT":
+        if(quotes[0].get("quoteType") or "").upper() == "ETF":
             category = gettingTheInfo.get("category") 
             return {
                 "Found": True,

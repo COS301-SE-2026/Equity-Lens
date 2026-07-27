@@ -7,7 +7,7 @@ from app.models.portfolio import InstrumentPurchasesAndSales
 from app.models.portfolio import ContributionsAndWithdrawals
 from app.models.portfolio import DividendsAndWithholdingTax
 from app.models.portfolio import TransactionExpenses
-from app.service.instrument import resolve_known_instrument
+# from app.service.instrument import resolve_known_instrument
 
 def _iso_or_none(portfolio, field: str):
     if portfolio:
@@ -20,13 +20,13 @@ def _iso_or_none(portfolio, field: str):
     else:
         return None
 
-def ticker_or_name(instrument_name: str | None):
-    Known = resolve_known_instrument(instrument_name or "")
+# def ticker_or_name(instrument_name: str | None):
+#     Known = resolve_known_instrument(instrument_name or "")
 
-    if Known:
-        return Known.ticker
-    else:
-        return instrument_name
+#     if Known:
+#         return Known.ticker
+#     else:
+#         return instrument_name
 
 
 def get_summary_import_PDF(database,portfolioID):
