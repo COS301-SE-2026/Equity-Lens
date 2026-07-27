@@ -276,6 +276,3 @@ def get_cached_fundamentals(ticker: str) -> dict:
         except Exception as exc:
             print(f"Yahoo fundamentals fetch failed for {candidate}: {exc}")
     return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
-                
-
-    

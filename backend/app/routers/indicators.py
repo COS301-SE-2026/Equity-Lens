@@ -1,3 +1,5 @@
+import random
+import time
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -38,9 +40,12 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
         return []
     
     results = []
-    for ticker in tickers:
+    for index, ticker in tickers:
         name = ticker_to_name.get(ticker, ticker)
         row = build_live_indicator_row(ticker,name,market_returns)
         results.append(serialize_indicator_row(row))
+        #Small delay between tickers to try and avoid yfinance rate limiting
+        if index < len(tickers) - 1:
+            time.sleep(random.uniform(1.0, 2.0))
 
     return results

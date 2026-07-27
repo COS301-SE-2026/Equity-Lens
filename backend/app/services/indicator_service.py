@@ -18,21 +18,7 @@ INDICATOR_UNITS = {
     "sortino": "",
 }
 
-def _extract_statement_value(statement, *candidate_keys):
-    if statement is None or statement.empty:
-        return None
-    for key in candidate_keys:
-        if key in statement.index:
-            value = statement.loc[key]
-            if hasattr(value,"iloc"):
-                value = value.iloc[0]
-            try:
-                return float(value)
-            except (TypeError, ValueError):
-                return None
-    return None
-
-def serialize_indicator_value(value, unit, fallback_reason="Data could not be retrieved. Check if ticker is delisted or if Lambda refresh job ran today."):
+def serialize_indicator_value(value, unit, fallback_reason="Data could not be retrieved."):
     if isinstance(value, dict) and "status" in value:
         return value
     
@@ -76,24 +62,44 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
         returns, market_returns = returns.align(market_returns, join="inner")
 
         beta = None
-        if len(returns) > 10 and len(market_returns) > 10:
-            beta = calculate_beta(returns.values, market_returns.values)
+        try:
+            if len(returns) > 10 and len(market_returns) > 10:
+                beta = calculate_beta(returns.values, market_returns.values)
+        except Exception as exc:
+            print(f"Beta calculation failed for {symbol}: {exc}")
+            beta = None
         
         rsi_value = None
-        if len(close) > 14:
-            rsi_value = float(calculate_rsi(close).iloc[-1])
+        try:
+            if len(close) > 14:
+                rsi_value = float(calculate_rsi(close).iloc[-1])
+        except Exception as exc:
+            print(f"RSI calculation failed for {symbol}: {exc}")
+            rsi_value = None
         
         sharpe = None
-        if len(returns) > 10:
-            sharpe = calculate_sharpe_ratio(returns.values)
+        try:
+            if len(returns) > 10:
+                sharpe = calculate_sharpe_ratio(returns.values)
+        except Exception as exc:
+            print(f"Sharpe calculation failed for {symbol} : {exc}")
+            sharpe = None
         
         sortino = None
-        if len(returns) > 10:
-            sortino = calculate_sortino_ratio(returns.values)
+        try:
+            if len(returns) > 10:
+                sortino = calculate_sortino_ratio(returns.values)
+        except Exception as exc:
+            print(f"Sortino calculation failed for {symbol}: {exc}")
+            sortino = None
 
         capm_value = None
-        if beta is not None:
-            capm_value = calculate_capm(0.02, beta, 0.08)
+        try:
+            if beta is not None:
+                capm_value = calculate_capm(0.02, beta, 0.08)
+        except Exception as exc:
+            print(f"CAPM calculation failed for {symbol}: {exc}")
+            capm_value = None
 
         fundamentals = get_cached_fundamentals(symbol)
 
@@ -103,29 +109,51 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
 
         eps = info.get("trailingEps") or info.get("epsTrailingTwelveMonths")
         pe = None
-        if eps is not None and float(eps) != 0:
-            pe = calculate_pe_ratio(float(close.iloc[-1]),float(eps))
+        try:
+            if eps is not None and float(eps) > 0:
+                pe = calculate_pe_ratio(float(close.iloc[-1]),float(eps))
+            else:
+                trailing_pe = info.get("trailingPE") or info.get("forwardPE")
+                if trailing_pe is not None:
+                    pe = float(trailing_pe)
+        except Exception as exc:
+            print(f"PE Calculation failed for {symbol}: {exc}")
+            pe = None
 
         altman = None
         try:
-            if balance_sheet is not None and not balance_sheet.empty and not financials.empty:
-                current_assets = _extract_statement_value(balance_sheet,"currentAssets","totalCurrentAssets",)
-                current_liabilities = _extract_statement_value(balance_sheet,"currentLiabilities","totalCurrentLiabilities",)
+            if balance_sheet is not None and not balance_sheet.empty and financials is not None and not financials.empty:
                 working_capital = None
-                if current_assets is not None and current_liabilities is not None:
-                    working_capital = current_assets - current_liabilities
+                if "Working Capital" in balance_sheet.index:
+                    working_capital = float(balance_sheet.loc["Working Capital"].iloc[0])
 
-                retained_earnings = _extract_statement_value(balance_sheet,"retainedEarnings","retainedEarningsAccumulatedDeficit","retainedEarningsTotalEquity",)
-                total_assets = _extract_statement_value(balance_sheet,"totalAssets","totalAssetsReported",)
-                total_liabilities = _extract_statement_value(balance_sheet,"totalLiab","totalLiabilitiesNetMinorityInterest","totalLiabilities",)
-                ebit = _extract_statement_value(financials,"ebit","operatingIncome",)
-                sales = _extract_statement_value(financials,"totalRevenue","revenue",)
+                total_assets = None
+                if "Total Assets" in balance_sheet.index:
+                    total_assets = float(balance_sheet.loc["Total Assets"].iloc[0])
+
+                retained_earnings = None
+                if "Retained Earnings" in balance_sheet.index:
+                    retained_earnings = float(balance_sheet.loc["Retained Earnings"].iloc[0])
+
+                ebit = None
+                if "EBIT" in financials.index:
+                    ebit = float(financials.loc["EBIT"].iloc[0])
+
                 market_cap = info.get("marketCap")
+
+                total_liabilities = None
+                if "Total Liabilities Net Minority Interest" in balance_sheet.index:
+                    total_liabilities = float(balance_sheet.loc["Total Liabilities Net Minority Interest"].iloc[0])
+
+                sales = None
+                if "Total Revenue" in financials.index:
+                    sales = float(financials.loc["Total Revenue"].iloc[0])
 
                 if all(value is not None
                        for value in [working_capital,total_assets,retained_earnings,ebit,market_cap,total_liabilities,sales]):
                     altman = calculate_altman_zscore(working_capital,total_assets,retained_earnings,ebit,market_cap,total_liabilities,sales,)
-        except Exception:
+        except Exception as exc:
+            print(f"Altman calculation failed for {symbol}: {exc}")
             altman = None
         return{
             "ticker": symbol,
@@ -151,4 +179,3 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
             "sharpe": None,
             "sortino": None,
 }
-
