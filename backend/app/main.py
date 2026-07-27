@@ -4,6 +4,7 @@ from app.routers import auth, portfolio
 from app.database import create_tables
 from app.config import settings
 from app.models import user
+from app.models import market_data
 from fastapi.responses import PlainTextResponse
 import traceback
 from app.routers import news

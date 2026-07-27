@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, Integer, DateTime, Numeric, String, Index, Date
+from sqlalchemy import Column, String, Integer, DateTime, Numeric, Index, Date, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 
@@ -24,3 +24,13 @@ class MarketData(Base):
     def __repr__(self):
         return f"MarketData(id={self.id!r}, ticker={self.ticker!r}, date={self.date!r}, close={self.close!r})"
 
+class FundamentalsCache(Base):
+    __tablename__ = "fundamentals_cache"
+    ticker = Column(String, primary_key=True)
+    info = Column(JSON, nullable=True)
+    balance_sheet = Column(JSON, nullable=True)
+    financials = Column(JSON, nullable=True)
+    fetched_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def __repr__(self):
+        return f"FundamentalsCache(ticker={self.ticker!r}, fetched_at={self.fetched_at!r})"
