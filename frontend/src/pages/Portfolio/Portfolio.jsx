@@ -201,7 +201,7 @@ const Portfolio = () => {
   const [GetDividendIncome, setGetDividendIncome] = useState([]);
   const [GetExpenses, setGetExpenses] = useState([]);
 
-  const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
+  const colours = ['var(--accent-primary)', '#8A94A8', '#5A6480', '#3D4455'];
 
   const SavePortfolio = async (data, file) => {
 
@@ -407,24 +407,24 @@ const Portfolio = () => {
 
     <div className="p-2">
 
-      <div className="p-6 border border-gray-700 rounded-3xl">
+      <div className="p-6 border border-[var(--border-subtle)] rounded-3xl">
 
         <div className="flex flex-col items-center">
 
-            <h2 className="text-2xl font-bold text-white text-center">
+            <h2 className="text-2xl font-bold text-[var(--text-primary)] text-center">
               Upload Portfolio
             </h2>
-            <p className="text-gray-400 mt-2 mb-3 text-center">
+            <p className="text-[var(--text-secondary)] mt-2 mb-3 text-center">
               Upload your a PDF or Excel file to import your portfolio
             </p>
 
             <div className="flex gap-4 mt-6">
 
-            <button onClick={DownloadPDF} className="bg-red-600 text-white px-5 py-2 rounded-lg">
+            <button onClick={DownloadPDF} className="border border-[var(--border-subtle)] text-[var(--text-primary)] px-5 py-2 rounded-lg hover:bg-[var(--surface-hover)]">
                 Download PDF Template
             </button>
 
-            <button onClick={DownloadEXCEL} className="bg-green-600 text-white px-5 py-2 rounded-lg">
+            <button onClick={DownloadEXCEL} className="border border-[var(--border-subtle)] text-[var(--text-primary)] px-5 py-2 rounded-lg hover:bg-[var(--surface-hover)]">
               Download Excel Template
             </button>
 
@@ -433,7 +433,7 @@ const Portfolio = () => {
             <input
               type="file"
               accept=".pdf,.xlsx"
-              className="mt-6 text-gray-600"
+              className="mt-6 text-[var(--text-secondary)]"
               onChange={async (event) => { 
                 const file = event.target.files[0];
 
@@ -480,81 +480,81 @@ const Portfolio = () => {
 
       { summary && <div className="grid grid-cols-6 gap-8 mt-8">
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
 
-            <Wallet size={20} className="text-yellow-500" />
-            <p className="text-gray-400">Portfolio Value</p>
+            <Wallet size={20} className="text-[var(--accent-primary)]" />
+            <p className="text-[var(--text-secondary)]">Portfolio Value</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.PortfolioValue || 0}</h2>
+          <h2 className="text-2xl font-bold text-[var(--text-primary)]">R{summary?.PortfolioValue || 0}</h2>
 
 
         </div>
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
 
-            <Briefcase size={20} className="text-blue-500" />
-            <p className="text-gray-400">Holdings</p>
+            <Briefcase size={20} className="text-[var(--text-secondary)]" />
+            <p className="text-[var(--text-secondary)]">Holdings</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">{summary?.TotalHoldings || 0}</h2>
+          <h2 className="text-2xl font-bold text-[var(--text-primary)]">{summary?.TotalHoldings || 0}</h2>
 
         </div>
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
-            <ArrowLeftRight size={20} className="text-green-500" />
-            <p className="text-gray-400">Purchase & Sales</p>
+            <ArrowLeftRight size={20} className="text-[var(--text-secondary)]" />
+            <p className="text-[var(--text-secondary)]">Purchase & Sales</p>
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalPurchasesAndSales || 0}</h2>
+          <h2 className="text-2xl font-bold text-[var(--text-primary)]">R{summary?.TotalPurchasesAndSales || 0}</h2>
 
         </div>
 
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
 
-            <Landmark size={20} className="text-purple-500" />
-            <p className="text-gray-400">Contributions</p>
+            <Landmark size={20} className="text-[var(--text-secondary)]" />
+            <p className="text-[var(--text-secondary)]">Contributions</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalContributionsAndWithdrawals || 0}</h2>
+          <h2 className="text-2xl font-bold text-[var(--text-primary)]">R{summary?.TotalContributionsAndWithdrawals || 0}</h2>
 
         </div>
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
 
-            <TrendingUp size={20} className="text-green-500" />
-            <p className="text-gray-400">Dividends</p>
+            <TrendingUp size={20} className="text-[var(--text-secondary)]" />
+            <p className="text-[var(--text-secondary)]">Dividends</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalDividendsAndWithholdingTax || 0}</h2>
+          <h2 className="text-2xl font-bold text-[var(--text-primary)]">R{summary?.TotalDividendsAndWithholdingTax || 0}</h2>
 
         </div>
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
 
-            <CreditCard size={20} className="text-orange-500" />
-            <p className="text-gray-400">Expenses</p>
+            <CreditCard size={20} className="text-[var(--text-secondary)]" />
+            <p className="text-[var(--text-secondary)]">Expenses</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R{summary?.TotalTransactionExpenses || 0}</h2>
+          <h2 className="text-2xl font-bold text-[var(--text-primary)]">R{summary?.TotalTransactionExpenses || 0}</h2>
 
         </div>
 
@@ -576,8 +576,8 @@ const Portfolio = () => {
 
       { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 mb-7">
 
-        <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center mb-4">
+        <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center mb-4">
             Trading Activity
           </h2>
 
@@ -594,8 +594,8 @@ const Portfolio = () => {
           
         </div>
 
-        <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center mb-4">
+        <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center mb-4">
             Cash flow
           </h2>
 
@@ -619,8 +619,8 @@ const Portfolio = () => {
 
         </div>
 
-         <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center mb-4">
+         <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center mb-4">
             Dividend Income
           </h2>
 
@@ -650,8 +650,8 @@ const Portfolio = () => {
 
        
 
-        <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center">
+        <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center">
             Assert allocation
           </h2>
 
@@ -675,8 +675,8 @@ const Portfolio = () => {
 
 
 
-         <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center">
+         <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center">
             Expense breakdown
           </h2>
           <div className="flex justify-center w-full h-80">
@@ -693,25 +693,25 @@ const Portfolio = () => {
 
       
 
-        <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center">
+        <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center">
             Top Holdings
           </h2>
 
           {GetTheTopHoldingsImportPDF.map((item, index) =>
             <div key={index} className="mb-4">
               <div className="flex justify-between mb-1">
-                <p className="text-gray-300">
+                <p className="text-[var(--text-secondary)]">
                   {item.name}
                 </p>
 
-                <p className="text-gray-300">
+                <p className="text-[var(--text-secondary)]">
                   R{item.value}
                 </p>
               </div>
 
 
-              <div className="w-full bg-gray-600 rounded-full h-3">
+              <div className="w-full bg-[var(--border-mid)] rounded-full h-3">
                 <div className="h-3 rounded-full"
                      style={{
                       width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
@@ -735,48 +735,48 @@ const Portfolio = () => {
 
        { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-2 gap-8 mt-8">
 
-        <div className="p-6 border border-red-700 rounded-2xl">
+        <div className="p-6 border border-[var(--signal-negative)] rounded-2xl">
 
           <div className="flex items-center gap-2">
-            <TriangleAlert size={24} className="text-red-500"></TriangleAlert>
-            <h2 className="text-xl font-bold text-red">
+            <TriangleAlert size={24} className="text-[var(--signal-negative)]"></TriangleAlert>
+            <h2 className="text-xl font-bold text-[var(--signal-negative)]">
               Lowest Holding
             </h2>
           </div>
 
 
-          <p className="text-gray-400 mb-5">
+          <p className="text-[var(--text-secondary)] mb-5">
             Your smallest holdings by weight in the portfolio
           </p>
 
-          <div className="flex justify-between border border-gray-700 rounded-xl p-4">
+          <div className="flex justify-between border border-[var(--border-subtle)] rounded-xl p-4">
 
             <div>
-              <p className="text-xl text-white font-bold">{GetTheLowest.name}</p>
+              <p className="text-xl text-[var(--text-primary)] font-bold">{GetTheLowest.name}</p>
             </div>
 
             <div>
-              <p className="text-xl text-red-400 font-bold">{GetTheLowest.value}</p>
+              <p className="text-xl text-[var(--signal-negative)] font-bold">{GetTheLowest.value}</p>
             </div>
 
           </div>
 
         </div>
 
-        <div className="p-6 border border-purple-500 rounded-2xl">
+        <div className="p-6 border border-[var(--border-subtle)] rounded-2xl">
 
           <div className="flex items-center gap-2">
-            <Bot size={24} className="text-purple-500"></Bot>
+            <Bot size={24} className="text-[var(--accent-primary)]"></Bot>
             <h2 className="text-xl font-bold">
               AI Portfolio Assistant
             </h2>
           </div>
 
-          <p className="text-gray-400 mb-5">
+          <p className="text-[var(--text-secondary)] mb-5">
             Ask questions about your portfolio and recivce AI-powered insights.
           </p>
 
-          <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold">
+          <button className="w-full bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--text-on-accent)] py-3 rounded-xl font-semibold">
             Go To Assistant
           </button>
 

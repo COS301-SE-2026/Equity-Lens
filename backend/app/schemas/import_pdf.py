@@ -11,7 +11,7 @@ class PortfolioRequest(BaseModel):
     document_id: str
     account_number: str
     portfolio_name: str
-    
+    currency: str = "ZAR"
 
 class HoldingsRequest(BaseModel):
     portfolio_id: str

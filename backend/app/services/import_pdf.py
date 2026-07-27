@@ -23,6 +23,10 @@ def search_ticket_number(instrumentName: str):
 
     if TheKnownsOne:
         return {"Found": True, "ticker":TheKnownsOne.ticker, "sector":TheKnownsOne.sector}
+
+
+def search_ticket_number(instrumentName: str):
+  try:
     
     cached = Cache.get(The_Keys)
 
@@ -39,6 +43,7 @@ def search_ticket_number(instrumentName: str):
         Cache[The_Keys] = (time.time(), result)
     
     return result
+
 
 def _search_ticker_number_uncached(instrument_name: str):
     try:

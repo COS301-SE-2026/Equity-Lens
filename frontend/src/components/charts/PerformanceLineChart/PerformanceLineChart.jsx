@@ -19,8 +19,8 @@ const MOCK_DATA = [
   { name: 'Dec', value: 128000, benchmark: 85000  },
 ];
 
-const PORTFOLIO_COLOR = '#D4A017';
-const BENCHMARK_COLOR = '#8A94A8';
+const PORTFOLIO_COLOR = 'var(--chart-primary)';
+const BENCHMARK_COLOR = 'var(--chart-benchmark)';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -116,7 +116,7 @@ const PerformanceLineChart = ({ data = MOCK_DATA }) => {
               borderRadius: '4px',
               border: activeFilter === filter ? 'none' : '1px solid var(--border-subtle)',
               background: activeFilter === filter ? 'var(--accent-primary)' : 'transparent',
-              color: activeFilter === filter ? '#000' : 'var(--text-secondary)',
+              color: activeFilter === filter ? 'var(--text-on-accent)' : 'var(--text-secondary)',
               cursor: 'pointer',
               transition: 'all 120ms ease-out',
             }}
