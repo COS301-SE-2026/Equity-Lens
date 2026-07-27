@@ -93,6 +93,14 @@ const IndicatorCell = ({ indicatorKey, result, loading }) => {
     : sig === 'negative' ? 'var(--signal-negative,#ef4444)'
     : 'var(--text-primary,#e5e5e5)';
 
+    const formatValue = (value) => {
+      const numericValue = Number(value);
+      if(!Number.isFinite(numericValue)){
+        return value;
+      }
+      return numericValue.toFixed(2);
+    };
+
   if (loading) return (
     <div className="flex flex-col gap-1.5 animate-pulse pt-1">
       <div className="h-4 w-12 rounded" style={{ background: 'var(--border-subtle,#2a2a2a)' }}/>
