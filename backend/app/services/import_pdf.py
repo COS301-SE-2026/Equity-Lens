@@ -45,14 +45,14 @@ def _search_ticker_number_uncached(instrument_name: str):
         quotes = []
         query = []
 
-        query = _search_queries(instrument_name):
+        query = _search_queries(instrument_name)
         quotes = yf.Search(query).quotes
             
         if not quotes:
             return{
-                "Found": False
-                "ticker": "none"
-                "sector": "none"
+                "Found": False,
+                "ticker": "none",
+                "sector": "none",
             }
         
         gettingTicker = quotes[0]["symbol"]
@@ -63,28 +63,28 @@ def _search_ticker_number_uncached(instrument_name: str):
             return {
                 "Found": True,
                 "ticker": gettingTicker,
-                "sector": category
+                "sector": category,
             }
 
         return {
             "Found": True,
             "ticker": gettingTicker,
-            "sector": gettingTheInfo.get("sector") or "none"
+            "sector": gettingTheInfo.get("sector") or "none",
 
         }
     
-    expect YFRateLimitError as exc:
+    except YFRateLimitError as exc:
         return {
-            "Found": False
-            "ticker": "none"
-            "sector": "none"
+            "Found": False,
+            "ticker": "none",
+            "sector": "none",
         }
 
-    expect ReadTimeout as exc:
+    except ReadTimeout as exc:
         return {
-            "Found": False
-            "ticker": "none"
-            "sector": "none"
+            "Found": False,
+            "ticker": "none",
+            "sector": "none",
         }
 
 def search_queries(instrumentName):
