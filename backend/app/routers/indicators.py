@@ -40,7 +40,7 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
         return []
     
     results = []
-    for index, ticker in tickers:
+    for index, ticker in enumerate(tickers):
         name = ticker_to_name.get(ticker, ticker)
         row = build_live_indicator_row(ticker,name,market_returns)
         results.append(serialize_indicator_row(row))

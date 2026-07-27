@@ -167,6 +167,7 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
             "sortino": sortino,
         }
     except Exception as e:
+        print(f"build_live_indicator_row failed for {symbol}: {e}")
         return{
             "ticker": symbol,
             "name": name,
