@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator, Field
 from sqlalchemy.orm import Session
 from app.services.ai_service import chat
 from app.database import get_db
@@ -15,12 +15,19 @@ class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[UUID] = None
 
+    @field_validator("message")
+    @classmethod
+    def no_empty_messages(cls, v):
+        if not v or not v.strip():
+            raise ValueError("You cannot send an empty message.")
+        return v.strip()
+
 class ChatResponse(BaseModel):
     reply: str
     conversation_id: UUID
 
 class ChangeConversationName(BaseModel):
-    title: str
+    title: str = Field(min_length = 1)
 
 @router.post("/", response_model = ChatResponse)
 async def ai_chat(
@@ -32,7 +39,8 @@ async def ai_chat(
         reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id)
         return ChatResponse(reply = reply, conversation_id = conversation_id)
     except Exception as e:
-        raise HTTPException(status_code = 500, detail = str(e))
+        print(f"AI chat fail: {e}")
+        raise HTTPException(status_code = 500, detail = "Something went wrong")
 
 # now to return all conversations for the logged user
 @router.get("/conversations/")
