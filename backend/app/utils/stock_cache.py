@@ -4,9 +4,13 @@ from datetime import datetime, timezone, timedelta
 import requests
 from app.config import settings
 from app.database import SessionLocal
-from app.models.market_data import MarketData
+from app.models.market_data import MarketData, FundamentalsCache
 
 _REFRESH_LOCKS = set()
+#weekly - comfortable time as eases rates on yfinance
+#and also short enough to where a company can release financials
+#on a random day mid-week and wont be long until the refresh to serve fresh data
+FUNDAMENTALS_TTL_HOURS = 24 * 7
 
 def should_refresh_market_data(last_fetched_at, ttl_hours: int | None = None) -> bool:
     if ttl_hours is None:
@@ -95,7 +99,7 @@ def _save_price_history(ticker: str, history: pd.DataFrame) -> None:
 def _fetch_from_alpha_vantage(ticker: str) -> pd.DataFrame:
     url = (
         "https://www.alphavantage.co/query"
-        f"?function=TIME_SERIES_DAILY_ADJUSTED&symbol={ticker}&outputsize=compact&apikey={settings.alpha_vantage_api_key}"
+        f"?function=TIME_SERIES_DAILY&symbol={ticker}&outputsize=compact&apikey={settings.alpha_vantage_api_key}"
     )
     response = requests.get(url, timeout = 10)
     response.raise_for_status()
@@ -108,7 +112,7 @@ def _fetch_from_alpha_vantage(ticker: str) -> pd.DataFrame:
     previous_close = None
     for raw_date in sorted(series.keys()):
         item = series[raw_date]
-        close = float(item.get("5. adjusted close") or item.get("4. close"))
+        close = float(item.get("4. close"))
         open_price = float(item.get("1. open"))
         high = float(item.get("2. high"))
         low = float(item.get("3. low"))
@@ -198,6 +202,50 @@ def get_cached_price_history(ticker: str, period: str = "1y") -> pd.DataFrame:
         return history
     finally:
         _REFRESH_LOCKS.discard(ticker)
+
+def _load_cached_fundamentals(ticker: str) -> dict | None:
+    db = SessionLocal()
+    try:
+        row = db.query(FundamentalsCache).filter(FundamentalsCache.ticker == ticker.upper()).first()
+        if row is None:
+            return None
+        if should_refresh_market_data(row.fetched_at, ttl_hours=FUNDAMENTALS_TTL_HOURS):
+            return None
+        balance_sheet = pd.DataFrame(row.balance_sheet) if row.balance_sheet else pd.DataFrame()
+        financials = pd.DataFrame(row.financials) if row.financials else pd.DataFrame()
+        return {
+            "info": row.info or {},
+            "balance_sheet": balance_sheet,
+            "financials": financials,
+        }
+    finally:
+        db.close()
+
+def _save_fundamentals(ticker: str, info: dict, balance_sheet: pd.DataFrame, financials: pd.DataFrame) -> None:
+    db = SessionLocal()
+    try:
+        existing = db.query(FundamentalsCache).filter(FundamentalsCache.ticker == ticker.upper()).first()
+        bs_json = balance_sheet.to_dict() if balance_sheet is not None and not balance_sheet.empty else None
+        fin_json = financials.to_dict() if financials is not None and not financials.empty else None
+
+        if existing is None:
+            db.add(
+                FundamentalsCache(
+                    ticker = ticker.upper(),
+                    info = info,
+                    balance_sheet = bs_json,
+                    financials = fin_json,
+                    fetched_at = datetime.now(timezone.utc),
+                )
+            )
+        else:
+            existing.info = info
+            existing.balance_sheet = bs_json
+            existing.financials = fin_json
+            existing.fetched_at = datetime.now(timezone.utc)
+        db.commit()
+    finally:
+        db.close()
     
 def get_cached_fundamentals(ticker: str) -> dict:
     ticker = ticker.upper()
@@ -207,14 +255,27 @@ def get_cached_fundamentals(ticker: str) -> dict:
             "balance_sheet": pd.DataFrame(),
             "financials": pd.DataFrame(),
         }
-    try:
-        ticker_obj = yf.Ticker(ticker)
-        return{
-            "info": ticker_obj.info or {},
-            "balance_sheet": ticker_obj.balance_sheet,
-            "financials": ticker_obj.financials,
-        }
-    except Exception as exc:
-        print(f"Yahoo fundamentals fetch failed for {ticker}: {exc}")
-        return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
-        
+    cached = _load_cached_fundamentals(ticker)
+    if cached is not None:
+        print(f"Fundamentals cache hit: {ticker}")
+        return cached
+    ticker_candidates = [ticker] if ticker.endswith(".JO") else [f"{ticker}.JO", ticker]
+    for candidate in ticker_candidates:
+        try:
+            ticker_obj = yf.Ticker(candidate)
+            info = ticker_obj.info or {}
+            balance_sheet = ticker_obj.balance_sheet
+            financials = ticker_obj.financials
+            if info or (balance_sheet is not None and not balance_sheet.empty) or (financials is not None and not financials.empty):
+                _save_fundamentals(ticker, info, balance_sheet, financials)
+                return{
+                    "info": info,
+                    "balance_sheet": balance_sheet,
+                    "financials": financials,
+                }
+        except Exception as exc:
+            print(f"Yahoo fundamentals fetch failed for {candidate}: {exc}")
+    return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
+                
+
+    
