@@ -7,7 +7,6 @@ import {
   ResponsiveContainer,
   Tooltip,
   CartesianGrid,
-  ReferenceDot,
 } from 'recharts';
 
 import { GlassPanel } from '../shared/GlassPanel';
@@ -313,18 +312,7 @@ const PerformanceVsBenchmark = ({
     return buildExplanation({ stats, attribution, anomalies, visibleSeries });
   }, [stats, attribution, anomalies, visibleSeries]);
 
-  const annotations = useMemo(() => {
-    return anomalies
-      .map((a) => {
-        const point = visibleSeries.find((p) => p.date === a.date);
-        if (point) {
-          return { ...a, name: point.name, value: point.value };
-        } else {
-          return null;
-        }
-      })
-      .filter((a) => a !== null);
-  }, [anomalies, visibleSeries]);
+  // chart dots for anomaly events pulled as not feesible in time - will be a demo 3 thing
 
   /** @type {'good'|'bad'} */
   let portTone;
@@ -372,26 +360,6 @@ const PerformanceVsBenchmark = ({
           <Tooltip content={<PerfTooltip benchmarkLabel={benchmarkLabel} />} />
           <Line type="monotone" dataKey="benchmark" stroke="var(--text-secondary)" strokeWidth={1.5} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} />
           <Line type="monotone" dataKey="value" stroke="var(--accent-primary)" strokeWidth={2} dot={false} activeDot={{ r: 5, stroke: 'var(--bg-primary)', strokeWidth: 2 }} />
-          {annotations.map((a) => {
-            let dotColor;
-            if (a.changePct >= 0) {
-              dotColor = 'var(--signal-positive)';
-            } else {
-              dotColor = 'var(--signal-negative)';
-            }
-            return (
-              <ReferenceDot
-                key={`${a.ticker}-${a.date}`}
-                x={a.name}
-                y={a.value}
-                r={5}
-                fill={dotColor}
-                stroke="var(--surface-card)"
-                strokeWidth={2}
-                label={{ value: a.ticker, position: 'top', fontSize: 9, fontFamily: 'monospace', fill: 'var(--text-secondary)' }}
-              />
-            );
-          })}
         </LineChart>
       </ResponsiveContainer>
     );}

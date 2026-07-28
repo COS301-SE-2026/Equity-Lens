@@ -19,7 +19,8 @@ export const formatShortCurrency = (value) => {
     return `R ${(value / 1000).toFixed(0)}k`;
   }
   if (abs >= 1000) {
-    return `R ${(value / 1000).toFixed(1)}k`;
+    const decimals = value < 0 ? 1 : 0;
+    return `R ${(value / 1000).toFixed(decimals)}k`;
   }
   return `R ${Math.round(value ?? 0)}`;
 };
