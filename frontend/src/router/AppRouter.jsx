@@ -11,6 +11,7 @@ import Portfolio from '../pages/Portfolio/Portfolio';
 import NotFound from '../pages/NotFound/NotFound';
 import News from '../pages/News/News';
 import AIChat from '../pages/AIChat/AIChat';
+import Help from '../pages/Help/Help';
 import { ROUTES } from '../utils/constants';
 import Analytics from '../pages/Analytics/Analytics';
 import ConfirmEmail from '../pages/Auth/ConfirmEmail';
@@ -41,6 +42,23 @@ const ProtectedRoute = ({ children }) => {
   return isAuthenticated ? <AppLayout>{children}</AppLayout> : <Navigate to={ROUTES.LOGIN} replace />;
 };
 
+const HelpRoute = () => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <LoadingSpinner size="lg" />
+    </div>
+  );
+  //signed in
+  if (isAuthenticated) {
+    return <AppLayout><Help/></AppLayout>
+  }
+  //signed out
+  <div className = "min-h-screen bg-bg-primary p-6">
+    <Help/>
+  </div>
+}
+
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return null;
@@ -58,6 +76,7 @@ export const AppRoutes = () => (
       <Route path={ROUTES.AI_CHAT} element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
       <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
       <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
+      <Route path={ROUTES.HELP} element={<HelpRoute />} />
 
       <Route path={ROUTES.HOME} element={<Landing />} />  
       <Route path="*" element={<NotFound />} />
