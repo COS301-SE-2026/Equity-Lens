@@ -191,13 +191,7 @@ const NewsInvestment = () => {
               {wishlist.length === 0 ? (<tr><td className="text-[var(--text-secondary)]">No watchlist stocks added </td></tr>) : 
               (
               wishlist.map((items) => (         
-            <tr key={items} className="border-b border-[var(--border-subtle)] mb-7">
-              wishlist.map(
-                /**
-                 * @param {any} items
-                 */
-                (items) => (         
-            <tr key={items.id} className="border-b border-gray-400 mb-7">
+            <tr key={items.id} className="border-b border-[var(--border-subtle)] mb-7">       
 
             <td>
               <p className="text-[var(--text-primary)]">{items.ticker}</p>
@@ -213,13 +207,13 @@ const NewsInvestment = () => {
              <button onClick={() => ToDeleteWishlist(items.id)} className="text-[var(--signal-negative)] hover:opacity-80">Remove</button>
             </td>
           </tr>
-          )) )}
-
-
+          ))
+          )}
+=
           </tbody>
           
        </table>
-        </div>
+     </div>
 
       
        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
@@ -228,16 +222,14 @@ const NewsInvestment = () => {
           <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Why is my top gainer up ?</button>
           <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Why is my top loser down ?</button>
           <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Which watchlist stock is the best ?</button>
-          <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Summarise today`&apos;`s news</button>
+          <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Summarise today news</button>
         </div>
        </div>
        
-
-      </div> 
-       </div>
-
+      </div>
     </div>
-
+    </div>
+ 
 
   );
 };
