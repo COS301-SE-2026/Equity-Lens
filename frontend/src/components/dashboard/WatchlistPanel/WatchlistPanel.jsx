@@ -8,7 +8,7 @@ import useWatchlist from '../../../hooks/useWatchlist';
 const VISIBLE_LIMIT = 3;
 
 const WatchlistPanel = () => {
-  const { watchlist, loading, error, addTicker } = useWatchlist();
+  const { watchlist, loading, error, addTicker, removeTicker } = useWatchlist();
   const [adding, setAdding] = useState(false);
   const [ticker, setTicker] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -35,11 +35,20 @@ const WatchlistPanel = () => {
     }
   };
 
+  /** @param {string} watchlistId */
+  const handleRemove = async (watchlistId) => {
+    try {
+      await removeTicker(watchlistId);
+    } catch (err) {
+      console.warn('remove from watchlist failed:', err);
+    }
+  };
+
   return (
     <GlassPanel>
       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
         <div className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
-          WATCHLIST
+          Watchlist
         </div>
         <button
           type="button"
@@ -47,7 +56,7 @@ const WatchlistPanel = () => {
           className="flex items-center gap-1 font-mono text-[9px]"
           style={{ color: adding ? 'var(--accent-primary)' : 'var(--text-ghost)' }}
         >
-          <Plus size={11} /> ADD
+          <Plus size={11} /> Add
         </button>
       </div>
 
@@ -95,6 +104,7 @@ const WatchlistPanel = () => {
               name={item.company_name || item.ticker}
               price={item.current_price ?? 0}
               changePercent={item.change_percent ?? 0}
+              onRemove={() => handleRemove(item.id)}
             />
           ))
         )}

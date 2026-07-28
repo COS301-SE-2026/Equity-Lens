@@ -5,7 +5,7 @@ import { zar } from '../../../utils/currency';
 const MoverColumn = ({ label, items, tone }) => (
   <div>
     <div className="mb-2 font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
-      {label.toUpperCase()}
+      {label}
     </div>
     {items.length === 0 ? (
       <p className="text-[12px]" style={{ color: 'var(--text-ghost)' }}>
@@ -32,7 +32,7 @@ const MoverColumn = ({ label, items, tone }) => (
  */
 const TopMovers = ({ attribution }) => (
   <GlassPanel>
-    <PanelHead label="TODAY'S MOVERS" />
+    <PanelHead label="Today's Movers" />
     <div className="grid grid-cols-2 gap-6 p-5">
       <MoverColumn label="Top contributors" items={attribution.contributors} tone="good" />
       <MoverColumn label="Largest drag" items={attribution.drags} tone="bad" />

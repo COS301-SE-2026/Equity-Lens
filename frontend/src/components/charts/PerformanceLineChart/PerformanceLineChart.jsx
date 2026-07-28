@@ -1,27 +1,13 @@
 import { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { formatShortCurrency as formatCurrency } from '../../../utils/formatters';
 
 const FILTERS = ['Monthly', 'Quarterly', 'Annually'];
-const formatCurrency = (value) => `R ${(value / 1000).toFixed(0)}k`;
-
-const MOCK_DATA = [
-  { name: 'Jan', value: 98000,  benchmark: 72000  },
-  { name: 'Feb', value: 101000, benchmark: 73500  },
-  { name: 'Mar', value: 99500,  benchmark: 74000  },
-  { name: 'Apr', value: 104000, benchmark: 76000  },
-  { name: 'May', value: 108000, benchmark: 75500  },
-  { name: 'Jun', value: 106500, benchmark: 77000  },
-  { name: 'Jul', value: 112000, benchmark: 79000  },
-  { name: 'Aug', value: 115000, benchmark: 80500  },
-  { name: 'Sep', value: 113000, benchmark: 78000  },
-  { name: 'Oct', value: 118000, benchmark: 81000  },
-  { name: 'Nov', value: 122000, benchmark: 83000  },
-  { name: 'Dec', value: 128000, benchmark: 85000  },
-];
 
 const PORTFOLIO_COLOR = 'var(--chart-primary)';
 const BENCHMARK_COLOR = 'var(--chart-benchmark)';
 
+/** @param {{ active?: boolean, payload?: any[], label?: string }} props */
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -43,7 +29,7 @@ const CustomTooltip = ({ active, payload, label }) => {
       }}>
         {label}
       </p>
-      {payload.map((entry) => (
+      {payload.map((/** @type {any} */ entry) => (
         <p key={entry.dataKey} style={{
           fontSize: '13px',
           fontWeight: 600,
@@ -85,12 +71,13 @@ const ChartLegend = () => (
   </div>
 );
 
-const PerformanceLineChart = ({ data = MOCK_DATA }) => {
+/** @param {{ data?: any[] }} props */
+const PerformanceLineChart = ({ data = [] }) => {
   const [activeFilter, setActiveFilter] = useState('Monthly');
 
   if (!data || data.length === 0) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px', color: 'var(--text-secondary)', fontSize: '12px', fontFamily: 'var(--font-primary)', }}>
+      <div aria-label="Portfolio performance chart" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px', color: 'var(--text-secondary)', fontSize: '12px', fontFamily: 'var(--font-primary)', }}>
         No performance data available
       </div>
     );
@@ -152,7 +139,7 @@ const PerformanceLineChart = ({ data = MOCK_DATA }) => {
           />
           <YAxis
             tickFormatter={formatCurrency}
-            tick={{ fill: 'var(--chart-axis-text)', fontSize: 10, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}
+            tick={/** @type {any} */ ({ fill: 'var(--chart-axis-text)', fontSize: 10, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' })}
             axisLine={false}
             tickLine={false}
             width={52}

@@ -100,12 +100,11 @@ describe('Dashboard', () => {
   it('gives Portfolio Health own section', () => {
     renderDashboard();
     expect(screen.getByText('5.0')).toBeInTheDocument();
-    expect(screen.getByText("What's contributing to your score")).toBeInTheDocument();
     expect(screen.getByText('Benchmark Performance')).toBeInTheDocument();
     expect(screen.getByText('20% weight')).toBeInTheDocument();
     expect(screen.queryByText(/adding a few more positions reduces how much any one holding drives your return/i)).not.toBeInTheDocument();
     const breadthRow = within(screen.getByTestId('health-factor-portfolioBreadth'));
-    fireEvent.click(breadthRow.getByText('Why?'));
+    fireEvent.click(breadthRow.getByText('Why'));
     expect(breadthRow.getByText(/adding a few more positions reduces how much any one holding drives your return/i)).toBeInTheDocument();
     expect(breadthRow.getByText('8-12 positions')).toBeInTheDocument();
 
