@@ -23,7 +23,7 @@ describe('Topbar', () => {
   it('renders topbar text', () => {
     render(<Topbar onMenuClick={() => {}} />);
 
-    expect(screen.getByText(/JSE·ALSI/i)).toBeInTheDocument();
+    // market data strip is commented out pending demo 3, so not asserted here
     expect(screen.getByText(/Abdul/i)).toBeInTheDocument();
     expect(screen.getByText(/Sign out/i)).toBeInTheDocument();
   });
