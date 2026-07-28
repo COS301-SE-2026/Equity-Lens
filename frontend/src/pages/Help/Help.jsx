@@ -50,6 +50,20 @@ const QNA = [
     }
 ];
 
+const LINKS = [
+    {
+        label: 'Portfolio Template',
+        body: 'Download the Excel format we import cleanly',
+        href: '/template/EquityLens_Portfolio_Excel_Template.xlsx',
+        download: true
+    }, 
+    {
+        label: 'Contact support',
+        body: 'Email us for any queries or questions',
+        href: 'mailto:thebigfivetb5@gmail.com',
+    }
+];
+
 const CARD = 'terminal-card flex flex-col p-4';
 
 const Help = () => {
@@ -84,6 +98,17 @@ const Help = () => {
                     </button>
                     {open === i && (<p className = "px-4 pb-4 text-sm font-medium text-text-secondary">{a}</p>)}
                 </div>
+            ))}
+        </div>
+
+        <h2 className = "mt-10 text-x1 font-semiBold">Resources (Click box to get output)</h2>
+
+        <div className = "mt-4 grid gap-3 sm:grid-cols-3">
+            {LINKS.map(({label, body, href, download}) => (
+                <a key ={label} href = {href} download = {download} className = {CARD}>
+                    <h3 className = "text-sm font-medium">{label}</h3>
+                    <p className = "mt-1.5 text-xs text-text-secondary">{body}</p>
+                </a>
             ))}
         </div>
     </div>
