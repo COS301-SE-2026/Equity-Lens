@@ -212,6 +212,15 @@ const PortfolioOverview = ({ sectorData, holdings, flashSector, flashHoldings })
                   </div>
                 );
               })}
+              {holdings.length > top.length && (
+                <div
+                  className="flex items-center justify-between px-2 pt-2 font-mono text-[11px]"
+                  style={{ color: 'var(--text-ghost)', borderTop: '1px solid var(--border-subtle)' }}
+                >
+                  <span>+{holdings.length - top.length} more</span>
+                  <span>{zar(totalValue - top.reduce((s, h) => s + (h.value ?? 0), 0))}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
