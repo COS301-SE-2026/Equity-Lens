@@ -1,3 +1,4 @@
+import time
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timezone, timedelta
@@ -41,7 +42,7 @@ def _load_local_price_history(ticker:str) -> pd.DataFrame:
     if not rows:
         return pd.DataFrame()
     records = []
-    for index, row in enumerate(rows):
+    for  row in rows:
         records.append({
             "Open": float(row.open),
             "High": float(row.high),
@@ -225,27 +226,41 @@ def _save_fundamentals(ticker: str, info: dict, balance_sheet: pd.DataFrame, fin
     db = SessionLocal()
     try:
         existing = db.query(FundamentalsCache).filter(FundamentalsCache.ticker == ticker.upper()).first()
-        bs_json = balance_sheet.to_dict() if balance_sheet is not None and not balance_sheet.empty else None
-        fin_json = financials.to_dict() if financials is not None and not financials.empty else None
+
+        balance_sheetjson = None
+        if balance_sheet is not None and not balance_sheet.empty:
+            balance_sheet_copy = balance_sheet.copy()
+            balance_sheet_copy.columns = balance_sheet_copy.columns.astype(str)
+            balance_sheet_copy = balance_sheet_copy.where(pd.notna(balance_sheet_copy), None)
+            balance_sheetjson = balance_sheet_copy.to_dict()
+
+        financials_json = None
+        if financials is not None and not financials.empty:
+            financials_copy = financials.copy()
+            financials_copy.columns = financials_copy.columns.astype(str)
+            financials_copy = financials_copy.where(pd.notna(financials_copy), None)
+            financials_json = financials_copy.to_dict()
 
         if existing is None:
             db.add(
                 FundamentalsCache(
                     ticker = ticker.upper(),
                     info = info,
-                    balance_sheet = bs_json,
-                    financials = fin_json,
+                    balance_sheet = balance_sheetjson,
+                    financials = financials_json,
                     fetched_at = datetime.now(timezone.utc),
                 )
             )
         else:
             existing.info = info
-            existing.balance_sheet = bs_json
-            existing.financials = fin_json
+            existing.balance_sheet = balance_sheetjson
+            existing.financials = financials_json
             existing.fetched_at = datetime.now(timezone.utc)
         db.commit()
     finally:
         db.close()
+
+_FUNDAMENTALS_RATE_LIMITED_UNTIL: dict[str, datetime] = {}
     
 def get_cached_fundamentals(ticker: str) -> dict:
     ticker = ticker.upper()
@@ -259,12 +274,18 @@ def get_cached_fundamentals(ticker: str) -> dict:
     if cached is not None:
         print(f"Fundamentals cache hit: {ticker}")
         return cached
+    cooldown_until = _FUNDAMENTALS_RATE_LIMITED_UNTIL.get(ticker)
+    if cooldown_until and datetime.now(timezone.utc) < cooldown_until:
+        print(f"Skipping {ticker} fundamentals fetch - cooldown")
+        return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
     ticker_candidates = [ticker] if ticker.endswith(".JO") else [f"{ticker}.JO", ticker]
     for candidate in ticker_candidates:
         try:
             ticker_obj = yf.Ticker(candidate)
             info = ticker_obj.info or {}
+            time.sleep(0.5)
             balance_sheet = ticker_obj.balance_sheet
+            time.sleep(0.5)
             financials = ticker_obj.financials
             if info or (balance_sheet is not None and not balance_sheet.empty) or (financials is not None and not financials.empty):
                 _save_fundamentals(ticker, info, balance_sheet, financials)
@@ -275,4 +296,7 @@ def get_cached_fundamentals(ticker: str) -> dict:
                 }
         except Exception as exc:
             print(f"Yahoo fundamentals fetch failed for {candidate}: {exc}")
+            if "Too Many Requests" in str(exc) or "Rate limited" in str(exc):
+                _FUNDAMENTALS_RATE_LIMITED_UNTIL[ticker] = datetime.now(timezone.utc) + timedelta(minutes=10)
+                break
     return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}

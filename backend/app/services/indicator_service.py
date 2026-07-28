@@ -107,6 +107,16 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
         balance_sheet = fundamentals.get("balance_sheet")
         financials = fundamentals.get("financials")
 
+        #Altman Z and PE not applicable to Mutual funds and ETF
+        quote_type = (info.get("quoteType") or "").upper()
+        is_fund = quote_type in ("ETF", "MUTUALFUND", "INDEX")
+        fund_reason = "N/A - financial instrument doesn't report company-level financials."
+
+        #Altman Z is built for retail/industrial companies, therefore Total Revenue is N/A from financial institutions
+        sector = (info.get("sector") or "").upper()
+        is_financial = sector in ("FINANCIAL SERVICES", "FINANCIALS")
+        sector_reason = "N/A - Altman Z Score not meaninful for banks and financial institutions."
+
         eps = info.get("trailingEps") or info.get("epsTrailingTwelveMonths")
         pe = None
         try:
@@ -119,6 +129,9 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
         except Exception as exc:
             print(f"PE Calculation failed for {symbol}: {exc}")
             pe = None
+
+        if pe is None and is_fund:
+            pe = {"status": "insufficient_data", "reason": fund_reason}
 
         altman = None
         try:
@@ -155,6 +168,13 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
         except Exception as exc:
             print(f"Altman calculation failed for {symbol}: {exc}")
             altman = None
+
+        if altman is None and is_fund:
+            altman = {"status": "insufficient_data", "reason": fund_reason}
+
+        if altman is None and is_financial:
+            altman = {"status": "insufficient_data", "reason": sector_reason}
+        
         return{
             "ticker": symbol,
             "name": name,
