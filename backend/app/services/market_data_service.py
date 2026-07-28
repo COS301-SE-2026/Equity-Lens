@@ -2,6 +2,7 @@ import pandas as pd
 from app.utils.stock_cache import get_cached_price_history
 from datetime import datetime, timezone
 from uuid import uuid4
+import time
 
 import yfinance as yf
 
@@ -12,8 +13,7 @@ from app.schemas.market_data import (
     SearchResponse,
     SearchResultItem,
 )
-
-
+#Not yet connected to front end, connect to portfolio page
 def get_current_price(symbol: str) -> CurrentPriceResponse:
     history = get_cached_price_history(symbol, period="1y")
 
@@ -22,7 +22,7 @@ def get_current_price(symbol: str) -> CurrentPriceResponse:
 
     latest = history.iloc[-1]
     price = float(latest["Close"])
-    volume = int(latest["Volume"] or 0)
+    volume = int(latest["Volume"]) if not pd.isna(latest["Volume"]) else 0
     previous_close = latest.get("Prev Close")
 
     if previous_close is None or pd.isna(previous_close):
@@ -59,15 +59,25 @@ def get_historical_data(symbol: str, period: str) -> HistoryResponse:
             low=float(row["Low"]),
             close=float(row["Close"]),
             prev_close=float(row["Prev Close"]) if "Prev Close" in row and not pd.isna(row["Prev Close"]) else None,
-            volume=int(row["Volume"] or 0),
+            volume=int(row["Volume"]) if not pd.isna(row["Volume"]) else 0,
         )
         for index, row in history.iterrows()
     ]
 
     return HistoryResponse(symbol=symbol.upper(), period=period, data=data)
 
-
+_SEARCH_CACHE: dict[str, tuple[float, SearchResponse]] = {}
+_SEARCH_CACHE_TTL_SECONDS = 300
+#In-memory cache to avoid yfinance rate-limiting (aggressive requests get rate limited fast
+#- see stock_cache.py for reference), 5 minutes TTL and no persistency.
 def search_stocks(query: str) -> SearchResponse:
+    normalized_query= query.strip().lower()
+    cached = _SEARCH_CACHE.get(normalized_query)
+    if cached is not None:
+        cached_at, cached_response = cached
+        if time.time() - cached_at < _SEARCH_CACHE_TTL_SECONDS:
+            return cached_response
+        
     search_results = yf.Search(query, max_results=10)
     results = [
         SearchResultItem(
@@ -77,5 +87,6 @@ def search_stocks(query: str) -> SearchResponse:
         for quote in getattr(search_results, "quotes", []) or []
         if quote.get("symbol")
     ]
-
-    return SearchResponse(query=query, results=results)
+    response = SearchResponse(query=query, results=results)
+    _SEARCH_CACHE[normalized_query] = (time.time(), response)
+    return response

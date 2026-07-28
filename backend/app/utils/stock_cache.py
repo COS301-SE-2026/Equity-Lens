@@ -66,6 +66,8 @@ def _save_price_history(ticker: str, history: pd.DataFrame) -> None:
                 if hasattr(timestamp, "to_pydatetime")
                 else timestamp.date()
             )
+            volume = float(row["Volume"]) if not pd.isna(row["Volume"]) else 0.0
+            prev_close = float(row["Prev Close"]) if "Prev Close" in row and not pd.isna(row["Prev Close"]) else float(row["Close"])
             existing = (
                 db.query(MarketData)
                 .filter(MarketData.ticker == ticker.upper(), MarketData.date == trade_date)
@@ -80,8 +82,8 @@ def _save_price_history(ticker: str, history: pd.DataFrame) -> None:
                         high = float(row["High"]),
                         low = float(row["Low"]),
                         close = float(row["Close"]),
-                        prev_close = float(row["Prev Close"]) if "Prev Close" in row and not pd.isna(row["Prev Close"]) else float(row["Close"]),
-                        volume = float(row["Volume"] or 0),
+                        prev_close = prev_close,
+                        volume = volume,
                         fetched_at = datetime.now(timezone.utc),
                     )
                 )
@@ -90,19 +92,24 @@ def _save_price_history(ticker: str, history: pd.DataFrame) -> None:
                 existing.high = float(row["High"])
                 existing.low = float(row["Low"])
                 existing.close = float(row["Close"])
-                existing.prev_close = float(row["Prev Close"]) if "Prev Close" in row and not pd.isna(row["Prev Close"]) else float(row["Close"])
-                existing.volume = float(row["Volume"] or 0)
+                existing.prev_close = prev_close
+                existing.volume = volume
                 existing.fetched_at = datetime.now(timezone.utc)
         db.commit()
     finally:
         db.close()
 
 def _fetch_from_alpha_vantage(ticker: str) -> pd.DataFrame:
-    url = (
-        "https://www.alphavantage.co/query"
-        f"?function=TIME_SERIES_DAILY&symbol={ticker}&outputsize=compact&apikey={settings.alpha_vantage_api_key}"
+    response = requests.get(
+        "https://www.alphavantage.co/query",
+        params={
+            "function": "TIME_SERIES_DAILY",
+            "symbol": ticker,
+            "outputsize": "compact",
+            "apikey": settings.alpha_vantage_api_key,
+        },
+        timeout=10,
     )
-    response = requests.get(url, timeout = 10)
     response.raise_for_status()
     payload = response.json()
     series = payload.get("Time Series (Daily)")
@@ -134,22 +141,20 @@ def _fetch_from_alpha_vantage(ticker: str) -> pd.DataFrame:
     return df
 
 def _fetch_from_yfinance(ticker: str, period: str) -> pd.DataFrame:
-    ticker_obj = yf.Ticker(ticker)
-    history = ticker_obj.history(period=period, interval="1d", auto_adjust=True)
-    if history.empty:
-        return pd.DataFrame()
-    history = history.rename(
-        columns = {
-            "Open": "Open",
-            "High": "High",
-            "Low": "Low",
-            "Close": "Close",
-            "Volume": "Volume",
-        }
-    )
-    history = history[["Open", "High", "Low", "Close", "Volume"]].copy()
-    history["Prev Close"] = history["Close"].shift(1)
-    return history
+    #mirrors get_cached_fundamentals, try .JO first then fallback to plain
+    candidates = [ticker] if ticker.endswith(".JO") else [f"{ticker}.JO", ticker]
+    for candidate in candidates:
+        try:
+            ticker_obj = yf.Ticker(candidate)
+            history = ticker_obj.history(period=period, interval="1d", auto_adjust=True)
+            if not history.empty:
+                
+                history = history[["Open", "High", "Low", "Close", "Volume"]].copy()
+                history["Prev Close"] = history["Close"].shift(1)
+                return history
+        except Exception as exc:
+            print(f"Yahoo history fetch failed for {candidate}: {exc}")
+    return pd.DataFrame()
 
 def _refresh_price_history(ticker: str, period: str) -> pd.DataFrame:
     try:
@@ -159,7 +164,7 @@ def _refresh_price_history(ticker: str, period: str) -> pd.DataFrame:
             _save_price_history(ticker,history)
             return _load_local_price_history(ticker)
     except Exception as exc:
-        print(f"Alpha Vantage refresh failed for {ticker}: {exc}")
+        print(f"Alpha Vantage refresh failed for {ticker}: {type(exc).__name__}")
 
     if settings.allow_live_market_fallback:
         try:
