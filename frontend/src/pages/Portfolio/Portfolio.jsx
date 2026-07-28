@@ -189,10 +189,186 @@ const ReadingPDFFile = async(file) => {
   }
 
 
+  let instrumentName = "";
+
+  const Holdings = HoldingsTable.map((row) => {
+    const splitParts = row.text.split(" ").filter((item => item !== ""))
+
+    if(row.text.includes("Opening Balance") || row.text.includes("Instrument") || row.text.includes("Total") || row.text.includes("Page"))
+    {
+      return null
+    }
+
+   const firstNumberIndex = splitParts.findIndex((item) => { return item.includes(".") && !Number.isNaN(item);})
+
+   if(firstNumberIndex === -1)
+   {
+    instrumentName = instrumentName + " " + row.text;
+    return null;
+   }
+
+   instrumentName = instrumentName + " " + splitParts.slice(0,firstNumberIndex).join(" ");
+
+   const values = splitParts.slice(firstNumberIndex);
+
+   const getNumber = () => {
+    let numbers = values.pop();
+    const check = values.at(-1);
+
+    if(values.length > 0 && check && !check.includes("."))
+    {
+      const checkSecond = values.pop();
+
+      if(checkSecond)
+      {
+        numbers = checkSecond + numbers;
+      }
+    }
+
+    return numbers;
+   }
+
+   getNumber()
+   getNumber()
+   getNumber()
+   getNumber()
+   const cost = getNumber()
+   const quantity = getNumber()
+
+   if(cost == undefined || quantity == undefined)
+   {
+      return null;
+   }
+
+    const holdings =  {
+      instrument_name: instrumentName.trim(),
+      quantity: quantity,
+      total_cost: (cost),
+    }
+
+    instrumentName = "";
+
+    return holdings;
+
+  }).filter((item) => item != null)
+
+
+   const PurchaseandSales = PurchaseAndSalesTable.map((row) => {
+
+    const splitParts = row.text.split(" ").filter((item => item !== ""))
+
+    if(!splitParts[0].includes("/"))
+    {
+      return null
+    }
+    const values = splitParts.slice(2)
+
+    const getNumber = () => {
+    let numbers = values.pop();
+
+    const check = values.at(-1);
+
+    if(values.length > 0 && check && !check.includes("."))
+    {
+      const CheckSecond = values.pop();
+
+      if(CheckSecond)
+      {
+        numbers = CheckSecond + numbers;
+      }
+    }
+
+    return numbers;
+   }
+
+   getNumber()
+   getNumber()
+   const quantity = getNumber()
+   const price = getNumber()
+   const instrumentname = values.join(" ")
+
+    return {
+      transaction_date: splitParts[0].replaceAll("/","-"),
+      transaction_name: splitParts[1],
+      instrument_name: instrumentname,
+      price: price,
+      quantity: quantity,
+    }
+
+  }).filter((item) => item != null)
+
+
+   const ContributionsandWithdrawals = ContributionsTable.map((row) => {
+    const splitParts = row.text.split(" ").filter((item => item !== ""))
+
+    if(!splitParts[0].includes("/"))
+    {
+      return null
+    }
+
+    const last = splitParts.at(-1) || "";
+    const secondLast = splitParts.at(-2) || "";
+
+    const chackThousands = !Number.isNaN(Number(secondLast))
+
+    return {
+      transaction_date: splitParts[0].replaceAll("/","-"),
+      statement_date: splitParts[1].replaceAll("/","-"),
+      transaction_name: splitParts.slice(2,chackThousands ? -2 : -1).join(" ").replaceAll("Capital",""),
+      value: chackThousands ? secondLast + last : last
+    }
+
+  }).filter((item) => item != null)
+
+  
+   const DividendsandWithholdingTax = TaxTable.map((row) => {
+    const splitParts = row.text.split(" ").filter((item) => item !== "")
+
+    if(!splitParts[0].includes("/"))
+    {
+      return null;
+    }
+
+    return {
+      transaction_date: splitParts[0].replaceAll("/","-"),
+      instrument_name: splitParts.slice(1,-4).join(" "),
+      gross_dividend: splitParts[splitParts.length - 4],
+      tax_rate: splitParts[splitParts.length - 1],
+    }
+  }).filter((item) => item != null)
+
+   const Expenses = ExpensesTable.map((row) => {
+    const splitParts = row.text.split(" ").filter((item => item !== ""))
+
+    if(!splitParts[0].includes("/"))
+    {
+      return null;
+    }
+
+    return {
+      transaction_date: splitParts[0].replaceAll("/","-"),
+      settlement_date: splitParts[1].replaceAll("/","-"),
+      narrative:  splitParts.slice(2,-1).join(" "),
+      value: splitParts[splitParts.length - 1],
+    }
+  }).filter((item) => item != null)
+
+  const results = {Portfolio,Holdings,PurchaseandSales,ContributionsandWithdrawals,DividendsandWithholdingTax,Expenses}
+
+  return results;
+
 }
 
 const Portfolio = () => {
   const [summary, setSummary] = useState("");
+  /**
+   * @type {[any, function]}
+   */
+  const [summary, setSummary] = useState(null);
+  /**
+   * @type {[any[], function]}
+   */
+
   const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState([]);
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState([]);
   const [GetTheLowest, setGetTheLowest] = useState([]);

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router';
 import useAuth from '../../hooks/useAuth';
 import { ROUTES } from '../../utils/constants';
 import FormInput from '../../components/forms/FormInput/FormInput';

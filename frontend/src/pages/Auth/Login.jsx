@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router';
 import useAuth from '../../hooks/useAuth';
 import useForm from '../../hooks/useForm';
 import FormInput from '../../components/forms/FormInput/FormInput';

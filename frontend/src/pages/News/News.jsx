@@ -192,6 +192,13 @@ const NewsInvestment = () => {
               (
               wishlist.map((items) => (         
             <tr key={items} className="border-b border-[var(--border-subtle)] mb-7">
+              wishlist.map(
+                /**
+                 * @param {any} items
+                 */
+                (items) => (         
+            <tr key={items.id} className="border-b border-gray-400 mb-7">
+
             <td>
               <p className="text-[var(--text-primary)]">{items.ticker}</p>
               <p className="text-[var(--text-secondary)]">{items.company_name}</p>
