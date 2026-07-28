@@ -1,6 +1,7 @@
 import yfinance as yf
 
 from app.repositories.watchlist import add_watchlist,get_watchlist,remove_watchlist
+from yfinance.exceptions import YFRateLimitError
 
 def add_watchlist_service(database,user_id,data):
     stock_info = yf.Ticker(data.ticker).info
@@ -21,18 +22,26 @@ def get_watchlist_service(database,user_id):
     AllResults = []
 
     for items in watchlist:
-        getInfo = yf.Ticker(items.ticker).info
+        try:
+            getInfo = yf.Ticker(items.ticker).info
+
+            current_price = getInfo.get("currentPrice")
+            change_percent = getInfo.get("regularMarketChangePercent")
+
+        except YFRateLimitError:
+            current_price = 0
+            change_percent = 0
 
         AllResults.append({
             "id": items.id,
             "ticker": items.ticker,
             "company_name": items.company_name,
             "sector": items.sector,
-            "current_price": getInfo.get("currentPrice"),
-            "change_percent": getInfo.get("regularMarketChangePercent"),
+            "current_price": current_price,
+            "change_percent": change_percent,
 
         })
-
+        
     if len(AllResults) == 0:
         return{
             "success": True,

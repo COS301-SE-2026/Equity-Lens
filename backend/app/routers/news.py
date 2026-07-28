@@ -7,8 +7,6 @@ from app.database import get_db
 from app.schemas.auth import UserResponse
 from sqlalchemy.orm import Session
 
-from app.services.news_service import get_portfolio_new,clean_instrument_news
-
 load_dotenv()
 
 router = APIRouter(prefix="/api/news", tags=["importing news"])
