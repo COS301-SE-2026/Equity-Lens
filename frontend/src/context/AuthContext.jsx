@@ -9,18 +9,20 @@ import {
   respondToMFA,
 } from '../services/authService';
 
-const AuthContext = createContext(null);
+const AuthContext = createContext(/** @type {any} */ (null));
 
+/** @param {{ children: import('react').ReactNode }} props */
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(/** @type {any} */ (null));
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [mfaState, setMfaState] = useState(null);
+  const [error, setError] = useState(/** @type {string|null} */ (null));
+  const [mfaState, setMfaState] = useState(/** @type {{ type: string, email: string }|null} */ (null));
 
 useEffect(() => {
     const initAuth = async () => {
-      if (typeof window !== 'undefined' && window.__E2E_AUTH_BYPASS__) {
-        setUser(window.__E2E_AUTH_BYPASS__);
+      const win = /** @type {any} */ (window);
+      if (typeof window !== 'undefined' && win.__E2E_AUTH_BYPASS__) {
+        setUser(win.__E2E_AUTH_BYPASS__);
         setLoading(false);
         return;
       }
@@ -37,22 +39,25 @@ useEffect(() => {
     initAuth();
   }, []);
 
+  /** @param {string} fullName @param {string} email @param {string} password */
   const register = async (fullName, email, password) => {
     try {
       await registerService(fullName, email, password);
     } catch (err) {
-      throw new Error(err.message || 'Registration failed');
+      throw new Error((err instanceof Error ? err.message : null) || 'Registration failed');
     }
   };
 
+  /** @param {string} email @param {string} code */
   const confirmEmail = async (email, code) => {
     try {
       await confirmRegistration(email, code);
     } catch (err) {
-      throw new Error(err.message || 'Confirmation failed');
+      throw new Error((err instanceof Error ? err.message : null) || 'Confirmation failed');
     }
   };
 
+  /** @param {string} email @param {string} password */
   const login = async (email, password) => {
     try {
       const { nextStep } = await loginService(email, password);
@@ -73,10 +78,11 @@ useEffect(() => {
         return { challenge: null };
       }
     } catch (err) {
-      throw new Error(err.message || 'Login failed');
+      throw new Error((err instanceof Error ? err.message : null) || 'Login failed');
     }
   };
 
+  /** @param {string} totpCode */
   const submitMFACode = async (totpCode) => {
     try {
       const result = await respondToMFA(totpCode);
@@ -85,7 +91,7 @@ useEffect(() => {
         setMfaState(null);
       }
     } catch (err) {
-      throw new Error(err.message || 'Invalid MFA code');
+      throw new Error((err instanceof Error ? err.message : null) || 'Invalid MFA code');
     }
   };
 

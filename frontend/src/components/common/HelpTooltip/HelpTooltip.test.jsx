@@ -7,7 +7,7 @@ describe('HelpTooltip', () => {
     render(<HelpTooltip text="Plain-language explanation" />);
     expect(screen.queryByText('Plain-language explanation')).not.toBeInTheDocument();
 
-    fireEvent.mouseEnter(screen.getByLabelText('What does this mean?').parentElement);
+    fireEvent.mouseEnter(screen.getByLabelText('What does this mean?'));
     expect(screen.getByText('Plain-language explanation')).toBeInTheDocument();
   });
 

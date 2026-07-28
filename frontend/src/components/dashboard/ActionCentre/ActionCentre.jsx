@@ -3,9 +3,9 @@ import { AlertTriangle, Lightbulb, MessageCircle, CheckCircle2, Upload } from 'l
 import { GlassPanel, PanelHead } from '../shared/GlassPanel';
 
 const SEVERITY = {
-  risk: { icon: AlertTriangle, color: 'var(--signal-negative)', label: 'RISK' },
-  suggestion: { icon: Lightbulb, color: 'var(--accent-primary)', label: 'SUGGESTION' },
-  info: { icon: MessageCircle, color: 'var(--text-secondary)', label: 'WORTH ASKING' },
+  risk: { icon: AlertTriangle, color: 'var(--signal-negative)', label: 'Risk' },
+  suggestion: { icon: Lightbulb, color: 'var(--accent-primary)', label: 'Suggestion' },
+  info: { icon: MessageCircle, color: 'var(--text-secondary)', label: 'Worth Asking' },
 };
 
 /**
@@ -57,7 +57,7 @@ const ActionItem = ({ item, onScrollTo }) => {
  */
 const ActionCentre = ({ items, hasHoldings, onScrollTo }) => (
   <GlassPanel>
-    <PanelHead label="ACTION CENTRE" hint={hasHoldings ? `${items.length} item${items.length === 1 ? '' : 's'}` : undefined} />
+    <PanelHead label="Action Centre" hint={hasHoldings ? `${items.length} item${items.length === 1 ? '' : 's'}` : undefined} />
     <div className="p-5">
       {!hasHoldings ? (
         <div className="flex flex-col items-center gap-3 py-6 text-center">
@@ -70,7 +70,7 @@ const ActionCentre = ({ items, hasHoldings, onScrollTo }) => (
             className="mt-1 rounded-md px-4 py-2 font-mono text-[11px] font-medium"
             style={{ background: 'var(--accent-primary)', color: 'var(--text-on-accent)' }}
           >
-            IMPORT PORTFOLIO
+            Import Portfolio
           </Link>
         </div>
       ) : items.length === 0 ? (

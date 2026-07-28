@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { getPortfolio } from '../services/portfolioService';
 
 const usePortfolio = () => {
-  const [portfolioData, setPortfolioData] = useState(null);
+  const [portfolioData, setPortfolioData] = useState(/** @type {any} */ (null));
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [fetchedAt, setFetchedAt] = useState(null);
+  const [error, setError] = useState(/** @type {string|null} */ (null));
+  const [fetchedAt, setFetchedAt] = useState(/** @type {Date|null} */ (null));
 
   useEffect(() => {
     const fetchPortfolio = async () => {
@@ -17,7 +17,10 @@ const usePortfolio = () => {
         setFetchedAt(new Date());
       } catch (err) {
         console.warn('portfolio fetch failed:', err);
-        setError(err.response?.data?.detail || err.message || 'Failed to load portfolio data');
+        const message =
+          err && typeof err === 'object' && 'response' in err
+            ? /** @type {any} */ (err).response?.data?.detail : err instanceof Error ? err.message : null;
+        setError(message || 'Failed to load portfolio data');
       } finally {
         setLoading(false);
       }

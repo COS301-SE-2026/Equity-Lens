@@ -27,8 +27,8 @@ describe('DashboardHoldingsTable', () => {
 
   it('shows positive today', () => {
     renderTable(HOLDINGS);
-    expect(screen.getByText(/\(\+1\.20%\)/)).toBeInTheDocument();
-    expect(screen.getByText(/\(-0\.50%\)/)).toBeInTheDocument();
+    expect(screen.getByText(/\(\+6\.70%\)/)).toBeInTheDocument();
+    expect(screen.getByText(/\(\+4\.20%\)/)).toBeInTheDocument();
   });
 
   it('shows an empty state', () => {

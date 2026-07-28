@@ -85,7 +85,7 @@ export function getTopHolding(holdings) {
 
 /**
  * @param {{ date: string, name: string, value: number, benchmark?: number }[]} series
- * @param {'1D'|'1W'|'1M'|'1Y'|'ALL'} range
+ * @param {'1D'|'1W'|'1M'|'3M'|'1Y'|'ALL'} range
  * @returns {{ series: { date: string, name: string, value: number, benchmark?: number }[] }}
  */
 export function filterByRange(series, range) {
@@ -109,15 +109,15 @@ export function buildChartStats(series) {
   const last = series[series.length - 1];
   const portPct = first.value ? ((last.value - first.value) / first.value) * 100 : 0;
 
-  const firstPnt = series.find((p) => p.benchmark != null && p.benchmark !== 0);
-  const lastPnt = [...series].reverse().find((p) => p.benchmark != null);
+  const firstPnt = series.find((p) => p.benchmark !== null && p.benchmark !== 0);
+  const lastPnt = [...series].reverse().find((p) => p.benchmark !== null);
 
   let benchAvailable = false;
   let benchPct = 0;
   if (firstPnt && lastPnt && firstPnt !== lastPnt) {
     const firstVal = firstPnt.benchmark;
     const lastVal = lastPnt.benchmark;
-    if (firstVal != null && lastVal != null) {
+    if (typeof firstVal === 'number' && typeof lastVal === 'number') {
       benchAvailable = true;
       benchPct = ((lastVal - firstVal) / firstVal) * 100;
     }

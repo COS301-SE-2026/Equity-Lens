@@ -65,11 +65,11 @@ describe('buildSummary', () => {
     const summary = buildSummary({ holdings, sectorData, attribution, chartStats, dailyChangePct: 0 });
 
     expect(summary.headline).toBe(
-      'NPN is your largest holding at 58% of your portfolio, making single-stock risk your primary concern.',
+      '58% of your portfolio is in NPN, making it your biggest source of risk.',
     );
     expect(summary.supportingText).toEqual([
-      'Technology now represents 58% of your portfolio, making sector concentration a significant source of risk.',
-      'Only 2 positions make up your entire portfolio, leaving very little diversification.',
+      '58% of your book is in Technology, adding sector concentration risk.',
+      'Only 2 positions make up your entire book.',
     ]);
     expect(summary.severity).toBe('risk');
     expect(summary.badge).toBe('Concentration');
@@ -103,7 +103,7 @@ describe('buildSummary', () => {
     const summary = buildSummary({ holdings, sectorData, attribution, chartStats, dailyChangePct: 0.1 });
 
     expect(summary.headline).toBe(
-      'Your portfolio remains well diversified across sectors, with no individual company representing more than 17% of total value.',
+      'Your holdings are well diversified, no company is more than 17% of your book.',
     );
     expect(summary.severity).toBe('neutral');
     expect(summary.badge).toBe('Overview');
@@ -125,7 +125,7 @@ describe('buildSummary', () => {
 
     const summary = buildSummary({ holdings, sectorData, attribution, chartStats, dailyChangePct: 0 });
 
-    expect(summary.headline).toBe('You currently have no Healthcare exposure, a common gap in balanced JSE portfolios.');
+    expect(summary.headline).toBe('You have no Healthcare exposure - a common gap in balanced JSE portfolios.');
     expect(summary.severity).toBe('opportunity');
     expect(summary.badge).toBe('Opportunity');
   });

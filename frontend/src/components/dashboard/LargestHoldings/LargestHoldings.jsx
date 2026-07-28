@@ -1,13 +1,12 @@
 import { Link } from 'react-router-dom';
-import { GlassPanel } from '../shared/GlassPanel';
-import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
+import { GlassPanel, PanelHead } from '../shared/GlassPanel';
 import { zar } from '../../../utils/currency';
 
 /** @param {{ label: string, value: string }} props */
 const ExposureStat = ({ label, value }) => (
   <div>
     <div className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
-      {label.toUpperCase()}
+      {label}
     </div>
     <div className="mt-0.5 font-mono text-[16px] font-semibold" style={{ color: 'var(--text-primary)' }}>
       {value}
@@ -25,12 +24,10 @@ const LargestHoldings = ({ holdings, sectorCount }) => {
 
   return (
     <GlassPanel className="flex h-full flex-col">
-      <div className="flex items-center gap-1.5 px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <div className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
-          LARGEST POSITIONS
-        </div>
-        <HelpTooltip text="Your biggest holdings by rand value - not necessarily your best performers. A large position means more of your money moves with that one stock." />
-      </div>
+      <PanelHead
+        label="Largest Positions"
+        help="Your biggest holdings by rand value - not necessarily your best performers."
+      />
       <div className="grid grid-cols-3 gap-4 px-5 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
         <ExposureStat label="Positions" value={String(holdings.length)} />
         <ExposureStat label="Sectors" value={String(sectorCount)} />

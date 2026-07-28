@@ -38,7 +38,7 @@ const TodayInsights = ({ insights, onScrollTo }) => {
 
   return (
     <GlassPanel>
-      <PanelHead label="TODAY'S INSIGHTS" />
+      <PanelHead label="Today's Insights" />
       <div className={`${SCROLL_LIST_CLASS} space-y-3 p-4`} style={SCROLL_LIST_STYLE}>
         {insights.map((insight) => {
           const { color } = (insight.type ? TONE[insight.type] : undefined) ?? DEFAULT;

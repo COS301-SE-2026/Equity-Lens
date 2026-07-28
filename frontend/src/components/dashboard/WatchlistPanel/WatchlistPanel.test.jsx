@@ -46,14 +46,20 @@ describe('WatchlistPanel', () => {
     expect(screen.getByText(/no stocks tracked yet/i)).toBeInTheDocument();
   });
 
-  it('opens a ticker input on + ADD and calls addTicker on submit', async () => {
+  it('opens a ticker input on + Add and calls addTicker on submit', async () => {
     render(<WatchlistPanel />);
-    fireEvent.click(screen.getByText('ADD'));
+    fireEvent.click(screen.getByText('Add'));
 
     const input = screen.getByPlaceholderText('e.g. NPN');
     fireEvent.change(input, { target: { value: 'sbk' } });
-    fireEvent.click(screen.getByText('Add'));
+    fireEvent.click(screen.getByText('Add', { selector: 'button[type="submit"]' }));
 
     expect(addTicker).toHaveBeenCalledWith('sbk');
+  });
+
+  it('calls removeTicker with the item id when its remove button is clicked', () => {
+    render(<WatchlistPanel />);
+    fireEvent.click(screen.getByTitle('Remove ABG from watchlist'));
+    expect(mockState.removeTicker).toHaveBeenCalledWith('w1');
   });
 });

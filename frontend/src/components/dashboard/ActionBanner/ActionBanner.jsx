@@ -3,9 +3,9 @@ import { GlassPanel, PanelHead } from '../shared/GlassPanel';
 import { Link } from 'react-router-dom';
 
 const SEVERITY = {
-  risk: { color: 'var(--signal-negative)', bg: 'var(--signal-negative-bg)', label: 'RISK' },
-  suggestion: { color: 'var(--accent-primary)', bg: 'var(--accent-subtle)', label: 'SUGGESTION' },
-  info: { color: 'var(--text-secondary)', bg: 'var(--surface-hover)', label: 'WORTH ASKING' },
+  risk: { color: 'var(--signal-negative)', bg: 'var(--signal-negative-bg)', label: 'Risk' },
+  suggestion: { color: 'var(--accent-primary)', bg: 'var(--accent-subtle)', label: 'Suggestion' },
+  info: { color: 'var(--text-secondary)', bg: 'var(--surface-hover)', label: 'Worth Asking' },
 };
 
 /**
@@ -36,7 +36,7 @@ const ActionCard = ({ item, onScrollTo }) => {
           {label}
         </div>
         <span className="font-mono text-[9px] font-bold tracking-widest" style={{ color: 'var(--text-ghost)' }}>
-          {item.impact.toUpperCase()} IMPACT
+          {item.impact} Impact
           {item.healthImprovement !== null && ` · +${item.healthImprovement.toFixed(1)} Health`}
         </span>
       </div>
@@ -75,7 +75,7 @@ const ActionCard = ({ item, onScrollTo }) => {
  */
 const ActionBanner = ({ items, hasHoldings, onScrollTo }) => (
   <GlassPanel>
-    <PanelHead label="ACTION CENTRE" hint={hasHoldings ? `${items.length} item${items.length === 1 ? '' : 's'}` : undefined} />
+    <PanelHead label="Action Centre" hint={hasHoldings ? `${items.length} item${items.length === 1 ? '' : 's'}` : undefined} />
     <div className="p-4">
       {!hasHoldings ? (
         <div className="flex flex-col items-center gap-3 py-6 text-center">
@@ -88,7 +88,7 @@ const ActionBanner = ({ items, hasHoldings, onScrollTo }) => (
             className="mt-1 rounded-md px-4 py-2 font-mono text-[11px] font-medium"
             style={{ background: 'var(--accent-primary)', color: 'var(--text-on-accent)' }}
           >
-            IMPORT PORTFOLIO
+            Import Portfolio
           </Link>
         </div>
       ) : items.length === 0 ? (
