@@ -47,7 +47,7 @@ def test_add_watchlist_service(mock_ticker, mock_data):
     assert result["highest"]["ticker"] == "AAPL"
     assert result["lowest"]["ticker"] == "AAPL"
 
-@patch("app.watchlist.watchlist.remove_watchlist")
+@patch("app.services.watchlist.remove_watchlist")
 def test_remove_watchlist_service(mock_remove):
     result = remove_watchlist_service(Mock(),1,10)
 

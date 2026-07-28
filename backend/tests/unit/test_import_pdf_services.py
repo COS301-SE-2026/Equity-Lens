@@ -89,13 +89,21 @@ def test_save_contributions_and_withdrawals_import(mock_search, mock_data):
     assert result["Message"] == "Contributions and withdrawals has been saved successfully"
 
 @patch("app.services.import_pdf.save_dividends_and_withholding_tax")
-def test_save_dividends_and_withholding_tax_import(mock_data):
+@patch("app.services.import_pdf.search_ticket_number")
+def test_save_dividends_and_withholding_tax_import(mock_search,mock_data):
+    mock_search.return_value = {
+        "ticker" : "AAPL",
+        "sector": "Tech"
+    }
+
     mock_data.return_value = Mock()
+    data = Mock()
+    data.instrument_name = "Apple"
 
     result =  save_dividends_and_withholding_tax_import(
         database=Mock(),
         user_id=4,
-        data=Mock(),
+        data=data,
     )
 
     assert result["Success"] is True
