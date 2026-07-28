@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { useState } from 'react';
 import useAuth from '../hooks/useAuth';
 import LoadingSpinner from '../components/common/LoadingSpinner/LoadingSpinner';
@@ -14,6 +14,7 @@ import AIChat from '../pages/AIChat/AIChat';
 import { ROUTES } from '../utils/constants';
 import Analytics from '../pages/Analytics/Analytics';
 import ConfirmEmail from '../pages/Auth/ConfirmEmail';
+import Landing from '../pages/Landing/Landing';
 
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -46,11 +47,10 @@ const PublicRoute = ({ children }) => {
   return !isAuthenticated ? children : <Navigate to={ROUTES.DASHBOARD} replace />;
 };
 
-const AppRouter = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
-      <Route path={ROUTES.REGISTER} element={<PublicRoute><Register /></PublicRoute>} />
+export const AppRoutes = () => (
+  <Routes>
+    <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
+    <Route path={ROUTES.REGISTER} element={<PublicRoute><Register /></PublicRoute>} />
 
       <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path={ROUTES.PORTFOLIO} element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
@@ -59,9 +59,14 @@ const AppRouter = () => (
       <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
       <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
 
-      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
+      <Route path={ROUTES.HOME} element={<Landing />} />  
       <Route path="*" element={<NotFound />} />
     </Routes>
+);
+
+const AppRouter = () => (
+  <BrowserRouter>
+    <AppRoutes />
   </BrowserRouter>
 );
 
