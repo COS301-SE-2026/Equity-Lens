@@ -1,5 +1,6 @@
 import random
 import time
+import secrets
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
@@ -46,6 +47,6 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
         results.append(serialize_indicator_row(row))
         #Small delay between tickers to try and avoid yfinance rate limiting
         if index < len(tickers) - 1:
-            time.sleep(random.uniform(1.0, 2.0))
+            time.sleep(secrets.SystemRandom().uniform(1.0, 2.0))
 
     return results

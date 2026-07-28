@@ -5,7 +5,6 @@ from uuid import UUID
 
 
 class CurrentPriceParams(BaseModel):
-    
     symbol: str = Field(..., description="Stock symbol, e.g. AAPL", example="AAPL")
 
 class HistoryParams(BaseModel):
@@ -21,7 +20,6 @@ class HistoryParams(BaseModel):
         return v
 
 class SearchParams(BaseModel):
-    
     query: str = Field(..., min_length=1, description="Search keyword, e.g. 'Apple'")
 
 class CurrentPriceResponse(BaseModel):

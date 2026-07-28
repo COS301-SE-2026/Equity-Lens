@@ -2,31 +2,30 @@ from fastapi import APIRouter, Depends
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
 from app.services.market_data_service import get_current_price, get_historical_data, search_stocks
-from app.schemas.market_data import CurrentPriceResponse, HistoryResponse, SearchResponse
+from app.schemas.market_data import CurrentPriceResponse, HistoryResponse, SearchResponse, CurrentPriceParams, SearchParams, HistoryParams
 
 router = APIRouter(prefix="/api/stocks", tags=["stocks"])
 
-@router.get("/details")
+@router.get("/details", response_model=CurrentPriceResponse)
 def stock_details(
-    symbol: str,
-    current_user: UserResponse = Depends(get_current_user)
+    params: CurrentPriceParams = Depends(),
+    current_user: UserResponse = Depends(get_current_user),
 ):
     """Get full stock details"""
-    return get_current_price(symbol)
+    return get_current_price(params.symbol)
 
-@router.get("/history")
+@router.get("/history", response_model=HistoryResponse)
 def stock_history(
-    symbol: str,
-    period: str = "1mo",
-    current_user: UserResponse = Depends(get_current_user)
+    params: HistoryParams = Depends(),
+    current_user: UserResponse = Depends(get_current_user),
 ):
     """Get historical OHLCV data"""
-    return get_historical_data(symbol,period)
+    return get_historical_data(params.symbol,params.period)
 
-@router.get("/search")
+@router.get("/search", response_model=SearchResponse)
 def search_stocks_endpoint(
-    query: str,
+    params: SearchParams = Depends(),
     current_user: UserResponse = Depends(get_current_user)
 ):
     """Search for stocks by name or symbol"""
-    return search_stocks(query)
+    return search_stocks(params.query)
