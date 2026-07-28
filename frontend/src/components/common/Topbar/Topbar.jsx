@@ -2,11 +2,12 @@ import { Menu, Sun, Moon } from 'lucide-react';
 import { useThemeContext } from '../../../context/ThemeContext.jsx';
 import useAuth from '../../../hooks/useAuth';
 
-const MARKET_DATA = [
-  { label: 'JSE·ALSI', value: '81,204', change: '+0.84%', positive: true },
-  { label: 'USD/ZAR', value: '18.42', change: '-0.31%', positive: false },
-  { label: 'BRENT', value: '83.14', change: '+1.12%', positive: true },
-];
+// pulled for demo 2 - was hardcoded mock data, not live. revisit properly for demo 3.
+// const MARKET_DATA = [
+//   { label: 'JSE·ALSI', value: '81,204', change: '+0.84%', positive: true },
+//   { label: 'USD/ZAR', value: '18.42', change: '-0.31%', positive: false },
+//   { label: 'BRENT', value: '83.14', change: '+1.12%', positive: true },
+// ];
 
 const Topbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
@@ -56,7 +57,7 @@ const Topbar = ({ onMenuClick }) => {
         <span style={{ color: 'var(--border-mid)', fontSize: '14px' }}>|</span>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }} className="hidden md:flex">
-          {MARKET_DATA.map((m) => (
+          {/* {MARKET_DATA.map((m) => (
             <div
               key={m.label}
               style={{
@@ -74,7 +75,7 @@ const Topbar = ({ onMenuClick }) => {
                 {m.change}
               </span>
             </div>
-          ))}
+          ))} */}
         </div>
       </div>
 
