@@ -1,6 +1,7 @@
 import re
 from typing import NamedTuple
 
+
 class Instrument(NamedTuple):
     ticker: str
     sector: str
@@ -22,15 +23,6 @@ EXPOSURE_EM_EQUITY = "Emerging Market Equity"
 EXPOSURE_UNKNOWN_FUND = "Unclassified Fund"
 
 _STOCKS = {
-    "Alphabet Inc-CL A": ("GOOGL", "Technology", REGION_US),
-    "Alphabet Inc-CL C": ("GOOG", "Technology", REGION_US),
-    "Microsoft Corp": ("MSFT", "Technology", REGION_US),
-    "NVIDIA Corp": ("NVDA", "Technology", REGION_US),
-    "Taiwan Semiconductor Manufacturing Co Ltd": ("TSM", "Technology", REGION_EM),
-    "Apple Inc": ("AAPL", "Technology", REGION_US),
-    "Amazon.com Inc": ("AMZN", "Consumer Cyclical", REGION_US),
-    "Meta Platforms Inc": ("META", "Technology", REGION_US),
-    "Tesla Inc": ("TSLA", "Consumer Cyclical", REGION_US),
     "Naspers Limited": ("NPN.JO", "Technology", REGION_SA),
     "Standard Bank Group": ("SBK.JO", "Financial Services", REGION_SA),
     "Capitec Bank Holdings": ("CPI.JO", "Financial Services", REGION_SA),
@@ -57,6 +49,10 @@ _ETFS = {
     ),
     "EasyETFs AI World Actively Managed ETF": ("EASYAI.JO", EXPOSURE_GLOBAL_EQUITY, REGION_GLOBAL),
 }
+
+def is_zar_listed(ticker: str | None) -> bool:
+    return bool(ticker) and ticker.upper().endswith(".JO")
+
 
 REGION_BENCHMARKS = {
     REGION_SA: ("^J203.JO", "JSE ALSI", "ZAR"),
