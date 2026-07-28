@@ -1,4 +1,5 @@
-from app.utils.stock_cache import get_cached_price_history, get_cached_fundamentals
+import pandas as pd
+from app.utils.stock_cache import get_cached_price_history
 from datetime import datetime, timezone
 from uuid import uuid4
 
@@ -22,11 +23,9 @@ def get_current_price(symbol: str) -> CurrentPriceResponse:
     latest = history.iloc[-1]
     price = float(latest["Close"])
     volume = int(latest["Volume"] or 0)
-    fundamentals = get_cached_fundamentals(symbol)
-    info = fundamentals.get("info", {})
-    previous_close = info.get("regularMarketPreviousClose") or info.get("previousClose")
+    previous_close = latest.get("Prev Close")
 
-    if previous_close is None:
+    if previous_close is None or pd.isna(previous_close):
         if len(history) >= 2:
             previous_close = float(history.iloc[-2]["Close"])
         else:
@@ -59,6 +58,7 @@ def get_historical_data(symbol: str, period: str) -> HistoryResponse:
             high=float(row["High"]),
             low=float(row["Low"]),
             close=float(row["Close"]),
+            prev_close=float(row["Prev Close"]) if "Prev Close" in row and not pd.isna(row["Prev Close"]) else None,
             volume=int(row["Volume"] or 0),
         )
         for index, row in history.iterrows()

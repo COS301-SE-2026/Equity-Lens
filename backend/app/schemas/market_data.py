@@ -41,6 +41,7 @@ class HistoryDataPoint(BaseModel):
     high: float
     low: float
     close: float
+    prev_close: Optional[float] = None
     volume: int
 
 class HistoryResponse(BaseModel):
