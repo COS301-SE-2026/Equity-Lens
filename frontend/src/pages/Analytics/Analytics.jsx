@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import useIndicators from '../../hooks/useIndicators';
+import {useNavigate} from 'react-router-dom';
 
 const INDICATORS = {
   capm: {
@@ -92,6 +93,14 @@ const IndicatorCell = ({ indicatorKey, result, loading }) => {
     : sig === 'negative' ? 'var(--signal-negative,#ef4444)'
     : 'var(--text-primary,#e5e5e5)';
 
+    const formatValue = (value) => {
+      const numericValue = Number(value);
+      if(!Number.isFinite(numericValue)){
+        return value;
+      }
+      return numericValue.toFixed(2);
+    };
+
   if (loading) return (
     <div className="flex flex-col gap-1.5 animate-pulse pt-1">
       <div className="h-4 w-12 rounded" style={{ background: 'var(--border-subtle,#2a2a2a)' }}/>
@@ -120,7 +129,7 @@ const IndicatorCell = ({ indicatorKey, result, loading }) => {
     <div className="flex flex-col gap-0.5 pt-1">
       <span className="text-sm font-mono font-semibold tabular-nums"
         style={{ color: color(sig), letterSpacing: '-0.02em' }}>
-        {result.value}{result.unit}
+        {formatValue(result.value)}{result.unit}
       </span>
       <span className="text-[9px] leading-tight" style={{ color: 'var(--text-ghost,#444)' }}>
         {meta.describe(result.value)}
@@ -161,7 +170,7 @@ const StockRow = ({ stock, loading, results, index }) => (
 
 export default function Analytics() {
   const { stockData, loading, error } = useIndicators();
-
+  const navigate = useNavigate();
   const stocks = Object.values(stockData).map((s) => s.results).filter(Boolean);
 
   return (
@@ -196,7 +205,22 @@ export default function Analytics() {
             <p className="text-[10px] mt-1" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>{error}</p>
           </div>
         )}
-
+        {!loading && !error && stocks.length === 0 && (
+          <div className="terminal-card text-center p-8">
+            <p className="text-xs font-medium" style={{color: 'var(--text-primary,#e5e5e5)'}}>
+              No Holdings
+              </p>
+              <p className="text-[10px] mt-1" style={{color: 'var(--text-secondary,#a0a0a0)'}}>
+                Add some holdings to your portfolio to see indicators here.
+              </p>
+              <button onClick={() => navigate('/Portfolio')}
+               className="mt-4 text-[10px] font-mono px-4 py-2 rounded" 
+               style={{background:'var(--text-primary,#e5e5e5)',color:'var(--bg-primary,#0a0a0a)'}}>
+                Import Holdings
+               </button>
+          </div>
+        )}
+        {(loading || stocks.length > 0) && (
         <div className="flex flex-col gap-3">
           {loading
             ? Array.from({ length: 2 }).map((_, i) => (
@@ -223,6 +247,7 @@ export default function Analytics() {
               ))
           }
         </div>
+        )}
       </div>
     </>
   );

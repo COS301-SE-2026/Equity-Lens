@@ -4,12 +4,14 @@ from app.routers import auth, portfolio
 from app.database import create_tables
 from app.config import settings
 from app.models import user
+from app.models import market_data
 from fastapi.responses import PlainTextResponse
 import traceback
 from app.routers import news
 from app.routers import import_pdf
 from app.routers import pdf_summary
 from app.routers import watchlist
+from app.routers import indicators
 from app.routers import ai_chat
 
 app = FastAPI(title="EquityLens API")
@@ -46,4 +48,4 @@ app.include_router(watchlist.router)
 app.include_router(news.router)
 app.include_router(ai_chat.router)
 app.include_router(import_pdf.router)
-
+app.include_router(indicators.router)
