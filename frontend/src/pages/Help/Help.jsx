@@ -1,6 +1,6 @@
 import {Link} from 'react-router-dom';
 import {ROUTES} from '../../utils/constants'
-import { div } from 'framer-motion/client';
+import {useState} from 'react';
 
 const REDIRECTS = [
     {
@@ -11,7 +11,7 @@ const REDIRECTS = [
     },
     {
         title: 'Import your portfolio',
-        body: 'Upload a PDF of CSV file.',
+        body: 'Upload a PDF or Excel file.',
         to: ROUTES.PORTFOLIO,
         action: "Go to portfolio"
     },
@@ -35,9 +35,30 @@ const REDIRECTS = [
     },
 ];
 
+const QNA = [
+    {
+        q: "Which file formats can I upload?",
+        a: "Excel by following the template and PDF"
+    },
+    {
+        q: "Can the AI Assistant see my portfolio?",
+        a: "Yes, it uses your uploaded portfolio and replies are based off of those."
+    },
+    {
+        q: "Is this financial advice?",
+        a: "No. EquityLens is there to help you gain futher insight into your portfolio."
+    }
+];
+
 const CARD = 'terminal-card flex flex-col p-4';
 
-const Help = () => (
+const Help = () => {
+    /**
+     * @type {[number | null, function]}
+     */
+    const [open, closed] = useState(null);
+
+    return (
     <div className = "mx-auto w-full wax-w-4x1">
         <h1 className = "text-3xl font-semibold text-center">Help</h1>
 
@@ -50,7 +71,23 @@ const Help = () => (
                 </div>
             ))}
         </div>
+
+        <h2 className = "mt-10 text-x1 font-semiBold">FAQs</h2>
+
+        <div className = "mt-4 flex flex-col gap-2">
+            {QNA.map(({q,a}, i) => (
+                <div key = {q} className = "terminal-card">
+                    <button type = "button" onClick = {() => closed(open === i ? null : i)} aria-expanded = {open === i} 
+                            className = "flex w-full items-center justify-between p-4 text-left text-sm font-medium">
+                        {q}
+                        <span className = "text-text-secondary">{open === i ? '-' : '+'}</span>
+                    </button>
+                    {open === i && (<p className = "px-4 pb-4 text-sm font-medium text-text-secondary">{a}</p>)}
+                </div>
+            ))}
+        </div>
     </div>
-)
+    )
+}
 
 export default Help;
