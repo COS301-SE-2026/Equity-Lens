@@ -269,7 +269,7 @@ const AIChat = () => {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask the assistant…"
+          placeholder="Ask the assistant..."
           maxLength={500}
           className="flex-1 rounded-lg border border-[var(--border-default)]
                      bg-[var(--bg-secondary)] px-3 py-2.5 text-sm
