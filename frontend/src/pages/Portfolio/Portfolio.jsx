@@ -1,18 +1,18 @@
 import { useState } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
-import { ArrowLeftRight, Wallet, CreditCard, Percent, TrendingUp, Landmark, Receipt, Briefcase, TriangleAlert, Bot, Download } from "lucide-react"
+import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, TriangleAlert, Bot ,LoaderCircle } from "lucide-react"
 import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
 import api from "../../services/api"
 import * as XLSX from "xlsx"
 
 ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
 
+const DownloadEXCEL = () =>{ window.open("/template/EquityLens_Portfolio_Excel_Template.xlsx") }
 
-const DownloadPDF = () => { window.open("/template/EquityLens PDF Import Template.pdf")}
-const DownloadEXCEL = () =>{ window.open("/template/EquityLens Portfolio Excel Template.xlsx") }
-
-
+/**
+ * @param {File} file
+ */
 const ReadingExcelFile = async(file) => {
 
   if(!file)
@@ -23,40 +23,39 @@ const ReadingExcelFile = async(file) => {
   const read = XLSX.read(await file.arrayBuffer());
 
   const Portfolio = XLSX.utils.sheet_to_json(read.Sheets["Portfolio"]).map((item) =>({
-          account_number: item.Account_Number,
-          portfolio_name: item.Portfolio_Name,
-          statement_date: item.Statement_Date,
-          portfolio_value: item.Portfolio_Value,
+          account_number: item["Account Number"],
+          portfolio_name: item["Portfolio Name"],
+          statement_date: item["Statement Date"],
   }));
   const Holdings = XLSX.utils.sheet_to_json(read.Sheets["Holdings"]).map((item) =>({
-         instrument_name: item.Instrument_Name,
-          quantity: item.Quantity,
-          total_cost: item.Total_Cost,
+         instrument_name: item["Instrument Name"],
+          quantity: item["Quantity"],
+          total_cost: item["Total Cost"],
   }));
   const PurchaseandSales = XLSX.utils.sheet_to_json(read.Sheets["Purchase and Sales"]).map((item) =>({
-          transaction_date: item.Transaction_Date,
-          transaction_name: item.Transaction_Type,
-          instrument_name: item.Instrument_Name,
+          transaction_date: item["Transaction Date"],
+          transaction_name: item["Transaction Type"],
+          instrument_name: item["Instrument Name"],
           price: item.Price,
           quantity: item.Quantity
   }));
   const ContributionsandWithdrawals = XLSX.utils.sheet_to_json(read.Sheets["Contributions and Withdrawals"]).map((item) =>({
-              transaction_date: item.Transaction_Date,
-              statement_date: item.Settlement_Date,
-              transaction_name: item.Transaction_Type,
+              transaction_date: item["Transaction Date"],
+              statement_date: item["Settlement Date"],
+              transaction_name: item["Transaction Type"],
               value: item.Value,
   }));
   const DividendsandWithholdingTax = XLSX.utils.sheet_to_json(read.Sheets["Dividends and Withholding Tax"]).map((item) =>({
-              transaction_date: item.Transaction_Date,
-              instrument_name: item.Instrument_Name,
-              gross_dividend: item.Gross_Dividend,
-              tax_rate: item["Tax_Rate(%)"],
+              transaction_date: item["Transaction Date"],
+              instrument_name: item["Instrument Name"],
+              gross_dividend: item["Gross Dividend"],
+              tax_rate: item["Tax Rate(%)"],
   }));
   const Expenses = XLSX.utils.sheet_to_json(read.Sheets["Expenses"]).map((item) =>({
-              transaction_date: item.Transaction_Date,
-              settlement_date: item.Settlement_Date,
-              narrative: item.Narrative,
-              value: item.Value,
+              transaction_date: item["Transaction Date"],
+              settlement_date: item["Settlement Date"],
+              narrative: item["Narrative"],
+              value: item["Value"],
   }));
 
 
@@ -66,143 +65,342 @@ const ReadingExcelFile = async(file) => {
 
 }
 
-
-const ReadingPDFFile = async(file) => {
-
-
+/**
+ * @param {File} file
+ * @param {string } password
+ */
+const ReadingPDFFile = async(file,password) =>
+{
   if(!file)
   {
-    return;
+    return
   }
 
-        const convertPdf = await ShowPdf.getDocument({
+  const convertPdf = await ShowPdf.getDocument({
         data: await file.arrayBuffer(),
+        password: password,
       }).promise;
 
-      let gettingInfo = "";
 
-      for (let i = 1; i <= convertPdf.numPages; i++) {
-        const page = await convertPdf.getPage(i);
-        const content = await page.getTextContent();
+  const allRows = [];
 
-        let PageInfo = "";
+  for(let x = 1; x <= convertPdf.numPages;x++)
+  {
+   
+      const toGetThePage = await convertPdf.getPage(x);
+      const ToGetTheContent = await toGetThePage.getTextContent();
 
-
-        for (const items of content.items) 
-        {
-          PageInfo = PageInfo + items.str + " ";
-        }
-
-        gettingInfo = gettingInfo + PageInfo;
-
-      }
-
-      const words = gettingInfo.split(" ").filter((word) => word !== "");
-
-      const findAllSections = (start, end) =>
+      for(const items of ToGetTheContent.items)
       {
-        const starting = words.indexOf(start);
-        const ending = words.indexOf(end);
+        if("str" in items && "transform" in items)
+        {
 
-        return words.slice(starting + 1, ending);
+          allRows.push({text: items.str , x:items.transform[4], y:items.transform[5], page: x})
+      
+        }
+      }
+    
+
+  }
+
+  /**
+   * @type {{ y: number, page: number, text: string, items: {text: string, x: number, y: number, page: number}[]}[]}
+   */
+  const allRowsTogther = []
+
+  for(const items of allRows)
+  {
+    const ExistRow = allRowsTogther.find((row) => row.y === items.y && row.page === items.page)
+
+    if(ExistRow)
+    {
+      ExistRow.items.push(items);
+    }
+    else
+    {
+      allRowsTogther.push({page: items.page,text: "", y: items.y, items: [items]})
+    }
+
+    
+  }
+
+  for(const row of allRowsTogther)
+  {
+     row.text = row.items.map((item) => item.text).join(" ")
+  }
+
+  /**
+   * 
+   * @param {string} starting 
+   * @param {string} ending 
+   * @returns 
+   */
+  const getTheTable = (starting,ending) => {
+    const table = []
+    let addingRows = false
+
+    for(const row of allRowsTogther)
+    {
+      if(row.text.toLowerCase().includes(starting.toLowerCase()))
+      {
+        addingRows = true
+        continue
       }
 
+      if(addingRows && row.text.toLowerCase().includes(ending.toLowerCase()))
+      {
+        break
+      }
 
-  const PortfolioLength = findAllSections("Portfolio","Holdings")
-  const HoldingsLength = findAllSections("Holdings","Purchase_and_Sales")
-  const PurchaseandSalesLength = findAllSections("Purchase_and_Sales","Contributions_and_Withdrawals")
-  const ContributionsandWithdrawalsLength = findAllSections("Contributions_and_Withdrawals","Dividends_and_Withholding_Tax")
-  const DividendsandWithholdingTaxLength = findAllSections("Dividends_and_Withholding_Tax","Expenses")
-  const ExpensesLength = words.slice(words.indexOf("Expenses") + 1)
+      if(addingRows)
+      {
+        table.push({page:row.page, text: row.text})
+      }
+    }
 
-  const Portfolio = []
-  const Holdings = []
-  const PurchaseandSales = []
-  const ContributionsandWithdrawals = []
-  const DividendsandWithholdingTax = []
-  const Expenses = []
+    return table
+  }
 
+  const HoldingsTable = getTheTable("Instrument Exposure ","Detailed Transactions - Instrument Purchases and Sales")
+  const PurchaseAndSalesTable = getTheTable("Detailed Transactions - Instrument Purchases and Sales","Detailed Transactions - Transaction Costs")
+  const ContributionsTable = getTheTable("Detailed Transactions - Contributions and Withdrawals","Detailed Transactions - Dividends and Withholding Tax")
+  const TaxTable = getTheTable("Detailed Transactions - Dividends and withholding Tax","Detailed Transactions - Interest")
+  const ExpensesTable = getTheTable("Detailed Transactions - Expenses","Notes")
 
-  for (let x = 5; x < PortfolioLength.length; x = x + 4) 
+  const accountIndex = allRowsTogther.findIndex((row) => {return row.text.trim().startsWith("EE")})
+  const statementIndex = allRowsTogther.find((row) => {return row.text.trim().includes(" to ")})
+  const accountRow = allRowsTogther[accountIndex]
+  const PortfolioRow = allRowsTogther[accountIndex + 1].text.trim()
+
+  if(!statementIndex)
   {
-        Portfolio.push({
-          account_number: PortfolioLength[x],
-          portfolio_name: PortfolioLength[x + 1],
-          statement_date: PortfolioLength[x + 2],
-          portfolio_value: PortfolioLength[x + 3],
-        })
+    throw("error for the statementIndex")
   }
 
+  const gettingthData = statementIndex.text.split("to")[1].trim()
+  let date = new Date(gettingthData).toISOString().split("T")[0]
 
-  for (let x = 3; x < HoldingsLength.length; x = x + 3) 
-  {
-        Holdings.push({
-          instrument_name: HoldingsLength[x],
-          quantity: HoldingsLength[x + 1],
-          total_cost: HoldingsLength[x + 2],
-        })
-  }
 
-   for (let x = 5; x < PurchaseandSalesLength.length; x = x + 5) 
-  {
-        PurchaseandSales.push({
-          transaction_date: PurchaseandSalesLength[x],
-          transaction_name: PurchaseandSalesLength[x + 1],
-          instrument_name: PurchaseandSalesLength[x + 2],
-          price: PurchaseandSalesLength[x + 3],
-          quantity: PurchaseandSalesLength[x + 4],
-        })
-  }
+  const Portfolio = [{
 
-   for (let x = 4; x < ContributionsandWithdrawalsLength.length; x = x + 4) 
-  {
-        ContributionsandWithdrawals.push({
-          transaction_date: ContributionsandWithdrawalsLength[x],
-          statement_date: ContributionsandWithdrawalsLength[x + 1],
-          transaction_name: ContributionsandWithdrawalsLength[x + 2],
-          value: ContributionsandWithdrawalsLength[x + 3],
-        })
-  }
+      account_number: accountRow.text,
+      portfolio_name: PortfolioRow,
+      statement_date: date,
 
-   for (let x = 4; x < DividendsandWithholdingTaxLength.length; x = x + 4) 
-  {
-        DividendsandWithholdingTax.push({
-          transaction_date: DividendsandWithholdingTaxLength[x],
-          instrument_name: DividendsandWithholdingTaxLength[x + 1],
-          gross_dividend: DividendsandWithholdingTaxLength[x + 2],
-          tax_rate: DividendsandWithholdingTaxLength[x + 3],
-        })
-  }
+  }]
 
-  for (let x = 4; x < ExpensesLength.length; x = x + 4) 
-  {
-        Expenses.push({
-          transaction_date: ExpensesLength[x],
-          settlement_date: ExpensesLength[x + 1],
-          narrative: ExpensesLength[x + 2],
-          value: ExpensesLength[x + 3],
-        })
-  }
 
-  return {
-    Portfolio,Holdings,PurchaseandSales,ContributionsandWithdrawals,DividendsandWithholdingTax,Expenses
-  }
+  let instrumentName = "";
 
+  const Holdings = HoldingsTable.map((row) => {
+    const splitParts = row.text.split(" ").filter((item => item !== ""))
+
+    if(row.text.includes("Opening Balance") || row.text.includes("Instrument") || row.text.includes("Total") || row.text.includes("Page"))
+    {
+      return null
+    }
+
+   const firstNumberIndex = splitParts.findIndex((item) => { return item.includes(".") && !Number.isNaN(item);})
+
+   if(firstNumberIndex === -1)
+   {
+    instrumentName = instrumentName + " " + row.text;
+    return null;
+   }
+
+   instrumentName = instrumentName + " " + splitParts.slice(0,firstNumberIndex).join(" ");
+
+   const values = splitParts.slice(firstNumberIndex);
+
+   const getNumber = () => {
+    let numbers = values.pop();
+    const check = values.at(-1);
+
+    if(values.length > 0 && check && !check.includes("."))
+    {
+      const checkSecond = values.pop();
+
+      if(checkSecond)
+      {
+        numbers = checkSecond + numbers;
+      }
+    }
+
+    return numbers;
+   }
+
+   getNumber()
+   getNumber()
+   getNumber()
+   getNumber()
+   const cost = getNumber()
+   const quantity = getNumber()
+
+   if(cost == undefined || quantity == undefined)
+   {
+      return null;
+   }
+
+    const holdings =  {
+      instrument_name: instrumentName.trim(),
+      quantity: quantity,
+      total_cost: (cost),
+    }
+
+    instrumentName = "";
+
+    return holdings;
+
+  }).filter((item) => item != null)
+
+
+   const PurchaseandSales = PurchaseAndSalesTable.map((row) => {
+
+    const splitParts = row.text.split(" ").filter((item => item !== ""))
+
+    if(!splitParts[0].includes("/"))
+    {
+      return null
+    }
+    const values = splitParts.slice(2)
+
+    const getNumber = () => {
+    let numbers = values.pop();
+
+    const check = values.at(-1);
+
+    if(values.length > 0 && check && !check.includes("."))
+    {
+      const CheckSecond = values.pop();
+
+      if(CheckSecond)
+      {
+        numbers = CheckSecond + numbers;
+      }
+    }
+
+    return numbers;
+   }
+
+   getNumber()
+   getNumber()
+   const quantity = getNumber()
+   const price = getNumber()
+   const instrumentname = values.join(" ")
+
+    return {
+      transaction_date: splitParts[0].replaceAll("/","-"),
+      transaction_name: splitParts[1],
+      instrument_name: instrumentname,
+      price: price,
+      quantity: quantity,
+    }
+
+  }).filter((item) => item != null)
+
+
+   const ContributionsandWithdrawals = ContributionsTable.map((row) => {
+    const splitParts = row.text.split(" ").filter((item => item !== ""))
+
+    if(!splitParts[0].includes("/"))
+    {
+      return null
+    }
+
+    const last = splitParts.at(-1) || "";
+    const secondLast = splitParts.at(-2) || "";
+
+    const chackThousands = !Number.isNaN(Number(secondLast))
+
+    return {
+      transaction_date: splitParts[0].replaceAll("/","-"),
+      statement_date: splitParts[1].replaceAll("/","-"),
+      transaction_name: splitParts.slice(2,chackThousands ? -2 : -1).join(" ").replaceAll("Capital",""),
+      value: chackThousands ? secondLast + last : last
+    }
+
+  }).filter((item) => item != null)
+
+  
+   const DividendsandWithholdingTax = TaxTable.map((row) => {
+    const splitParts = row.text.split(" ").filter((item) => item !== "")
+
+    if(!splitParts[0].includes("/"))
+    {
+      return null;
+    }
+
+    return {
+      transaction_date: splitParts[0].replaceAll("/","-"),
+      instrument_name: splitParts.slice(1,-4).join(" "),
+      gross_dividend: splitParts[splitParts.length - 4],
+      tax_rate: splitParts[splitParts.length - 1],
+    }
+  }).filter((item) => item != null)
+
+   const Expenses = ExpensesTable.map((row) => {
+    const splitParts = row.text.split(" ").filter((item => item !== ""))
+
+    if(!splitParts[0].includes("/"))
+    {
+      return null;
+    }
+
+    return {
+      transaction_date: splitParts[0].replaceAll("/","-"),
+      settlement_date: splitParts[1].replaceAll("/","-"),
+      narrative:  splitParts.slice(2,-1).join(" "),
+      value: splitParts[splitParts.length - 1],
+    }
+  }).filter((item) => item != null)
+
+  const results = {Portfolio,Holdings,PurchaseandSales,ContributionsandWithdrawals,DividendsandWithholdingTax,Expenses}
+
+  return results;
 
 }
 
 const Portfolio = () => {
-  const [summary, setSummary] = useState("");
+  /**
+   * @type {[any, function]}
+   */
+  const [summary, setSummary] = useState(null);
+  /**
+   * @type {[any[], function]}
+   */
   const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState([]);
+  /**
+   * @type {[any[], function]}
+   */
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState([]);
+  /**
+   * @type {[any[], function]}
+   */
   const [GetTheLowest, setGetTheLowest] = useState([]);
+  /**
+   * @type {[any[], function]}
+   */
   const [GetTradingActivity, setGetTradingActivity] = useState([]);
+  /**
+   * @type {[any[], function]}
+   */
   const [GetCashFlow, setGetCashFlow] = useState([]);
+  /**
+   * @type {[any[], function]}
+   */
   const [GetDividendIncome, setGetDividendIncome] = useState([]);
-  const [GetExpenses, setGetExpenses] = useState([]);
+  /**
+   * @type {[boolean,function]}
+   */
+  const [LoadingPage, setLoadingPage] = useState(false);
 
-  const colours = ['var(--accent-primary)', '#8A94A8', '#5A6480', '#3D4455'];
+  const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
+  /**
+   * 
+   * @param {any} data
+   * @param {File} file
+   */
   const SavePortfolio = async (data, file) => {
 
     try {
@@ -230,14 +428,19 @@ const Portfolio = () => {
 
       const savedPortfolio = uploadPortfolioRequest.data;
 
-      const PortfolioValue = parseFloat(data.Portfolio[0].portfolio_value.replace("R","").replace(",",""));
+      let PortfolioValue = 0;
+
+      for(const holding of data.Holdings)
+      {
+          PortfolioValue = PortfolioValue + parseFloat(holding.total_cost)
+      }
 
       for (const eachItems of data.Holdings) {
-        const totalCost = parseFloat(eachItems.total_cost.replace("R","").replace(",",""));
-        const quantity = parseFloat(eachItems.quantity);
+        const totalCost = parseFloat(eachItems.total_cost);
+        const quantity = parseFloat(eachItems.quantity || 0);
 
         const uploadHoldingsRequest = await api.post(
-          "/import_pdf/save_holdings/",
+          "/import_pdf/save_holdings",
           {
               portfolio_id: savedPortfolio.portfolio_id,
               instrument_name: eachItems.instrument_name,
@@ -251,10 +454,12 @@ const Portfolio = () => {
           )
       }
 
+     
+
 
       for (const eachItems of data.PurchaseandSales) {
 
-        const price = parseFloat(eachItems.price.replace("R","").replace(",",""));
+        const price = parseFloat(eachItems.price);
         const quantity = parseFloat(eachItems.quantity);
 
 
@@ -277,7 +482,7 @@ const Portfolio = () => {
 
 
       for (const eachItems of data.ContributionsandWithdrawals) {
-        const value_zar = parseFloat(eachItems.value.replace("R","").replace(",",""));
+        const value_zar = parseFloat(eachItems.value);
 
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_contributions_and_withdrawals/",
@@ -292,9 +497,9 @@ const Portfolio = () => {
       }
 
       for (const eachItems of data.DividendsandWithholdingTax) {
-        const gross_dividend = parseFloat(eachItems.gross_dividend.replace("R","").replace(",",""));
-        const tax_rate = parseFloat(eachItems.tax_rate.replace("%",""));
-        const net_dividend = parseFloat((gross_dividend - (gross_dividend *  (tax_rate/100))));
+        const gross_dividend = parseFloat(eachItems.gross_dividend);
+        const tax_rate = parseFloat(eachItems.tax_rate);
+        const net_dividend = ((gross_dividend - (gross_dividend *  (tax_rate/100))));
 
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_dividends_and_withholding_tax/",
@@ -314,7 +519,7 @@ const Portfolio = () => {
       
 
       for (const eachItems of data.Expenses) {
-        const value_zar = parseFloat(eachItems.value.replace("R","").replace(",",""));
+        const value_zar = parseFloat(eachItems.value);
 
         const uploadHoldingsRequest = await api.post(
           "/import_pdf/save_transaction_expenses/",
@@ -388,77 +593,88 @@ const Portfolio = () => {
       )
 
       const ExpensesImport = Expenses.data;
-      setGetExpenses(ExpensesImport);
 
 
 
     }
     catch (theErrors) 
     {
-      
+      if(file.name.toLowerCase().endsWith(".pdf"))
+      {
+       alert("Incorrect PDF Password or unsupported EasyQuities statement. Please use the Excel template")
+      }
+      else
+      {
+        alert("Invalid or unsupported Excel file. Please can you make sure to use the Excel template")
+      }
     }
-
-
 
 
   }
 
+    if (LoadingPage)
+    {
+      return(
+        <div className="flex flex-col items-center mt-30">
+        <LoaderCircle className="w-20 h-16 animate-spin" />     
+        <h2 className="text-2xl text-white">Loading Portfolio</h2>
+        <p className="text-gray-400">Please wait until we import your portfolio</p>
+        </div>
+      )
+    }
+  
   return (
 
     <div className="p-2">
 
-      <div className="p-6 border border-[var(--border-subtle)] rounded-3xl">
+      <div className="max-w-4xl mx-auto p-6 border border-gray-700 rounded-3xl bg-gray-900">
 
         <div className="flex flex-col items-center">
 
-            <h2 className="text-2xl font-bold text-[var(--text-primary)] text-center">
+            <h2 className="text-5xl font-bold text-white text-center mb-5">
               Upload Portfolio
             </h2>
-            <p className="text-[var(--text-secondary)] mt-2 mb-3 text-center">
-              Upload your a PDF or Excel file to import your portfolio
+
+            <p className="text-gray-400 mt-2 mb-3 text-center max-w-2xl">
+              Download your portfolio statement from EasyEquities as a PDF, or use the Excel 
+              template to enter your portfolio manually if the PDF import is unavailable
             </p>
 
-            <div className="flex gap-4 mt-6">
+            <div className="flex flex-col items-center gap-4 mt-8">
 
-            <button onClick={DownloadPDF} className="border border-[var(--border-subtle)] text-[var(--text-primary)] px-5 py-2 rounded-lg hover:bg-[var(--surface-hover)]">
-                Download PDF Template
-            </button>
-
-            <button onClick={DownloadEXCEL} className="border border-[var(--border-subtle)] text-[var(--text-primary)] px-5 py-2 rounded-lg hover:bg-[var(--surface-hover)]">
+            <button onClick={DownloadEXCEL} className="bg-green-600 text-white px-5 py-2 rounded-lg">
               Download Excel Template
             </button>
 
-             </div>
+            <label className="bg-blue-600 text-white px-6 py-3 rounded-lg">
+              choose PDF or Excel File
 
             <input
               type="file"
               accept=".pdf,.xlsx"
-              className="mt-6 text-[var(--text-secondary)]"
+              className="hidden"
               onChange={async (event) => { 
-                const file = event.target.files[0];
+                const file = event.target.files?.[0];
 
                 if(!file)
                 {
                   return;
                 }
 
-
+                setLoadingPage(true)
                 try
                 {
                 let data;
 
                 if(file.name.toLowerCase().endsWith(".pdf"))
                 {
-                   data = await ReadingPDFFile(file);
+                  const Passwords = prompt("Enter the PDF password") || "";
+                  data = await ReadingPDFFile(file, Passwords);
+                   
                 }
                 else if(file.name.toLowerCase().endsWith(".xlsx"))
                 {
                   data = await ReadingExcelFile(file);
-                }
-                else
-                {
-                  alert("Please select a PDF or Excel file");
-                  return;
                 }
 
 
@@ -467,94 +683,114 @@ const Portfolio = () => {
             
             catch(theError)
             {
-              alert("Not working...")
+              if(file.name.toLowerCase().endsWith(".pdf"))
+              {
+                alert("Incorrect PDF Password or unsupported EasyEquities statement. Please use the Excel template")
+              }
+              else if(file.name.toLowerCase().endsWith(".xlsx"))
+              {
+                alert("Invalid or unsupported Excel file. Please can you make sure to use the Excel template")
+              }
+              else
+              {
+                alert("Please make sure you either upload a pdf or Excel")
+              }
+            }
+            finally
+            {
+              setLoadingPage(false)
             }
 
             }
           }
             />
+          </label>
+
+          </div>
 
         </div>
 
       </div>
 
+      
+
       { summary && <div className="grid grid-cols-6 gap-8 mt-8">
 
-        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
+        <div className="p-5 border border-gray-700 rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
 
-            <Wallet size={20} className="text-[var(--accent-primary)]" />
-            <p className="text-[var(--text-secondary)]">Portfolio Value</p>
+            <Wallet size={20} className="text-yellow-500" />
+            <p className="text-gray-400">Portfolio Value</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">R{summary?.PortfolioValue || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">R {summary?.PortfolioValue || 0}</h2>
 
 
         </div>
 
-        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
+        <div className="p-5 border border-gray-700 rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
 
-            <Briefcase size={20} className="text-[var(--text-secondary)]" />
-            <p className="text-[var(--text-secondary)]">Holdings</p>
+            <Briefcase size={20} className="text-blue-500" />
+            <p className="text-gray-400">Holdings</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">{summary?.TotalHoldings || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">{summary?.TotalHoldings || 0}</h2>
 
         </div>
 
-        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
+        <div className="p-5 border border-gray-700 rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
-            <ArrowLeftRight size={20} className="text-[var(--text-secondary)]" />
-            <p className="text-[var(--text-secondary)]">Purchase & Sales</p>
+            <ArrowLeftRight size={20} className="text-green-500" />
+            <p className="text-gray-400">Purchase & Sales</p>
           </div>
 
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">R{summary?.TotalPurchasesAndSales || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">R {summary?.TotalPurchasesAndSales || 0}</h2>
 
         </div>
 
 
-        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
+        <div className="p-5 border border-gray-700 rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
 
-            <Landmark size={20} className="text-[var(--text-secondary)]" />
-            <p className="text-[var(--text-secondary)]">Contributions</p>
+            <Landmark size={20} className="text-purple-500" />
+            <p className="text-gray-400">Contributions</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">R{summary?.TotalContributionsAndWithdrawals || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">R {summary?.TotalContributionsAndWithdrawals || 0}</h2>
 
         </div>
 
-        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
+        <div className="p-5 border border-gray-700 rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
 
-            <TrendingUp size={20} className="text-[var(--text-secondary)]" />
-            <p className="text-[var(--text-secondary)]">Dividends</p>
+            <TrendingUp size={20} className="text-green-500" />
+            <p className="text-gray-400">Dividends</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">R{summary?.TotalDividendsAndWithholdingTax || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">R {summary?.TotalDividendsAndWithholdingTax || 0}</h2>
 
         </div>
 
-        <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
+        <div className="p-5 border border-gray-700 rounded-2xl">
 
           <div className="flex items-center gap-3 mb-2">
 
-            <CreditCard size={20} className="text-[var(--text-secondary)]" />
-            <p className="text-[var(--text-secondary)]">Expenses</p>
+            <CreditCard size={20} className="text-orange-500" />
+            <p className="text-gray-400">Expenses</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-[var(--text-primary)]">R{summary?.TotalTransactionExpenses || 0}</h2>
+          <h2 className="text-2xl font-bold text-white">R {summary?.TotalTransactionExpenses || 0}</h2>
 
         </div>
 
@@ -576,8 +812,8 @@ const Portfolio = () => {
 
       { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 mb-7">
 
-        <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center mb-4">
+        <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center mb-4">
             Trading Activity
           </h2>
 
@@ -594,8 +830,8 @@ const Portfolio = () => {
           
         </div>
 
-        <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center mb-4">
+        <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center mb-4">
             Cash flow
           </h2>
 
@@ -619,8 +855,8 @@ const Portfolio = () => {
 
         </div>
 
-         <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center mb-4">
+         <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center mb-4">
             Dividend Income
           </h2>
 
@@ -650,8 +886,8 @@ const Portfolio = () => {
 
        
 
-        <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center">
+        <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center">
             Assert allocation
           </h2>
 
@@ -673,45 +909,25 @@ const Portfolio = () => {
 
           </div>
 
-
-
-         <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center">
-            Expense breakdown
-          </h2>
-          <div className="flex justify-center w-full h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={GetExpenses} layout="vertical">
-            <XAxis type = "number"/>
-            <YAxis type="category" dataKey="name"/>
-            <Tooltip/>
-            <Bar dataKey="value" fill="orange"/>
-          </BarChart>
-          </ResponsiveContainer>
-          </div>
-        </div>
-
-      
-
-        <div className="border border-[var(--border-subtle)] rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-[var(--text-primary)] text-center">
+        <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center">
             Top Holdings
           </h2>
 
           {GetTheTopHoldingsImportPDF.map((item, index) =>
             <div key={index} className="mb-4">
               <div className="flex justify-between mb-1">
-                <p className="text-[var(--text-secondary)]">
+                <p className="text-gray-300">
                   {item.name}
                 </p>
 
-                <p className="text-[var(--text-secondary)]">
+                <p className="text-gray-300">
                   R{item.value}
                 </p>
               </div>
 
 
-              <div className="w-full bg-[var(--border-mid)] rounded-full h-3">
+              <div className="w-full bg-gray-600 rounded-full h-3">
                 <div className="h-3 rounded-full"
                      style={{
                       width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
@@ -726,57 +942,68 @@ const Portfolio = () => {
 
 
 
-        </div>  
+        </div> 
 
+        <div className="border border-gray-700 rounded-2xl p-4">
+          <h2 className="text-xl font-bold text-white text-center mb-6">
+            AI Portfolio Assistant
+          </h2>
+          <div>
+            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">Summrise my portfolio ?</button>
+            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">What is my largest holding ?</button>
+            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">How much have i earned in dividends ?</button>
+            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4"> How active is my trading ?</button>
+        </div> 
       </div>
+    </div>
 
       }
 
 
        { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-2 gap-8 mt-8">
 
-        <div className="p-6 border border-[var(--signal-negative)] rounded-2xl">
+        <div className="p-6 border border-red-700 rounded-2xl">
 
           <div className="flex items-center gap-2">
-            <TriangleAlert size={24} className="text-[var(--signal-negative)]"></TriangleAlert>
-            <h2 className="text-xl font-bold text-[var(--signal-negative)]">
+            <TriangleAlert size={24} className="text-red-500"></TriangleAlert>
+            <h2 className="text-xl font-bold text-red">
               Lowest Holding
             </h2>
           </div>
 
 
-          <p className="text-[var(--text-secondary)] mb-5">
+          <p className="text-gray-400 mb-5">
             Your smallest holdings by weight in the portfolio
           </p>
 
-          <div className="flex justify-between border border-[var(--border-subtle)] rounded-xl p-4">
+          <div className="flex justify-between border border-gray-700 rounded-xl p-4">
 
             <div>
-              <p className="text-xl text-[var(--text-primary)] font-bold">{GetTheLowest.name}</p>
+              <p className="text-xl text-white font-bold">{GetTheLowest[0]?.name}</p>
             </div>
 
             <div>
-              <p className="text-xl text-[var(--signal-negative)] font-bold">{GetTheLowest.value}</p>
+              <p className="text-xl text-red-400 font-bold">{GetTheLowest[0]?.value}</p>
             </div>
 
           </div>
 
         </div>
 
-        <div className="p-6 border border-[var(--border-subtle)] rounded-2xl">
+        <div className="p-6 border border-purple-500 rounded-2xl">
 
           <div className="flex items-center gap-2">
-            <Bot size={24} className="text-[var(--accent-primary)]"></Bot>
+            <Bot size={24} className="text-purple-500"></Bot>
             <h2 className="text-xl font-bold">
               AI Portfolio Assistant
             </h2>
           </div>
 
-          <p className="text-[var(--text-secondary)] mb-5">
+          <p className="text-gray-400 mb-5">
             Ask questions about your portfolio and recivce AI-powered insights.
           </p>
 
-          <button className="w-full bg-[var(--accent-primary)] hover:bg-[var(--accent-hover)] text-[var(--text-on-accent)] py-3 rounded-xl font-semibold">
+          <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold">
             Go To Assistant
           </button>
 
