@@ -109,7 +109,15 @@ const InfoIcon = () => (
   </svg>
 );
 
-const IndicatorCell = ({ indicatorKey, result, loading }) => {
+const formatValue = (value) => {
+  const numericValue = Number(value);
+  if(!Number.isFinite(numericValue)){
+    return value;
+  }
+    return numericValue.toFixed(2);
+  };
+
+const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
   const meta = INDICATORS[indicatorKey];
   const color = (sig) =>
     sig === 'positive' ? 'var(--signal-positive,#22c55e)'
@@ -132,24 +140,24 @@ const IndicatorCell = ({ indicatorKey, result, loading }) => {
   );
 
   if (!result || result.status === 'error') return (
-    <div className="flex flex-col gap-0.5 pt-1">
+    <button onClick={onSelect} className="flex flex-col gap-0.5 pt-1 text-left w-full cursor-pointer">
       <span className="text-[11px] font-mono" style={{ color: 'var(--signal-negative,#ef4444)' }}>Error</span>
       <span className="text-[9px]" style={{ color: 'var(--text-ghost,#444)' }}>Calc failed</span>
-    </div>
+    </button>
   );
 
   if (result.status === 'insufficient_data') return (
-    <div className="flex flex-col gap-0.5 pt-1">
+    <button onClick={onSelect} className="flex flex-col gap-0.5 pt-1 text-left w-full cursor-pointer">
       <span className="text-[11px] font-mono" style={{ color: 'var(--text-ghost,#444)' }}>N/A</span>
       <span className="text-[9px] leading-tight" style={{ color: 'var(--text-ghost,#444)' }}>
         {result.reason?.split('.')[0]}
       </span>
-    </div>
+    </button>
   );
 
   const sig = meta.signal(result.value);
   return (
-    <div className="flex flex-col gap-0.5 pt-1">
+    <button onClick={onSelect} className="flex flex-col gap-0.5 pt-1 text-left w-full cursor-pointer">
       <span className="text-sm font-mono font-semibold tabular-nums"
         style={{ color: color(sig), letterSpacing: '-0.02em' }}>
         {formatValue(result.value)}{result.unit}
@@ -157,11 +165,11 @@ const IndicatorCell = ({ indicatorKey, result, loading }) => {
       <span className="text-[9px] leading-tight" style={{ color: 'var(--text-ghost,#444)' }}>
         {meta.describe(result.value)}
       </span>
-    </div>
+    </button>
   );
 };
 
-const StockRow = ({ stock, loading, results, index }) => (
+const StockRow = ({ stock, loading, results, index, onCellSelect }) => (
   <div className="terminal-card"
     style={{ animation: 'fadeSlideIn 0.3s ease both', animationDelay: `${index * 70}ms` }}>
     <div className="flex items-center gap-3 px-4 py-3"
@@ -184,17 +192,112 @@ const StockRow = ({ stock, loading, results, index }) => (
               {INDICATORS[key].label} <InfoIcon />
             </span>
           </Tooltip>
-          <IndicatorCell indicatorKey={key} result={results?.[key]} loading={loading} />
+          <IndicatorCell indicatorKey={key} result={results?.[key]} loading={loading} onSelect={() => onCellSelect(key, stock.ticker)}
+            />
         </div>
       ))}
     </div>
   </div>
 );
 
+const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) => {
+  if (!indicatorKey) return null;
+  const meta = INDICATORS[indicatorKey];
+
+  const color = (sig) =>
+    sig === 'positive' ? 'var(--signal-positive,#22c55e)'
+    : sig === 'negative' ? 'var(--signal-negative,#ef4444)'
+    : 'var(--text-primary,#e5e5e5)';
+
+  const comparisonRows = stocks
+    .map((stock) => {
+      const result = stock[indicatorKey];
+      if (!result || result.status !== 'ok') return null;
+      return { ticker: stock.ticker, name: stock.name, value: result.value, unit: result.unit, sig: meta.signal(result.value)};
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.ticker.localeCompare(b.ticker));
+
+    return (
+      <div className="fixed inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 10000}} onClick={onClose}>
+        <div className="terminal-card w-full max-w-lg max-h-[85vh] overflow-y-auto" style={{ background: 'var(--bg-primary,#0a0a0a)', border: '1px solid var(--border-subtle,#2a2a2a)' }} onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)' }}>
+            <h2 className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--text-primary,#e5e5e5)' }}>
+              {meta.label}
+            </h2>
+            <button onClick={onClose} className="w-5 h-5 flex items-center justify-center rounded text-xs leading-none" style={{ color: 'var(--text-ghost,#444)', border: '1px solid var(--border-subtle,#2a2a2a)' }}>
+              x
+            </button>
+          </div>
+          <div className="px-5 py-4 flex flex-col gap-4">
+            <div>
+              <p className="text-[9px] uppercase tracking-widest font-medium mb-1.5" style={{ color: 'var(--text-ghost,#444)' }}>
+                Why it matters
+              </p>
+              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>
+                {meta.why}
+              </p>
+            </div>
+            <div>
+              <p className="text-[9px] uppercase tracking-widest font-medium mb-1.5" style={{ color: 'var(--text-ghost,#444)' }}>
+                How it's worked out
+              </p>
+              <p className="text-[11px] leading-relaxed px-3 py-2.5 rounded" style={{ color: 'var(--text-primary,#e5e5e5)', background: 'var(--border-subtle,#2a2a2a)' }}>
+                {meta.plainFormula}
+              </p>
+              <p className="text-[9px] font-mono mt-1.5" style={{ color: 'var(--text-ghost,#444)' }}>
+                {meta.formula}
+              </p>
+            </div>
+            {meta.sectorCaveat && (
+              <div className="px-3 py-2.5 rounded" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+                <p className="text-[10px] leading-relaxed" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>
+                  <span className="font-semibold" style={{ color: 'var(--signal-negative,#ef4444)' }}>
+                    Sector note -
+                  </span>
+                  {meta.sectorCaveat}
+                </p>
+              </div>
+            )}
+            <div>
+          <p className="text-[9px] uppercase tracking-widest font-medium mb-1.5" style={{ color: 'var(--text-ghost,#444)' }}>
+            Across your holdings
+          </p>
+          {comparisonRows.length === 0 ? (
+            <p className="text-[10px]" style={{ color: 'var(--text-ghost,#444)' }}>
+              No holdings currently have a value for this indicator.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {comparisonRows.map((row) => (
+                <div key={row.ticker} className="flex items-center justify-between px-3 py-2 rounded" style={{ background: row.ticker === activeTicker ? 'var(--border-subtle,#2a2a2a)' : 'transparent', border: row.ticker === activeTicker ? '1px solid var(--text-ghost,#444)' : '1px solid transparent',}}>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-mono font-medium" style={{ color: 'var(--text-primary,#e5e5e5)' }}>
+                      {row.ticker}
+                    </span>
+                    <span className="text-[9px]" style={{ color: 'var(--text-ghost,#444)' }}>
+                      {row.name}
+                    </span>
+                  </div>
+                  <span className="text-[11px] font-mono font-semibold tabular-nums" style={{ color: color(row.sig)}}>
+                    {formatValue(row.value)}{row.unit}
+                  </span>
+                </div>
+              ))}
+              </div>
+          )}
+          </div>
+          </div>
+        </div>
+      </div>
+    )
+}
+
 export default function Analytics() {
   const { stockData, loading, error } = useIndicators();
   const navigate = useNavigate();
   const stocks = Object.values(stockData).map((s) => s.results).filter(Boolean);
+  const [selected, setSelected] = useState(null);
 
   return (
     <>
@@ -211,7 +314,7 @@ export default function Analytics() {
             <h1 className="text-xs font-medium uppercase tracking-widest"
               style={{ color: 'var(--text-primary,#e5e5e5)' }}>Analytics</h1>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost,#444)' }}>
-              Financial indicators calculated per holding - hover any label for an explanation
+              How your holdings are doing - hover a label for a quick explanation, click a value to learn more
             </p>
           </div>
           <span className="text-[10px] px-2 py-1 rounded font-mono"
@@ -266,12 +369,19 @@ export default function Analytics() {
                   index={i}
                   loading={false}
                   results={stock}
+                  onCellSelect={(indicatorKey, ticker) => setSelected({ indicatorKey, ticker })}
                 />
               ))
           }
         </div>
         )}
       </div>
+      <IndicatorDetailModal
+        indicatorKey={selected?.indicatorKey}
+        activeTicker={selected?.ticker}
+        stocks={stocks}
+        onClose={() => setSelected(null)}
+      />
     </>
   );
 }
