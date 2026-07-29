@@ -62,6 +62,11 @@ def get_the_top_holdings_import_PDF(database,portfolioID):
 def get_the_lowest_holdings_import_PDF(database,portfolioID):
     getInfo = database.query(Holdings.instrument_name, Holdings.total_cost).filter(Holdings.portfolio_id == portfolioID).order_by(Holdings.total_cost.asc()).first()
 
+    if not getInfo:
+        return {
+            "name": None,
+            "value": 0,
+        }
     return {
         "name": getInfo.instrument_name,
         "value": float(getInfo.total_cost),

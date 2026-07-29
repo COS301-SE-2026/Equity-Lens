@@ -1,4 +1,3 @@
-import random
 import time
 import secrets
 from fastapi import APIRouter, Depends
@@ -8,6 +7,8 @@ from app.models.portfolio import Portfolios, Holdings
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
 from app.services.indicator_service import build_live_indicator_row, serialize_indicator_row
+from app.services.instruments import resolve_known_instrument
+from app.services.portfolio_service import INVALID_TICKER_MARKERS
 from app.utils.market_cache import get_market_returns
 
 router = APIRouter(prefix="/api/indicators", tags=["indicators"])
@@ -31,7 +32,10 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
 
     for h in holdings: 
         ticker = (h.ticker or "").strip()
-        if not ticker:
+        if not ticker or ticker.upper() in INVALID_TICKER_MARKERS:
+            known = resolve_known_instrument(h.instrument_name or "")
+            ticker = known.ticker if known else ""
+        if not ticker or ticker.upper() in INVALID_TICKER_MARKERS:
             continue
         if ticker not in tickers:
             tickers.append(ticker)

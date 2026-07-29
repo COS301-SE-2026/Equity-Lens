@@ -1,5 +1,5 @@
 import logging
-from datetime import date
+from datetime import date, timedelta
 from uuid import UUID
 
 from sqlalchemy.orm import Session
@@ -11,11 +11,12 @@ from app.services.instruments import (
     KIND_STOCK,
     REGION_BENCHMARKS,
     REGION_UNKNOWN,
+    is_zar_listed,
     looks_like_fund,
     normalize_sector,
     resolve_known_instrument,
 )
-from app.services.market_data_service import get_current_price
+from app.services.market_data_service import get_current_price, _cents_to_major
 from app.utils.stock_cache import get_cached_price_history
 
 logger = logging.getLogger(__name__)
@@ -51,7 +52,7 @@ def _price_holding(h) -> dict:
         region = REGION_UNKNOWN
 
     current_price = cost_price
-    if ticker and ticker.upper() not in INVALID_TICKER_MARKERS:
+    if ticker and ticker.upper() not in INVALID_TICKER_MARKERS and is_zar_listed(ticker):
         try:
             live = get_current_price(ticker)
             current_price = live.price
@@ -215,6 +216,52 @@ def _index_levels(ticker: str, quote_currency: str, since: date) -> dict[date, f
 
     return levels or None
 
+def _holding_value_series(h: dict, since: date) -> dict[date, float] | None:
+    ticker = h["ticker"]
+    if not ticker or ticker.upper() in INVALID_TICKER_MARKERS:
+        return None
+    if not is_zar_listed(ticker):
+        return None
+
+    try:
+        history = get_cached_price_history(ticker, period=_history_period(since))
+    except Exception as exc:
+        logger.warning(f"portfolio history fetch failed for {ticker}: {exc}")
+        return None
+
+    if history is None or history.empty:
+        return None
+    
+    divisor = _cents_to_major(ticker)
+    quantity = h["quantity"]
+    levels: dict[date, float] = {}
+    for timestamp, row in history.iterrows():
+        close = row["Close"]
+        if close != close:
+            continue
+
+        levels[timestamp.date()] = (float(close) / divisor) * quantity
+
+    return levels or None
+
+
+def _portfolio_value_series(priced_holdings: list[dict], since: date) -> dict[date, float]:
+    per_holding_levels = []
+    for h in priced_holdings:
+        levels = _holding_value_series(h, since)
+        if levels:
+            per_holding_levels.append(levels)
+
+    if not per_holding_levels:
+        return {}
+
+    common_days = sorted(set.intersection(*(set(levels) for levels in per_holding_levels)))
+    if not common_days:
+        return {}
+
+    return {day: round(sum(levels[day] for levels in per_holding_levels), 2) for day in common_days}
+
+
 def _benchmark_series(
     priced_holdings: list[dict], since: date, base_value: float
 ) -> tuple[dict[date, float], list[dict]]:
@@ -298,32 +345,32 @@ class PortfolioService:
         return _build_sector_allocation(priced)
 
     def _performance_and_benchmark(
-        self, user_id: UUID, priced_holdings: list[dict]
+        self, priced_holdings: list[dict]
     ) -> tuple[list[dict], list[dict]]:
-        _, portfolio_ids = self._get_holdings(user_id)
-        snapshots = self.portfolio_repo.get_snapshot_history(portfolio_ids)
-        if not snapshots:
+        since = date.today() - timedelta(days=365)
+        portfolio_series = _portfolio_value_series(priced_holdings, since)
+        if not portfolio_series:
             return [], []
 
-        first_day = snapshots[0]["snapshot_date"]
-        base_value = float(snapshots[0]["total_value"] or 0)
-        series, components = _benchmark_series(priced_holdings, first_day, base_value)
+        first_day = min(portfolio_series)
+        base_value = portfolio_series[first_day]
+        benchmark_series, components = _benchmark_series(priced_holdings, first_day, base_value)
 
-        history = []
-        for snapshot in snapshots:
-            day = snapshot["snapshot_date"]
-            history.append({
+        history = [
+            {
                 "date": day.isoformat(),
                 "name": day.strftime("%b %d"),
-                "value": snapshot["total_value"],
-                "benchmark": _nearest_benchmark(series, day),
-            })
+                "value": portfolio_series[day],
+                "benchmark": _nearest_benchmark(benchmark_series, day),
+            }
+            for day in sorted(portfolio_series)
+        ]
 
         return history, components
 
     def get_performance_history(self, user_id: UUID) -> list[dict]:
         priced_holdings, _ = self._get_priced_holdings(user_id)
-        history, _ = self._performance_and_benchmark(user_id, priced_holdings)
+        history, _ = self._performance_and_benchmark(priced_holdings)
         return history
 
     def get_dashboard(self, user_id: UUID) -> dict:
@@ -336,7 +383,7 @@ class PortfolioService:
                 portfolio_ids[0], date.today(), summary["total_value"], None
             )
 
-        performance_history, components = self._performance_and_benchmark(user_id, priced_holdings)
+        performance_history, components = self._performance_and_benchmark(priced_holdings)
 
         return {
             "summary": summary,
