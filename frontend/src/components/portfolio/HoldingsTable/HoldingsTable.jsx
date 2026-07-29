@@ -1,7 +1,9 @@
 import React from 'react';
 
 const COLS = ['Ticker', 'Name', 'Sector', 'Qty', 'Avg Cost', 'Current', 'Value', 'P&L', 'P&L %'];
-
+/**
+ * @param {*} holdings
+ */
 const HoldingsTable = ({ holdings = [] }) => (
   <div style={{ overflowX: 'auto' }}>
     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -29,7 +31,8 @@ const HoldingsTable = ({ holdings = [] }) => (
         </tr>
       </thead>
       <tbody>
-        {holdings.map((h, i) => {
+
+        {holdings.map(/** @param {*} h  @param {*} i*/(h, i) => {
           const positive = h.gain_loss_pct >= 0;
           return (
             <tr
