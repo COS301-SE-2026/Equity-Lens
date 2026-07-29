@@ -6,7 +6,7 @@ const Button = ({
   loading = false,
   disabled = false,
   fullWidth = false,
-  onClick,
+  onClick = undefined,
   className = '',
 }) => {
   const baseStyles = `

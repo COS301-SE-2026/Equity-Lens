@@ -1,8 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+
 import Button from '../../components/common/Button/Button';
-import api from '../../services/api'
 import useAuth from '../../hooks/useAuth';
-import ReactMarkdown from 'react-markdown'
+import api from '../../services/api'
+
+/**
+ * @typedef {{id: number | string, role: 'user' | 'assistant', text: string}} ChatMessage
+ * @typedef {{id: number, title: string}} Conversation
+ * @typedef {{id: number, role: 'user' | 'assistant', content:string}} ApiMessage
+ */
 
 const SUGGESTED_PROMPTS = [
   'How is MTN doing?',
@@ -12,15 +19,18 @@ const SUGGESTED_PROMPTS = [
 
 const AIChat = () => {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(/**@type {ChatMessage[]}*/ ([]));
   const [isThinking, setIsThinking] = useState(false);
-  const [conversationId, setConversationId] = useState(null);
-  const [conversations, setConversations] = useState([]);
+  const [conversationId, setConversationId] = useState(/**@type {number | null}*/(null));
+  const [conversations, setConversations] = useState(/**@type {Conversation[]}*/([]));
   const { user } = useAuth();
-  const firstName = user?.full_name?.split(' ')[0] ?? 'there';
+  /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const bottomRef = useRef(null);
-  const [editingId, setEditingId] = useState(null);
+  const [editingId, setEditingId] = useState(/**@type {number | null}*/(null));
   const [editTitle, setEditTitle] = useState('');
+  /**@type {React.MutableRefObject<HTMLInputElement | null>}*/
+  const renameRef = useRef(null)
+  const firstName = user?.full_name?.split(' ')[0] ?? 'there';
 
   //scroll to bottom of new messages
   useEffect(() => {
@@ -34,23 +44,30 @@ const AIChat = () => {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if(editingId !== null) {
+      renameRef.current?.focus();
+    }
+  }, [editingId]);
+
+  /** @param {string}  rawText*/
   const sendMessage = (rawText) => {
-    if (isThinking) return;
+    if (isThinking) {
+      return;
+    }
     const text = rawText.trim();
-    if (!text) return;
-    const userMessage = { id: Date.now(), role: 'user', text };
+    if (!text) {
+      return;
+    }
+    const userMessage = /** @type {ChatMessage} */({ id: Date.now(), role: 'user', text });
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsThinking(true);
 
     // The ai assistant replying now 
-    api.post('/ai_chat/', {message: text, conversation_id: conversationId})
+    return api.post('/ai_chat/', {message: text, conversation_id: conversationId})
       .then((res) => {
-        const responseMessage = {
-          id: Date.now() + 1,
-          role: 'assistant',
-          text: res.data.reply,
-        };
+        const responseMessage = /** @type {ChatMessage} */({id: Date.now() + 1, role: 'assistant', text: res.data.reply,});
         setConversationId(res.data.conversation_id);
         setMessages((prev) => [...prev, responseMessage]);
 
@@ -61,23 +78,20 @@ const AIChat = () => {
 
       //Error checking incase ai call fails
       .catch(() => {
-        const errorMessage = {
-          id: Date.now() + 1,
-          role: 'assistant',
-          text: "Something went wrong, try again.",          
-        };
+        const errorMessage = /**@type {ChatMessage} */ ({id: Date.now() + 1, role: 'assistant', text: "Something went wrong, try again."});
         setMessages((prev) => [...prev, errorMessage]);
       })
       .finally(() => setIsThinking(false));
     };
   
   //now to load the messages
+  /**@param {Conversation} convo*/
   const loadConversation = (convo) => {
     setConversationId(convo.id);
     api.get(`/ai_chat/conversations/${convo.id}/messages/`)
       .then((res) => {
         setMessages(
-          res.data.map((m) => ({
+          /**@type {ApiMessage[]} */(res.data).map((m) => ({
             id: m.id,
             role: m.role,
             text: m.content
@@ -93,9 +107,12 @@ const AIChat = () => {
     setMessages([]);
   }
 
+  /**@param {Number} convoId*/
   const renameConversation = (convoId) => {
     const trimmed = editTitle.trim();
-    if (!trimmed) return;
+    if (!trimmed) {
+      return;
+    }
 
     api.put(`/ai_chat/conversations/${convoId}/`, {title: trimmed})
       .then(() => {
@@ -107,13 +124,14 @@ const AIChat = () => {
       .catch(() => {})
   };
 
+  /**@param {Number} convoId*/
   const deleteConversation = (convoId) => {
     api.delete(`/ai_chat/conversations/${convoId}/`)
       .then(() => {
         setConversations((prev) => 
           prev.filter((c) => c.id !== convoId)
         );
-        if (conversationId == convoId) {
+        if (conversationId === convoId) {
           setConversationId(null);
           setMessages([]);
         }
@@ -121,6 +139,7 @@ const AIChat = () => {
       .catch(() => {});
   };
 
+  /** @param {React.FormEvent<HTMLFormElement>} e*/
   const handleSubmit = (e) => {
     e.preventDefault();
     sendMessage(input);
@@ -145,7 +164,7 @@ const AIChat = () => {
                       e.preventDefault();
                       renameConversation(convo.id);
                     }}>
-                <input autoFocus
+                <input ref = {renameRef}
                        value = {editTitle}
                        onChange = {(e) => setEditTitle(e.target.value)}
                        onBlur = {() => setEditingId(null)}
@@ -167,12 +186,12 @@ const AIChat = () => {
                           setEditTitle(convo.title);
                         }}
                         className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-[var(--text-primary)] group-hover:visible">
-                  <i className="fa fa-pencil" aria-hidden="true"></i>
+                  <i className="fa fa-pencil" aria-hidden="true" />
                 </button>
                 <button type = "button"
                         onClick = {() => deleteConversation(convo.id)}
                         className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-[var(--signal-negative)] group-hover:visible">
-                  <i class="fa fa-trash"></i>
+                  <i className="fa fa-trash" />
                 </button>
         </>
         )}
