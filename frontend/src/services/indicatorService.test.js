@@ -13,7 +13,7 @@ describe("indicatorService", () => {
     vi.clearAllMocks();
   });
   it("calls the cached indicators endpoint", async () => {
-    api.get.mockResolvedValue({ data: []
+    vi.mocked(api.get).mockResolvedValue({ data: []
     });
     await getIndicatorData();
     expect(api.get).toHaveBeenCalledWith("/indicators");
@@ -21,7 +21,7 @@ describe("indicatorService", () => {
 
   it("returns the backend response payload unchanged", async () => {
     const payload = [{ticker: "AAPL", name: "Apple Inc."}];
-    api.get.mockResolvedValue({data: payload});
+    vi.mocked(api.get).mockResolvedValue({data: payload});
     await expect(getIndicatorData()).resolves.toBe(payload);
   });
 });

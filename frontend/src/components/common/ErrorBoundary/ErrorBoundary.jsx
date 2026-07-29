@@ -1,15 +1,29 @@
 import { Component } from 'react';
 
 class ErrorBoundary extends Component {
+  /**
+   * 
+   * @param {*} props 
+   */
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
+  /**
+   * 
+   * @param {*} error 
+   * @returns 
+   */
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
 
+  /**
+   * 
+   * @param {*} error 
+   * @param {*} info 
+   */
   componentDidCatch(error, info) {
     console.error('Uncaught render error:', error, info?.componentStack);
   }

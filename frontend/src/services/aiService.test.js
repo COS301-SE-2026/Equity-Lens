@@ -62,12 +62,12 @@ describe('getMockResponse', () => {
     });
 
     it('returns all 4 ticker cards', () => {
-      const result = getMockResponse('cards');
+      const result = /**@type {any}*/getMockResponse('cards');
       expect(result.cards).toHaveLength(4);
     });
 
     it('card objects have required fields', () => {
-      const result = getMockResponse('cards');
+      const result =  /**@type {any}*/ getMockResponse('cards');
       const card = result.cards[0];
       expect(card).toHaveProperty('ticker');
       expect(card).toHaveProperty('name');

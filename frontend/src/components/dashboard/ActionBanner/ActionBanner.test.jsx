@@ -26,6 +26,11 @@ const ITEMS = [
   },
 ];
 
+/**
+ * 
+ * @param {*} props 
+ * @returns 
+ */
 const renderBanner = (props) =>
   render(
     <MemoryRouter>
@@ -35,7 +40,7 @@ const renderBanner = (props) =>
 
 describe('ActionBanner', () => {
   it('renders each item as card', () => {
-    renderBanner();
+    renderBanner({items: []});
     expect(screen.getByText(/technology is 58% of your portfolio/i)).toBeInTheDocument();
     expect(screen.getByText('Explore New Sectors')).toBeInTheDocument();
     expect(screen.getByText('Fix Diversification')).toBeInTheDocument();

@@ -10,6 +10,15 @@ import {
 } from 'lucide-react';
 import { ROUTES } from '../../../utils/constants';
 
+/**
+ * @type{{
+ *  label: string,
+ *  icon: any,
+ *  to: string,
+ *  badge?: boolean,
+ *  pinBottom?: boolean
+ * }[]} 
+ */
 const navItems = [
   { label: 'Dashboard', icon: LayoutDashboard, to: ROUTES.DASHBOARD },
   { label: 'Portfolio', icon: Briefcase, to: ROUTES.PORTFOLIO },
@@ -20,6 +29,11 @@ const navItems = [
 
 ];
 
+/**
+ * 
+ * @param {*} param 
+ * @returns 
+ */
 const Sidebar = ({ open, onClose }) => {
   return (
     <>

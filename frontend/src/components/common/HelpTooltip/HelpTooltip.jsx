@@ -2,7 +2,13 @@ import { useRef, useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { HelpCircle } from 'lucide-react';
+import { type } from '@testing-library/user-event/dist/cjs/utility/type.js';
 
+/**
+ * 
+ * @param {*} text
+ * @returns 
+ */
 export default function HelpTooltip({ text }) {
   const [visible, setVisible] = useState(false);
   const [pos, setPos] = useState({ left: 0, bottom: 0 });
@@ -22,7 +28,8 @@ export default function HelpTooltip({ text }) {
 
     syncPosition();
 
-    const handleKeyDown = (e) => {
+    
+    const handleKeyDown = (/** @type {any} */e) => {
     if (e.key === 'Escape') setVisible(false); };
     window.addEventListener('scroll', syncPosition, true);
     window.addEventListener('resize', syncPosition);

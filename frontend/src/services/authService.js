@@ -11,6 +11,13 @@ import {
   updateMFAPreference,
 } from "aws-amplify/auth";
 
+/**
+ * 
+ * @param {*} fullName 
+ * @param {*} email 
+ * @param {*} password 
+ * @returns 
+ */
 export async function register(fullName, email, password) {
   const result = await signUp({
     username: email,
@@ -22,13 +29,34 @@ export async function register(fullName, email, password) {
   return { userId: result.userId, email: email };
 }
 
-
+/**
+ * 
+ * @param {*} email 
+ * @param {*} code 
+ * @returns 
+ */
 export const confirmRegistration = (email, code) => confirmSignUp({ username: email, confirmationCode: code });
+/**
+ * 
+ * @param {*} email 
+ * @param {*} password 
+ * @returns 
+ */
 export const login = (email, password) => signIn({ username: email, password });
+/**
+ * 
+ * @param {*} totpCode 
+ * @returns 
+ */
 export const respondToMFA = (totpCode) => confirmSignIn({ challengeResponse: totpCode });
 export const initTOTPSetup = () => setUpTOTP();
 export const logout = () => signOut();
 
+/**
+ * 
+ * @param {*} totpCode 
+ * @returns 
+ */
 export async function confirmTOTPSetup(totpCode) {
   await verifyTOTPSetup({ code: totpCode });
   await updateMFAPreference({ totp: "PREFERRED" });
@@ -67,8 +95,8 @@ export async function getCurrentUserProfile() {
   let fullName = "";
   if (session.tokens && session.tokens.idToken) {
     const payload = session.tokens.idToken.payload;
-    email = payload.email || "";
-    fullName = payload.name || "";
+    email = String(payload.email || "");
+    fullName = String(payload.name || "");
   }
 
   return {

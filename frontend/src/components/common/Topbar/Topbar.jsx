@@ -9,12 +9,18 @@ import useAuth from '../../../hooks/useAuth';
 //   { label: 'BRENT', value: '83.14', change: '+1.12%', positive: true },
 // ];
 
+/**
+ * 
+ * @param {*} param
+ * @returns 
+ */
+
 const Topbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useThemeContext();
 
   const initials = user?.full_name
-    ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? user.full_name.split(' ').map((/**@type {string}*/n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U';
 
   const timestamp = new Date().toISOString().slice(0, 10);

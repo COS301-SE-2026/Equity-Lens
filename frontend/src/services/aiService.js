@@ -23,6 +23,11 @@ const TICKERS = {
 };
 
 // Maps TICKERS entry onto the StockTickerCard
+/**
+ * 
+ * @param {*} t 
+ * @returns 
+ */
 const toCard = (t) => ({
   ticker: t.symbol,
   name: t.name,
@@ -33,6 +38,11 @@ const toCard = (t) => ({
 // portfolio vs JSE comparison.
 const PORTFOLIO_VS_JSE = { portfolio: 8.42, jse: 5.17 };
 
+/**
+ * 
+ * @param {string} rawInput 
+ * @returns 
+ */
 export const getMockResponse = (rawInput) => {
   const text = normalize(rawInput);
 
@@ -64,7 +74,7 @@ export const getMockResponse = (rawInput) => {
   }
 
   for (const key of Object.keys(TICKERS)) {
-    const t = TICKERS[key];
+    const t = /**@type {any} */ (TICKERS)[key];
     const keywords = [key, ...t.aliases];
     if (keywords.some((word) => new RegExp(`\\b${word}\\b`).test(text))) {
       return {
