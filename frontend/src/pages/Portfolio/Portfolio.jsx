@@ -909,7 +909,7 @@ const Portfolio = () => {
 
           </div>
 
-        <div className="border border-gray-700 rounded-2xl p-4">
+        <div className="col-span-2 border border-gray-700 rounded-2xl p-4">
           <h2 className="text-xl font-bold text-white text-center">
             Top Holdings
           </h2>
@@ -939,22 +939,7 @@ const Portfolio = () => {
 
             </div>
           )}
-
-
-
         </div> 
-
-        <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center mb-6">
-            AI Portfolio Assistant
-          </h2>
-          <div>
-            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">Summrise my portfolio ?</button>
-            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">What is my largest holding ?</button>
-            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4">How much have i earned in dividends ?</button>
-            <button className="w-full p-4 rounded-2xl border border-gray-700 bg-gray-800 mb-4"> How active is my trading ?</button>
-        </div> 
-      </div>
     </div>
 
       }
@@ -979,11 +964,11 @@ const Portfolio = () => {
           <div className="flex justify-between border border-gray-700 rounded-xl p-4">
 
             <div>
-              <p className="text-xl text-white font-bold">{GetTheLowest[0]?.name}</p>
+              <p className="text-xl text-white font-bold">{GetTheLowest?.name}</p>
             </div>
 
             <div>
-              <p className="text-xl text-red-400 font-bold">{GetTheLowest[0]?.value}</p>
+              <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
             </div>
 
           </div>
