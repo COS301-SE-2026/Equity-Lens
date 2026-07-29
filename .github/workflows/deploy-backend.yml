@@ -77,6 +77,9 @@ jobs:
                   aws ecr get-login-password --region ${{ vars.AWS_REGION }} |
                   docker login --username AWS  --password-stdin ${{ steps.login-to-store-credentials.outputs.registry }}
 
+                  # old :latest layers pile up as dangling images and filled disk
+                  docker system prune -af
+
                   docker pull ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.BACKEND_ECR_REPOSITORY }}:latest
 
                   docker run --rm --env-file /home/ubuntu/backend.env ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.BACKEND_ECR_REPOSITORY }}:latest alembic upgrade head
