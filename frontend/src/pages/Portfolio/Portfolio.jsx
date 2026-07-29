@@ -23,8 +23,8 @@ const ReadingExcelFile = async(file) => {
   const read = XLSX.read(await file.arrayBuffer());
 
   const Portfolio = XLSX.utils.sheet_to_json(read.Sheets["Portfolio"]).map((item) =>({
-          account_number: item["Account Number"],
-          portfolio_name: item["Portfolio Name"],
+          account_number: String(item["Account Number"] ?? ""),
+          portfolio_name: String(item["Portfolio Name"] ?? ""),
           statement_date: item["Statement Date"],
   }));
   const Holdings = XLSX.utils.sheet_to_json(read.Sheets["Holdings"]).map((item) =>({
