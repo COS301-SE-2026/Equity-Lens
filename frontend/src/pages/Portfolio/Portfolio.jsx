@@ -11,6 +11,14 @@ ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
 const DownloadEXCEL = () =>{ window.open("/template/EquityLens_Portfolio_Excel_Template.xlsx") }
 
 /**
+ * @param {Date | any} value
+ */
+const toDateOnly = (value) => {
+  if (!(value instanceof Date)) return value;
+  return value.toISOString().split("T")[0];
+};
+
+/**
  * @param {File} file
  */
 const ReadingExcelFile = async(file) => {
@@ -20,12 +28,12 @@ const ReadingExcelFile = async(file) => {
     return;
   }
 
-  const read = XLSX.read(await file.arrayBuffer());
+  const read = XLSX.read(await file.arrayBuffer(), { cellDates: true });
 
   const Portfolio = XLSX.utils.sheet_to_json(read.Sheets["Portfolio"]).map((item) =>({
-          account_number: item["Account Number"],
-          portfolio_name: item["Portfolio Name"],
-          statement_date: item["Statement Date"],
+          account_number: String(item["Account Number"] ?? ""),
+          portfolio_name: String(item["Portfolio Name"] ?? ""),
+          statement_date: toDateOnly(item["Statement Date"]),
   }));
   const Holdings = XLSX.utils.sheet_to_json(read.Sheets["Holdings"]).map((item) =>({
          instrument_name: item["Instrument Name"],
@@ -33,27 +41,27 @@ const ReadingExcelFile = async(file) => {
           total_cost: item["Total Cost"],
   }));
   const PurchaseandSales = XLSX.utils.sheet_to_json(read.Sheets["Purchase and Sales"]).map((item) =>({
-          transaction_date: item["Transaction Date"],
+          transaction_date: toDateOnly(item["Transaction Date"]),
           transaction_name: item["Transaction Type"],
           instrument_name: item["Instrument Name"],
           price: item.Price,
           quantity: item.Quantity
   }));
   const ContributionsandWithdrawals = XLSX.utils.sheet_to_json(read.Sheets["Contributions and Withdrawals"]).map((item) =>({
-              transaction_date: item["Transaction Date"],
-              statement_date: item["Settlement Date"],
+              transaction_date: toDateOnly(item["Transaction Date"]),
+              statement_date: toDateOnly(item["Settlement Date"]),
               transaction_name: item["Transaction Type"],
               value: item.Value,
   }));
   const DividendsandWithholdingTax = XLSX.utils.sheet_to_json(read.Sheets["Dividends and Withholding Tax"]).map((item) =>({
-              transaction_date: item["Transaction Date"],
+              transaction_date: toDateOnly(item["Transaction Date"]),
               instrument_name: item["Instrument Name"],
               gross_dividend: item["Gross Dividend"],
               tax_rate: item["Tax Rate(%)"],
   }));
   const Expenses = XLSX.utils.sheet_to_json(read.Sheets["Expenses"]).map((item) =>({
-              transaction_date: item["Transaction Date"],
-              settlement_date: item["Settlement Date"],
+              transaction_date: toDateOnly(item["Transaction Date"]),
+              settlement_date: toDateOnly(item["Settlement Date"]),
               narrative: item["Narrative"],
               value: item["Value"],
   }));
@@ -597,8 +605,11 @@ const Portfolio = () => {
 
 
     }
-    catch (theErrors) 
+    catch (theErrors)
     {
+      // the alert below is generic on purpose but log the real cause so we can actually debug reports of this
+      console.error("SavePortfolio failed:", theErrors)
+
       if(file.name.toLowerCase().endsWith(".pdf"))
       {
        alert("Incorrect PDF Password or unsupported EasyQuities statement. Please use the Excel template")

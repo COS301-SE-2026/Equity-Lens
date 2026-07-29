@@ -83,7 +83,7 @@ const NewsInvestment = () => {
           <div className="flex justify-between">
             <div>
               <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Top Loser</h2>
-              {wishlist.length == 0 ? (<p className="text-[var(--text-secondary)]">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker} {wishlistLowest.sector})</p> <p className="text-[var(--signal-negative)]">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
+              {wishlist.length == 0 ? (<p className="text-[var(--text-secondary)]">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker}({wishlistLowest.sector})</p> <p className="text-[var(--signal-negative)]">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
             </div>
            <div>
           <TrendingDown className="w-10 h-10 text-[var(--signal-negative)]"></TrendingDown>
@@ -209,7 +209,6 @@ const NewsInvestment = () => {
           </tr>
           ))
           )}
-=
           </tbody>
           
        </table>
@@ -222,7 +221,7 @@ const NewsInvestment = () => {
           <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Why is my top gainer up ?</button>
           <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Why is my top loser down ?</button>
           <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Which watchlist stock is the best ?</button>
-          <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Summarise today news</button>
+          <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Summarise today's news</button>
         </div>
        </div>
        

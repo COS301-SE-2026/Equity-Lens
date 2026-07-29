@@ -212,8 +212,8 @@ describe("This testing is for the News Page", () =>
     render(<NewsInvestment />);
 
     expect(
-      await screen.findByText("My Watchlists")
-    ).toBeInTheDocument();
+      screen.getAllByText("My Watchlist")
+    ).toHaveLength(2);
      expect(
       await screen.findByText("1")
     ).toBeInTheDocument();
