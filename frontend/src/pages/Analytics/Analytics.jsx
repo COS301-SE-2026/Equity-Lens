@@ -150,16 +150,6 @@ const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
     <button onClick={onSelect} className="flex flex-col gap-0.5 pt-1 text-left w-full cursor-pointer">
       <span className="text-[11px] font-mono" style={{ color: 'var(--text-ghost,#444)' }}>N/A</span>
       <span className="text-[9px] leading-tight" style={{ color: 'var(--text-ghost,#444)' }}>
-    <div className="flex flex-col gap-0.5 pt-1">
-      <span className="text-[11px] font-mono" style={{ color: 'var(--signal-negative)' }}>Error</span>
-      <span className="text-[9px]" style={{ color: 'var(--text-ghost)' }}>Calc failed</span>
-    </div>
-  );
-
-  if (result.status === 'insufficient_data') return (
-    <div className="flex flex-col gap-0.5 pt-1">
-      <span className="text-[11px] font-mono" style={{ color: 'var(--text-ghost)' }}>N/A</span>
-      <span className="text-[9px] leading-tight" style={{ color: 'var(--text-ghost)' }}>
         {result.reason?.split('.')[0]}
       </span>
     </button>
@@ -325,7 +315,7 @@ export default function Analytics() {
               style={{ color: 'var(--text-primary,#e5e5e5)' }}>Analytics</h1>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost,#444)' }}>
               How your holdings are doing - hover a label for a quick explanation, click a value to learn more
-              style={{ color: 'var(--text-primary)' }}>Analytics</h1>
+              </p>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost)' }}>
               Financial indicators calculated per holding - hover any label for an explanation
             </p>
