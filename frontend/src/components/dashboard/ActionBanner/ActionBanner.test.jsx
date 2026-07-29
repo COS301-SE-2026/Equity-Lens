@@ -7,15 +7,21 @@ const ITEMS = [
   {
     id: 'sector-concentration',
     severity: 'risk',
+    impact: 'Medium',
     title: 'Technology is 58% of your portfolio',
     detail: 'A single sector this large means sector-specific news can swing your whole book.',
+    benefit: 'Reducing Technology below 40% could improve your Portfolio Health by +0.3.',
+    healthImprovement: 0.3,
     cta: { label: 'Explore New Sectors', target: 'holdings-section' },
   },
   {
     id: 'low-diversification',
     severity: 'suggestion',
+    impact: 'Low',
     title: 'Only 2 positions in your portfolio',
     detail: 'Most retail portfolios target 8-12 positions across sectors to reduce single-stock risk.',
+    benefit: 'Adding a few more positions could improve your Portfolio Health.',
+    healthImprovement: null,
     cta: { label: 'Fix Diversification', to: '/portfolio' },
   },
 ];
