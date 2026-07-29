@@ -5,7 +5,8 @@ import {
   Briefcase,
   X, 
   Sparkles,
-  BarChart2
+  BarChart2,
+  HelpCircle
 } from 'lucide-react';
 import { ROUTES } from '../../../utils/constants';
 
@@ -14,7 +15,9 @@ const navItems = [
   { label: 'Portfolio', icon: Briefcase, to: ROUTES.PORTFOLIO },
   { label: 'Analytics',    icon: BarChart2, to: ROUTES.ANALYTICS },
   { label: 'News', icon: Newspaper, to: ROUTES.NEWS },
-  { label: 'AI Assistant', icon: Sparkles, to: ROUTES.AI_CHAT}
+  { label: 'AI Assistant', icon: Sparkles, to: ROUTES.AI_CHAT},
+  { label: 'Help', icon: HelpCircle, to: ROUTES.HELP, pinBottom: true},
+
 ];
 
 const Sidebar = ({ open, onClose }) => {
@@ -85,7 +88,7 @@ const Sidebar = ({ open, onClose }) => {
           }}>
           </p>
 
-          {navItems.map(({ label, icon: Icon, to, badge }) => (
+          {navItems.map(({ label, icon: Icon, to, badge, pinBottom }) => (
             <NavLink
               key={to}
               to={to}
@@ -103,6 +106,7 @@ const Sidebar = ({ open, onClose }) => {
                 borderLeft: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
                 textDecoration: 'none',
                 transition: 'all 120ms ease-out',
+                marginTop: pinBottom ? 'auto' : undefined
               })}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
