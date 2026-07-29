@@ -6,6 +6,10 @@ import {
   ResponsiveContainer 
 } from 'recharts';
 
+/**
+ * @typedef {{sector: string, percentage: number, value: number}} SectorDatum
+ */
+
 const CHART_COLORS = [
   'var(--accent-primary)',
   '#8A94A8',
@@ -24,6 +28,7 @@ const mockSectorData = [
   { sector: 'Real Estate', percentage: 4.5, value: 57000 },
 ];
 
+/** @param {{active?: boolean, payload?: {payload: SectorDatum}[]}} props*/
 const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const { sector, percentage, value } = payload[0].payload;

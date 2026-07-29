@@ -1,8 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { THEME_KEY } from '../utils/constants';
 
+/**@type {any} */
 const ThemeContext = createContext(null);
 
+/**
+ * @param {Object} object
+ * @param {*} object.children
+*/
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(
     () => localStorage.getItem(THEME_KEY) || 'light'

@@ -1,7 +1,18 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import FormInput from '../FormInput/FormInput';
-
+/**
+ *  @param {object} objects
+ *  @param {*} [objects.label]
+ *  @param {*} [objects.name]
+ *  @param {*} [objects.type]
+ *  @param {*} [objects.value]
+ *  @param {*} [objects.onChange]
+ *  @param {*} [objects.onBlur]
+ *  @param {*} [objects.error]
+ *  @param {*} [objects.placeholder]
+ *  @param {*} [objects.required]
+ */
 const PasswordInput = ({
   label = 'Password',
   name = 'password',

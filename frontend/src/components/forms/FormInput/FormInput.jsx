@@ -1,3 +1,19 @@
+
+
+/**
+ *  @param {Object} objects
+ *  @param {*} objects.label
+ *  @param {*} objects.name
+ *  @param {*} objects.type
+ *  @param {*} objects.value
+ *  @param {*} objects.onChange
+ *  @param {*} objects.onBlur
+ *  @param {*} objects.error
+ *  @param {*} objects.placeholder
+ *  @param {*} objects.required
+ *  @param {*} objects.disabled
+ *  @param {*} objects.className
+ */
 const FormInput = ({
   label,
   name,
@@ -10,7 +26,7 @@ const FormInput = ({
   required = false,
   disabled = false,
   className = '',
-}) => {
+} ) => {
   return (
     <div className={`flex flex-col gap-1.5 ${className}`}>
       {label && (

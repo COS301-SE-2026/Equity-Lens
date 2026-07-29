@@ -1,10 +1,23 @@
 import { TrendingUp, TrendingDown, DollarSign, BarChart2 } from 'lucide-react';
 
+/**
+ *  @param {*} value
+ */
 const formatCurrency = (value) =>
   new Intl.NumberFormat('en-ZA', { style: 'currency', currency: 'ZAR' }).format(value);
 
+/**
+ *  @param {*} value
+ */
 const formatPercent = (value) => `${value >= 0 ? '+' : ''}${value?.toFixed(2)}%`;
-
+/**
+ *  @param {object} objects
+ *  @param {*} objects.label
+ *  @param {*} objects.value
+ *  @param {*} [objects.sub]
+ *  @param {*} objects.icon
+ *  @param {*} [objects.positive]
+ */
 const StatCard = ({ label, value, sub, icon: Icon, positive }) => (
   <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 shadow-[var(--shadow-card)]">
     <div className="flex items-start justify-between mb-3">
@@ -33,6 +46,10 @@ const StatCard = ({ label, value, sub, icon: Icon, positive }) => (
 );
 
 
+/**
+ *  @param {object} objects
+ *  @param {*} objects.summary
+ */
 const PortfolioSummary = ({ summary }) => {
   if (!summary) return null;
   const gainPositive = summary.total_gain_loss >= 0;
