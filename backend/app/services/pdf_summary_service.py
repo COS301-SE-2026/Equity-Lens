@@ -20,14 +20,6 @@ def _iso_or_none(portfolio, field: str):
     else:
         return None
 
-# def ticker_or_name(instrument_name: str | None):
-#     Known = resolve_known_instrument(instrument_name or "")
-
-#     if Known:
-#         return Known.ticker
-#     else:
-#         return instrument_name
-
 
 def get_summary_import_PDF(database,portfolioID):
     PortfolioValue = database.query(func.sum(Holdings.total_cost)).filter(Holdings.portfolio_id == portfolioID).scalar() or 0
