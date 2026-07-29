@@ -42,6 +42,14 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const DividendBarChart = ({ data = MOCK_DATA }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '160px', color: 'var(--text-secondary)', fontSize: '12px', fontFamily: 'var(--font-primary)' }}>
+        No dividend data available
+      </div>
+    );
+  }
+
   const avg = average(data);
 
   return (
@@ -65,7 +73,7 @@ const DividendBarChart = ({ data = MOCK_DATA }) => {
 
           <ReferenceLine
             y={avg}
-            stroke="#60a5fa"
+            stroke="var(--signal-info)"
             strokeDasharray="4 3"
             strokeWidth={1}
             strokeOpacity={0.6}
@@ -73,7 +81,7 @@ const DividendBarChart = ({ data = MOCK_DATA }) => {
               value: `Avg R${avg}`,
               position: 'insideTopRight',
               fontSize: 9,
-              fill: '#60a5fa',
+              fill: 'var(--signal-info)',
               fontFamily: 'var(--font-mono)',
               opacity: 0.7,
             }}
@@ -83,8 +91,8 @@ const DividendBarChart = ({ data = MOCK_DATA }) => {
             {data.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill="rgba(96, 165, 250, 0.35)"
-                stroke="rgba(96, 165, 250, 0.6)"
+                fill="var(--accent-subtle)"
+                stroke="var(--accent-primary)"
                 strokeWidth={1}
               />
             ))}

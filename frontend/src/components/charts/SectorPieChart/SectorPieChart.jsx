@@ -7,14 +7,12 @@ import {
 } from 'recharts';
 
 const CHART_COLORS = [
-  '#D4A017',
-  'rgba(96,165,250,0.85)',
-  'rgba(52,211,153,0.85)',
-  'rgba(251,113,133,0.85)',
-  'rgba(167,139,250,0.85)',
-  'rgba(251,191,36,0.85)',
-  'rgba(34,211,238,0.85)',
-  'rgba(244,114,182,0.85)',
+  'var(--accent-primary)',
+  '#8A94A8',
+  '#6E7B94',
+  '#5A6480',
+  '#454C5E',
+  '#343A47',
 ];
 
 const mockSectorData = [

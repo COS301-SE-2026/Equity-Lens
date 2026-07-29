@@ -1,165 +1,154 @@
+import { useCallback, useState, useRef, useEffect } from 'react';
+import useAuth from '../../hooks/useAuth';
 import usePortfolio from '../../hooks/usePortfolio';
-import StockTickerCard from '../../components/dashboard/StockTickerCard/StockTickerCard';
-import PerformanceLineChart from '../../components/charts/PerformanceLineChart/PerformanceLineChart';
-import DividendBarChart from '../../components/charts/DividendBarChart/DividendBarChart';
-import WatchlistItem from '../../components/dashboard/WatchlistItem/WatchlistItem';
-import HoldingsTable from '../../components/portfolio/HoldingsTable/HoldingsTable';
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
+import { GlassPanel } from '../../components/dashboard/shared/GlassPanel';
+import DashboardHero from '../../components/dashboard/DashboardHero/DashboardHero';
+import ActionBanner from '../../components/dashboard/ActionBanner/ActionBanner';
+import PortfolioHealth from '../../components/dashboard/PortfolioHealth/PortfolioHealth';
+import PerformanceVsBenchmark from '../../components/dashboard/PerformanceVsBenchmark/PerformanceVsBenchmark';
+import PortfolioOverview from '../../components/dashboard/PortfolioOverview/PortfolioOverview';
+import TodayInsights from '../../components/dashboard/TodayInsights/TodayInsights';
+import WatchlistPanel from '../../components/dashboard/WatchlistPanel/WatchlistPanel';
+import {
+  buildSectors,
+  buildChartStats,
+  buildAttrib,
+  buildHealth,
+  buildActions,
+  buildInsights,
+  buildSummary,
+} from '../../utils/dashboardInsights';
 
-const WATCHLIST = [
-  { ticker: 'ABG', name: 'Absa Group',   price: 182.50, changePercent:  1.2 },
-  { ticker: 'DSY', name: 'Discovery Ltd', price: 142.30, changePercent: -0.8 },
-  { ticker: 'VOD', name: 'Vodacom Group',   price: 98.60,  changePercent:  0.4 },
-  { ticker: 'GFI', name: 'Gold Fields', price: 312.00, changePercent:  2.1 },
-];
-
-const MOCK_PERFORMANCE = [
-  { benchmark: 72000 }, { benchmark: 73000 }, { benchmark: 73500 },
-  { benchmark: 75000 }, { benchmark: 74500 }, { benchmark: 77000 },
-  { benchmark: 78500 }, { benchmark: 80000 }, { benchmark: 78000 },
-  { benchmark: 81000 }, { benchmark: 83000 }, { benchmark: 85000 },
-];
-
-const SectionCard = ({ title, subtitle, children, scrollable = false }) => (
-  <div
-    style={{
-      background: 'var(--surface-card)',
-      border: '1px solid var(--border-subtle)',
-      borderRadius: '6px',
-      display: 'flex',
-      flexDirection: 'column',
-      height: '100%',
-      overflow: 'hidden',
-    }}
-  >
-    <div style={{
-      padding: '10px 16px',
-      borderBottom: '1px solid var(--border-subtle)',
-      flexShrink: 0,
-    }}>
-      <p style={{
-        fontSize: '10px',
-        fontWeight: 500,
-        color: 'var(--text-primary)',
-        fontFamily: 'var(--font-primary)',
-        textTransform: 'uppercase',
-        letterSpacing: '0.08em',
-      }}>
-        {title}
-      </p>
-      {subtitle && (
-        <p style={{
-          fontSize: '10px',
-          marginTop: '2px',
-          color: 'var(--text-secondary)',
-          fontFamily: 'var(--font-primary)',
-        }}>
-          {subtitle}
-        </p>
-      )}
-    </div>
-    <div style={{
-      padding: '16px',
-      flex: 1,
-      overflowY: scrollable ? 'auto' : 'visible',
-      maxHeight: scrollable ? '260px' : 'none',
-    }}>
-      {children}
-    </div>
-  </div>
-);
+// anomaly headline data pulled for demo 2
+const FLASH_CLASS = 'ring-4 ring-inset ring-orange-500 animate-pulse transition-all duration-500';
+const FLASH_TIME = 2500;
 
 const Dashboard = () => {
-  const { portfolioData, loading, error } = usePortfolio();
+  const { portfolioData, loading, error, fetchedAt } = usePortfolio();
+  const { user } = useAuth();
+  const [flashedTarget, setFlashedTarget] = useState(/** @type {string|null} */ (null));
+  /** @type {React.MutableRefObject<ReturnType<typeof setTimeout> | null>} */
+  const flashTimeoutRef = useRef(null);
+
+  const scrollToSection = useCallback((/** @type {string} */ id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    setFlashedTarget(id);
+    flashTimeoutRef.current = setTimeout(() => setFlashedTarget(null), FLASH_TIME);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+    };
+  }, []);
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '256px' }}>
+      <div className="flex min-h-screen items-center justify-center" style={{ background: 'var(--bg-primary)' }}>
         <LoadingSpinner size="lg" />
       </div>
-    );
-  }
+    );}
 
   if (error) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', minHeight: '256px' }}>
-        <div
-          role="alert"
-          style={{
-            background: 'var(--surface-card)',
-            border: '1px solid var(--border-subtle)',
-            borderRadius: '6px',
-            padding: '32px',
-            maxWidth: '400px',
-            textAlign: 'center',
-          }}
-        >
-          <p style={{ fontSize: '11px', fontWeight: 500, marginBottom: '8px', color: 'var(--signal-negative)', fontFamily: 'var(--font-primary)' }}>
-            Failed to load portfolio
+      <div className="flex min-h-screen items-center justify-center px-4" style={{ background: 'var(--bg-primary)' }}>
+        <GlassPanel className="max-w-md p-8 text-center">
+          <p className="mb-2 font-mono text-[11px] tracking-widest" style={{ color: 'var(--signal-negative)' }}>
+            Could Not Load Portfolio
           </p>
-          <p style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'var(--font-primary)' }}>
-            {error}
-          </p>
-        </div>
+          <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>{error}</p>
+        </GlassPanel>
       </div>
-    );
-  }
+    );}
 
-const topHoldings = [...(portfolioData?.holdings || [])] .sort((a, b) => b.value - a.value) .slice(0, 4);
+  const firstName = user?.full_name?.split(' ')[0] ?? 'there';
+  const holdings = portfolioData?.holdings ?? [];
   
-return (
+  const perfSeries = (portfolioData?.performanceHistory ?? []).map(
+    /** @param {{ date?: string, name?: string, value: number, benchmark?: number }} point
+     *  @param {number} i */
+    (point, i) => ({
+      date: point.date,
+      name: point.name ?? point.date?.slice(5, 7) ?? `M${i + 1}`,
+      value: point.value,
+      benchmark: point.benchmark,
+    }),);
+
+  const benchmarkLabel = portfolioData?.benchmarkLabel ?? 'JSE ALSI';
+  const { sectors: sectorData } = buildSectors(holdings);
+  const fullChartStats = buildChartStats(perfSeries);
+  const attribution = buildAttrib(holdings);
+  const health = buildHealth({ holdings, sectorData, chartStats: fullChartStats, benchmarkLabel });
+  const { items: actionItems } = buildActions({ holdings, sectorData, attribution, health });
+  const { insights: todayInsights } = buildInsights({
+    holdings,
+    sectorData,
+    attribution,
+    chartStats: fullChartStats,
+    totalGainLoss: {
+      pct: portfolioData?.summary?.total_gain_loss_pct,
+      value: portfolioData?.summary?.total_gain_loss,
+    },});
+
+  const summary = buildSummary({
+    holdings,
+    sectorData,
+    attribution,
+    chartStats: fullChartStats,
+    dailyChangePct: portfolioData?.summary?.daily_change ?? 0,
+    benchmarkLabel,
+  });
+
+  return (
     <div
-      className="px-4 lg:px-6 py-6 space-y-6 max-w-[1600px] mx-auto w-full"
-      aria-label="Portfolio dashboard"
-    >
-      <div className="grid grid-cols-12 gap-4">
-        {topHoldings.map((holding) => (
-          <div key={holding.ticker} className="col-span-12 sm:col-span-6 xl:col-span-3">
-            <StockTickerCard
-              ticker={holding.ticker}
-              name={holding.name}
-              price={holding.current_price}
-              changePercent={holding.daily_change_pct}
-              totalReturn={holding.gain_loss_pct}
-            />
+      className="min-h-screen"
+      style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'var(--font-primary)' }} >
+      <main className="mx-auto max-w-[1800px] space-y-10 px-6 py-8 lg:px-12" aria-label="Portfolio dashboard">
+        <DashboardHero
+          name={firstName}
+          portfolioData={portfolioData}
+          attribution={attribution}
+          health={health}
+          summary={summary}
+          fetchedAt={fetchedAt}
+          onScrollToHealth={() => scrollToSection('portfolio-health')}
+          onScrollTo={scrollToSection}/>
+
+        <ActionBanner items={actionItems} hasHoldings={holdings.length > 0} onScrollTo={scrollToSection} />
+
+        <div
+          id="portfolio-health"
+          className={`rounded-2xl ${flashedTarget === 'portfolio-health' ? FLASH_CLASS : ''}`} >
+          <PortfolioHealth health={health} onScrollTo={scrollToSection} />
+        </div>
+        <div className="grid grid-cols-12 gap-8">
+          <div
+            id="performance-vs-benchmark"
+            className={`col-span-12 space-y-6 rounded-2xl lg:col-span-8 ${flashedTarget === 'performance-vs-benchmark' ? FLASH_CLASS : ''}`} >
+            <PerformanceVsBenchmark
+              series={perfSeries}
+              attribution={attribution}
+              holdings={holdings}
+              onScrollTo={scrollToSection}
+              benchmarkLabel={benchmarkLabel}/>
           </div>
-        ))}
-      </div>
 
-      <div className="grid grid-cols-12 gap-6">
-        <div className="col-span-12 lg:col-span-8">
-          <SectionCard title="Portfolio performance" subtitle="vs JSE All Share benchmark">
-            <PerformanceLineChart data={
-            portfolioData?.performanceHistory?.map((point, i) => ({
-              name: point.name ?? point.date?.slice(5, 7) ?? `M${i + 1}`,
-              value: point.value,
-              benchmark: point.benchmark ?? MOCK_PERFORMANCE[i]?.benchmark ?? 72000,
-            }))
-          } />
-          </SectionCard>
+          <div className="col-span-12 space-y-8 lg:col-span-4">
+            {/* CorrelatedNews pulled for demo 2 as not feasible in time but code kept*/}
+            <TodayInsights insights={todayInsights} onScrollTo={scrollToSection} />
+            <WatchlistPanel />
+          </div>
         </div>
-
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
-          <SectionCard title="Dividend income">
-            <DividendBarChart />
-          </SectionCard>
-          <SectionCard title="Watchlist" scrollable={true}>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-              {WATCHLIST.map((item) => (
-                <WatchlistItem key={item.ticker} {...item} />
-              ))}
-            </div>
-          </SectionCard>
-        </div>
-
-        <div className="col-span-12">
-          <SectionCard title="Holdings" subtitle="All active positions in your portfolio">
-            <HoldingsTable holdings={portfolioData?.holdings} />
-          </SectionCard>
-        </div>
-      </div>
+        <PortfolioOverview
+          sectorData={sectorData}
+          holdings={holdings}
+          flashSector={flashedTarget === 'sector-allocation'}
+          flashHoldings={flashedTarget === 'holdings-table'}
+        />
+      </main>
     </div>
-  );
-};
+  );};
 
 export default Dashboard;

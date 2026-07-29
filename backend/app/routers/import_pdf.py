@@ -10,6 +10,7 @@ from app.schemas.import_pdf import DividendsAndWithholdingTaxRequest
 from app.schemas.import_pdf import TransactionExpensesRequest
 from app.services.import_pdf import import_Pdf_data
 from app.services.import_pdf import save_portfolios_import
+from app.services.import_pdf import get_my_portfolio
 from app.services.import_pdf import save_holdings_import
 from app.services.import_pdf import save_instrument_purchases_and_sales_import
 from app.services.import_pdf import save_contributions_and_withdrawals_import
@@ -27,6 +28,13 @@ def import_Pdf_data_DB(data: ImportPdfRequest,db : Session = Depends(get_db), Cu
         database=db,
         user_id=CurrentUser.id,
         data=data
+    )
+
+@router.get("/my_portfolio")
+def get_my_portfolio_DB(db : Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):
+    return get_my_portfolio(
+        database=db,
+        user_id=CurrentUser.id
     )
 
 @router.post("/save_portfolios")

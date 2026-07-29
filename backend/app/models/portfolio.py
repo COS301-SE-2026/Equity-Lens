@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Date, Numeric
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Date, Numeric, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 
@@ -26,9 +26,21 @@ class Portfolios(Base):
     portfolio_name = Column(String(100), nullable=False)
     statement_end_date = Column(Date)
     statement_start_date = Column(Date)
+    currency = Column(String(10), nullable=False, default="ZAR")
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))
+
+class PortfolioSnapshot(Base):
+    __tablename__ = "portfolio_snapshots"
+    
+    __table_args__ = (UniqueConstraint("portfolio_id", "snapshot_date", name="uq_portfolio_snapshot_date"),)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id", ondelete="CASCADE"), nullable=False, index=True)
+    snapshot_date = Column(Date, nullable=False)
+    total_value = Column(Numeric(18, 2), nullable=False)
+    benchmark_value = Column(Numeric(18, 2))
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 class Holdings(Base):
     __tablename__ = "holdings"

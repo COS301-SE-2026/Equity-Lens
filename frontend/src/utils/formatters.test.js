@@ -52,6 +52,15 @@ describe("chartFormatters", () => {
     it("formats large values correctly", () => {
       expect(formatShortCurrency(100000)).toBe("R 100k");
     });
+
+    it("switches to millions", () => {
+      expect(formatShortCurrency(2_400_000)).toBe("R 2.4m");
+      expect(formatShortCurrency(15_000_000)).toBe("R 15m");
+    });
+
+    it("handles negatives", () => {
+      expect(formatShortCurrency(-9482)).toBe("R -9.5k");
+    });
   });
 
   describe("formatMonthYear", () => {
