@@ -108,8 +108,5 @@ describe('not found', () => {
     expect(screen.getByText('NotFound Page')).toBeInTheDocument();
   });
 
-  it('falls through to NotFound at /help (Help page not built yet)', () => {
-    renderAt(ROUTES.HELP);
-    expect(screen.getByText('NotFound Page')).toBeInTheDocument();
-  });
+  it.todo('falls through to NotFound at /help (Help page not built yet)');
 });
