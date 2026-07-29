@@ -18,6 +18,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    op.execute('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"')
     op.create_table(
         "portfolio_snapshots",
         sa.Column("id", sa.UUID(), server_default=sa.text("uuid_generate_v4()"), nullable=False),

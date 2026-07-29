@@ -1,0 +1,17 @@
+node_modules
+dist
+build
+coverage
+playwright-report
+test-results
+.git
+*.log
+npm-debug.log*
+.env
+.env.local
+.vscode
+.idea
+.DS_Store
+venv/
+__pycache__/
+*.pyc

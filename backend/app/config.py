@@ -9,7 +9,11 @@ class Settings(BaseSettings):
     secret_key: str = "to-be-changed-later"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
-    cors_origins: list[str] = ["http://localhost:5173"]
+    cors_origins: list[str] = [
+        "http://localhost:5173",
+        "https://equitylens.co.za",
+        "https://www.equitylens.co.za",
+    ]
     aws_region: str = "af-south-1"
     aws_access_key_id: str | None = None
     aws_secret_access_key: str | None = None
