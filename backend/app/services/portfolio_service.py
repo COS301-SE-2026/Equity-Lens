@@ -1,3 +1,4 @@
+import math
 import logging
 from datetime import date, timedelta
 from uuid import UUID
@@ -55,8 +56,18 @@ def _price_holding(h) -> dict:
     if ticker and ticker.upper() not in INVALID_TICKER_MARKERS and is_zar_listed(ticker):
         try:
             live = get_current_price(ticker)
-            current_price = live.price
-            daily_change_pct = live.change_percent or 0.0
+            raw_price = live.price
+            current_price = (
+                raw_price
+                if raw_price is not None and not math.isnan(raw_price)
+                else cost_price
+            )
+            raw_change = live.change_percent
+            daily_change_pct = (
+                raw_change
+                if raw_change is not None and not math.isnan(raw_change)
+                else 0.0
+            )
             priced_live = True
         except Exception as exc:
             logger.warning(f"live price fetch failed for {ticker}: {exc}")
