@@ -348,7 +348,7 @@ const PerformanceVsBenchmark = ({
             tick={{ fontSize: 10, fontFamily: 'monospace' }}
             tickLine={false}
             axisLine={false}
-            interval={0}
+            minTickGap={48}
           />
           <YAxis
             stroke="var(--text-ghost)"

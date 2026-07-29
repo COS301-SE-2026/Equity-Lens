@@ -1,13 +1,20 @@
+import logging
+
 import yfinance as yf
 
 from app.repositories.watchlist import add_watchlist,get_watchlist,remove_watchlist
-from yfinance.exceptions import YFRateLimitError
+
+logger = logging.getLogger(__name__)
 
 def add_watchlist_service(database,user_id,data):
-    stock_info = yf.Ticker(data.ticker).info
-
-    company_name = stock_info.get("longName")
-    sector = stock_info.get("sector")
+    company_name = None
+    sector = None
+    try:
+        stock_info = yf.Ticker(data.ticker).info
+        company_name = stock_info.get("longName")
+        sector = stock_info.get("sector")
+    except Exception as exc:
+        logger.warning(f"yfinance lookup failed for {data.ticker}: {exc}")
 
     add_watchlist(database,user_id,data.ticker,company_name,sector)
 
@@ -22,15 +29,14 @@ def get_watchlist_service(database,user_id):
     AllResults = []
 
     for items in watchlist:
+        current_price = None
+        change_percent = None
         try:
             getInfo = yf.Ticker(items.ticker).info
-
             current_price = getInfo.get("currentPrice")
             change_percent = getInfo.get("regularMarketChangePercent")
-
-        except YFRateLimitError:
-            current_price = 0
-            change_percent = 0
+        except Exception as exc:
+            logger.warning(f"yfinance lookup failed for {items.ticker}: {exc}")
 
         AllResults.append({
             "id": items.id,
@@ -39,9 +45,8 @@ def get_watchlist_service(database,user_id):
             "sector": items.sector,
             "current_price": current_price,
             "change_percent": change_percent,
-
         })
-        
+
     if len(AllResults) == 0:
         return{
             "success": True,
@@ -51,10 +56,12 @@ def get_watchlist_service(database,user_id):
             "lowest": {}
         }
 
-    TheHighest = AllResults[0]
-    Thelowest = AllResults[0]
+    Priced = [items for items in AllResults if items["change_percent"] is not None]
 
-    for items in AllResults:
+    TheHighest = Priced[0] if Priced else {}
+    Thelowest = Priced[0] if Priced else {}
+
+    for items in Priced:
         if items["change_percent"] > TheHighest["change_percent"]:
             TheHighest = items
 

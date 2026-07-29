@@ -8,6 +8,8 @@ from app.database import SessionLocal
 from app.models.market_data import MarketData, FundamentalsCache
 
 _REFRESH_LOCKS = set()
+_PRICE_REFRESH_COOLDOWN_UNTIL: dict[str, datetime] = {}
+PRICE_REFRESH_COOLDOWN_MINUTES = 10
 #weekly - comfortable time as eases rates on yfinance
 #and also short enough to where a company can release financials
 #on a random day mid-week and wont be long until the refresh to serve fresh data
@@ -157,14 +159,14 @@ def _fetch_from_yfinance(ticker: str, period: str) -> pd.DataFrame:
     return pd.DataFrame()
 
 def _refresh_price_history(ticker: str, period: str) -> pd.DataFrame:
-    try:
-        if settings.alpha_vantage_api_key:
+    if settings.alpha_vantage_api_key and not ticker.upper().endswith(".JO"):
+        try:
             history = _fetch_from_alpha_vantage(ticker)
             print(f"Alpha Vantage refresh: {ticker}")
             _save_price_history(ticker,history)
             return _load_local_price_history(ticker)
-    except Exception as exc:
-        print(f"Alpha Vantage refresh failed for {ticker}: {type(exc).__name__}")
+        except Exception as exc:
+            print(f"Alpha Vantage refresh failed for {ticker}: {exc}")
 
     if settings.allow_live_market_fallback:
         try:
@@ -200,11 +202,18 @@ def get_cached_price_history(ticker: str, period: str = "1y") -> pd.DataFrame:
     if ticker in _REFRESH_LOCKS:
         return history
 
+    cooldown_until = _PRICE_REFRESH_COOLDOWN_UNTIL.get(ticker)
+    if cooldown_until and datetime.now(timezone.utc) < cooldown_until:
+        print(f"Skipping {ticker} price refresh - cooldown")
+        return history
+
     _REFRESH_LOCKS.add(ticker)
     try:
         refreshed = _refresh_price_history(ticker, period)
         if not refreshed.empty:
+            _PRICE_REFRESH_COOLDOWN_UNTIL.pop(ticker, None)
             return refreshed
+        _PRICE_REFRESH_COOLDOWN_UNTIL[ticker] = datetime.now(timezone.utc) + timedelta(minutes=PRICE_REFRESH_COOLDOWN_MINUTES)
         return history
     finally:
         _REFRESH_LOCKS.discard(ticker)

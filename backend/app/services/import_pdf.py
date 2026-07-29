@@ -13,8 +13,8 @@ from app.repositories.import_pdf import get_latest_portfolio, save_portfolios
 # from app.services.instrument import resolve_known_instrument
 from requests.exceptions import ReadTimeout
 
-# SECONDS_In_HOUR = 3600
-# Cache: dic[str,tuple[float,dic]] = {}
+SECONDS_In_HOUR = 3600
+Cache: dict[str, tuple[float, dict]] = {}
 
 # def search_ticket_number(instrumentName: str):
 #     The_Keys = instrumentName.strip().lower()
@@ -27,6 +27,7 @@ from requests.exceptions import ReadTimeout
 
 def search_ticket_number(instrumentName: str):
     
+    The_Keys = instrumentName.strip().lower()
     cached = Cache.get(The_Keys)
 
     if cached and (time.time() - cached[0]) < SECONDS_In_HOUR:
@@ -117,8 +118,8 @@ def save_portfolios_import(database,user_id,data):
         "portfolio_id": str(document.id)
     }
 
-def get_my_portfolio(datbase, user_id):
-    document = get_latest_portfolio(datbase, user_id)
+def get_my_portfolio(database, user_id):
+    document = get_latest_portfolio(database, user_id)
 
     if not document:
         return {

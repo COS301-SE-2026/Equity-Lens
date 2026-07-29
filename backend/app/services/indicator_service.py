@@ -1,5 +1,6 @@
 import pandas as pd
 from app.utils.stock_cache import get_cached_fundamentals, get_cached_price_history
+from app.services.market_data_service import _cents_to_major
 from app.indicators.capm import calculate_capm
 from app.indicators.altman_z_score import calculate_altman_zscore
 from app.indicators.beta import calculate_beta
@@ -55,16 +56,16 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
         if hist.empty or "Close" not in hist:
             raise ValueError("No price data")
         
-        close = hist["Close"].dropna()
+        close = hist["Close"].dropna() / _cents_to_major(symbol)
         returns = close.pct_change().dropna()
         # We use 'inner' join here to account for holiday dates where the market would be closed
         # as would lead to length mismatches
-        returns, market_returns = returns.align(market_returns, join="inner")
+        aligned_returns, aligned_market_returns = returns.align(market_returns, join="inner")
 
         beta = None
         try:
-            if len(returns) > 10 and len(market_returns) > 10:
-                beta = calculate_beta(returns.values, market_returns.values)
+            if len(aligned_returns) > 10 and len(aligned_market_returns) > 10:
+                beta = calculate_beta(aligned_returns.values, aligned_market_returns.values)
         except Exception as exc:
             print(f"Beta calculation failed for {symbol}: {exc}")
             beta = None
