@@ -964,11 +964,11 @@ const Portfolio = () => {
           <div className="flex justify-between border border-gray-700 rounded-xl p-4">
 
             <div>
-              <p className="text-xl text-white font-bold">{GetTheLowest[0]?.name}</p>
+              <p className="text-xl text-white font-bold">{GetTheLowest?.name}</p>
             </div>
 
             <div>
-              <p className="text-xl text-red-400 font-bold">{GetTheLowest[0]?.value}</p>
+              <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
             </div>
 
           </div>
