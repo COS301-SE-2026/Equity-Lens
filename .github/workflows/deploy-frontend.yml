@@ -81,9 +81,6 @@ jobs:
                   aws ecr get-login-password --region ${{ vars.AWS_REGION }} |
                   docker login --username AWS --password-stdin ${{ steps.login-to-store-credentials.outputs.registry }}
 
-                  # old :latest layers pile up as dangling images and filled the disk
-                  docker system prune -af
-
                   docker pull ${{ steps.login-to-store-credentials.outputs.registry }}/${{  vars.FRONTEND_ECR_REPOSITORY }}:latest
 
                   docker stop equity-lens-frontend || true
