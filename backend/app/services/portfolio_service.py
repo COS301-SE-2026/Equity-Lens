@@ -56,7 +56,12 @@ def _price_holding(h) -> dict:
     if ticker and ticker.upper() not in INVALID_TICKER_MARKERS and is_zar_listed(ticker):
         try:
             live = get_current_price(ticker)
-            current_price = live.price
+            raw_price = live.price
+            current_price = (
+                raw_price
+                if raw_price is not None and not math.isnan(raw_price)
+                else cost_price
+            )
             raw_change = live.change_percent
             daily_change_pct = (
                 raw_change
