@@ -10,6 +10,10 @@ import {
   ReferenceLine,
 } from 'recharts';
 
+/**
+ * @typedef {{month: string, amount: number}} DividendDatum
+ */
+
 const MOCK_DATA = [
   { month: 'Jan', amount: 180 },
   { month: 'Feb', amount: 340 },
@@ -19,9 +23,11 @@ const MOCK_DATA = [
   { month: 'Jun', amount: 200 },
 ];
 
+/** @param {DividendDatum[]} data*/
 const average = (data) =>
   Math.round(data.reduce((sum, d) => sum + d.amount, 0) / data.length);
 
+/**@param {{active?: boolean, payload?: {value: number}[], label?: string}} */
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -65,7 +71,7 @@ const DividendBarChart = ({ data = MOCK_DATA }) => {
             dy={4}
           />
           <YAxis
-            tick={{ fill: 'var(--chart-axis-text)', fontSize: 10, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}
+            tick={{ fill: 'var(--chart-axis-text)', fontSize: 10, fontFamily: 'var(--font-mono)', style: {fontVariantNumeric: 'tabular-nums'} }}
             axisLine={false}
             tickLine={false}
           />
