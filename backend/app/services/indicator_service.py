@@ -115,7 +115,7 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) 
         #Altman Z is built for retail/industrial companies, therefore Total Revenue is N/A from financial institutions
         sector = (info.get("sector") or "").upper()
         is_financial = sector in ("FINANCIAL SERVICES", "FINANCIALS")
-        sector_reason = "N/A - Altman Z Score not meaninful for banks and financial institutions."
+        sector_reason = "N/A - Altman Z Score not meaningful for banks and financial institutions."
 
         eps = info.get("trailingEps") or info.get("epsTrailingTwelveMonths")
         pe = None

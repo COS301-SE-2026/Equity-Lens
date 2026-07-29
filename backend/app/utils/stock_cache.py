@@ -236,6 +236,7 @@ def _save_fundamentals(ticker: str, info: dict, balance_sheet: pd.DataFrame, fin
         if balance_sheet is not None and not balance_sheet.empty:
             balance_sheet_copy = balance_sheet.copy()
             balance_sheet_copy.columns = balance_sheet_copy.columns.astype(str)
+            balance_sheet_copy = balance_sheet_copy.astype(object)
             balance_sheet_copy = balance_sheet_copy.where(pd.notna(balance_sheet_copy), None)
             balance_sheetjson = balance_sheet_copy.to_dict()
 
@@ -243,6 +244,7 @@ def _save_fundamentals(ticker: str, info: dict, balance_sheet: pd.DataFrame, fin
         if financials is not None and not financials.empty:
             financials_copy = financials.copy()
             financials_copy.columns = financials_copy.columns.astype(str)
+            financials_copy = financials_copy.astype(object)
             financials_copy = financials_copy.where(pd.notna(financials_copy), None)
             financials_json = financials_copy.to_dict()
 
