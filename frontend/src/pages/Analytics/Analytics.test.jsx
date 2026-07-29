@@ -33,7 +33,7 @@ describe('Analytics', () => {
   it("shows the page description", () => {
     renderAnalytics();
     expect(
-      screen.getByText("Financial indicators calculated per holding - hover any label for an explanation")
+      screen.getByText("How your holdings are doing - hover a label for a quick explanation, click a value to learn more")
     ).toBeInTheDocument();
   });
 
