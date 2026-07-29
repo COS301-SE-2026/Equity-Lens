@@ -1,8 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from "@testing-library/react";
-import Analytics from "./Analytics";
-import useIndicators from "../../hooks/useIndicators";
 import { MemoryRouter } from 'react-router';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+import useIndicators from "../../hooks/useIndicators";
+
+import Analytics from "./Analytics";
+
+
 
 vi.mock("../../hooks/useIndicators");
 
