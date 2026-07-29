@@ -13,23 +13,30 @@ from app.schemas.market_data import (
     SearchResponse,
     SearchResultItem,
 )
-#Not yet connected to front end, connect to portfolio page
+def _cents_to_major(symbol: str) -> float:
+    if symbol.startswith("^"):
+        return 1.0
+    return 100.0 if symbol.upper().endswith(".JO") else 1.0
+
 def get_current_price(symbol: str) -> CurrentPriceResponse:
     history = get_cached_price_history(symbol, period="1y")
 
     if history.empty:
         raise ValueError(f"No data found for symbol: {symbol}")
 
+    divisor = _cents_to_major(symbol)
     latest = history.iloc[-1]
-    price = float(latest["Close"])
+    price = float(latest["Close"]) / divisor
     volume = int(latest["Volume"]) if not pd.isna(latest["Volume"]) else 0
     previous_close = latest.get("Prev Close")
 
     if previous_close is None or pd.isna(previous_close):
         if len(history) >= 2:
-            previous_close = float(history.iloc[-2]["Close"])
+            previous_close = float(history.iloc[-2]["Close"]) / divisor
         else:
             previous_close = price
+    else:
+        previous_close = float(previous_close) / divisor
 
     change_percent = None
     if previous_close and previous_close != 0:
@@ -51,14 +58,15 @@ def get_historical_data(symbol: str, period: str) -> HistoryResponse:
     if history.empty:
         raise ValueError(f"No historical data found for symbol: {symbol}")
 
+    divisor = _cents_to_major(symbol)
     data = [
         HistoryDataPoint(
             date=index.to_pydatetime(),
-            open=float(row["Open"]),
-            high=float(row["High"]),
-            low=float(row["Low"]),
-            close=float(row["Close"]),
-            prev_close=float(row["Prev Close"]) if "Prev Close" in row and not pd.isna(row["Prev Close"]) else None,
+            open=float(row["Open"]) / divisor,
+            high=float(row["High"]) / divisor,
+            low=float(row["Low"]) / divisor,
+            close=float(row["Close"]) / divisor,
+            prev_close=float(row["Prev Close"]) / divisor if "Prev Close" in row and not pd.isna(row["Prev Close"]) else None,
             volume=int(row["Volume"]) if not pd.isna(row["Volume"]) else 0,
         )
         for index, row in history.iterrows()
