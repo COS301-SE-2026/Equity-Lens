@@ -39,8 +39,6 @@ jobs:
       - name: Lint
         working-directory: frontend
         run: npm run lint
-        continue-on-error: true
-        #flip to false later
 
       - name: Format check
         working-directory: frontend
