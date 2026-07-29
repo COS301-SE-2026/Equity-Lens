@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import useIndicators from '../../hooks/useIndicators';
 import {useNavigate} from 'react-router-dom';
+
+import useIndicators from '../../hooks/useIndicators';
 
 const INDICATORS = {
   capm: {
@@ -124,14 +125,6 @@ const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
     : sig === 'negative' ? 'var(--signal-negative)'
     : 'var(--text-primary)';
 
-    const formatValue = (value) => {
-      const numericValue = Number(value);
-      if(!Number.isFinite(numericValue)){
-        return value;
-      }
-      return numericValue.toFixed(2);
-    };
-
   if (loading) return (
     <div className="flex flex-col gap-1.5 animate-pulse pt-1">
       <div className="h-4 w-12 rounded" style={{ background: 'var(--border-subtle)' }}/>
@@ -219,7 +212,8 @@ const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) =
     .sort((a, b) => a.ticker.localeCompare(b.ticker));
 
     return (
-      <div className="fixed inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 10000}} onClick={onClose}>
+      <div className="fixed inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 10000}} onClick={onClose} role="presentation">
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
         <div className="terminal-card w-full max-w-lg max-h-[85vh] overflow-y-auto" style={{ background: 'var(--bg-primary,#0a0a0a)', border: '1px solid var(--border-subtle,#2a2a2a)' }} onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)' }}>
             <h2 className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--text-primary,#e5e5e5)' }}>
@@ -240,7 +234,7 @@ const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) =
             </div>
             <div>
               <p className="text-[9px] uppercase tracking-widest font-medium mb-1.5" style={{ color: 'var(--text-ghost,#444)' }}>
-                How it's worked out
+                How it&apos;s worked out
               </p>
               <p className="text-[11px] leading-relaxed px-3 py-2.5 rounded" style={{ color: 'var(--text-primary,#e5e5e5)', background: 'var(--border-subtle,#2a2a2a)' }}>
                 {meta.plainFormula}
@@ -316,9 +310,6 @@ export default function Analytics() {
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost,#444)' }}>
               How your holdings are doing - hover a label for a quick explanation, click a value to learn more
               </p>
-            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost)' }}>
-              Financial indicators calculated per holding - hover any label for an explanation
-            </p>
           </div>
           <span className="text-[10px] px-2 py-1 rounded font-mono"
             style={{ color: 'var(--text-ghost)', border: '1px solid var(--border-subtle)' }}>
@@ -353,6 +344,7 @@ export default function Analytics() {
         <div className="flex flex-col gap-3">
           {loading
             ? Array.from({ length: 2 }).map((_, i) => (
+              // eslint-disable-next-line react/no-array-index-key -- static skeleton count, never reordered
                 <div key={i} className="terminal-card overflow-hidden animate-pulse">
                   <div className="h-14 px-4 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                     <div className="h-3 w-16 rounded mb-2" style={{ background: 'var(--border-subtle)' }}/>
@@ -360,6 +352,7 @@ export default function Analytics() {
                   </div>
                   <div className="grid grid-cols-7 p-3 gap-3">
                     {Array.from({ length: 7 }).map((_, j) => (
+                      // eslint-disable-next-line react/no-array-index-key -- static skeleton count, never reordered
                       <div key={j} className="h-10 rounded" style={{ background: 'var(--border-subtle)' }}/>
                     ))}
                   </div>

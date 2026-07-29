@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent} from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import AIChat from "./AIChat.jsx";
 import useAuth from "../../hooks/useAuth.js";
@@ -7,10 +7,14 @@ import api from "../../services/api.js";
 vi.mock("../../hooks/useAuth.js");
 vi.mock("../../services/api.js");
 
+const mockUseAuth = /** @type {any} */(useAuth);
+const mockGet = /** @type {any} */(api.get);
+const mockPost = /** @type {any} */(api.post);
+
 describe("AIChat", () => {
   beforeEach(() => {
-    useAuth.mockReturnValue({user: { full_name: "Bob Lane" }});
-    api.get.mockResolvedValue({data: []});
+    mockUseAuth.mockReturnValue({user: { full_name: "Bob Lane" }});
+    mockGet.mockResolvedValue({data: []});
   });
 
   it("renders the page heading", () => {
@@ -24,7 +28,7 @@ describe("AIChat", () => {
   });
 
   it("falls back to 'there' when no user is set", () => {
-    useAuth.mockReturnValue({user: null});
+    mockUseAuth.mockReturnValue({user: null});
     render(<AIChat />);
     expect(screen.getByText("Hello there")).toBeDefined();
   });
@@ -32,13 +36,13 @@ describe("AIChat", () => {
   describe("when the user sends a message", () => {
     beforeEach(() => {
       vi.clearAllMocks();
-        api.get.mockResolvedValue({data: []});
-        api.post.mockResolvedValue({data: {reply: "mock reply", conversation_id: 1}});
+        mockGet.mockResolvedValue({data: []});
+        mockPost.mockResolvedValue({data: {reply: "mock reply", conversation_id: 1}});
     });
 
     it("adds the typed message to the conversation and clears input", () => {
       render(<AIChat />);
-      const input = screen.getByPlaceholderText("Ask the assistant...");
+      const input = /**@type {HTMLInputElement} */ (screen.getByPlaceholderText("Ask the assistant..."));
       const sendButton = screen.getByRole("button", {name: /send/i})
 
       fireEvent.change(input, {target: {value: "what is NPN?"}});
@@ -51,7 +55,7 @@ describe("AIChat", () => {
     it("disables the send button while the assistant is thinking", () => {
        render(<AIChat />);
        const input = screen.getByPlaceholderText("Ask the assistant...");
-       const sendButton = screen.getByRole("button", { name: /send/i });
+       const sendButton = /**@type {HTMLButtonElement} */(screen.getByRole("button", { name: /send/i }));
 
        fireEvent.change(input, { target: { value: "hi" } });
        fireEvent.click(sendButton);
@@ -87,7 +91,7 @@ describe("AIChat", () => {
     it("the send button gets enabled when a user types a letter into the text box.", () => {
       render(<AIChat/>);
       const input = screen.getByPlaceholderText("Ask the assistant...");
-      const sendButton = screen.getByRole("button", {name: /send/i});
+      const sendButton = /**@type {HTMLButtonElement} */(screen.getByRole("button", {name: /send/i}));
 
       expect(sendButton.disabled).toBe(true);
 
@@ -115,7 +119,7 @@ describe("AIChat", () => {
     });
   
     it("Sends the prompt when it is clicked", async () => {
-      api.post.mockResolvedValue({data: {reply: "mock reply", conversation_id: 1}});
+      mockPost.mockResolvedValue({data: {reply: "mock reply", conversation_id: 1}});
       render(<AIChat/>);
       fireEvent.click(screen.getByRole("button", {name: "How is MTN doing?"}));
 

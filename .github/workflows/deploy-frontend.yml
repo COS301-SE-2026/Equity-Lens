@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
-    branches: [main]
+    branches: [main, dev]
 
 permissions:
   contents: read
@@ -14,8 +14,6 @@ jobs:
     frontend:
         runs-on: ubuntu-latest
         timeout-minutes: 10
-        environment:
-          name: ${{ github.ref_name == 'main' && 'production' || 'staging'}}
         steps:
             - name: To checkout the repository
               uses: actions/checkout@v4
@@ -36,22 +34,29 @@ jobs:
               run: npm test -- --run
 
             - name: To Build frontend Docker image
-              run: docker build -t equity-lens-frontend ./frontend
+              run: |
+                docker build \
+                  -f frontend/Dockerfile.prod \
+                  --build-arg VITE_API_URL=${{ vars.VITE_API_URL }} \
+                  --build-arg VITE_COGNITO_USER_POOL_ID=${{ vars.VITE_COGNITO_USER_POOL_ID }} \
+                  --build-arg VITE_COGNITO_CLIENT_ID=${{ vars.VITE_COGNITO_CLIENT_ID }} \
+                  --build-arg VITE_COGNITO_REGION=${{ vars.VITE_COGNITO_REGION }} \
+                  -t equity-lens-frontend ./frontend
 
             - name: To make the Configure AWS credentials
-              if: github.event_name == 'push'
+              if: github.event_name == 'pull_request'
               uses: aws-actions/configure-aws-credentials@v6
               with:
                 role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
                 aws-region: ${{ vars.AWS_REGION }}
 
             - name: To log in to Amazon ECR
-              if: github.event_name == 'push'
+              if: github.event_name == 'pull_request'
               id: login-to-store-credentials
               uses: aws-actions/amazon-ecr-login@v2
 
             - name: To make a Tag and to also push all the frontend and all the image from the docker to Amazon ECR
-              if: github.event_name == 'push'
+              if: github.event_name == 'pull_request'
               env:
                 TO_STORE_THE_ECR_REGISTRY: ${{ steps.login-to-store-credentials.outputs.registry }}
                 TO_STORE_THE_ECR_REPOSITORY: ${{vars.FRONTEND_ECR_REPOSITORY }}
@@ -64,22 +69,27 @@ jobs:
                 docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:latest
 
             - name: to automatically deploy the frontend to the ec2
-              if: github.event_name == 'push'
+              if: github.event_name == 'pull_request'
               uses: appleboy/ssh-action@v1
               with:
                 host: ${{ secrets.EC2_PUBLIC_ADDRESS }}
                 username: ${{ secrets.EC2_USERNAME }}
                 key: ${{ secrets.THE_PRIVATE_SSH_KEY }}
                 script: |
+                  set -e
+
                   aws ecr get-login-password --region ${{ vars.AWS_REGION }} |
                   docker login --username AWS --password-stdin ${{ steps.login-to-store-credentials.outputs.registry }}
+
+                  # old :latest layers pile up as dangling images and filled the disk
+                  docker system prune -af
 
                   docker pull ${{ steps.login-to-store-credentials.outputs.registry }}/${{  vars.FRONTEND_ECR_REPOSITORY }}:latest
 
                   docker stop equity-lens-frontend || true
                   docker rm equity-lens-frontend || true
 
-                  docker run -d --name equity-lens-frontend -p 80:80 ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.FRONTEND_ECR_REPOSITORY }}:latest
+                  docker run -d --name equity-lens-frontend -p 3000:8080 ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.FRONTEND_ECR_REPOSITORY }}:latest
 
 
               

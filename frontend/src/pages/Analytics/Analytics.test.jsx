@@ -1,8 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from "@testing-library/react";
-import Analytics from "./Analytics";
-import useIndicators from "../../hooks/useIndicators";
 import { MemoryRouter } from 'react-router';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+import useIndicators from "../../hooks/useIndicators";
+
+import Analytics from "./Analytics";
+
+
 
 vi.mock("../../hooks/useIndicators");
 
@@ -29,7 +33,7 @@ describe('Analytics', () => {
   it("shows the page description", () => {
     renderAnalytics();
     expect(
-      screen.getByText("Financial indicators calculated per holding - hover any label for an explanation")
+      screen.getByText("How your holdings are doing - hover a label for a quick explanation, click a value to learn more")
     ).toBeInTheDocument();
   });
 
