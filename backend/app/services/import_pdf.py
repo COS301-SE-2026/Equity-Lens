@@ -6,35 +6,98 @@ from app.repositories.import_pdf import save_contributions_and_withdrawals
 from app.repositories.import_pdf import save_dividends_and_withholding_tax
 from app.repositories.import_pdf import save_transaction_expenses
 import yfinance as yf
+import re
 from yfinance.exceptions import YFRateLimitError
+import time
+from app.repositories.import_pdf import get_latest_portfolio, save_portfolios
+# from app.services.instrument import resolve_known_instrument
 from requests.exceptions import ReadTimeout
 
+# SECONDS_In_HOUR = 3600
+# Cache: dic[str,tuple[float,dic]] = {}
+
+# def search_ticket_number(instrumentName: str):
+#     The_Keys = instrumentName.strip().lower()
+
+#     TheKnownsOne = resolve_known_instrument(instrumentName)
+
+#     if TheKnownsOne:
+#         return {"Found": True, "ticker":TheKnownsOne.ticker, "sector":TheKnownsOne.sector}
+
+
 def search_ticket_number(instrumentName: str):
-  try:
-
-    instrumentName = instrumentName.replace("South Africa","SA")
-    instrumentName = instrumentName.replace("Exchange Traded Fund","")
-    instrumentName = instrumentName.replace("Index","")
     
-    search = yf.Search(instrumentName)
-    gettingName = search.quotes
+    cached = Cache.get(The_Keys)
 
-    if not gettingName:
-        return { "Found": False, "ticker": "none", "sector": "none" }
+    if cached and (time.time() - cached[0]) < SECONDS_In_HOUR:
+        return cached[1]
 
-    ticker = gettingName[0]["symbol"]
-    sector = yf.Ticker(ticker).info.get("sector")
+    result = _search_ticker_number_uncached(instrumentName)
 
-    if not sector:
-        return { "Found": True, "ticker": gettingName[0]["symbol"], "sector": "none" }
-    else:
-        return { "Found": True, "ticker": gettingName[0]["symbol"], "sector": sector }
+    if not result["Found"]:
+        time.sleep(2)
+        result = _search_ticker_number_uncached(instrumentName)
+    
+    if result["Found"]:
+        Cache[The_Keys] = (time.time(), result)
+    
+    return result
 
-  except YFRateLimitError:
-         return { "Found": True, "ticker": "MTN_LIMIT_ISSUE", "sector": "Testing_LIMIT_ISSUE" }
-  except ReadTimeout:
-         return { "Found": True, "ticker": "MTN_LIMIT_ISSUE", "sector": "Testing_LIMIT_ISSUE" }
 
+def _search_ticker_number_uncached(instrument_name: str):
+    try:
+        query = search_queries(instrument_name)
+        quotes = yf.Search(query).quotes
+            
+        if not quotes:
+            return{
+                "Found": False,
+                "ticker": "none",
+                "sector": "none",
+            }
+        
+        gettingTicker = quotes[0]["symbol"]
+        gettingTheInfo = yf.Ticker(gettingTicker).info
+
+        if(quotes[0].get("quoteType") or "").upper() == "ETF":
+            category = gettingTheInfo.get("category") 
+            return {
+                "Found": True,
+                "ticker": gettingTicker,
+                "sector": category,
+            }
+
+        return {
+            "Found": True,
+            "ticker": gettingTicker,
+            "sector": gettingTheInfo.get("sector") or "none",
+
+        }
+    
+    except YFRateLimitError as exc:
+        return {
+            "Found": False,
+            "ticker": "none",
+            "sector": "none",
+        }
+
+    except ReadTimeout as exc:
+        return {
+            "Found": False,
+            "ticker": "none",
+            "sector": "none",
+        }
+
+def search_queries(instrumentName):
+    gettingName = " ".join(instrumentName.split())
+
+    trimmed = re.sub("ETF","",gettingName,flags=re.IGNORECASE)
+    trimmed = trimmed.strip()
+
+    if trimmed != gettingName:
+        return trimmed
+    
+    return gettingName
 
 def import_Pdf_data(database,user_id,data):
     document = save_document(database,user_id,data)
@@ -51,6 +114,20 @@ def save_portfolios_import(database,user_id,data):
     return {
         "Success": True,
         "Message": "PDF has been saved successfully",
+        "portfolio_id": str(document.id)
+    }
+
+def get_my_portfolio(datbase, user_id):
+    document = get_latest_portfolio(datbase, user_id)
+
+    if not document:
+        return {
+            "Found": False,
+            "portfolio_id": None
+        }
+
+    return {
+        "Found": True,
         "portfolio_id": str(document.id)
     }
 

@@ -28,6 +28,7 @@ def save_portfolios(database,user_id,data):
         document_id = data.document_id,
         account_number = data.account_number,
         portfolio_name = data.portfolio_name,
+        currency = data.currency,
 
     )
 
@@ -36,6 +37,14 @@ def save_portfolios(database,user_id,data):
     database.refresh(saving)
 
     return saving
+
+def get_latest_portfolio(database,user_id):
+    return (
+        database.query(Portfolios)
+        .filter(Portfolios.user_id == user_id)
+        .order_by(Portfolios.created_at.desc())
+        .first()
+    )
 
 def save_holdings(database,user_id,data,ticker,sector):
 

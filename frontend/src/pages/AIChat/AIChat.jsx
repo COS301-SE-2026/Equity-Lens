@@ -171,7 +171,7 @@ const AIChat = () => {
                 </button>
                 <button type = "button"
                         onClick = {() => deleteConversation(convo.id)}
-                        className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-red-500 group-hover:visible">
+                        className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-[var(--signal-negative)] group-hover:visible">
                   <i class="fa fa-trash"></i>
                 </button>
         </>
@@ -269,7 +269,7 @@ const AIChat = () => {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask the assistant…"
+          placeholder="Ask the assistant..."
           maxLength={500}
           className="flex-1 rounded-lg border border-[var(--border-default)]
                      bg-[var(--bg-secondary)] px-3 py-2.5 text-sm
