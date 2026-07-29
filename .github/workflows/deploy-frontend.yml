@@ -84,7 +84,7 @@ jobs:
                   docker stop equity-lens-frontend || true
                   docker rm equity-lens-frontend || true
 
-                  docker run -d --name equity-lens-frontend -p 3000:80 ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.FRONTEND_ECR_REPOSITORY }}:latest
+                  docker run -d --name equity-lens-frontend -p 3000:8080 ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.FRONTEND_ECR_REPOSITORY }}:latest
 
 
               
