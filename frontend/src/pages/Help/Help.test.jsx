@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import {MemoryRouter} from 'react-route-dom'
+import {MemoryRouter} from 'react-router-dom';
 
 import Help from './Help';
 
@@ -28,7 +28,13 @@ describe('Testing the Help page', () => {
         await user.click(q);
 
         expect(q).toHaveAttribute('aria-expanded', 'true');
-        expect(screen.getByText('Excel by following the template and PDF')).not.toBeInTheDocument();
+        expect(screen.getByText('Excel by following the template and PDF')).toBeInTheDocument();
         expect(q).toHaveTextContent('-');
+
+        await user.click(q);
+
+        expect(q).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.queryByText('Excel by following the template and PDF')).not.toBeInTheDocument();
+        expect(q).toHaveTextContent('+');
     })
 });
