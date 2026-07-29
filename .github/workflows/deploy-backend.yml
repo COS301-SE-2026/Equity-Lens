@@ -32,7 +32,9 @@ jobs:
 
             - name: Run all the backend tests
               working-directory: backend
-              run: pytest
+              env:
+                PYTHONPATH: .
+              run: python -m pytest
 
             - name: To Build backend Docker image
               run: docker build -t equity-lens-backend ./backend
