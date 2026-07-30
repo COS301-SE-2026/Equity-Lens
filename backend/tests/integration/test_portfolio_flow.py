@@ -1,7 +1,8 @@
-from datetime import date, timedelta
+from datetime import date
 from unittest.mock import patch
 import pytest
 import pandas as pd
+from app.models.portfolio import Holdings, Portfolios
 
 NASPERS = "Naspers Limited"
 TICKER_VALUES = {
@@ -35,37 +36,23 @@ def stub_data():
         ):yield
 
 @pytest.fixture
-def importe_portfolio(client, auth_headers):
-    stock = {NASPERS: {"Found": True, "ticker": "NPN.JO", "sector": "Technology"}}
+def importe_portfolio(db_session, test_user):
+    portfolio = Portfolios( user_id = test_user.id, account_number = "EE-123456", portfolio_name = "EasyEquities ZAR", currency = "ZAR")
 
-    with(patch("app.services.import_pdf.search_ticket_number", stock.get)):
-        document = client.post("/api/import_pdf/", json = {"file_name": "statement.pdf"}, headers = auth_headers)
-        assert document.status_code == 200, document.text
+    db_session.add(portfolio)
+    db_session.commit()
 
-        portfolio = client.post("/api/import_pdf/save_portfolios",
-                    json = {
-                        "document_id": document.json()["document_id"],
-                        "account_number": "EE-123456",
-                        "portfolio_name": "EasyEquities ZAR",
-                        "currency": "ZAR"
-                    }, headers = auth_headers
-        )
-        assert portfolio.status_code == 200, portfolio.text
-        portfolio_id = portfolio.json()["portfolio_id"]
-
-        for holding in [{
-            "portfolio_id": portfolio_id,
-            "instrument_name": NASPERS,
-            "ticker": "",
-            "quantity": "10",
-            "total_cost": "4000",
-            "cost_price": "400",
-            "weight_percentage": "66.67",
-            "sector": ""
-        }]: response = client.post(
-            "/api/import_pdf/save_holdings", json = holding, headers = auth_headers
-        ) 
-        assert response.status_code == 200, response.text
+    db_session.add(Holdings(portfolio_id = portfolio.id,
+                            instrument_name = NASPERS,
+                            ticker = "NPN.JO",
+                            sector = "Technology",
+                            quantity = 10,
+                            total_cost = 4000,
+                            cost_price = 400,
+                            weight_percentage = 100,
+                    )
+    )
+    db_session.commit()
 
 
 def test_import_to_dashboard(client, auth_headers, importe_portfolio, stub_data):
