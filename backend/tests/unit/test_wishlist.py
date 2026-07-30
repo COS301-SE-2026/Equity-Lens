@@ -3,6 +3,7 @@ from unittest.mock import Mock,patch
 from app.services.watchlist import add_watchlist_service
 from app.services.watchlist import get_watchlist_service
 from app.services.watchlist import remove_watchlist_service
+from app.repositories.watchlist import add_watchlist, get_watchlist, remove_watchlist
 
 
 @patch("app.services.watchlist.add_watchlist")
@@ -23,7 +24,7 @@ def test_add_watchlist_service(mock_ticker, mock_data):
 
 @patch("app.services.watchlist.get_watchlist")
 @patch("app.services.watchlist.yf.Ticker")
-def test_add_watchlist_service(mock_ticker, mock_data):
+def test_get_watchlist_service(mock_ticker, mock_data):
     item = Mock()
     item.id = 1
     item.ticker = "AAPL"
@@ -55,4 +56,11 @@ def test_remove_watchlist_service(mock_remove):
     assert result["Message"] == "Deleted watchlist successfully"
 
 
+def test_watchlist_repository(db_session, test_user):
+    watch = add_watchlist(db_session, test_user.id, "AAPL", "Apple Inc", "Technology")
 
+    assert [a.ticker for a in  get_watchlist(db_session, test_user.id)] == ["AAPL"]
+
+    remove_watchlist(db_session, test_user.id, watch.id)
+
+    assert get_watchlist(db_session, test_user.id) == []
