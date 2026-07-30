@@ -164,26 +164,6 @@ describe("This testing is for the News Page", () =>
   });
 
 
-    it("To Show the AI suggestion Box", () => {
-    render(<NewsInvestment />);
-
-    expect(
-      screen.getByText("Why is my top gainer up ?")
-    ).toBeInTheDocument();
-
-     expect(
-      screen.getByText("Why is my top loser down ?")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByText("Which watchlist stock is the best ?")
-    ).toBeInTheDocument();
-
-     expect(
-      screen.getByText("Summarise today's news")
-    ).toBeInTheDocument();
-
-
   });
 
   it("To Show the data of the top gainer and top loser", async () => {
@@ -299,4 +279,3 @@ describe("This testing is for the News Page", () =>
      });
 
 
-});

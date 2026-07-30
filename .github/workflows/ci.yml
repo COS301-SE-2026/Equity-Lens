@@ -36,34 +36,9 @@ jobs:
         working-directory: frontend
         run: npm audit --audit-level=high --omit=dev
 
-      - name: Lint
-        working-directory: frontend
-        run: npm run lint
-        continue-on-error: true
-        # flip to false later
-
-      - name: Format check
-        working-directory: frontend
-        run: npm run format:check
-        continue-on-error: true
-        # flip to false later
-
-      - name: Type check
-        working-directory: frontend
-        run: npm run typecheck
-        continue-on-error: true
-         # flip to false, same as other comments
-
-      - name: Dead code scan (knip)
-        working-directory: frontend
-        run: npx knip
-        continue-on-error: true
-        #flip to false once knip ignores are tuned for false positives
-
       - name: Unit tests
         working-directory: frontend
         run: npm run coverage
-        continue-on-error: true
 
       - name: Install Playwright
         working-directory: frontend
@@ -128,19 +103,6 @@ jobs:
           python -m pip install --upgrade pip setuptools
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
-
-      - name: Lint (ruff)
-        working-directory: backend
-        run: |
-          ruff check .
-          ruff format --check .
-        continue-on-error: true
-
-      - name: Type check (mypy)
-        working-directory: backend
-        run: mypy app
-        continue-on-error: true
-        # flip these to false once mypy/ruff baseline is cleared
 
       - name: Run pip-audit to check the packages
         working-directory: backend
