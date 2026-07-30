@@ -39,9 +39,9 @@ describe('BrandStyleGuide', () => {
     expect(screen.getAllByText('Fails').length).toBeGreaterThan(0);
   });
 
-  it('documents missing Landing.jsx in the changelog', () => {
+  it('documents the Landing.jsx retokenisation in the changelog', () => {
     renderPage();
-    expect(screen.getByText(/not present in this branch's working tree/i)).toBeInTheDocument();
+    expect(screen.getByText(/landing\.jsx has since merged in/i)).toBeInTheDocument();
   });
 
   it('links back to app', () => {
