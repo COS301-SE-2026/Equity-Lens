@@ -78,7 +78,7 @@ test.describe("Help e2e testing", () => {
 
          await expect(
       page.locator("body")
-    ).toContainText(/Resources (Click box to get output)/i);
+    ).toContainText(/Resources \(Click box to get output\)/i);
 
 
   });

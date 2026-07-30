@@ -47,7 +47,7 @@ jobs:
       - name: E2E tests
         working-directory: frontend
         run: npm run test:e2e
-        continue-on-error: true
+        continue-on-error: false
 
       - name: Upload Playwright report
         if: failure()
