@@ -1,30 +1,53 @@
 import { useState } from 'react';
 
+/**
+ * 
+ * @param {*} initialValues
+ * @param {*} validate
+ * @returns 
+ */
 const useForm = (initialValues, validate) => {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+
+  const [touched, setTouched] = useState(/** @type {any} */ ({}));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+
+  /**
+ * 
+ * @param {*} e
+ * @returns 
+ */
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setValues((prev) => ({ ...prev, [name]: value }));
+    setValues(/**@param {any} prev*/(prev) => ({ ...prev, [name]: value }));
     if (touched[name] && validate) {
       const validationErrors = validate({ ...values, [name]: value });
       setErrors(validationErrors);
     }
   };
 
+    /**
+ * 
+ * @param {*} e
+ * @returns 
+ */
   const handleBlur = (e) => {
     const { name } = e.target;
-    setTouched((prev) => ({ ...prev, [name]: true }));
+    setTouched(/**@param {any} prev*/(prev) => ({ ...prev, [name]: true }));
     if (validate) {
       const validationErrors = validate(values);
       setErrors(validationErrors);
     }
   };
 
-  const handleSubmit = (onSubmit) => async (e) => {
+  /**
+ * 
+ * @param {*} onSubmit
+ * @returns 
+ */
+  const handleSubmit = (onSubmit) => /**@param {any} e*/async (e) => {
     e.preventDefault();
     const allTouched = Object.keys(values).reduce(
       (acc, key) => ({ ...acc, [key]: true }), {}

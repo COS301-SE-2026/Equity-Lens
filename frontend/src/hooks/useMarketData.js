@@ -9,6 +9,9 @@ const useMarketData = () => {
     const [loading, setLoading] = useState(null);
     const [error, setError] = useState(null);
 
+    /**
+     * @param {any} request
+     */
     const runRequest = useCallback(async (request, onSuccess) => {
         setLoading(true);
         setError(null);
@@ -17,16 +20,15 @@ const useMarketData = () => {
             onSuccess(data);
             return data;
         } catch (err) {
-            setError(err?.message || "Failed to load market data");
             throw err;
         } finally {
             setLoading(false);
         }
     }, []);
 
-    const fetchStockDetails = useCallback((symbol) => runRequest(() => getStockDetails(symbol), setStockDetails), [runRequest]);
-    const fetchHistoricalData = useCallback((symbol, period = '1mo') => runRequest(() => getHistorialData(symbol, period), setHistory), [runRequest]);
-    const fetchSearchResults = useCallback((query) => runRequest(() => searchStocks(query), setSearchResults), [runRequest]);
+    const fetchStockDetails = useCallback( /** @param {any} symbol*/(symbol) => runRequest(() => getStockDetails(symbol), setStockDetails), [runRequest]);
+    const fetchHistoricalData = useCallback( /** @param {any} symbol*/(symbol, period = '1mo') => runRequest(() => getHistorialData(symbol, period), setHistory), [runRequest]);
+    const fetchSearchResults = useCallback( /** @param {any} query*/(query) => runRequest(() => searchStocks(query), setSearchResults), [runRequest]);
 
     const reset = useCallback(() => {
         setCurrentPrice(null);

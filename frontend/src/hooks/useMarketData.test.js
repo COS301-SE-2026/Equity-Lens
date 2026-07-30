@@ -14,7 +14,7 @@ describe('useMarketData', () => {
     });
 
     it('fetches stock details', async () => {
-        getStockDetails.mockResolvedValueOnce({ ticker: 'AAPL', price: 123 });
+        vi.mocked(getStockDetails).mockResolvedValueOnce({ ticker: 'AAPL', price: 123 });
         const { result } = renderHook(() => useMarketData());
         await act(async () => {
             await result.current.fetchStockDetails('AAPL');
@@ -23,7 +23,7 @@ describe('useMarketData', () => {
     });
 
     it('fetches historical stock data', async () => {
-        getHistorialData.mockResolvedValueOnce({ symbol: 'AAPL' });
+        vi.mocked(getHistorialData).mockResolvedValueOnce({ symbol: 'AAPL' });
         const { result } = renderHook(() => useMarketData());
         await act(async () => {
             await result.current.fetchHistoricalData('AAPL', '1m');
@@ -32,7 +32,7 @@ describe('useMarketData', () => {
     });
 
     it('fetches search results', async () => {
-        searchStocks.mockResolvedValueOnce({ results: ['AAPL'] });
+        vi.mocked(searchStocks).mockResolvedValueOnce({ results: ['AAPL'] });
         const { result } = renderHook(() => useMarketData());
         await act(async () => {
             await result.current.fetchSearchResults('apple');
@@ -41,7 +41,7 @@ describe('useMarketData', () => {
     });
 
     it('records an error on failure', async () =>{
-        getStockDetails.mockRejectedValueOnce(new Error('Service failed'));
+        vi.mocked(getStockDetails).mockRejectedValueOnce(new Error('Service failed'));
         const {result} = renderHook(() => useMarketData());
         await act(async() => {
             await expect(result.current.fetchStockDetails('AAPL')).rejects.toThrow('Service failed');

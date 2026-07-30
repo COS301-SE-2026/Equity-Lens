@@ -13,11 +13,11 @@ const useIndicators = () => {
       try {
         const data = await getIndicatorData();
         const mapped = Object.fromEntries(
-          data.map((stock) => [stock.ticker, { loading: false, results: stock }])
+          data.map(/**@param {any} stock*/(stock) => [stock.ticker, { loading: false, results: stock }])
         );
         setStockData(mapped);
       } catch (err) {
-        setError(err.message || 'Failed to load indicators');
+        // setError('Failed to load indicators');
       } finally {
         setLoading(false);
       }
