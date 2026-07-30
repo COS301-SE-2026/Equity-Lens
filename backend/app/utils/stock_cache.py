@@ -158,7 +158,7 @@ def _fetch_from_yfinance(ticker: str, period: str) -> pd.DataFrame:
             print(f"Yahoo history fetch failed for {candidate}: {exc}")
     return pd.DataFrame()
 
-def _refresh_price_history(ticker: str, period: str) -> pd.DataFrame:
+def _refresh_price_history(ticker: str, period: str, force_live: bool = False) -> pd.DataFrame:
     if settings.alpha_vantage_api_key and not ticker.upper().endswith(".JO"):
         try:
             history = _fetch_from_alpha_vantage(ticker)
@@ -168,7 +168,7 @@ def _refresh_price_history(ticker: str, period: str) -> pd.DataFrame:
         except Exception as exc:
             print(f"Alpha Vantage refresh failed for {ticker}: {exc}")
 
-    if settings.allow_live_market_fallback:
+    if settings.allow_live_market_fallback or force_live:
         try:
             history = _fetch_from_yfinance(ticker, period)
             if not history.empty:
@@ -179,7 +179,7 @@ def _refresh_price_history(ticker: str, period: str) -> pd.DataFrame:
             print(f"Yahoo refresh failed for {ticker}: {exc}")
     return pd.DataFrame()
 
-def get_cached_price_history(ticker: str, period: str = "1y") -> pd.DataFrame:
+def get_cached_price_history(ticker: str, period: str = "1y", force_live: bool = False) -> pd.DataFrame:
     ticker = ticker.upper()
     history = _load_local_price_history(ticker)
     if not history.empty:
@@ -209,7 +209,7 @@ def get_cached_price_history(ticker: str, period: str = "1y") -> pd.DataFrame:
 
     _REFRESH_LOCKS.add(ticker)
     try:
-        refreshed = _refresh_price_history(ticker, period)
+        refreshed = _refresh_price_history(ticker, period, force_live=force_live)
         if not refreshed.empty:
             _PRICE_REFRESH_COOLDOWN_UNTIL.pop(ticker, None)
             return refreshed
