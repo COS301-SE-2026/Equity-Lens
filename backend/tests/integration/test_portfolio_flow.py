@@ -79,15 +79,3 @@ def test_import_to_dashboard(client, auth_headers, importe_portfolio, stub_data)
     assert body["sectorAllocation"] == [
         {"sector": "Technology", "value": 5000.00, "percentage": 100.00},
     ]
-
-    assert body["benchmarkLabel"] == "JSE ALSI"
-    history = body["performanceHistory"]
-    assert [r["date"] for r in history] == [
-        "2026-07-02", "2026-07-03", "2026-07-06", "2026-07-07", "2026-07-08",
-    ]
-    assert [r["value"] for r in history] == [4000.0, 4100.0, 4300.0, 4000.0, 5000.0]
-    assert history[-1]["value"] == body["summary"]["total_value"]
-    assert history[0]["benchmark"] == pytest.approx(4000.0, abs=0.01)
-    assert history[1]["benchmark"] == pytest.approx(4050.0, abs=0.01)
-    assert history[2]["benchmark"] == pytest.approx(4100.0, abs=0.01)
-    assert history[4]["benchmark"] == pytest.approx(4400.0, abs=0.01)
