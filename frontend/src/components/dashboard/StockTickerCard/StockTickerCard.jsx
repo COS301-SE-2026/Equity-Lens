@@ -1,3 +1,8 @@
+/**
+ * 
+ * @param {*} param
+ * @returns 
+ */
 const StockTickerCard = ({ ticker, name, price, changePercent, totalReturn }) => {
   const dailyPositive = changePercent >= 0;
   const totalPositive = totalReturn >= 0;

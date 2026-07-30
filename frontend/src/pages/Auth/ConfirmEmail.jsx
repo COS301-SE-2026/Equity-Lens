@@ -11,9 +11,14 @@ import Button from '../../components/common/Button/Button';
   const location = useLocation();
   const [email, setEmail] = useState(location.state?.email || '');
   const [code, setCode] = useState('');
-  const [status, setStatus] = useState({ type: null, message: '' }); // 'error' | 'success'
+  const [status, setStatus] = useState(/** @type {any} */({ type: null, message: '' }));
   const [isLoading, setIsLoading] = useState(false);
 
+  /**
+ * 
+ * @param {*} e
+ * @returns 
+ */
   const handleConfirm = async (e) => 
     {
     e.preventDefault();
@@ -33,7 +38,7 @@ import Button from '../../components/common/Button/Button';
     } 
       catch (err) 
     {
-      setStatus({ type: 'error', message: err.message || 'Invalid code. Please try again.' });
+      setStatus({ type: 'error', message: 'Invalid code. Please try again.' });
       setCode('');
     } 
       finally 
@@ -77,7 +82,7 @@ import Button from '../../components/common/Button/Button';
                   name="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={/** @param {any} e */(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                   required
                 />
@@ -90,7 +95,7 @@ import Button from '../../components/common/Button/Button';
                 inputMode="numeric"
                 maxLength={6}
                 value={code}
-                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                onChange={/** @param {any} e */(e) => setCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="000000"
                 autoFocus
                 required

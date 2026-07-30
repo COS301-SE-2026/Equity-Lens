@@ -12,6 +12,7 @@ import { type } from '@testing-library/user-event/dist/cjs/utility/type.js';
 export default function HelpTooltip({ text }) {
   const [visible, setVisible] = useState(false);
   const [pos, setPos] = useState({ left: 0, bottom: 0 });
+  /** @type {any} */
   const buttonRef = useRef(null);
   const shouldReduceMotion = useReducedMotion();
 
