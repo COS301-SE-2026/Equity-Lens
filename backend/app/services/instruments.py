@@ -55,8 +55,8 @@ def is_zar_listed(ticker: str | None) -> bool:
 
 
 REGION_BENCHMARKS = {
-    REGION_SA: ("^J203.JO", "JSE ALSI", "ZAR"),
-    REGION_US: ("^GSPC", "S&P 500", "USD"),
+    REGION_SA: ("STX40.JO", "Satrix 40 (JSE Top 40 proxy)", "ZAR"),
+    REGION_US: ("SPY", "S&P 500 (SPY ETF proxy)", "USD"),
     REGION_GLOBAL: ("URTH", "MSCI World", "USD"),
     REGION_EM: ("EEM", "MSCI EM", "USD"),
 }

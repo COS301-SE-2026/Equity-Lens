@@ -24,7 +24,7 @@ import { ROUTES } from '../../utils/constants';
 
 const CONTACT_EMAIL = 'thebigfivetb5@gmail.com';
 
-const YELLOW = '#d4a017';
+const ACCENT = '#FF6B00';
 /** @type {[number, number, number, number]} */
 const EASE_SMOOTH = [0.16, 1, 0.3, 1];
 
@@ -170,7 +170,7 @@ const SHOWCASE = [
       'True underlying weightings',
       'Sector-level concentration risk',
     ],
-    src: '/screens/dashboard.png',
+    src: '/screens/dashboard2.png',
     alt: 'Look-through exposure showing flattened ETF holdings',
   },
   {
@@ -192,7 +192,7 @@ const SHOWCASE = [
       'Risk-adjusted return metrics',
       'Per-holding drill-down',
     ],
-    src: '/screens/portfolio.png',
+    src: '/screens/analytics.png',
     alt: 'Analytics page with financial indicators',
   },
   {
@@ -205,7 +205,7 @@ const SHOWCASE = [
       'Direct news-to-price correlation',
       'Cross-referenced on the timeline',
     ],
-    src: '/screens/ai.png',
+    src: '/screens/news.png',
     alt: 'News feed correlated with portfolio anomalies',
   },
   {
@@ -256,7 +256,7 @@ const Landing = () => (
     </Helmet>
 
     <div
-      className="relative min-h-screen overflow-x-hidden bg-[#050505] text-white"
+      className="relative min-h-screen overflow-x-hidden bg-[var(--surface-base)] text-white"
       style={{ fontFamily: 'var(--font-primary)' }}>
       <Nav />
       <main id="main">
@@ -280,7 +280,7 @@ const Landing = () => (
 
     <style>{`
       a:focus-visible, button:focus-visible, [role="button"]:focus-visible {
-        outline: 2px solid ${YELLOW};
+        outline: 2px solid ${ACCENT};
         outline-offset: 2px;
         border-radius: 6px;
       }
@@ -355,7 +355,7 @@ const Nav = () => {
     >
       <a
         href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-yellow-400 focus:px-3 focus:py-1.5 focus:text-[13px] focus:font-semibold focus:text-black"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-[var(--accent-primary)] focus:px-3 focus:py-1.5 focus:text-[13px] focus:font-semibold focus:text-[var(--text-on-accent)]"
       >
         Skip to content
       </a>
@@ -379,8 +379,8 @@ const Nav = () => {
           </Link>
           <Link to={ROUTES.REGISTER} className="ml-1">
             <span
-              className="inline-flex items-center gap-1.5 rounded-lg bg-yellow-400 px-4 py-2 text-[14px] font-semibold text-black transition-colors hover:bg-yellow-300"
-              style={{ boxShadow: `0 4px 16px ${YELLOW}40` }}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent-primary)] px-4 py-2 text-[14px] font-semibold text-[var(--text-on-accent)] transition-colors hover:bg-[var(--accent-hover)]"
+              style={{ boxShadow: `0 4px 16px ${ACCENT}40` }}
             >
               Sign up
             </span>
@@ -419,7 +419,7 @@ const Nav = () => {
             <Link
               to={ROUTES.REGISTER}
               onClick={() => setMobileOpen(false)}
-              className="mt-1 rounded-lg bg-yellow-400 px-3 py-2.5 text-center text-[15px] font-semibold text-black"
+              className="mt-1 rounded-lg bg-[var(--accent-primary)] px-3 py-2.5 text-center text-[15px] font-semibold text-[var(--text-on-accent)]"
             >
               Get started
             </Link>
@@ -502,7 +502,7 @@ const Hero = () => (
 );
 
 const brokerCell = 'p-4 sm:p-5 flex items-center gap-3';
-const lensCellRich = 'p-4 sm:p-5 border-l border-zinc-200 bg-yellow-50 flex items-start gap-3';
+const lensCellRich = 'p-4 sm:p-5 border-l border-zinc-200 bg-[var(--accent-subtle)] flex items-start gap-3';
 const text1 = 'text-[13px] sm:text-[16px] text-zinc-500';
 const text2 = 'text-[13px] sm:text-[16px] text-zinc-900 font-medium';
 const cross = <X size={15} className="shrink-0 text-zinc-400" aria-hidden="true" />;
@@ -523,7 +523,7 @@ const WhyEquityLens = () => {
         >
           From fund labels
           <br />
-          <span className="text-yellow-600">to true exposure.</span>
+          <span className="text-[var(--accent-hover)]">to true exposure.</span>
         </h2>
         <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-zinc-600">
           Traditional brokerages stop at the fund level. Here&apos;s what changes once Equity-Lens
@@ -545,8 +545,8 @@ const WhyEquityLens = () => {
               What you see today
             </p>
           </div>
-          <div className="border-l border-zinc-200 bg-yellow-50 p-4 sm:p-5">
-            <p className="mb-1 font-mono text-[10px] tracking-widest text-yellow-600">
+          <div className="border-l border-zinc-200 bg-[var(--accent-subtle)] p-4 sm:p-5">
+            <p className="mb-1 font-mono text-[10px] tracking-widest text-[var(--accent-hover)]">
               EQUITY-LENS
             </p>
             <p className="text-[14px] font-semibold text-zinc-900 sm:text-[15px]">
@@ -565,7 +565,7 @@ const WhyEquityLens = () => {
               <span className={text1}>{row.before}</span>
             </div>
             <div className={lensCellRich}>
-              <row.icon size={18} className="mt-0.5 shrink-0 text-yellow-600" aria-hidden="true" />
+              <row.icon size={18} className="mt-0.5 shrink-0 text-[var(--accent-hover)]" aria-hidden="true" />
               <div>
                 <p className={text2}>{row.afterTitle}</p>
                 <p className="mt-1 text-[12px] leading-relaxed text-zinc-600 sm:text-[13px]">
@@ -592,14 +592,14 @@ const MissionStrip = () => {
         {...REVEAL}
         className="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.03] via-white/[0.015] to-transparent px-8 py-14 backdrop-blur-2xl sm:px-14 sm:py-16"
       >
-        <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-yellow-400/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 left-0 h-64 w-64 rounded-full bg-emerald-400/5 blur-3xl" />
+        <div className="pointer-events-none absolute -top-24 right-0 h-72 w-72 rounded-full bg-[var(--accent-primary)]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 left-0 h-64 w-64 rounded-full bg-[var(--signal-positive)]/5 blur-3xl" />
 
         <div className="relative max-w-4xl">
           <div className="mb-6 flex items-center gap-4">
             <p
               id="mission-heading"
-              className="font-mono text-[14px] uppercase tracking-[0.60em] text-yellow-400"
+              className="font-mono text-[14px] uppercase tracking-[0.60em] text-[var(--accent-primary)]"
             >
               Our Mission
             </p>
@@ -607,7 +607,7 @@ const MissionStrip = () => {
 
           <h2 className="text-3xl font-semibold leading-tight tracking-tight text-white sm:text-4xl lg:text-5xl">
             Every South African investor deserves{' '}
-            <span className="text-yellow-400">institutional-grade portfolio intelligence.</span>
+            <span className="text-[var(--accent-primary)]">institutional-grade portfolio intelligence.</span>
           </h2>
 
           <p className="mt-6 max-w-3xl text-base leading-8 text-zinc-300 sm:text-lg">
@@ -682,7 +682,7 @@ const InsightCard = ({ text, presetKey }) => (
     initial={{ opacity: 0, y: 6 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ duration: 0.35 }}
-    className="min-h-[96px] rounded-xl border border-yellow-400/25 bg-yellow-400/[0.04] px-4 py-3.5 flex items-start gap-3"
+    className="min-h-[96px] rounded-xl border border-[var(--accent-primary)]/25 bg-[var(--accent-primary)]/[0.04] px-4 py-3.5 flex items-start gap-3"
   >
     <p className="text-[15px] text-zinc-200 leading-relaxed">{text}</p>
   </motion.div>
@@ -821,7 +821,7 @@ const PieHoverTip = ({ active, payload }) => {
           aria-hidden="true"
         />
         <span className="font-semibold">{data.payload.name}</span>
-        <span className="ml-auto text-yellow-400">
+        <span className="ml-auto text-[var(--accent-primary)]">
           {data.value}%
         </span>
       </div>
@@ -838,19 +838,19 @@ const PresetButton = ({ active, onClick, preset }) => (
     onClick={onClick}
     className={`text-left p-4 rounded-xl transition-colors border ${
       active
-        ? 'border-yellow-400/80 bg-yellow-400/[0.03]'
+        ? 'border-[var(--accent-primary)]/80 bg-[var(--accent-primary)]/[0.03]'
         : 'border-white/10 bg-white/5 hover:bg-white/[0.08] hover:border-white/20'
     }`}
   >
     <div className="flex items-center justify-between mb-1">
-      <span className={`text-[14px] font-semibold ${active ? 'text-yellow-400' : 'text-white'}`}>
+      <span className={`text-[14px] font-semibold ${active ? 'text-[var(--accent-primary)]' : 'text-white'}`}>
         {preset.label}
       </span>
       {active && (
         <span
           aria-hidden="true"
           className="w-1.5 h-1.5 rounded-full"
-          style={{ background: YELLOW, boxShadow: `0 0 8px ${YELLOW}` }}
+          style={{ background: ACCENT, boxShadow: `0 0 8px ${ACCENT}` }}
         />
       )}
     </div>
@@ -899,7 +899,7 @@ const ShowcaseRow = ({ row, flipped }) => {
         {...fadeInProps}
         className={`flex flex-col justify-center ${flipped ? 'lg:order-last' : ''}`}
       >
-        <span className="font-mono text-xs font-semibold tracking-widest text-yellow-400 uppercase">{row.label}</span>
+        <span className="font-mono text-xs font-semibold tracking-widest text-[var(--accent-primary)] uppercase">{row.label}</span>
         <h3 className="mt-3 text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">{row.heading}</h3>
         <p className="mt-4 max-w-lg text-sm leading-relaxed text-zinc-400 sm:text-base">{row.body}</p>
         
@@ -907,7 +907,7 @@ const ShowcaseRow = ({ row, flipped }) => {
           {row.bullets.map((bullet) => (
             <li key={bullet} className="flex items-center gap-3">
               <span 
-                className="h-1.5 w-1.5 shrink-0 rounded-full bg-yellow-400 shadow-[0_0_8px_rgba(250,204,21,0.6)]" 
+                className="h-1.5 w-1.5 shrink-0 rounded-full bg-[var(--accent-primary)] shadow-[0_0_8px_rgba(255,107,0,0.6)]"
                 aria-hidden="true"
               />
               <span className="text-sm text-zinc-300">{bullet}</span>
@@ -992,8 +992,8 @@ const TrustBar = () => {
         transition={{ ...REVEAL.transition, delay: 0.1 }}
         className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3"
       >
-        <div className="relative overflow-hidden rounded-2xl border border-yellow-400/20 bg-gradient-to-br from-yellow-400/[0.03] to-transparent p-6 backdrop-blur-xl lg:col-span-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-yellow-400/30 bg-yellow-400/[0.08] text-yellow-400">
+        <div className="relative overflow-hidden rounded-2xl border border-[var(--accent-primary)]/20 bg-gradient-to-br from-[var(--accent-primary)]/[0.03] to-transparent p-6 backdrop-blur-xl lg:col-span-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--accent-primary)]/30 bg-[var(--accent-primary)]/[0.08] text-[var(--accent-primary)]">
             <KeyRound size={18} aria-hidden="true" />
           </div>
           <h3 className="mt-4 text-base font-semibold text-white">
@@ -1050,11 +1050,11 @@ const FlatteningEngine = () => {
             largest holdings fall at the same time with a loss much larger than the headline
             weighting suggests.
           </p>
-          <div className="mt-8 rounded-xl border border-rose-500/10 bg-rose-500/[0.15] p-6">
+          <div className="mt-8 rounded-xl border border-[var(--signal-negative)]/10 bg-[var(--signal-negative)]/[0.15] p-6">
             <span className="block font-mono text-xs font-medium uppercase tracking-wider text-zinc-500">
               Estimated portfolio loss
             </span>
-            <div className="mt-1 font-mono text-4xl font-bold tracking-tight text-rose-500 sm:text-5xl">
+            <div className="mt-1 font-mono text-4xl font-bold tracking-tight text-[var(--signal-negative)] sm:text-5xl">
               -{TOTAL_DRAWDOWN.toFixed(1)}%
             </div>
             <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-400">
@@ -1111,10 +1111,10 @@ const LedgerRow = ({ holding }) => {
   return (
     <div
       className={`grid grid-cols-4 items-center py-3.5 transition-colors hover:bg-white/[0.02] ${
-        isAnchor ? 'bg-rose-500/[0.02] font-semibold' : ''}`}>
-      <div className={isAnchor ? 'text-rose-400' : 'text-white'}>{holding.ticker}</div>
+        isAnchor ? 'bg-[var(--signal-negative)]/[0.02] font-semibold' : ''}`}>
+      <div className={isAnchor ? 'text-[var(--signal-negative)]' : 'text-white'}>{holding.ticker}</div>
       <div className="text-right text-zinc-400">{holding.move}%</div>
-      <div className={`text-right font-bold ${isAnchor ? 'text-rose-500' : 'text-zinc-200'}`}>-{cost.toFixed(1)}%
+      <div className={`text-right font-bold ${isAnchor ? 'text-[var(--signal-negative)]' : 'text-zinc-200'}`}>-{cost.toFixed(1)}%
       </div>
       <div className="text-right text-zinc-500">{shareOfLoss}%</div>
     </div>
@@ -1241,7 +1241,7 @@ const YellowButton = ({ children, large }) => {
     <motion.span
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
-      className={`inline-flex items-center gap-2 rounded-lg bg-yellow-400 font-semibold text-black shadow-[0_8px_24px_rgba(250,204,21,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] ${sizeClasses}`}
+      className={`inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] font-semibold text-[var(--text-on-accent)] shadow-[0_8px_24px_rgba(255,107,0,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] ${sizeClasses}`}
     >
       {children}
     </motion.span>
