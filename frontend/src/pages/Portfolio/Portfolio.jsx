@@ -658,7 +658,7 @@ const Portfolio = () => {
             </button>
 
             <label className="bg-blue-600 text-white px-6 py-3 rounded-lg">
-              choose PDF or Excel File
+              choose the Excel File
 
             <input
               type="file"
