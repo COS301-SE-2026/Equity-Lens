@@ -31,6 +31,7 @@ const Register = () => {
   const navigate = useNavigate();
   const [serverError, setServerError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const {
     values,
@@ -44,22 +45,23 @@ const Register = () => {
     { fullName: '', email: '', password: '', confirmPassword: '' },
     validate
   );
-  
-const onSubmit = async (formValues) => {
-  setServerError(null);
-  try {
-    await register(formValues.fullName, formValues.email, formValues.password);
-    setSuccess(true);
-    setTimeout(() => navigate(ROUTES.LOGIN), 2000);
-  } catch (err) {
-    const msg = err.message?.toLowerCase() || '';
-    if (msg.includes('already exists') || msg.includes('already registered')) {
-      setServerError('An account with this email address already exists. Please sign in instead.');
-    } else {
-      setServerError('Registration failed. Please try again.');
+
+  const onSubmit = async (formValues) => {
+    setServerError(null);
+    try {
+      await register(formValues.fullName, formValues.email, formValues.password);
+      setRegisteredEmail(formValues.email);
+      setSuccess(true);
+      setTimeout(() => navigate(ROUTES.CONFIRM_EMAIL, { state: { email: formValues.email }}), 1500);
+    } catch (err) {
+      const msg = err.message?.toLowerCase() || '';
+      if (msg.includes('already exists') || msg.includes('already registered') || msg.includes('usernameexists')) {
+        setServerError('An account with this email already exists. Sign in instead.');
+      } else {
+        setServerError(err.message || 'Registration failed.');
+      }
     }
-  }
-};
+  };
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
@@ -80,7 +82,7 @@ const onSubmit = async (formValues) => {
               role="status"
               aria-live="polite"
             >
-              Account created successfully. Redirecting to login.
+              Account created. Check your email ({registeredEmail}) for a verification code.
             </div>
           )}
 
@@ -110,7 +112,6 @@ const onSubmit = async (formValues) => {
                 placeholder="Your Name Here"
                 required
               />
-
               <FormInput
                 label="Email Address"
                 name="email"
@@ -122,7 +123,6 @@ const onSubmit = async (formValues) => {
                 placeholder="your@email.com"
                 required
               />
-
               <PasswordInput
                 label="Password"
                 name="password"
@@ -133,7 +133,6 @@ const onSubmit = async (formValues) => {
                 placeholder="Min 8 characters"
                 required
               />
-
               <PasswordInput
                 label="Confirm Password"
                 name="confirmPassword"
@@ -144,7 +143,6 @@ const onSubmit = async (formValues) => {
                 placeholder="Repeat your password"
                 required
               />
-
               <Button
                 type="submit"
                 variant="primary"

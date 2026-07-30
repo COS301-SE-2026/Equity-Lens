@@ -1,58 +1,205 @@
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+
 import Button from '../../components/common/Button/Button';
-import { TrendingUp, TrendingDown } from 'lucide-react';
-import { getMockResponse } from '../../services/aiService';
-import StockTickerCard from '../../components/dashboard/StockTickerCard/StockTickerCard';
 import useAuth from '../../hooks/useAuth';
+import api from '../../services/api'
+
+/**
+ * @typedef {{id: number | string, role: 'user' | 'assistant', text: string}} ChatMessage
+ * @typedef {{id: number, title: string}} Conversation
+ * @typedef {{id: number, role: 'user' | 'assistant', content:string}} ApiMessage
+ */
 
 const SUGGESTED_PROMPTS = [
-  'Show all cards',
   'How is MTN doing?',
   "What's Sasol trading at?",
-  'How is my portfolio performing compared to the JSE benchmark?',
+  'How is my portfolio performing compared to the JSE benchmark?'
 ];
 
 const AIChat = () => {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(/**@type {ChatMessage[]}*/ ([]));
   const [isThinking, setIsThinking] = useState(false);
+  const [conversationId, setConversationId] = useState(/**@type {number | null}*/(null));
+  const [conversations, setConversations] = useState(/**@type {Conversation[]}*/([]));
   const { user } = useAuth();
-  const firstName = user?.full_name?.split(' ')[0] ?? 'there';
+  /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const bottomRef = useRef(null);
+  const [editingId, setEditingId] = useState(/**@type {number | null}*/(null));
+  const [editTitle, setEditTitle] = useState('');
+  /**@type {React.MutableRefObject<HTMLInputElement | null>}*/
+  const renameRef = useRef(null)
+  const firstName = user?.full_name?.split(' ')[0] ?? 'there';
 
-  // Keep the newest message (or the typing indicator) in view.
+  //scroll to bottom of new messages
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({behavior: 'smooth'});
   }, [messages, isThinking]);
 
+  // fetch conversations 
+  useEffect(() => {
+    api.get('/ai_chat/conversations/')
+      .then((res) => setConversations(res.data))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if(editingId !== null) {
+      renameRef.current?.focus();
+    }
+  }, [editingId]);
+
+  /** @param {string}  rawText*/
   const sendMessage = (rawText) => {
-    if (isThinking) return;
+    if (isThinking) {
+      return;
+    }
     const text = rawText.trim();
-    if (!text) return;
-    const userMessage = { id: Date.now(), role: 'user', text };
+    if (!text) {
+      return;
+    }
+    const userMessage = /** @type {ChatMessage} */({ id: Date.now(), role: 'user', text });
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsThinking(true);
 
-    // Simulate the assistant "thinking" before its reply lands.
-    setTimeout(() => {
-      const aiMessage = {
-        id: Date.now() + 1,
-        role: 'assistant',
-        ...getMockResponse(text),
-      };
-      setMessages((prev) => [...prev, aiMessage]);
-      setIsThinking(false);
-    }, 900);
+    // The ai assistant replying now 
+    return api.post('/ai_chat/', {message: text, conversation_id: conversationId})
+      .then((res) => {
+        const responseMessage = /** @type {ChatMessage} */({id: Date.now() + 1, role: 'assistant', text: res.data.reply,});
+        setConversationId(res.data.conversation_id);
+        setMessages((prev) => [...prev, responseMessage]);
+
+        api.get('/ai_chat/conversations/')
+        .then((res) => setConversations(res.data))
+        .catch(() => {});
+      })
+
+      //Error checking incase ai call fails
+      .catch(() => {
+        const errorMessage = /**@type {ChatMessage} */ ({id: Date.now() + 1, role: 'assistant', text: "Something went wrong, try again."});
+        setMessages((prev) => [...prev, errorMessage]);
+      })
+      .finally(() => setIsThinking(false));
+    };
+  
+  //now to load the messages
+  /**@param {Conversation} convo*/
+  const loadConversation = (convo) => {
+    setConversationId(convo.id);
+    api.get(`/ai_chat/conversations/${convo.id}/messages/`)
+      .then((res) => {
+        setMessages(
+          /**@type {ApiMessage[]} */(res.data).map((m) => ({
+            id: m.id,
+            role: m.role,
+            text: m.content
+          }))
+        )
+      })
+      .catch(() => {})
   };
 
+  // Adding a new chat button
+  const createNewChat = () => {
+    setConversationId(null);
+    setMessages([]);
+  }
+
+  /**@param {Number} convoId*/
+  const renameConversation = (convoId) => {
+    const trimmed = editTitle.trim();
+    if (!trimmed) {
+      return;
+    }
+
+    api.put(`/ai_chat/conversations/${convoId}/`, {title: trimmed})
+      .then(() => {
+        setConversations((prev) => 
+          prev.map((c) => (c.id === convoId ? {...c, title: trimmed} : c))
+        );
+        setEditingId(null);
+      })
+      .catch(() => {})
+  };
+
+  /**@param {Number} convoId*/
+  const deleteConversation = (convoId) => {
+    api.delete(`/ai_chat/conversations/${convoId}/`)
+      .then(() => {
+        setConversations((prev) => 
+          prev.filter((c) => c.id !== convoId)
+        );
+        if (conversationId === convoId) {
+          setConversationId(null);
+          setMessages([]);
+        }
+      })
+      .catch(() => {});
+  };
+
+  /** @param {React.FormEvent<HTMLFormElement>} e*/
   const handleSubmit = (e) => {
     e.preventDefault();
     sendMessage(input);
   };
 
   return (
-  <div className="flex h-full flex-col">
+  <div className="flex h-[calc(100vh-64px)] -m-4">
+    <aside className = "flex w-64 flex-col border-r border-[var(--border-subtle)] p-3">
+      <button type = "button"
+        onClick = {createNewChat}
+        className = {`mb-3 w-full truncate rounded-lg border border-[var(--border-default)]
+                     bg-[var(--bg-secondary)] px-3 py-2 text-sm font-medium
+                     text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]`}>
+          + New Chat                  
+      </button>
+      <div className = "flex-1 overflow-y-auto">
+        {conversations.map((convo) => (
+          <div key = {convo.id} className = "group mb-1 flex items-center">
+            {editingId === convo.id ? (
+              <form className = "flex w-full gap-1"
+                    onSubmit = {(e) => {
+                      e.preventDefault();
+                      renameConversation(convo.id);
+                    }}>
+                <input ref = {renameRef}
+                       value = {editTitle}
+                       onChange = {(e) => setEditTitle(e.target.value)}
+                       onBlur = {() => setEditingId(null)}
+                       className = "min-w-0 flex-1 rounded border border-[var(--border-default)] bg-[var(--bg-secondary)] px-2 py-1 text-sm text-[var(--text-primary)]" 
+                />    
+              </form>
+            ) : (
+              <>
+                {/* Making it an actual button */}
+                <button type = "button"
+                  onClick = {() => loadConversation(convo)}
+                  className = {`mb-1 w-full truncate rounded-lg px-3 py-2 text-left text-sm
+                                ${conversationId === convo.id ? 'bg-[var(--bg-tertiary)] text-[var(--text-primary)]': 'text-[var(--text-secondary)] hover:bg-[var(--bg-secondary)]'}`}>
+                  {convo.title}
+                </button>
+                <button type = "button"
+                        onClick = {() => {
+                          setEditingId(convo.id);
+                          setEditTitle(convo.title);
+                        }}
+                        className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-[var(--text-primary)] group-hover:visible">
+                  <i className="fa fa-pencil" aria-hidden="true" />
+                </button>
+                <button type = "button"
+                        onClick = {() => deleteConversation(convo.id)}
+                        className = "invisible ml-1 rounded px-1 text-sm text-[var(--text-dim)] hover:text-[var(--signal-negative)] group-hover:visible">
+                  <i className="fa fa-trash" />
+                </button>
+        </>
+        )}
+      </div>
+      ))}
+    </div>
+    </aside>
+    <div className = "flex flex-1 flex-col px-4">
     {/* Page heading */}
     <header className="border-b border-[var(--border-subtle)] pb-3">
       <h1 className="text-center text-lg font-semibold text-[var(--text-primary)]">
@@ -83,8 +230,7 @@ const AIChat = () => {
                              hover:bg-[var(--bg-tertiary)]
                              hover:text-[var(--text-primary)]
                              focus-visible:outline-none focus-visible:ring-2
-                             focus-visible:ring-[var(--accent-primary)]"
-                >
+                             focus-visible:ring-[var(--accent-primary)]">
                   {prompt}
                 </button>
               ))}
@@ -106,30 +252,8 @@ const AIChat = () => {
                   {message.text}
                 </p>
               ) : (
-                <div className="max-w-[80%]">
-                  <p className="text-sm text-[var(--text-secondary)]">
-                    {message.text}
-                    {message.trend === 'up' && (
-                      <TrendingUp
-                        size={16}
-                        className="mr-1 inline text-[var(--color-success)]"
-                      />
-                    )}
-                    {message.trend === 'down' && (
-                      <TrendingDown
-                        size={16}
-                        className="mr-1 inline text-[var(--color-danger)]"
-                      />
-                    )}
-                    {message.changeText}
-                  </p>
-                  {message.cards && (
-                    <div className="mt-3 grid grid-cols-2 gap-3">
-                      {message.cards.map((card) => (
-                        <StockTickerCard key={card.ticker} {...card} />
-                      ))}
-                    </div>
-                  )}
+                <div className="max-w-[80%] text-sm text-[var(--text-secondary)] [&>p]:mb-2 [&>ul]:mb-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:mb-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>h3]:font-semibold [&>h3]:mb-1 [&>strong]:font-semibold [&>p:last-child]:mb-0">
+                    <ReactMarkdown>{message.text}</ReactMarkdown>
                 </div>
               )}
             </li>
@@ -164,7 +288,7 @@ const AIChat = () => {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask the assistant…"
+          placeholder="Ask the assistant..."
           maxLength={500}
           className="flex-1 rounded-lg border border-[var(--border-default)]
                      bg-[var(--bg-secondary)] px-3 py-2.5 text-sm
@@ -179,6 +303,7 @@ const AIChat = () => {
       <p className="mt-2 text-[12px] text-[var(--text-dim)]">
         AI responses are informational only and not financial advice.
       </p>
+      </div>
     </div>
   </div>
   );

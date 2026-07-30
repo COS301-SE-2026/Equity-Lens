@@ -10,6 +10,10 @@ import {
   ReferenceLine,
 } from 'recharts';
 
+/**
+ * @typedef {{month: string, amount: number}} DividendDatum
+ */
+
 const MOCK_DATA = [
   { month: 'Jan', amount: 180 },
   { month: 'Feb', amount: 340 },
@@ -19,9 +23,11 @@ const MOCK_DATA = [
   { month: 'Jun', amount: 200 },
 ];
 
+/** @param {DividendDatum[]} data*/
 const average = (data) =>
   Math.round(data.reduce((sum, d) => sum + d.amount, 0) / data.length);
 
+/**@param {{active?: boolean, payload?: {value: number}[], label?: string}} */
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
@@ -42,6 +48,14 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const DividendBarChart = ({ data = MOCK_DATA }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '160px', color: 'var(--text-secondary)', fontSize: '12px', fontFamily: 'var(--font-primary)' }}>
+        No dividend data available
+      </div>
+    );
+  }
+
   const avg = average(data);
 
   return (
@@ -57,7 +71,7 @@ const DividendBarChart = ({ data = MOCK_DATA }) => {
             dy={4}
           />
           <YAxis
-            tick={{ fill: 'var(--chart-axis-text)', fontSize: 10, fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}
+            tick={{ fill: 'var(--chart-axis-text)', fontSize: 10, fontFamily: 'var(--font-mono)', style: {fontVariantNumeric: 'tabular-nums'} }}
             axisLine={false}
             tickLine={false}
           />
@@ -65,7 +79,7 @@ const DividendBarChart = ({ data = MOCK_DATA }) => {
 
           <ReferenceLine
             y={avg}
-            stroke="#60a5fa"
+            stroke="var(--signal-info)"
             strokeDasharray="4 3"
             strokeWidth={1}
             strokeOpacity={0.6}
@@ -73,7 +87,7 @@ const DividendBarChart = ({ data = MOCK_DATA }) => {
               value: `Avg R${avg}`,
               position: 'insideTopRight',
               fontSize: 9,
-              fill: '#60a5fa',
+              fill: 'var(--signal-info)',
               fontFamily: 'var(--font-mono)',
               opacity: 0.7,
             }}
@@ -83,8 +97,8 @@ const DividendBarChart = ({ data = MOCK_DATA }) => {
             {data.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
-                fill="rgba(96, 165, 250, 0.35)"
-                stroke="rgba(96, 165, 250, 0.6)"
+                fill="var(--accent-subtle)"
+                stroke="var(--accent-primary)"
                 strokeWidth={1}
               />
             ))}

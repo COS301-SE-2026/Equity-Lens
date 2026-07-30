@@ -1,9 +1,20 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from "@testing-library/react";
-import Analytics from "./Analytics";
+import { MemoryRouter } from 'react-router';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import useIndicators from "../../hooks/useIndicators";
 
+import Analytics from "./Analytics";
+
+
+
 vi.mock("../../hooks/useIndicators");
+
+const renderAnalytics = () => render(
+  <MemoryRouter>
+    <Analytics />
+  </MemoryRouter>
+)
 
 describe('Analytics', () => {
   beforeEach(() => {
@@ -15,19 +26,19 @@ describe('Analytics', () => {
   });
 
   it("shows the Analytics heading", () => {
-    render(<Analytics />);
+    renderAnalytics();
     expect(screen.getByRole("heading", { name: "Analytics" })).toBeInTheDocument();
   });
 
   it("shows the page description", () => {
-    render(<Analytics />);
+    renderAnalytics();
     expect(
-      screen.getByText("Financial indicators calculated per holding - hover any label for an explanation")
+      screen.getByText("How your holdings are doing - hover a label for a quick explanation, click a value to learn more")
     ).toBeInTheDocument();
   });
 
   it("shows the holdings count in the badge", () => {
-    render(<Analytics />);
+    renderAnalytics();
     expect(screen.getByText("0 holdings")).toBeInTheDocument();
   });
 
@@ -40,7 +51,7 @@ describe('Analytics', () => {
       loading: false,
       error: null,
     });
-    render(<Analytics />);
+    renderAnalytics();
     expect(screen.getByText("2 holdings")).toBeInTheDocument();
   });
 
@@ -52,7 +63,7 @@ describe('Analytics', () => {
       loading: false,
       error: null,
     });
-    render(<Analytics />);
+    renderAnalytics();
     expect(screen.getByText("CAPM")).toBeInTheDocument();
     expect(screen.getByText("P/E Ratio")).toBeInTheDocument();
     expect(screen.getByText("Altman Z")).toBeInTheDocument();
@@ -77,8 +88,8 @@ describe('Analytics', () => {
       loading: false,
       error: null,
     });
-    render(<Analytics />);
-    expect(screen.getByText("20%")).toBeInTheDocument();
+    renderAnalytics();
+    expect(screen.getByText("20.00%")).toBeInTheDocument();
     expect(screen.getByText("20% expected annual return for this risk level")).toBeInTheDocument();
   });
 
@@ -97,7 +108,7 @@ describe('Analytics', () => {
       loading: false,
       error: null,
     });
-    render(<Analytics />);
+    renderAnalytics();
     expect(screen.getAllByText("Error").length).toBe(7);
     expect(screen.getAllByText("Calc failed").length).toBe(7);
   });
@@ -108,7 +119,7 @@ describe('Analytics', () => {
       loading: true,
       error: null,
     });
-    const { container } = render(<Analytics />);
+    const { container } = renderAnalytics();
     expect(container.querySelectorAll(".animate-pulse").length).toBe(2);
     expect(screen.queryByText("CAPM")).not.toBeInTheDocument();
   });
@@ -131,7 +142,7 @@ describe('Analytics', () => {
       loading: false,
       error: null,
     });
-    render(<Analytics />);
+    renderAnalytics();
     expect(screen.getByText("N/A")).toBeInTheDocument();
     expect(screen.getByText("Not enough history")).toBeInTheDocument();
     expect(screen.queryByText(/Need 12 months/)).not.toBeInTheDocument();

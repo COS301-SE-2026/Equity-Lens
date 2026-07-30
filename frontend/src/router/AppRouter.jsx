@@ -11,9 +11,14 @@ import Portfolio from '../pages/Portfolio/Portfolio';
 import NotFound from '../pages/NotFound/NotFound';
 import News from '../pages/News/News';
 import AIChat from '../pages/AIChat/AIChat';
+import Help from '../pages/Help/Help';
 import { ROUTES } from '../utils/constants';
 import Analytics from '../pages/Analytics/Analytics';
+import ConfirmEmail from '../pages/Auth/ConfirmEmail';
+import Landing from '../pages/Landing/Landing';
+import BrandStyleGuide from '../pages/BrandStyleGuide/BrandStyleGuide';
 
+/** @param {{ children: React.ReactNode }} props */
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
@@ -29,6 +34,7 @@ const AppLayout = ({ children }) => {
   );
 };
 
+/** @param {{ children: React.ReactNode }} props */
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return (
@@ -39,27 +45,52 @@ const ProtectedRoute = ({ children }) => {
   return isAuthenticated ? <AppLayout>{children}</AppLayout> : <Navigate to={ROUTES.LOGIN} replace />;
 };
 
+const HelpRoute = () => {
+  const { isAuthenticated, loading } = useAuth();
+  if (loading) return (
+    <div className="flex items-center justify-center min-h-screen">
+      <LoadingSpinner size="lg" />
+    </div>
+  );
+  //signed in
+  if (isAuthenticated) {
+    return <AppLayout><Help/></AppLayout>
+  }
+  //signed out
+  <div className = "min-h-screen bg-bg-primary p-6">
+    <Help/>
+  </div>
+}
+
+/** @param {{ children: React.ReactNode }} props */
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return null;
   return !isAuthenticated ? children : <Navigate to={ROUTES.DASHBOARD} replace />;
 };
 
-const AppRouter = () => (
-  <BrowserRouter>
-    <Routes>
-      <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
-      <Route path={ROUTES.REGISTER} element={<PublicRoute><Register /></PublicRoute>} />
+export const AppRoutes = () => (
+  <Routes>
+    <Route path={ROUTES.LOGIN} element={<PublicRoute><Login /></PublicRoute>} />
+    <Route path={ROUTES.REGISTER} element={<PublicRoute><Register /></PublicRoute>} />
 
       <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path={ROUTES.PORTFOLIO} element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
       <Route path={ROUTES.NEWS} element={<ProtectedRoute><News /></ProtectedRoute>} />
       <Route path={ROUTES.AI_CHAT} element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
       <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+      <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
+      <Route path={ROUTES.HELP} element={<HelpRoute />} />
 
-      <Route path={ROUTES.HOME} element={<Navigate to={ROUTES.LOGIN} replace />} />
+      <Route path={ROUTES.HOME} element={<Landing />} />  
+      <Route path={ROUTES.BRAND_GUIDE} element={<BrandStyleGuide />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
+);
+
+const AppRouter = () => (
+  <BrowserRouter>
+    <AppRoutes />
   </BrowserRouter>
 );
 

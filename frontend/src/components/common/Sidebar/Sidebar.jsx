@@ -5,7 +5,8 @@ import {
   Briefcase,
   X, 
   Sparkles,
-  BarChart2
+  BarChart2,
+  HelpCircle
 } from 'lucide-react';
 import { ROUTES } from '../../../utils/constants';
 
@@ -14,7 +15,9 @@ const navItems = [
   { label: 'Portfolio', icon: Briefcase, to: ROUTES.PORTFOLIO },
   { label: 'Analytics',    icon: BarChart2, to: ROUTES.ANALYTICS },
   { label: 'News', icon: Newspaper, to: ROUTES.NEWS },
-  { label: 'AI Assistant', icon: Sparkles, to: ROUTES.AI_CHAT}
+  { label: 'AI Assistant', icon: Sparkles, to: ROUTES.AI_CHAT},
+  { label: 'Help', icon: HelpCircle, to: ROUTES.HELP, pinBottom: true},
+
 ];
 
 const Sidebar = ({ open, onClose }) => {
@@ -22,7 +25,8 @@ const Sidebar = ({ open, onClose }) => {
     <>
       {open && (
         <div
-          className="fixed inset-0 bg-black/60 z-20 lg:hidden"
+          className="fixed inset-0 z-20 lg:hidden"
+          style={{ background: 'rgba(13, 15, 18, 0.55)' }}
           onClick={onClose}
           aria-hidden="true"
         />
@@ -60,7 +64,7 @@ const Sidebar = ({ open, onClose }) => {
             fontFamily: 'var(--font-primary)',
             whiteSpace: 'nowrap',
           }}>
-            EQUITY<span style={{ color: 'var(--signal-gold)' }}>LENS</span>
+            EQUITY<span style={{ color: 'var(--accent-primary)' }}>LENS</span>
           </span>
           <button
             onClick={onClose}
@@ -84,7 +88,7 @@ const Sidebar = ({ open, onClose }) => {
           }}>
           </p>
 
-          {navItems.map(({ label, icon: Icon, to, badge }) => (
+          {navItems.map(({ label, icon: Icon, to, badge, pinBottom }) => (
             <NavLink
               key={to}
               to={to}
@@ -99,9 +103,10 @@ const Sidebar = ({ open, onClose }) => {
                 fontWeight: isActive ? 500 : 400,
                 color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
                 background: isActive ? 'rgba(212,160,23,0.06)' : 'transparent',
-                borderLeft: isActive ? '2px solid var(--signal-gold)' : '2px solid transparent',
+                borderLeft: isActive ? '2px solid var(--accent-primary)' : '2px solid transparent',
                 textDecoration: 'none',
                 transition: 'all 120ms ease-out',
+                marginTop: pinBottom ? 'auto' : undefined
               })}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -114,7 +119,7 @@ const Sidebar = ({ open, onClose }) => {
                   fontWeight: 700,
                   padding: '2px 6px',
                   borderRadius: '3px',
-                  background: 'var(--signal-gold)',
+                  background: 'var(--accent-primary)',
                   color: '#000',
                   fontFamily: 'var(--font-primary)',
                 }}>

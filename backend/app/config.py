@@ -1,22 +1,29 @@
-from pydantic_settings import BaseSettings
-from pydantic import field_validator
 from functools import lru_cache
-from typing import List
-
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     database_url: str = "postgresql://postgres:postgres@localhost:5432/equitylens"
+    allow_live_market_fallback: bool = False
+    alpha_vantage_api_key: str | None = None
+    market_data_refresh_ttl_hours: int = 24
     secret_key: str = "to-be-changed-later"
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
-    cors_origins: List[str] = ["http://localhost:5173"]
+    cors_origins: list[str] = [
+        "http://localhost:5173",
+        "https://equitylens.co.za",
+        "https://www.equitylens.co.za",
+    ]
+    aws_region: str = "af-south-1"
+    aws_access_key_id: str | None = None
+    aws_secret_access_key: str | None = None
+    aws_cognito_user_pool_id: str | None = None
+    aws_cognito_client_id: str | None = None
+    bedrock_model: str = "anthropic.claude-sonnet-4-5-20250929-v1:0"
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
-    model_config = {"env_file": ".env", "extra": "ignore"}
-
-
-@lru_cache()
-def get_settings():
+@lru_cache
+def get_settings() -> Settings:
     return Settings()
-
 
 settings = get_settings()
