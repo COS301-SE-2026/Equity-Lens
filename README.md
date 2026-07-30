@@ -5,6 +5,8 @@ and investment analytics by providing the user with the ability to import their 
 run institutional-grade financial analysis, track how stock movements relate to news events, 
 and engage with a trained AI-powered assistant to make smarter and safer investment decisions.
 
+**Live app:** [equitylens.co.za](https://equitylens.co.za/)
+
 ---
 
 ## Demo Videos
@@ -18,10 +20,16 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 | | Link |
 |---|---|
-| Design Document | [View Design Doc](./Documentation/Demo_1/DESIGN_DOCUMENT.pdf) |
-| Software Requirement Specification (SRS) | [View SRS](./Documentation/Demo_1/Software_Requirement_Specification.pdf) |
-| Wireframes | [View Wireframes](./Documentation/Demo_1/Wireframes.pdf) |
+| Software Requirement Specification (SRS) | [View SRS](./Documentation/Demo_2/Software_Requirement_Specification_v2.md) |
+| Software Architecture Specification (SAS) | [View SAS](./Documentation/Demo_2/Software_Architecture_Specification.md) |
+| Coding Standards | [View](./Documentation/Demo_2/Coding_Standards.md) |
+| Testing Policy | [View](./Documentation/Demo_2/Testing_Policy.md) |
+| User Manual | [View](./Documentation/Demo_2/User_Manual.md) |
+| Brand Style Guide | live at `/brand` in the running app ([source](./frontend/src/pages/BrandStyleGuide/BrandStyleGuide.jsx)) |
 | GitHub Project Board | [View Board](https://github.com/orgs/COS301-SE-2026/projects/45) |
+| Design Document (Demo 1) | [View Design Doc](./Documentation/Demo_1/DESIGN_DOCUMENT.pdf) |
+| SRS (Demo 1, superseded) | [View SRS](./Documentation/Demo_1/Software_Requirement_Specification.pdf) |
+| Wireframes (Demo 1) | [View Wireframes](./Documentation/Demo_1/Wireframes.pdf) |
 
 ---
 
@@ -31,6 +39,8 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 [![codecov](https://codecov.io/gh/COS301-SE-2026/Equity-Lens/graph/badge.svg?token=K5WIIJ0VXC)](https://codecov.io/gh/COS301-SE-2026/Equity-Lens)
 ![Requirements](https://img.shields.io/badge/requirements-up%20to%20date-brightgreen)
 [![GitHub Issues](https://img.shields.io/github/issues/COS301-SE-2026/Equity-Lens)](https://github.com/COS301-SE-2026/Equity-Lens/issues)
+[![Uptime](https://img.shields.io/uptimerobot/status/m803628024-a58c2adb71aaf80c9f7ccc71?label=uptime)](https://stats.uptimerobot.com/NXrIxg9iOy)
+[![Uptime Ratio](https://img.shields.io/uptimerobot/ratio/m803628024-a58c2adb71aaf80c9f7ccc71?label=30-day%20uptime)](https://stats.uptimerobot.com/NXrIxg9iOy)
 
 
 ## The Team
@@ -79,15 +89,15 @@ Third-year BSc Computer Science student at the University of Pretoria with a pas
 
 | Layer | Technology |
 |-------|------------|
-| Frontend | React + Vite, TailwindCSS, Recharts |
-| Backend | FastAPI, AWS Lambda, API Gateway |
-| Auth | AWS Cognito |
-| Database | AWS RDS PostgreSQL, AWS S3 |
-| AI | AWS Bedrock |
-| Market Data | yfinance (primary), Alpha Vantage (fallback) |
-| News | NewsData & Marketstack |
-| File Handling | pdfjs-dist |
-| CI/CD | GitHub Actions, AWS SAM |
+| Frontend | React 19 + Vite 7 (JSX only, no TypeScript), TailwindCSS, Recharts, aws-amplify (Cognito), framer-motion, react-hook-form |
+| Backend | FastAPI (Python 3.11), SQLAlchemy + Alembic, pandas + numpy (indicator calculations) |
+| Auth | AWS Cognito (email verification + TOTP MFA) |
+| Database | PostgreSQL 16 (AWS RDS in production),server side market-data cache
+| AI | AWS Bedrock (Claude models) |
+| Market Data | yfinance, Alpha Vantage
+| News | NewsData |
+| File Handling | pdfjs-dist (client-side PDF statement parsing), SheetJS/xlsx (client-side Excel import) |
+| CI/CD | GitHub Actions (Docker build → Amazon ECR → SSH deploy to EC2) |
 
 ---
 
@@ -175,8 +185,21 @@ JKH : chore: update dependencies
 ### Prerequisites
 
 - Docker Desktop (required)
-- Node.js 20+ (for running frontend tests locally)
+- Node.js 22+ (Node 22.22.0 is what CI runs against; needed for running frontend tests locally)
 - Python 3.11+ (for running backend tests locally)
+
+### Environment Setup
+
+Copy the example env files before first run - Docker Compose will fail to start without `backend/.env`:
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
+Fill in `AWS_COGNITO_USER_POOL_ID`/`AWS_COGNITO_CLIENT_ID` (backend) and `VITE_COGNITO_*` (frontend) with the team's dev Cognito pool values, and `NEWSDATA_API_KEY` for the News page to return real results. `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` are also required in `backend/.env` - both Cognito auth and the AI assistant (Bedrock) construct their boto3 clients with these explicitly, so login and AI chat won't work without them.
+
+> By default the backend serves cached/local price data only - live market data fetches (yfinance) are gated behind `ALLOW_LIVE_MARKET_FALLBACK=true` in `backend/.env`, which isn't set by `.env.example`. Add it if you need live prices during local development. `ALPHA_VANTAGE_API_KEY` is also optional and only affects non-JSE ticker history.
 
 ### Running the Project
 

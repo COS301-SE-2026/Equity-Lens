@@ -16,7 +16,9 @@ import { ROUTES } from '../utils/constants';
 import Analytics from '../pages/Analytics/Analytics';
 import ConfirmEmail from '../pages/Auth/ConfirmEmail';
 import Landing from '../pages/Landing/Landing';
+import BrandStyleGuide from '../pages/BrandStyleGuide/BrandStyleGuide';
 
+/** @param {{ children: React.ReactNode }} props */
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   return (
@@ -32,6 +34,7 @@ const AppLayout = ({ children }) => {
   );
 };
 
+/** @param {{ children: React.ReactNode }} props */
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return (
@@ -59,6 +62,7 @@ const HelpRoute = () => {
   </div>
 }
 
+/** @param {{ children: React.ReactNode }} props */
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   if (loading) return null;
@@ -79,6 +83,7 @@ export const AppRoutes = () => (
       <Route path={ROUTES.HELP} element={<HelpRoute />} />
 
       <Route path={ROUTES.HOME} element={<Landing />} />  
+      <Route path={ROUTES.BRAND_GUIDE} element={<BrandStyleGuide />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
 );

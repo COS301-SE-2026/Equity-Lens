@@ -1,18 +1,19 @@
 
 
 /**
- *  @param {Object} objects
- *  @param {*} objects.label
- *  @param {*} objects.name
- *  @param {*} objects.type
- *  @param {*} objects.value
- *  @param {*} objects.onChange
- *  @param {*} objects.onBlur
- *  @param {*} objects.error
- *  @param {*} objects.placeholder
- *  @param {*} objects.required
- *  @param {*} objects.disabled
- *  @param {*} objects.className
+ * @param {{
+ *   label: string,
+ *   name: string,
+ *   type: string,
+ *   value: string,
+ *   onChange: (e: any) => void,
+ *   onBlur?: (e: any) => void,
+ *   error?: string,
+ *   placeholder?: string,
+ *   required?: boolean,
+ *   disabled?: boolean,
+ *   className?: string,
+ * }} props
  */
 const FormInput = ({
   label,

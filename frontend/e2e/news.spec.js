@@ -16,18 +16,73 @@ test.describe("news e2e testing", () => {
       page.locator("body")
     ).toContainText(/Investment News/i);
 
-    // await expect(
-    //   page.locator("body")
-    // ).toContainText(
-    //   /Here's what Wall Street doesn't get about young investors/i
-    // );
+        await expect(
+      page.locator("body")
+    ).toContainText(/Stay updated with the latest market news and insights/i);  
 
-    // await expect(
-    //   page.locator("body")
-    // ).toContainText(
-    //   /Eve Halimi and Anam Lakhani created Alinea/i
-    // );
+            await expect(
+      page.locator("body")
+    ).toContainText(/Top Gainer/i);  
 
+
+      await expect(
+      page.locator("body")
+    ).toContainText(/Top Loser/i);  
+
+      await expect(
+      page.locator("body")
+    ).toContainText(/My Watchlist/i);  
+
+      await expect(
+      page.locator("body")
+    ).toContainText(/0/i);  
+
+      await expect(
+      page.locator("body")
+    ).toContainText(/Stocks/i);  
+    
+      await expect(
+      page.locator("body")
+    ).toContainText(/Ticker/i); 
+
+    
+      await expect(
+      page.locator("body")
+    ).toContainText(/Change/i); 
+
+    
+      await expect(
+      page.locator("body")
+    ).toContainText(/Action/i); 
+
+          await expect(
+      page.locator("body")
+    ).toContainText(/All/i); 
+
+         await expect(
+      page.locator("body")
+    ).toContainText(/Top/i); 
+
+      await expect(
+      page.locator("Body")
+    ).toContainText(/Business/i); 
+
+          await expect(
+      page.locator("Body")
+    ).toContainText(/Business/i); 
+
+
+          await expect(
+      page.locator("Body")
+    ).toContainText(/Technology/i); 
+
+              await expect(
+      page.locator("Body")
+    ).toContainText(/Politics/i); 
+
+              await expect(
+      page.locator("Body")
+    ).toContainText(/Crime/i); 
 
   });
 

@@ -2,9 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, dev]
-  pull_request:
-    branches: [main, dev]
+    branches: [main]
 
 permissions:
   contents: read
@@ -40,19 +38,19 @@ jobs:
               run: docker build -t equity-lens-backend ./backend
 
             - name: To make the Configure AWS credentials
-              if: github.event_name == 'pull_request'
+              if: github.event_name == 'push'
               uses: aws-actions/configure-aws-credentials@v6
               with:
                 role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
                 aws-region: ${{ vars.AWS_REGION }}
 
             - name: To Log in to Amazon ECR
-              if: github.event_name == 'pull_request'
+              if: github.event_name == 'push'
               id: login-to-store-credentials
               uses: aws-actions/amazon-ecr-login@v2
 
             - name: To make a tag and to also push all the backend and all the image from the docker to Amazon ECR
-              if: github.event_name == 'pull_request'
+              if: github.event_name == 'push'
               env:
                 TO_STORE_THE_ECR_REGISTRY: ${{ steps.login-to-store-credentials.outputs.registry }}
                 TO_STORE_THE_ECR_REPOSITORY: ${{ vars.BACKEND_ECR_REPOSITORY }}
@@ -65,7 +63,7 @@ jobs:
                 docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:latest
 
             - name: to automatically deploy the backed to the EC2
-              if: github.event_name == 'pull_request'
+              if: github.event_name == 'push'
               uses: appleboy/ssh-action@v1
               with:
                 host: ${{ secrets.EC2_PUBLIC_ADDRESS}}

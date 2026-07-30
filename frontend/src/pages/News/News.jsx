@@ -213,17 +213,6 @@ const NewsInvestment = () => {
           
        </table>
      </div>
-
-      
-       <div className="p-5 border border-[var(--border-subtle)] rounded-2xl">
-        <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">AI Suggestions</h2>
-        <div>
-          <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Why is my top gainer up ?</button>
-          <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Why is my top loser down ?</button>
-          <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Which watchlist stock is the best ?</button>
-          <button className="w-full p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-card)] mb-4">Summarise today's news</button>
-        </div>
-       </div>
        
       </div>
     </div>

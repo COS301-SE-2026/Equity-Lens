@@ -153,8 +153,10 @@ def _benchmark_weights(priced_holdings: list[dict]) -> dict[str, float]:
         return {}
 
     weights: dict[str, float] = {}
+    unclassified = []
     for h in priced_holdings:
         if h["region"] not in REGION_BENCHMARKS:
+            unclassified.append((h.get("ticker"), h.get("name"), h["region"]))
             continue
         weights[h["region"]] = weights.get(h["region"], 0.0) + h["value"] / total
 
@@ -190,7 +192,7 @@ def _close_on_or_after(history, when: date) -> float | None:
 
 def _index_levels(ticker: str, quote_currency: str, since: date) -> dict[date, float] | None:
     try:
-        history = get_cached_price_history(ticker, period=_history_period(since))
+        history = get_cached_price_history(ticker, period=_history_period(since), force_live=True)
     except Exception as exc:
         logger.warning(f"benchmark history fetch failed for {ticker}: {exc}")
         return None
@@ -201,7 +203,7 @@ def _index_levels(ticker: str, quote_currency: str, since: date) -> dict[date, f
     fx = None
     if quote_currency != "ZAR":
         try:
-            fx = get_cached_price_history("USDZAR=X", period=_history_period(since))
+            fx = get_cached_price_history("USDZAR=X", period=_history_period(since), force_live=True)
         except Exception as exc:
             logger.warning(f"USDZAR history fetch failed, cannot convert {ticker}: {exc}")
             return None
@@ -278,6 +280,7 @@ def _benchmark_series(
 ) -> tuple[dict[date, float], list[dict]]:
     weights = _benchmark_weights(priced_holdings)
     if not weights:
+        logger.info("benchmark debug: _benchmark_series aborting early, no regional weights")
         return {}, []
 
     components = []
@@ -286,6 +289,7 @@ def _benchmark_series(
         ticker, label, quote_currency = REGION_BENCHMARKS[region]
         levels = _index_levels(ticker, quote_currency, since)
         if not levels:
+            logger.info("benchmark debug: dropping region=%s ticker=%s, no usable levels", region, ticker)
             continue
         per_region_levels[region] = levels
         components.append({"region": region, "label": label, "weight": round(weight * 100, 1)})
