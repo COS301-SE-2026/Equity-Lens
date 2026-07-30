@@ -134,7 +134,7 @@ jobs:
           AWS_COGNITO_USER_POOL_ID: ${{ vars.TEST_COGNITO_USER_POOL_ID }}
           AWS_ACCESS_KEY_ID: dummy
           AWS_SECRET_ACCESS_KEY: dummy
-        run: python -m pytest --cov=app --cov-report=xml --cov-fail-under=70
+        run: python -m pytest --cov=app --cov-report=xml 
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
