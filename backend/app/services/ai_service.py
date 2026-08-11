@@ -2,7 +2,38 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.portfolio import Portfolios, Document, Holdings
 from app.models.chat import ChatConversation, ChatMessages
+from app.utils.stock_cache import get_cached_price_history
+from app.services.market_data_service import _cents_to_major
 from datetime import datetime, timezone
+import pandas as pd
+
+
+MAX_TOOL_ITERATIONS = 3
+
+TOOL_CONFIG = { "tools": [
+                    { "toolSpec": {
+                            "name": "get_stock_data",
+                            "description": ( "Look up the latest available price for a single listed stock."
+                                             "Use this whenever the user asks how a specific company or share is doing, what it is trading at, or how it has moved. "
+                                             "JSE-listed tickers must end in .JO (for example SOL.JO for Sasol, NPN.JO for Naspers, MTN.JO for MTN Group)."
+                            ),
+                            "inputSchema": { "json": 
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "ticker": {
+                                                            "type": "string",
+                                                            "description": "The stock ticker symbol, e.g. AAPL",
+                                                        }
+                                                    },
+                                                    "required": ["ticker"]
+                                                }
+                                            },
+                        }
+                    }
+        ]
+}
+
 
 def get_bedrock_client():
     import boto3
@@ -55,6 +86,44 @@ def title_creation(client, user_message):
         inferenceConfig = {"maxTokens": 25}
     )
     return response["output"]["message"]["content"][0]["text"].strip()
+
+
+def get_stock_data_tool(ticker: str) -> str:
+    ticker = (ticker or "").strip().upper()
+    if not ticker:
+        return "No ticker was provided."
+
+    price_history = get_cached_price_history(ticker, period="1y", force_live=True)
+
+    if price_history.empty:
+        return f"No market data could be found for {ticker}."
+
+    divisor = _cents_to_major(ticker)
+    latest = price_history.iloc[-1]
+    close = float(latest["Close"]) / divisor
+    as_of = price_history.index[-1].date()
+
+    prev = latest.get("Prev Close")
+
+    if prev is None or pd.isna(prev):
+        prev_close = float(price_history.iloc[-2]["Close"]) / divisor if len(price_history) >= 2 else close
+    else:
+        prev_close = float(prev) / divisor
+
+    change = ((close - prev_close) / prev_close * 100) if prev_close else 0.0
+
+    return (
+        f"{ticker} closing price: R{close:.2f} (as of {as_of}). "
+        f"Previous close: R{prev_close:.2f}. Change: {change:+.2f}%. "
+        f"This is end-of-day data, not a live intraday price."
+    )
+
+
+def run_tool(name: str, tool_input: dict) -> str:
+    if name == "get_stock_data":
+        return get_stock_data_tool(tool_input.get("ticker", ""))
+    return f"Unknown tool: {name}"
+
 
 
 #now for chat functionality 
