@@ -194,14 +194,54 @@ def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = No
         "content": [{"text": user_message}]
     })
 
-    #response (using converse uses modelId and JSON format for messages)
-    response = client.converse(
-        modelId = settings.bedrock_model,
-        messages = history,
-        system = [{"text": system_prompt}],
-        inferenceConfig = {"maxTokens": 1024}
-    )
-    reply = response["output"]["message"]["content"][0]["text"]
+
+    output_message = None
+
+    for _ in range(MAX_TOOL_ITERATIONS):
+        response = client.converse(
+            modelId = settings.bedrock_model,
+            messages = history,
+            system = [{"text": system_prompt}],
+            inferenceConfig = {"maxTokens": 1024},
+            toolConfig = TOOL_CONFIG,
+        )
+
+        output_message = response["output"]["message"]
+        history.append(output_message)
+
+        if response.get("stopReason") != "tool_use":
+            break
+
+        tool_results = []
+        for block in output_message["content"]:
+            if "toolUse" not in block:
+                continue
+            tool_use = block["toolUse"]
+            try:
+                result_text = run_tool(tool_use["name"], tool_use.get("input") or {})
+                status = "success"
+            except Exception as exc:
+                print(f"Tool {tool_use['name']} failed: {exc}")
+                result_text = "That lookup failed. Tell the user the data is unavailable right now."
+                status = "error"
+
+            tool_results.append({
+                "toolResult": {
+                    "toolUseId": tool_use["toolUseId"],
+                    "content": [{"text": result_text}],
+                    "status": status,
+                }
+            })
+
+        history.append({"role": "user", "content": tool_results})
+
+    reply = "".join(
+        block["text"] for block in output_message["content"] if "text" in block
+    ).strip()
+
+    if not reply:
+        reply = "Sorry, I couldn't finish that one. Try asking again."
+
     
     #Saving to the DB
     if conversation_id:
