@@ -7,10 +7,17 @@ from app.models.portfolio import InstrumentPurchasesAndSales
 from app.models.portfolio import ContributionsAndWithdrawals
 from app.models.portfolio import DividendsAndWithholdingTax
 from app.models.portfolio import TransactionExpenses
-# from app.service.instrument import resolve_known_instrument
+from fastapi import HTTPException
+
 
 def checkPortfolioID(database,portfolioID, user_id):
     portfolio = database.query(Portfolios).filter(Portfolios.id == portfolioID, Portfolios.user_id == user_id).first()
+
+    if portfolio is None:
+        raise HTTPException(
+            status_code=404,
+            detail="The portfolio is not found"
+        )
 
 def _iso_or_none(portfolio, field: str):
     if portfolio:

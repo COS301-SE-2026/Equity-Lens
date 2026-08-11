@@ -6,7 +6,17 @@ from app.models.portfolio import InstrumentPurchasesAndSales
 from app.models.portfolio import ContributionsAndWithdrawals
 from app.models.portfolio import DividendsAndWithholdingTax
 from app.models.portfolio import TransactionExpenses
+from fastapi import HTTPException
 
+
+def checkDocumentID(database,document_id, user_id):
+    document = database.query(Document).filter(Document.id == document_id, Document.user_id == user_id).first()
+
+    if document is None:
+        raise HTTPException(
+            status_code=404,
+            detail="The document is not found"
+        )
 
 def save_document(database,user_id,data):
 
@@ -22,7 +32,7 @@ def save_document(database,user_id,data):
     return saving
 
 def save_portfolios(database,user_id,data):
-
+    checkDocumentID(database, data.document_id, user_id)
     saving = Portfolios(
         user_id = user_id,
         document_id = data.document_id,
