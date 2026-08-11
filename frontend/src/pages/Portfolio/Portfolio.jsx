@@ -381,10 +381,7 @@ const Portfolio = () => {
    * @type {[any[], function]}
    */
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState([]);
-  /**
-   * @type {[any[], function]}
-   */
-  const [GetTheLowest, setGetTheLowest] = useState([]);
+  const [GetTheLowest, setGetTheLowest] = useState({ name: "", value: 0 });
   /**
    * @type {[any[], function]}
    */
@@ -975,7 +972,7 @@ const Portfolio = () => {
           <div className="flex justify-between border border-gray-700 rounded-xl p-4">
 
             <div>
-              <p className="text-xl text-white font-bold">{GetTheLowest?.name}</p>
+              <p className="text-xl text-white font-bold">{GetTheLowest?.name ?? "No holdings"}</p>
             </div>
 
             <div>
