@@ -271,3 +271,194 @@ resource "aws_iam_role" "terraform_apply" {
   name               = "equitylens-terraform-apply"
   assume_role_policy = data.aws_iam_policy_document.apply_trust.json
 }
+
+data "aws_iam_policy_document" "apply_trust" {
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:${var.github_org}/${var.github_repo}:environment:terraform-apply"]
+    }
+  }
+}
+
+resource "aws_iam_role" "terraform_apply" {
+  name               = "equitylens-terraform-apply"
+  assume_role_policy = data.aws_iam_policy_document.apply_trust.json
+}
+
+data "aws_iam_policy_document" "terraform_apply_permissions" {
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:GetObject", "s3:PutObject"]
+    resources = ["arn:aws:s3:::equitylens-terraform-state-578377798340/equitylens/terraform.tfstate"]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["s3:ListBucket"]
+    resources = ["arn:aws:s3:::equitylens-terraform-state-578377798340"]
+
+    condition {
+      test     = "StringLike"
+      variable = "s3:prefix"
+      values   = ["equitylens/terraform.tfstate"]
+    }
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["dynamodb:GetItem", "dynamodb:PutItem", "dynamodb:DeleteItem"]
+    resources = [
+      "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/equitylens-terraform-locks"
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:DescribeInstances",
+      "ec2:DescribeImages",
+      "ec2:DescribeKeyPairs",
+      "ec2:DescribeSecurityGroups",
+      "ec2:DescribeSecurityGroupRules",
+      "ec2:DescribeSubnets",
+      "ec2:DescribeVpcs",
+      "ec2:DescribeTags",
+      "ec2:DescribeAvailabilityZones",
+      "ec2:DescribeAccountAttributes",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ec2:RunInstances",
+      "ec2:TerminateInstances",
+      "ec2:StopInstances",
+      "ec2:StartInstances",
+      "ec2:ModifyInstanceAttribute",
+      "ec2:CreateTags",
+      "ec2:DeleteTags",
+      "ec2:CreateSecurityGroup",
+      "ec2:DeleteSecurityGroup",
+      "ec2:AuthorizeSecurityGroupIngress",
+      "ec2:AuthorizeSecurityGroupEgress",
+      "ec2:RevokeSecurityGroupIngress",
+      "ec2:RevokeSecurityGroupEgress",
+      "ec2:ModifySecurityGroupRules",
+    ]
+    resources = ["*"]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "ecr:DescribeRepositories",
+      "ecr:CreateRepository",
+      "ecr:DeleteRepository",
+      "ecr:TagResource",
+      "ecr:UntagResource",
+      "ecr:PutLifecyclePolicy",
+      "ecr:GetLifecyclePolicy",
+      "ecr:DeleteLifecyclePolicy",
+      "ecr:PutImageTagMutability",
+      "ecr:PutImageScanningConfiguration",
+    ]
+    resources = var.ecr_repository_arns
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:CreateSecret",
+      "secretsmanager:DeleteSecret",
+      "secretsmanager:DescribeSecret",
+      "secretsmanager:PutSecretValue",
+      "secretsmanager:UpdateSecret",
+      "secretsmanager:TagResource",
+      "secretsmanager:UntagResource",
+    ]
+    resources = var.secret_arns
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:GetRole",
+      "iam:CreateRole",
+      "iam:DeleteRole",
+      "iam:UpdateRole",
+      "iam:UpdateAssumeRolePolicy",
+      "iam:TagRole",
+      "iam:UntagRole",
+      "iam:PutRolePolicy",
+      "iam:GetRolePolicy",
+      "iam:DeleteRolePolicy",
+      "iam:ListRolePolicies",
+      "iam:ListInstanceProfilesForRole",
+      "iam:AttachRolePolicy",
+      "iam:DetachRolePolicy",
+      "iam:ListAttachedRolePolicies",
+    ]
+    resources = [
+      aws_iam_role.deploy.arn,
+      aws_iam_role.instance.arn,
+      aws_iam_role.terraform_plan.arn,
+      aws_iam_role.terraform_apply.arn,
+    ]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:GetInstanceProfile",
+      "iam:CreateInstanceProfile",
+      "iam:DeleteInstanceProfile",
+      "iam:AddRoleToInstanceProfile",
+      "iam:RemoveRoleFromInstanceProfile",
+      "iam:TagInstanceProfile",
+    ]
+    resources = [aws_iam_instance_profile.instance.arn]
+  }
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:GetOpenIDConnectProvider",
+      "iam:CreateOpenIDConnectProvider",
+      "iam:DeleteOpenIDConnectProvider",
+      "iam:UpdateOpenIDConnectProviderThumbprint",
+      "iam:TagOpenIDConnectProvider",
+      "iam:UntagOpenIDConnectProvider",
+    ]
+    resources = [aws_iam_openid_connect_provider.github.arn]
+  }
+
+  statement {
+    effect    = "Allow"
+    actions   = ["iam:PassRole"]
+    resources = [aws_iam_role.instance.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "terraform_apply" {
+  name   = "equitylens-terraform-apply-permissions"
+  role   = aws_iam_role.terraform_apply.id
+  policy = data.aws_iam_policy_document.terraform_apply_permissions.json
+}
