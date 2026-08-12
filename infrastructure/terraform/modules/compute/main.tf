@@ -34,12 +34,12 @@ locals {
 
   user_data = templatefile("${path.module}/templates/user_data.sh.tpl", {
     aws_region              = var.aws_region
-    ecr_registry             = local.ecr_registry
+    ecr_registry            = local.ecr_registry
     backend_repository_url  = var.backend_repository_url
     frontend_repository_url = var.frontend_repository_url
-    secret_names_newline     = join("\n", var.secret_names)
-    certbot_email            = var.certbot_email
-    nginx_conf               = local.rendered_nginx_conf
+    secret_names_newline    = join("\n", var.secret_names)
+    certbot_email           = var.certbot_email
+    nginx_conf              = local.rendered_nginx_conf
   })
 }
 
