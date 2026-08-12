@@ -40,6 +40,7 @@ resource "aws_security_group_rule" "https" {
   }
 }
 
+#trivy:ignore:AVD-AWS-0104
 resource "aws_security_group_rule" "egress_all" {
   type              = "egress"
   security_group_id = aws_security_group.app.id

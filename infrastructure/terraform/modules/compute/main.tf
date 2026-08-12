@@ -52,8 +52,17 @@ resource "aws_instance" "app" {
   iam_instance_profile        = var.iam_instance_profile_name
   associate_public_ip_address = true
 
+  root_block_device {
+    encrypted = true
+  }
+
   user_data                   = local.user_data
   user_data_replace_on_change = true
+
+  metadata_options {
+    http_tokens   = "required"
+    http_endpoint = "enabled"
+  }
 
   tags = {
     Name        = "equitylens-app-${var.environment}"

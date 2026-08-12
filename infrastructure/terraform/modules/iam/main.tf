@@ -1,4 +1,6 @@
 
+data "aws_caller_identity" "current" {}
+
 resource "aws_iam_openid_connect_provider" "github" {
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
@@ -241,35 +243,6 @@ resource "aws_iam_role_policy" "terraform_plan_state" {
   name   = "equitylens-terraform-plan-state-access"
   role   = aws_iam_role.terraform_plan.id
   policy = data.aws_iam_policy_document.terraform_plan_state.json
-}
-
-data "aws_iam_policy_document" "apply_trust" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-
-    principals {
-      type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.github.arn]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "token.actions.githubusercontent.com:aud"
-      values   = ["sts.amazonaws.com"]
-    }
-
-    condition {
-      test     = "StringEquals"
-      variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:${var.github_org}/${var.github_repo}:environment:terraform-apply"]
-    }
-  }
-}
-
-resource "aws_iam_role" "terraform_apply" {
-  name               = "equitylens-terraform-apply"
-  assume_role_policy = data.aws_iam_policy_document.apply_trust.json
 }
 
 data "aws_iam_policy_document" "apply_trust" {

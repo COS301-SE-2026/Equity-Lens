@@ -1,3 +1,4 @@
+#trivy:ignore:AVD-AWS-0031
 resource "aws_ecr_repository" "backend" {
   name                 = var.backend_repository_name
   image_tag_mutability = "MUTABLE" # deploy-backend.yml always re-pushes :latest
@@ -7,6 +8,7 @@ resource "aws_ecr_repository" "backend" {
   }
 }
 
+#trivy:ignore:AVD-AWS-0031
 resource "aws_ecr_repository" "frontend" {
   name                 = var.frontend_repository_name
   image_tag_mutability = "MUTABLE" # deploy-frontend.yml always re-pushes :latest

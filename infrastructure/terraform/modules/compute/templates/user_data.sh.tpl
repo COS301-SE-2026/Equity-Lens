@@ -1,3 +1,4 @@
+#!/bin/bash
 set -uxo pipefail
 exec > >(tee -a /var/log/equitylens-bootstrap.log) 2>&1
 echo "equitylens bootstrap starting $(date -u)"
@@ -48,7 +49,6 @@ ${secret_names_newline}
 SECRET_NAMES_EOF
 set -x
 chown ubuntu:ubuntu /home/ubuntu/backend.env
-           ---
 aws ecr get-login-password --region ${aws_region} | docker login --username AWS --password-stdin ${ecr_registry}
 
 docker pull ${backend_repository_url}:latest
