@@ -237,12 +237,6 @@ data "aws_iam_policy_document" "terraform_plan_state" {
       "arn:aws:dynamodb:${var.aws_region}:${data.aws_caller_identity.current.account_id}:table/equitylens-terraform-locks"
     ]
   }
-
-  statement {
-    effect    = "Allow"
-    actions   = ["secretsmanager:GetSecretValue"]
-    resources = var.secret_arns
-  }
 }
 
 resource "aws_iam_role_policy" "terraform_plan_state" {

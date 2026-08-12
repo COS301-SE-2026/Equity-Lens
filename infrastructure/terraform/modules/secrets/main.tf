@@ -25,13 +25,10 @@ resource "aws_secretsmanager_secret" "backend_env" {
   description = "placeholder slot for backend.env's ${each.value} - value set out-of-band by a human, never by Terraform"
 }
 
-resource "aws_secretsmanager_secret_version" "backend_env" {
-  for_each = aws_secretsmanager_secret.backend_env
-
-  secret_id     = each.value.id
-  secret_string = "REPLACE_ME"
+removed {
+  from = aws_secretsmanager_secret_version.backend_env
 
   lifecycle {
-    ignore_changes = [secret_string]
+    destroy = false
   }
 }
