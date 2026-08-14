@@ -633,29 +633,38 @@ const Portfolio = () => {
   
   return (
 
-    <div className="p-2">
+    
+    <div className="p-6">
 
-      <div className="max-w-4xl mx-auto p-6 border border-gray-700 rounded-3xl bg-gray-900">
+      <div className="max-w-4xl mx-auto p-6 bg-gray-900 border border-gray-700 rounded-3xl">
 
-        <div className="flex flex-col items-center">
-
-            <h2 className="text-5xl font-bold text-white text-center mb-5">
+        <div className="text-center mb-10">
+            <h2 className="text-4xl font-bold text-white mb-3">
               Upload Portfolio
             </h2>
 
-            <p className="text-gray-400 mt-2 mb-3 text-center max-w-2xl">
-              Download your portfolio statement from EasyEquities as a PDF, or use the Excel 
-              template to enter your portfolio manually if the PDF import is unavailable
+            <p className="text-gray-400 max-w-xl mx-auto">
+              Import your easyEquities portfolio but using your statement
+              or our Excel template
             </p>
+          </div>
 
-            <div className="flex flex-col items-center gap-4 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Upload your statement
+                </h3>
 
-            <button onClick={DownloadEXCEL} className="bg-green-600 text-white px-5 py-2 rounded-lg">
-              Download Excel Template
-            </button>
+                <p className="text-sm text-gray-400">
+                  Upload your EasyEquities PDF or Complete the Excel template
+                </p>
 
-            <label className="bg-blue-600 text-white px-6 py-3 rounded-lg">
-              choose the Excel File
+            </div>
+
+            <label className="block text-center cursor-pointer w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
+
+              choose the File
 
             <input
               type="file"
@@ -714,6 +723,30 @@ const Portfolio = () => {
             />
           </label>
 
+          <p className="text-sm text-gray-500 text-center mt-3">
+            PDF or XLSX
+          </p>
+
+          </div>
+
+          <div className="border border-gray-700 rounded-2xl p-6">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Excel Template
+              </h3>
+
+              <p className="text-sm text-gray-400">
+                Don't have a supported PDF? Don't worry, You can enter your portfolio
+                manually using our template
+              </p>
+            </div>
+
+            <button onClick={DownloadEXCEL} className="w-full border border-orange-500 text-orange-400 hover:bg-orange-500 hover:text-white font-semibold py-3 rounded-xl transition">
+              Download Template
+            </button>
+            <p className="text-sm text-gray-500 text-center mt-3">
+              EquityLens Excel Template
+            </p>
           </div>
 
         </div>
