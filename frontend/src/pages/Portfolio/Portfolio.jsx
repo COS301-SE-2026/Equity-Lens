@@ -623,10 +623,10 @@ const Portfolio = () => {
     if (LoadingPage)
     {
       return(
-        <div className="flex flex-col items-center mt-30">
-        <LoaderCircle className="w-20 h-16 animate-spin" />     
-        <h2 className="text-2xl text-white">Loading Portfolio</h2>
-        <p className="text-gray-400">Please wait until we import your portfolio</p>
+        <div className="flex flex-col items-center justify-center mt-30">
+        <LoaderCircle className="w-20 h-16 animate-spin text-orange-500" />     
+        <h2 className="text-2xl text-white font-bold mt-4">Loading Portfolio</h2>
+        <p className="text-gray-400">Please wait until we import your portfolio...</p>
         </div>
       )
     }
