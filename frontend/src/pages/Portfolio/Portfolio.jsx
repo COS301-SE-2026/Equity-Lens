@@ -398,6 +398,7 @@ const Portfolio = () => {
    * @type {[boolean,function]}
    */
   const [LoadingPage, setLoadingPage] = useState(false);
+  const [accountType,setAccountType] = useState("");
 
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
@@ -428,6 +429,10 @@ const Portfolio = () => {
             document_id: document.document_id,
             account_number: portfolio.account_number,
             portfolio_name: portfolio.portfolio_name,
+            currency: "ZAR",
+            statement_end_date: "2026-08-14",
+            statement_start_date: "2026-01-01",
+            account_type: accountType
           }
       );
 
@@ -662,6 +667,23 @@ const Portfolio = () => {
 
             </div>
 
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-2"> Account Type</label>
+
+              <select
+                value={accountType}
+                onChange={(event) => setAccountType(event.target.value )}
+                className="w-full bg-gray-800 border border-gray-700 text-white p-3 rounded-xl"
+               
+              >
+                <option value=""> Select account type</option>
+                <option value="Taxable">Taxable</option>
+                <option value="TFSA">TFSA</option>
+                <option value="RA">RA</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
             <label className="block text-center cursor-pointer w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
 
               choose the File
@@ -675,6 +697,13 @@ const Portfolio = () => {
 
                 if(!file)
                 {
+                  return;
+                }
+
+                if(!accountType)
+                {
+                  alert("Please select an account type first");
+                  event.target.value = "";
                   return;
                 }
 
