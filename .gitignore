@@ -67,3 +67,9 @@ frontend/coverage/
 backend/coverage/
 test-results/
 playwright-report/
+
+*.tfvars
+!*.tfvars.example
+.terraform/
+*.tfstate*
+equitylens-prod-new

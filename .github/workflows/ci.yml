@@ -69,6 +69,42 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+      - name: Build production frontend image
+        run: |
+          docker build \
+            -f frontend/Dockerfile.prod \
+            --build-arg VITE_API_URL=http://localhost:8000 \
+            --build-arg VITE_COGNITO_USER_POOL_ID=af-south-1_smoketest \
+            --build-arg VITE_COGNITO_CLIENT_ID=smoketestclientid \
+            --build-arg VITE_COGNITO_REGION=af-south-1 \
+            -t equity-lens-frontend-smoketest ./frontend
+
+      - name: Run frontend smoke-test container
+        run: docker run -d --name frontend-smoketest -p 8080:8080 equity-lens-frontend-smoketest
+
+      - name: Wait for frontend smoke-test container to respond
+        run: |
+          URL="http://localhost:8080/"
+          ATTEMPTS=15
+          SLEEP_SECONDS=2
+          for i in $(seq 1 $ATTEMPTS); do
+            BODY=$(curl -sf "$URL" 2>/dev/null) && [ -n "$BODY" ] && {
+              echo "frontend responded after $i attempt(s), $(echo -n "$BODY" | wc -c) bytes"
+              exit 0
+            }
+            sleep "$SLEEP_SECONDS"
+          done
+          echo "::error::frontend smoke-test container never returned a non-empty 200 after $((ATTEMPTS * SLEEP_SECONDS))s"
+          echo "container logs : "
+          docker logs frontend-smoketest
+          exit 1
+
+      - name: Tear down frontend smoke-test container
+        if: always()
+        run: |
+          docker stop frontend-smoketest || true
+          docker rm frontend-smoketest || true
+
 
   backend:
     name: Backend Build & Test
@@ -135,6 +171,57 @@ jobs:
           AWS_ACCESS_KEY_ID: dummy
           AWS_SECRET_ACCESS_KEY: dummy
         run: python -m pytest --cov=app --cov-report=xml --cov-fail-under=80
+
+      - name: Write backend smoke-test env file
+        run: |
+          cat > backend/smoketest.env <<'EOF'
+          DATABASE_URL=postgresql://postgres:postgres@localhost:5432/equitylens
+          ALLOW_LIVE_MARKET_FALLBACK=false
+          ALPHA_VANTAGE_API_KEY=smoketest-dummy
+          MARKET_DATA_REFRESH_TTL_HOURS=24
+          SECRET_KEY=smoketest-not-a-real-secret
+          ALGORITHM=HS256
+          ACCESS_TOKEN_EXPIRE_MINUTES=30
+          CORS_ORIGINS=["http://localhost:3000"]
+          AWS_REGION=af-south-1
+          AWS_ACCESS_KEY_ID=dummy
+          AWS_SECRET_ACCESS_KEY=dummy
+          AWS_COGNITO_USER_POOL_ID=af-south-1_smoketest
+          AWS_COGNITO_CLIENT_ID=smoketestclientid
+          BEDROCK_MODEL=anthropic.claude-sonnet-4-5-20250929-v1:0
+          EOF
+
+      - name: Build production backend image
+        run: docker build -t equity-lens-backend-smoketest ./backend
+
+      - name: Run backend smoke-test container
+        run: |
+          docker run -d --name backend-smoketest --network host \
+            --env-file backend/smoketest.env equity-lens-backend-smoketest
+
+      - name: Wait for backend smoke-test container to become healthy
+        run: |
+          URL="http://localhost:8000/health"
+          ATTEMPTS=30
+          SLEEP_SECONDS=2
+          for i in $(seq 1 $ATTEMPTS); do
+            RESPONSE=$(curl -sf "$URL" 2>/dev/null) || RESPONSE=""
+            if echo "$RESPONSE" | grep -q '"status"[[:space:]]*:[[:space:]]*"ok"'; then
+              echo "backend healthy after $i attempt(s): $RESPONSE"
+              exit 0
+            fi
+            sleep "$SLEEP_SECONDS"
+          done
+          echo "::error::backend smoke-test container never became healthy after $((ATTEMPTS * SLEEP_SECONDS))s"
+          echo "container logs : "
+          docker logs backend-smoketest
+          exit 1
+
+      - name: Tear down backend smoke-test container
+        if: always()
+        run: |
+          docker stop backend-smoketest || true
+          docker rm backend-smoketest || true
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4

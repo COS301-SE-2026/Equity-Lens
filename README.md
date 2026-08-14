@@ -98,7 +98,7 @@ Third-year BSc Computer Science student at the University of Pretoria with a pas
 | Market Data | yfinance, Alpha Vantage
 | News | NewsData |
 | File Handling | pdfjs-dist (client-side PDF statement parsing), SheetJS/xlsx (client-side Excel import) |
-| CI/CD | GitHub Actions (Docker build → Amazon ECR → SSH deploy to EC2) |
+| CI/CD | GitHub Actions (Docker build → Amazon ECR → AWS SSM Run Command deploy to EC2), infrastructure as Terraform |
 
 ---
 
