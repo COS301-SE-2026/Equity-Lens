@@ -12,6 +12,9 @@ class PortfolioRequest(BaseModel):
     account_number: str
     portfolio_name: str
     currency: str = "ZAR"
+    statement_start_date: date
+    statement_end_date: date
+    account_type: str
 
 class HoldingsRequest(BaseModel):
     portfolio_id: UUID

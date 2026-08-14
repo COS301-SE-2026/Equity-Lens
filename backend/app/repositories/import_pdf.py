@@ -39,7 +39,9 @@ def save_portfolios(database,user_id,data):
         account_number = data.account_number,
         portfolio_name = data.portfolio_name,
         currency = data.currency,
-
+        statement_start_date = data.statement_start_date,
+        statement_end_date = data.statement_end_date,
+        account_type = data.account_type
     )
 
     database.add(saving)
@@ -152,6 +154,7 @@ def save_transaction_expenses(database,user_id,data):
     database.refresh(saving)
 
     return saving
+
 
 
 

@@ -26,10 +26,11 @@ class Portfolios(Base):
     portfolio_name = Column(String(100), nullable=False)
     statement_end_date = Column(Date)
     statement_start_date = Column(Date)
+    account_type = Column(String(10), nullable=True)
     currency = Column(String(10), nullable=False, default="ZAR")
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    updated_at = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))
+    updated_at  = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))
 
 class PortfolioSnapshot(Base):
     __tablename__ = "portfolio_snapshots"
