@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+
+import Button from '../../components/common/Button/Button';
+import FormInput from '../../components/forms/FormInput/FormInput';
 import useAuth from '../../hooks/useAuth';
 import { ROUTES } from '../../utils/constants';
-import FormInput from '../../components/forms/FormInput/FormInput';
-import Button from '../../components/common/Button/Button';
 
   const ConfirmEmail = () => {
   const { confirmEmail } = useAuth();

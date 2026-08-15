@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, TriangleAlert, Bot ,LoaderCircle } from "lucide-react"
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
-import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, TriangleAlert, Bot ,LoaderCircle } from "lucide-react"
+import { useState } from "react";
 import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
-import api from "../../services/api"
 import * as XLSX from "xlsx"
+
+import api from "../../services/api"
 
 ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
 
@@ -86,7 +87,7 @@ const ReadingPDFFile = async(file,password) =>
 
   const convertPdf = await ShowPdf.getDocument({
         data: await file.arrayBuffer(),
-        password: password,
+        password,
       }).promise;
 
 
@@ -186,7 +187,7 @@ const ReadingPDFFile = async(file,password) =>
   }
 
   const gettingthData = statementIndex.text.split("to")[1].trim()
-  let date = new Date(gettingthData).toISOString().split("T")[0]
+  const date = new Date(gettingthData).toISOString().split("T")[0]
 
 
   const Portfolio = [{
@@ -251,7 +252,7 @@ const ReadingPDFFile = async(file,password) =>
 
     const holdings =  {
       instrument_name: instrumentName.trim(),
-      quantity: quantity,
+      quantity,
       total_cost: (cost),
     }
 
@@ -300,8 +301,8 @@ const ReadingPDFFile = async(file,password) =>
       transaction_date: splitParts[0].replaceAll("/","-"),
       transaction_name: splitParts[1],
       instrument_name: instrumentname,
-      price: price,
-      quantity: quantity,
+      price,
+      quantity,
     }
 
   }).filter((item) => item != null)
@@ -480,8 +481,8 @@ const Portfolio = () => {
               instrument_name: eachItems.instrument_name,
               ticker: " ",
               sector: " ",
-              price: price,
-              quantity: quantity,
+              price,
+              quantity,
               value_zar: (price * quantity),
             }
           )
@@ -499,7 +500,7 @@ const Portfolio = () => {
               transaction_date: eachItems.transaction_date,
               settlement_date: eachItems.statement_date,
               transaction_name: eachItems.transaction_name,
-              value_zar: value_zar,
+              value_zar,
           } 
         );
       }
@@ -517,10 +518,10 @@ const Portfolio = () => {
               instrument_name: eachItems.instrument_name,
               ticker: " ",
               sector: " ",
-              gross_dividend: gross_dividend,
+              gross_dividend,
               withholding_tax: (gross_dividend *  (tax_rate/100)),
-              net_dividend: net_dividend,
-              tax_rate: tax_rate,
+              net_dividend,
+              tax_rate,
             }
            )
           }
@@ -536,7 +537,7 @@ const Portfolio = () => {
               transaction_date: eachItems.transaction_date,
               settlement_date: eachItems.settlement_date,
               narrative_name: eachItems.narrative,
-              value_zar: value_zar,
+              value_zar,
             }
         );
       }
@@ -810,15 +811,10 @@ const Portfolio = () => {
       }
 
 
-      <div className="grid grid-cols-4 gap-8 mt-8">
-         
-      </div>
+      <div className="grid grid-cols-4 gap-8 mt-8" />
 
 
-      <div className="grid grid-cols-2 gap-8">
-        
-
-      </div>
+      <div className="grid grid-cols-2 gap-8" />
 
 
       { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 mb-7">
@@ -943,9 +939,7 @@ const Portfolio = () => {
                      style={{
                       width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
                       backgroundColor: colours[index % colours.length]
-                     }}>
-
-                </div>
+                     }} />
               </div>
 
             </div>
@@ -961,7 +955,7 @@ const Portfolio = () => {
         <div className="p-6 border border-red-700 rounded-2xl">
 
           <div className="flex items-center gap-2">
-            <TriangleAlert size={24} className="text-red-500"></TriangleAlert>
+            <TriangleAlert size={24} className="text-red-500" />
             <h2 className="text-xl font-bold text-red">
               Lowest Holding
             </h2>
@@ -989,7 +983,7 @@ const Portfolio = () => {
         <div className="p-6 border border-purple-500 rounded-2xl">
 
           <div className="flex items-center gap-2">
-            <Bot size={24} className="text-purple-500"></Bot>
+            <Bot size={24} className="text-purple-500" />
             <h2 className="text-xl font-bold">
               AI Portfolio Assistant
             </h2>

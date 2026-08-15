@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
-import useForm from '../../hooks/useForm';
+
+import Button from '../../components/common/Button/Button';
 import FormInput from '../../components/forms/FormInput/FormInput';
 import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
-import Button from '../../components/common/Button/Button';
+import useAuth from '../../hooks/useAuth';
+import useForm from '../../hooks/useForm';
+import { ROUTES } from '../../utils/constants';
 import {
   validateEmail,
   validatePassword,
   validateConfirmPassword,
   validateName,
 } from '../../utils/validators';
-import { ROUTES } from '../../utils/constants';
 
 const validate = (values) => {
   const errors = {};

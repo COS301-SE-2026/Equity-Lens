@@ -1,15 +1,16 @@
 import { useCallback, useState, useRef, useEffect } from 'react';
-import useAuth from '../../hooks/useAuth';
-import usePortfolio from '../../hooks/usePortfolio';
+
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
-import { GlassPanel } from '../../components/dashboard/shared/GlassPanel';
-import DashboardHero from '../../components/dashboard/DashboardHero/DashboardHero';
 import ActionBanner from '../../components/dashboard/ActionBanner/ActionBanner';
-import PortfolioHealth from '../../components/dashboard/PortfolioHealth/PortfolioHealth';
+import DashboardHero from '../../components/dashboard/DashboardHero/DashboardHero';
 import PerformanceVsBenchmark from '../../components/dashboard/PerformanceVsBenchmark/PerformanceVsBenchmark';
+import PortfolioHealth from '../../components/dashboard/PortfolioHealth/PortfolioHealth';
 import PortfolioOverview from '../../components/dashboard/PortfolioOverview/PortfolioOverview';
+import { GlassPanel } from '../../components/dashboard/shared/GlassPanel';
 import TodayInsights from '../../components/dashboard/TodayInsights/TodayInsights';
 import WatchlistPanel from '../../components/dashboard/WatchlistPanel/WatchlistPanel';
+import useAuth from '../../hooks/useAuth';
+import usePortfolio from '../../hooks/usePortfolio';
 import {
   buildSectors,
   buildChartStats,

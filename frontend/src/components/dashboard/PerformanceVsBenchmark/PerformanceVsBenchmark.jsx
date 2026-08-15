@@ -9,13 +9,13 @@ import {
   CartesianGrid,
 } from 'recharts';
 
-import { GlassPanel } from '../shared/GlassPanel';
-import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
-import SecondaryButton from '../shared/SecondaryButton';
 import { zar } from '../../../utils/currency';
-import { formatShortCurrency } from '../../../utils/formatters';
 import { buildChartStats, filterByRange, buildExplanation, classifyContext, buildDriver,
 } from '../../../utils/dashboardInsights';
+import { formatShortCurrency } from '../../../utils/formatters';
+import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
+import { GlassPanel } from '../shared/GlassPanel';
+import SecondaryButton from '../shared/SecondaryButton';
 
 /** @typedef {'1D'|'1W'|'1M'|'3M'|'1Y'|'ALL'} RangeKey */
 /** @type {RangeKey[]} */
