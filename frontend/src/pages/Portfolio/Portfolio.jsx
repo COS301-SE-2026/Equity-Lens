@@ -708,7 +708,7 @@ const Portfolio = () => {
                 <button 
                 onClick={() => setShowPortfolios(true)}
                 className="block mx-auto text-orange-400 mt-4 hover:text-orange-300">
-                  view more
+                  view all
                 </button>
 
               </div>
@@ -843,7 +843,7 @@ const Portfolio = () => {
       { showPortfolios && (
 
         <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-         <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-lg">
+         <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-hidden">
           <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold text-white mb-2">
                   My Portfolios
@@ -854,21 +854,29 @@ const Portfolio = () => {
               </button>
           </div>
 
-            <div className="border border-gray-700 rounded-xl p-4">
+<div>
+  <div className="max-h-[65vh] overflow-y-auto pr-2">
+        {portfolios.map((portfolio, index) => (
+
+            <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
               <div className="flex justify-between items-center">
 
                  <p className="text-white font-semibold">
-                  EasyQuities TFSA
+                  {portfolio.portfolio_name}
                 </p>
 
-                <span className="text-purple font-semibold">
-                  TFSA
+                <span className="text-purple-400 font-semibold">
+                  {portfolio.account_type}
                 </span>
 
               </div>
+
+                <p className="text-sm text-gray-400">
+                  Account: {portfolio.account_number}
+                </p>
            
                 <p className="text-sm text-gray-400">
-                  Account: EE12ee
+                  {portfolio.statement_start_date} - {portfolio.statement_end_date}
                 </p>
 
                 <button className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
@@ -876,35 +884,10 @@ const Portfolio = () => {
                 </button>
             </div>
 
-             <div className="border border-gray-700 rounded-xl p-4">
-              <div className="flex justify-between items-center">
-
-                 <p className="text-white font-semibold">
-                  EasyQuities TFSA
-                </p>
-
-                <span className="text-purple font-semibold">
-                  TFSA
-                </span>
-
-              </div>
-           
-                <p className="text-sm text-gray-400">
-                  Account: EE12ee
-                </p>
-
-                <button className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
-                  View Summary
-                </button>
-            </div>
-
-
-                <button 
-                onClick={() => setShowPortfolios(true)}
-                className="block mx-auto text-orange-400 mt-4 hover:text-orange-300">
-                  view more
-                </button>
-
+          ))}
+          
+        </div>
+ </div>
               </div>
 
           </div>
