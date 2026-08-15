@@ -6,6 +6,8 @@ from app.utils.stock_cache import get_cached_price_history
 from app.services.market_data_service import _cents_to_major
 from datetime import datetime, timezone
 import pandas as pd
+import requests
+import time
 
 
 MAX_TOOL_ITERATIONS = 3
@@ -114,13 +116,52 @@ def get_stock_data_tool(ticker: str) -> str:
         prev_close = float(prev) / divisor
 
     change = ((close - prev_close) / prev_close * 100) if prev_close else 0.0
-    currency = "R" if ticker.endWith(".JO") else "$"
+    currency = "R" if ticker.endswith(".JO") else "$"
 
     return (
         f"{ticker} closing price: {currency}{close:.2f} (as of {as_of}). "
         f"Previous close: {currency}{prev_close:.2f}. Change: {change:+.2f}%. "
         f"This is end-of-day data, not a live intraday price."
     )
+
+
+MAX_NEWS_ARTICLES = 5
+
+def get_market_news_tool(query: str = "") -> str:
+    if not settings.newsdata_api_key:
+        return "News is not on this server."
+
+    query = (query or "").strip()
+
+    params = {"apikey": settings.newsdata_api_key, "language": "en"}
+    if query: 
+        params["q"] = query
+    else:
+        params["category"] = "business"
+
+    response = requests.get("https://newsdata.io/api/1/latest", params = params, timeout = 6)
+    response.raise_for_status()
+    articles = response.json().get("results") or []
+
+    if not articles:
+        return f"No recent news has been found for '{query}'." if query else "No recent business headlines found."
+
+    lines = []
+    for a in articles[:MAX_NEWS_ARTICLES]:
+        title = (a.get("title") or "").strip()
+        if not title:
+            continue
+        source = a.get("source_name") or a.get("source_id") or "unknown source"
+        pub_date = a.get("pubDate") or "unknown date"
+        description = (a.get("description") or "").strip()
+        if len(description) > 250:
+            description = description[:250] + "..."
+        line = f"- {title} ({source}, {pub_date})"
+        if description:
+            line += f": {description}"
+        lines.append(line)
+
+    return "Recent headlines:\n" + "\n".join(lines)
 
 
 def run_tool(name: str, tool_input: dict) -> str:
