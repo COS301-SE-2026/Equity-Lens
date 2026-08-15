@@ -93,11 +93,14 @@ def get_stock_data_tool(ticker: str) -> str:
     if not ticker:
         return "No ticker was provided."
 
-    price_history = get_cached_price_history(ticker, period="1y", force_live=True)
+    price_history = get_cached_price_history(ticker, period = "1y", force_live = True)
 
     if price_history.empty:
         return f"No market data could be found for {ticker}."
 
+    price_history = price_history[price_history["Close"].notna()]
+    if price_history.empty:
+        return f"No usable price data is available for {ticker}"
     divisor = _cents_to_major(ticker)
     latest = price_history.iloc[-1]
     close = float(latest["Close"]) / divisor
@@ -111,10 +114,11 @@ def get_stock_data_tool(ticker: str) -> str:
         prev_close = float(prev) / divisor
 
     change = ((close - prev_close) / prev_close * 100) if prev_close else 0.0
+    currency = "R" if ticker.endWith(".JO") else "$"
 
     return (
-        f"{ticker} closing price: R{close:.2f} (as of {as_of}). "
-        f"Previous close: R{prev_close:.2f}. Change: {change:+.2f}%. "
+        f"{ticker} closing price: {currency}{close:.2f} (as of {as_of}). "
+        f"Previous close: {currency}{prev_close:.2f}. Change: {change:+.2f}%. "
         f"This is end-of-day data, not a live intraday price."
     )
 
