@@ -609,7 +609,6 @@ const Portfolio = () => {
     }
     catch (theErrors)
     {
-      // the alert below is generic on purpose but log the real cause so we can actually debug reports of this
       console.error("SavePortfolio failed:", theErrors)
 
       if(file.name.toLowerCase().endsWith(".pdf"))
@@ -641,7 +640,7 @@ const Portfolio = () => {
     
     <div className="p-6">
 
-      <div className="max-w-4xl mx-auto p-6 bg-gray-900 border border-gray-700 rounded-3xl">
+      <div className="max-w-6xl mx-auto p-6 bg-gray-900 border border-gray-700 rounded-3xl">
 
         <div className="text-center mb-10">
             <h2 className="text-4xl font-bold text-white mb-3">
@@ -654,8 +653,45 @@ const Portfolio = () => {
             </p>
           </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  My Portfolios
+                </h3>
+
+            <div className="border border-gray-700 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+
+                 <p className="text-white font-semibold">
+                  EasyQuities TFSA
+                </p>
+
+                <span className="text-purple font-semibold">
+                  TFSA
+                </span>
+
+              </div>
+           
+                <p className="text-sm text-gray-400">
+                  Account: EE12ee
+                </p>
+
+                <button className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
+                  View Summary
+                </button>
+
+              
+            </div>
+
+                <button className="block mx-auto text-orange-400 mt-4 hover:text-orange-300">
+                  view more
+                </button>
+
+              </div>
+
+
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6">
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-white mb-2">
                   Upload your statement
@@ -664,7 +700,6 @@ const Portfolio = () => {
                 <p className="text-sm text-gray-400">
                   Upload your EasyEquities PDF or Complete the Excel template
                 </p>
-
             </div>
 
             <div className="mb-4">
@@ -755,8 +790,7 @@ const Portfolio = () => {
           <p className="text-sm text-gray-500 text-center mt-3">
             PDF or XLSX
           </p>
-
-          </div>
+        </div>
 
           <div className="border border-gray-700 rounded-2xl p-6">
             <div className="mb-6">
@@ -777,10 +811,11 @@ const Portfolio = () => {
               EquityLens Excel Template
             </p>
           </div>
+        </div>
 
         </div>
 
-      </div>
+
 
       
 
