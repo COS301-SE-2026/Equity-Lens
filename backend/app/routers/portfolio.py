@@ -55,6 +55,8 @@ def get_performance(
             "portfolio_name": portfolio.portfolio_name,
             "account_number": portfolio.account_number,
             "statement_end_date": portfolio.statement_end_date,
+            "statement_start_date": portfolio.statement_start_date,
+            "account_type": portfolio.account_type,
         }
         for portfolio in portfolios
     ]

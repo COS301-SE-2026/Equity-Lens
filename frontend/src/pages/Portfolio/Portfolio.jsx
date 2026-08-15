@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, TriangleAlert, Bot ,LoaderCircle } from "lucide-react"
@@ -400,6 +400,18 @@ const Portfolio = () => {
   const [LoadingPage, setLoadingPage] = useState(false);
   const [accountType,setAccountType] = useState("");
   const [showPortfolios,setShowPortfolios] = useState(false);
+  const [portfolios, setPortfolios] = useState([]);
+
+  useEffect( () => {
+    const getInfo = async () => {
+      const responses = await api.get("/portfolio/current");
+      setPortfolios(responses.data);
+      console.log(responses.data)
+    };
+
+    getInfo();
+
+  }, [])
 
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
@@ -408,6 +420,8 @@ const Portfolio = () => {
    * @param {any} data
    * @param {File} file
    */
+
+  
   const SavePortfolio = async (data, file) => {
 
     try {
@@ -661,29 +675,35 @@ const Portfolio = () => {
                   My Portfolios
                 </h3>
 
-            <div className="border border-gray-700 rounded-xl p-4">
+    {portfolios.slice(0,2).map((portfolio, index) => (
+
+            <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
               <div className="flex justify-between items-center">
 
                  <p className="text-white font-semibold">
-                  EasyQuities TFSA
+                  {portfolio.portfolio_name}
                 </p>
 
-                <span className="text-purple font-semibold">
-                  TFSA
+                <span className="text-purple-400 font-semibold">
+                  {portfolio.account_type}
                 </span>
 
               </div>
+
+                <p className="text-sm text-gray-400">
+                  Account: {portfolio.account_number}
+                </p>
            
                 <p className="text-sm text-gray-400">
-                  Account: EE12ee
+                  {portfolio.statement_start_date} - {portfolio.statement_end_date}
                 </p>
 
                 <button className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
                   View Summary
                 </button>
-
-              
             </div>
+
+          ))}
 
                 <button 
                 onClick={() => setShowPortfolios(true)}
