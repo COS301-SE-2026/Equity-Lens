@@ -413,6 +413,75 @@ const Portfolio = () => {
 
   }, [])
 
+  const ViewSummary = async(id) => {
+
+  try{
+    setLoadingPage(true)
+
+
+          const getSummaryRequest = await api.get(
+        `/import_pdf_summary/summary/${id}`
+      )
+
+      const getSummary = getSummaryRequest.data;
+      setSummary(getSummary);
+
+      const SummaGetTheTopAllocationImportPDFRequest = await api.get(
+        `/import_pdf_summary/top_holdings/${id}`,
+      )
+
+      const getSummaGetTheTopAllocationImportPDFry = SummaGetTheTopAllocationImportPDFRequest.data;
+      setGetTheTopHoldingsImportPDF(getSummaGetTheTopAllocationImportPDFry);
+
+
+      const getSummaryGetTheTopHoldingsImportPDFRequest = await api.get(
+        `/import_pdf_summary/portfolio_allocation/${id}`
+      )
+
+      const getSummaryGetTheTopHoldingsImportPDF = getSummaryGetTheTopHoldingsImportPDFRequest.data;
+      setGetTheTopAllocationImportPDF(getSummaryGetTheTopHoldingsImportPDF);
+
+      const LowestHoldingsRequest = await api.get(
+        `/import_pdf_summary/lowest_holdings/${id}`
+      )
+
+      const LowestHoldings = LowestHoldingsRequest.data;
+      setGetTheLowest(LowestHoldings);
+
+       const TradingActivity = await api.get(
+        `/import_pdf_summary/trading_activity/${id}`
+      )
+
+      const TradingActivityImport = TradingActivity.data;
+      setGetTradingActivity(TradingActivityImport);
+
+       const CashFlow = await api.get(
+        `/import_pdf_summary/cash_flow/${id}`
+      )
+
+      const CashFlowImport = CashFlow.data;
+      setGetCashFlow(CashFlowImport);
+
+       const Income = await api.get(
+        `/import_pdf_summary/dividend_income/${id}`
+      )
+
+      const IncomeImport = Income.data;
+      setGetDividendIncome(IncomeImport);
+    
+  }
+
+  catch(error)
+  {
+    console.log(error)
+  }
+  finally
+  {
+    setLoadingPage(false)
+  }
+
+  }
+
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
   /**
@@ -613,13 +682,11 @@ const Portfolio = () => {
       const IncomeImport = Income.data;
       setGetDividendIncome(IncomeImport);
 
-       const Expenses = await api.get(
-        `/import_pdf_summary/expenses/${savedPortfolio.portfolio_id}`
-      )
+      //  const Expenses = await api.get(
+      //   `/import_pdf_summary/expenses/${savedPortfolio.portfolio_id}`
+      // )
 
-      const ExpensesImport = Expenses.data;
-
-
+      // const ExpensesImport = Expenses.data;
 
     }
     catch (theErrors)
@@ -698,7 +765,7 @@ const Portfolio = () => {
                   {portfolio.statement_start_date} - {portfolio.statement_end_date}
                 </p>
 
-                <button className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
+                <button onClick={() => ViewSummary(portfolio.id)} className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
                   View Summary
                 </button>
             </div>
@@ -879,7 +946,7 @@ const Portfolio = () => {
                   {portfolio.statement_start_date} - {portfolio.statement_end_date}
                 </p>
 
-                <button className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
+                <button onClick={() => ViewSummary(portfolio.id)} className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
                   View Summary
                 </button>
             </div>

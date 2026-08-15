@@ -52,6 +52,8 @@ def get_performance(
 
     return [
         {
+            "id": portfolio.id,
+            "document_id": portfolio.document_id,
             "portfolio_name": portfolio.portfolio_name,
             "account_number": portfolio.account_number,
             "statement_end_date": portfolio.statement_end_date,
