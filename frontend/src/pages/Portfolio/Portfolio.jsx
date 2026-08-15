@@ -399,6 +399,7 @@ const Portfolio = () => {
    */
   const [LoadingPage, setLoadingPage] = useState(false);
   const [accountType,setAccountType] = useState("");
+  const [showPortfolios,setShowPortfolios] = useState(false);
 
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
@@ -684,7 +685,9 @@ const Portfolio = () => {
               
             </div>
 
-                <button className="block mx-auto text-orange-400 mt-4 hover:text-orange-300">
+                <button 
+                onClick={() => setShowPortfolios(true)}
+                className="block mx-auto text-orange-400 mt-4 hover:text-orange-300">
                   view more
                 </button>
 
@@ -817,7 +820,79 @@ const Portfolio = () => {
 
 
 
-      
+      { showPortfolios && (
+
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+         <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-lg">
+          <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  My Portfolios
+                </h3>
+
+              <button onClick={() => setShowPortfolios(false) } className="text-gray-400 hover:text-white">
+                X
+              </button>
+          </div>
+
+            <div className="border border-gray-700 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+
+                 <p className="text-white font-semibold">
+                  EasyQuities TFSA
+                </p>
+
+                <span className="text-purple font-semibold">
+                  TFSA
+                </span>
+
+              </div>
+           
+                <p className="text-sm text-gray-400">
+                  Account: EE12ee
+                </p>
+
+                <button className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
+                  View Summary
+                </button>
+            </div>
+
+             <div className="border border-gray-700 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+
+                 <p className="text-white font-semibold">
+                  EasyQuities TFSA
+                </p>
+
+                <span className="text-purple font-semibold">
+                  TFSA
+                </span>
+
+              </div>
+           
+                <p className="text-sm text-gray-400">
+                  Account: EE12ee
+                </p>
+
+                <button className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
+                  View Summary
+                </button>
+            </div>
+
+
+                <button 
+                onClick={() => setShowPortfolios(true)}
+                className="block mx-auto text-orange-400 mt-4 hover:text-orange-300">
+                  view more
+                </button>
+
+              </div>
+
+          </div>
+      )
+
+  
+
+      }
 
       { summary && <div className="grid grid-cols-6 gap-8 mt-8">
 
