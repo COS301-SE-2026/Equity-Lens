@@ -125,6 +125,8 @@ def get_stock_data_tool(ticker: str) -> str:
     )
 
 
+_NEWS_CACHE: dict[str, tuple[float, str]] = {}
+_NEWS_CACHE_TTL_SECONDS = 900
 MAX_NEWS_ARTICLES = 5
 
 def get_market_news_tool(query: str = "") -> str:
@@ -132,6 +134,13 @@ def get_market_news_tool(query: str = "") -> str:
         return "News is not on this server."
 
     query = (query or "").strip()
+    cache_key = query.lower() or "__headlines__"
+
+    cached_data = _NEWS_CACHE.get(cache_key)
+    if cached_data is not None:
+        cached_first, cached_result = cached_data
+        if time.time() - cached_first < _NEWS_CACHE_TTL_SECONDS:
+            return cached_result
 
     params = {"apikey": settings.newsdata_api_key, "language": "en"}
     if query: 
@@ -144,7 +153,9 @@ def get_market_news_tool(query: str = "") -> str:
     articles = response.json().get("results") or []
 
     if not articles:
-        return f"No recent news has been found for '{query}'." if query else "No recent business headlines found."
+        result = f"No recent news has been found for '{query}'." if query else "No recent business headlines found."
+        _NEWS_CACHE[cache_key] = (time.time(), result)
+        return result
 
     lines = []
     for a in articles[:MAX_NEWS_ARTICLES]:
@@ -161,7 +172,9 @@ def get_market_news_tool(query: str = "") -> str:
             line += f": {description}"
         lines.append(line)
 
-    return "Recent headlines:\n" + "\n".join(lines)
+    result = "Recent headlines:\n" + "\n".join(lines)
+    _NEWS_CACHE[cache_key] = (time.time(), result)
+    return result
 
 
 def run_tool(name: str, tool_input: dict) -> str:
