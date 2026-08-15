@@ -32,7 +32,27 @@ TOOL_CONFIG = { "tools": [
                                                 }
                                             },
                         }
-                    }
+                    },
+                    { "toolSpec": {
+                            "name": "get_market_news",
+                            "description": ("Fetch recent financial headlines."
+                                            "Pass a query such as a company name like 'Sasol' or a topic like 'interest rates' to search for news about those."
+                                            "Leave the query out for a roundup of the latest business headlines."
+                            ),
+                            "inputSchema": { "json":
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "query": {
+                                                            "type": "string",
+                                                            "description": "Company name or the topic to search news for it. Omit this field for general business headlines.",
+                                                        }
+                                                    },
+                                                    "required": []
+                                                }}
+
+
+                    }}
         ]
 }
 
