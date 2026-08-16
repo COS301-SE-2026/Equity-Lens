@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     aws_cognito_user_pool_id: str | None = None
     aws_cognito_client_id: str | None = None
     bedrock_model: str = "anthropic.claude-sonnet-4-5-20250929-v1:0"
+    ai_message_limit: int = 5
+    ai_window_limit: int = 60
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     newsdata_api_key: str | None = None
 

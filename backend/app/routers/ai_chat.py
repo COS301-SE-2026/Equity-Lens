@@ -9,6 +9,7 @@ from uuid import UUID
 from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages
 
+
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 
 class ChatRequest(BaseModel):
