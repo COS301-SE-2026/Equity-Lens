@@ -1,35 +1,36 @@
 import {Link} from 'react-router-dom';
 import {ROUTES} from '../../utils/constants'
 import {useState} from 'react';
+import { LayoutDashboard,Upload,ChartPie,Newspaper,Bot,ChevronDown,ChevronUp,FileSpreadsheet,Mail,CircleHelp} from "lucide-react";
 
 const REDIRECTS = [
     {
-        title: 'Check on dashboard',
-        body: 'Take a look at your dashboard.',
+        title: 'Getting Started',
+        body: 'In here you will learn the basic of EquityLens and where to find everything.',
         to: ROUTES.DASHBOARD,
-        action: "Go to dashboard"
+        icon: <LayoutDashboard size={12}/>
     },
     {
-        title: 'Import your portfolio',
-        body: 'Upload a PDF or Excel file.',
+        title: 'Import data',
+        body: 'You can upload your portfolio either using PDF or Excel.',
         to: ROUTES.PORTFOLIO,
         action: "Go to portfolio"
     },
     {
-        title: 'Look at the analytics',
-        body: 'Explained formulas.',
+        title: 'Understand your Portfolio',
+        body: 'You can view your holdings,allocation, and also portfolio analytics.',
         to: ROUTES.ANALYTICS,
         action: "Go to analytics page"
     },
     {
-        title: 'Check on news about your stocks',
-        body: 'Keep up to date with market news.',
+        title: 'News & Market',
+        body: 'To stay updated with the news about your investment.',
         to: ROUTES.NEWS,
         action: "Go to news page"
     },
     {
-        title: 'Ask AI Assistant questions',
-        body: 'Ask questions in plain english.',
+        title: 'AI Assistant',
+        body: 'Ask questions in plain english about your portfolio.',
         to: ROUTES.NEWS,
         action: "Go to AI Assistant"
     },
@@ -73,44 +74,26 @@ const Help = () => {
     const [open, closed] = useState(null);
 
     return (
-    <div className = "mx-auto w-full wax-w-4x1">
-        <h1 className = "text-3xl font-semibold text-center">Help</h1>
+    <div className = "mx-w-7xl mx-auto px-6 py-8 text-white">
 
-        <div className = "mt-6 grid gap-3 sm:grid-cols-2">
-            {REDIRECTS.map(({title, body, to, action}) => (
-                <div key = {title} className = {CARD}>
-                    <h2 className = "text-sm font-medium">{title}</h2>
-                    <p className = "mt-1.5 flex-1 text-xs text-text-secondary">{body}</p>
-                    <Link to = {to} className = "mt-3 self-start text-xs font-medium text-[var(--signal-gold)]">{action}</Link>
-                </div>
-            ))}
+        <div className="mb-10">
+            <div className="flex items-center gap-3 mb-2">
+                <CircleHelp className="text-purple-400" size={30}></CircleHelp>
+                <h1 className="text-3xl font-bold">Help Center</h1>
+            </div>
+            <p className="text-gray-400">
+                Find guides, answers and useful resources for EquityLens
+            </p>
         </div>
 
-        <h2 className = "mt-10 text-x1 font-semiBold">FAQs</h2>
+        <h2 className="text-xl font-semibold mb-4">How can we help</h2>
 
-        <div className = "mt-4 flex flex-col gap-2">
-            {QNA.map(({q,a}, i) => (
-                <div key = {q} className = "terminal-card">
-                    <button type = "button" onClick = {() => closed(open === i ? null : i)} aria-expanded = {open === i} 
-                            className = "flex w-full items-center justify-between p-4 text-left text-sm font-medium">
-                        {q}
-                        <span className = "text-text-secondary">{open === i ? '-' : '+'}</span>
-                    </button>
-                    {open === i && (<p className = "px-4 pb-4 text-sm font-medium text-text-secondary">{a}</p>)}
-                </div>
-            ))}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            
+
         </div>
 
-        <h2 className = "mt-10 text-x1 font-semiBold">Resources (Click box to get output)</h2>
-
-        <div className = "mt-4 grid gap-3 sm:grid-cols-3">
-            {LINKS.map(({label, body, href, download}) => (
-                <a key ={label} href = {href} download = {download} className = {CARD}>
-                    <h3 className = "text-sm font-medium">{label}</h3>
-                    <p className = "mt-1.5 text-xs text-text-secondary">{body}</p>
-                </a>
-            ))}
-        </div>
+        
     </div>
     )
 }
