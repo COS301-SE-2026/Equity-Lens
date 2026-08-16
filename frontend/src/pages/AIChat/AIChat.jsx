@@ -21,6 +21,7 @@ const AIChat = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState(/**@type {ChatMessage[]}*/ ([]));
   const [isThinking, setIsThinking] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
   const [conversationId, setConversationId] = useState(/**@type {number | null}*/(null));
   const [conversations, setConversations] = useState(/**@type {Conversation[]}*/([]));
   const { user } = useAuth();
@@ -45,6 +46,14 @@ const AIChat = () => {
   }, []);
 
   useEffect(() => {
+    if (cooldown <= 0) {
+      return;
+    }
+    const timer = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  useEffect(() => {
     if(editingId !== null) {
       renameRef.current?.focus();
     }
@@ -52,7 +61,7 @@ const AIChat = () => {
 
   /** @param {string}  rawText*/
   const sendMessage = (rawText) => {
-    if (isThinking) {
+    if (isThinking || cooldown > 0) {
       return;
     }
     const text = rawText.trim();
@@ -78,9 +87,14 @@ const AIChat = () => {
 
     //Error checking incase ai call fails
     .catch((err) => {
-      const text = err.response?.status === 429
-        ? (err.response?.data?.detail ?? "You have been rate-limited by sending messages too quick. Give it a minute.")
-        : "Something went wrong, try again.";
+      const detail = err.response?.data?.detail;
+      let text;
+      if (err.response?.status === 429) {
+        text = detail?.message ?? "You have been rate-limited by sending messages too quick. Give it a minute.";
+        setCooldown(detail?.retry_after ?? 60);
+      } else {
+        text = "Something went wrong, try again.";
+      }
       const errorMessage = /**@type {ChatMessage} */ ({id: Date.now() + 1, role: 'assistant', text});
       setMessages((prev) => [...prev, errorMessage]);
   })
@@ -291,7 +305,7 @@ const AIChat = () => {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask the assistant..."
+          placeholder= "Ask the assistant..."
           maxLength={500}
           className="flex-1 rounded-lg border border-[var(--border-default)]
                      bg-[var(--bg-secondary)] px-3 py-2.5 text-sm
@@ -299,8 +313,8 @@ const AIChat = () => {
                      focus-visible:outline-none focus-visible:ring-2
                      focus-visible:ring-[var(--accent-primary)]"
         />
-        <Button type="submit" variant="primary" disabled={isThinking || !input.trim()}>
-          Send
+        <Button type="submit" variant="primary" disabled={isThinking || cooldown > 0 || !input.trim()}>
+          {cooldown > 0 ? `Wait ${cooldown}s` : 'Send'}
         </Button>
       </form>
       <p className="mt-2 text-[12px] text-[var(--text-dim)]">
