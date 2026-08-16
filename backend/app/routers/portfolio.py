@@ -42,7 +42,7 @@ def get_performance(
 
 
 @router.get("/current")
-def get_performance(
+def get_current_information(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
