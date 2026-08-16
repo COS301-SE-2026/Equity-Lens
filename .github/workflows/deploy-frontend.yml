@@ -3,6 +3,13 @@ name: CI
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "ECR tag to redeploy (e.g. a previous commit SHA already pushed to FRONTEND_ECR_REPOSITORY). Leave empty to deploy :latest, same as a normal push-triggered deploy."
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -42,19 +49,19 @@ jobs:
                   -t equity-lens-frontend ./frontend
 
             - name: To make the Configure AWS credentials
-              if: github.event_name == 'push'
+              if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
               uses: aws-actions/configure-aws-credentials@v6
               with:
                 role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
                 aws-region: ${{ vars.AWS_REGION }}
 
             - name: To log in to Amazon ECR
-              if: github.event_name == 'push'
+              if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
               id: login-to-store-credentials
               uses: aws-actions/amazon-ecr-login@v2
 
             - name: To make a Tag and to also push all the frontend and all the image from the docker to Amazon ECR
-              if: github.event_name == 'push'
+              if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
               env:
                 TO_STORE_THE_ECR_REGISTRY: ${{ steps.login-to-store-credentials.outputs.registry }}
                 TO_STORE_THE_ECR_REPOSITORY: ${{vars.FRONTEND_ECR_REPOSITORY }}
@@ -66,27 +73,84 @@ jobs:
                 docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:$IMAGE_TAG
                 docker push $TO_STORE_THE_ECR_REGISTRY/$TO_STORE_THE_ECR_REPOSITORY:latest
 
-            - name: to automatically deploy the frontend to the ec2
-              if: github.event_name == 'push'
-              uses: appleboy/ssh-action@v1
-              with:
-                host: ${{ secrets.EC2_PUBLIC_ADDRESS }}
-                username: ${{ secrets.EC2_USERNAME }}
-                key: ${{ secrets.THE_PRIVATE_SSH_KEY }}
-                script: |
-                  set -e
+            - name: Look up target instance by tag
+              if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+              id: find-instance
+              run: |
+                INSTANCE_ID=$(aws ec2 describe-instances \
+                  --filters "Name=tag:Environment,Values=production" "Name=instance-state-name,Values=running" \
+                  --query "sort_by(Reservations[].Instances[], &LaunchTime)[-1].InstanceId" \
+                  --output text)
 
-                  aws ecr get-login-password --region ${{ vars.AWS_REGION }} |
-                  docker login --username AWS --password-stdin ${{ steps.login-to-store-credentials.outputs.registry }}
+                if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" == "None" ]; then
+                  echo "::error::no running instance tagged Environment=production was found"
+                  exit 1
+                fi
 
-                  docker pull ${{ steps.login-to-store-credentials.outputs.registry }}/${{  vars.FRONTEND_ECR_REPOSITORY }}:latest
+                echo "instance_id=$INSTANCE_ID" >> "$GITHUB_OUTPUT"
 
-                  docker stop equity-lens-frontend || true
-                  docker rm equity-lens-frontend || true
+            - name: Deploy to frontend via SSM Run Command
+              if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+              id: send-command
+              env:
+                AWS_REGION: ${{ vars.AWS_REGION }}
+                ECR_REGISTRY: ${{ steps.login-to-store-credentials.outputs.registry }}
+                ECR_REPO: ${{ vars.FRONTEND_ECR_REPOSITORY }}
+                INSTANCE_ID: ${{ steps.find-instance.outputs.instance_id }}
+                DEPLOY_TAG: ${{ inputs.image_tag != '' && inputs.image_tag || github.sha }}
+              run: |
+                COMMANDS=(
+                  "set -e"
+                  "aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY"
+                  "docker pull $ECR_REGISTRY/$ECR_REPO:$DEPLOY_TAG"
+                  "docker stop equity-lens-frontend || true"
+                  "docker rm equity-lens-frontend || true"
+                  "docker run -d --name equity-lens-frontend -p 3000:8080 $ECR_REGISTRY/$ECR_REPO:$DEPLOY_TAG"
+                  "HEALTHY=0"
+                  "for i in \$(seq 1 30); do"
+                  "  BODY=\$(curl -sf http://localhost:3000/ 2>/dev/null || true)"
+                  "  if [ -n \"\$BODY\" ]; then"
+                  "    HEALTHY=1"
+                  "    break"
+                  "  fi"
+                  "  sleep 2"
+                  "done"
+                  "if [ \"\$HEALTHY\" != \"1\" ]; then"
+                  "  echo 'frontend container never became healthy after 60s' >&2"
+                  "  docker logs equity-lens-frontend --tail 50 >&2"
+                  "  exit 1"
+                  "fi"
+                )
+                PARAMS_JSON=$(printf '%s\n' "${COMMANDS[@]}" | jq -R . | jq -s '{commands: .}')
 
-                  docker run -d --name equity-lens-frontend -p 3000:8080 ${{ steps.login-to-store-credentials.outputs.registry }}/${{ vars.FRONTEND_ECR_REPOSITORY }}:latest
+                COMMAND_ID=$(aws ssm send-command \
+                  --instance-ids "$INSTANCE_ID" \
+                  --document-name "AWS-RunShellScript" \
+                  --comment "equitylens frontend deploy ${DEPLOY_TAG:0:7}" \
+                  --parameters "$PARAMS_JSON" \
+                  --query "Command.CommandId" --output text)
 
+                echo "command_id=$COMMAND_ID" >> "$GITHUB_OUTPUT"
 
-              
-              
+            - name: Wait for deploy command to finish
+              if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+              env:
+                INSTANCE_ID: ${{ steps.find-instance.outputs.instance_id }}
+                COMMAND_ID: ${{ steps.send-command.outputs.command_id }}
+              run: |
+                aws ssm wait command-executed --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" || true
+
+                STATUS=$(aws ssm get-command-invocation \
+                  --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" \
+                  --query "Status" --output text)
+                echo "remote command status: $STATUS"
+
+                if [ "$STATUS" != "Success" ]; then
+                  echo "::error::SSM command $COMMAND_ID finished with status $STATUS"
+                  aws ssm get-command-invocation \
+                    --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" \
+                    --query "{StandardOutputContent:StandardOutputContent,StandardErrorContent:StandardErrorContent}" \
+                    --output json
+                  exit 1
+                fi
     
