@@ -1,3 +1,4 @@
+import { fetchAuthSession, signOut } from "aws-amplify/auth";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock('aws-amplify/auth', () => ({
@@ -8,8 +9,6 @@ vi.mock('aws-amplify/auth', () => ({
 vi.mock('../utils/constants', () => ({
     API_BASE_URL: 'https://api.test.example.com',
 }));
-
-import { fetchAuthSession } from "aws-amplify/auth";
 
 import api from './api';
 
@@ -40,5 +39,34 @@ describe('request interceptor', () => {
         fetchAuthSession.mockRejectedValue(new Error('session lookup failed'));
         const config = await requestFulfilled()({ headers: {} });
         expect(config.headers.Authorization).toBeUndefined();
+    });
+});
+
+describe('response interceptor', () => {
+    it('passes successful response', () => {
+        const response = { status: 200, data: { ok: true } };
+        expect(responseFulfilled()(response)).toBe(response);
+    });
+
+    it('401, signs user out and redirects to login', async () => {
+        signOut.mockResolvedValue(undefined);
+        const error = { response: { status: 401 } };
+        await expect(responseRejected()(error)).rejects.toBe(error);
+        expect(signOut).toHaveBeenCalled();
+        expect(window.location.href).toBe('/login');
+    });
+
+    it('still redirects to login, if signOut fails', async () => {
+        signOut.mockRejectedValue(new Error('sign out failed'));
+        const error = { response: { status: 401 } };
+        await expect(responseRejected()(error)).rejects.toBe(error);
+        expect(window.location.href).toBe('/login');
+    });
+
+    it('does not redirect for non 401', async () => {
+        const error = { response: { status: 500 } };
+        await expect(responseRejected()(error)).rejects.toBe(error);
+        expect(signOut).not.toHaveBeenCalled();
+        expect(window.location.href).toBe('');
     });
 });
