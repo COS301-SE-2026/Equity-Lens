@@ -126,7 +126,7 @@ jobs:
                 COMMAND_ID=$(aws ssm send-command \
                   --instance-ids "$INSTANCE_ID" \
                   --document-name "AWS-RunShellScript" \
-                  --comment "equitylens frontend deploy $DEPLOY_TAG (${{ github.sha }})" \
+                  --comment "equitylens frontend deploy ${DEPLOY_TAG:0:7}" \
                   --parameters "$PARAMS_JSON" \
                   --query "Command.CommandId" --output text)
 
