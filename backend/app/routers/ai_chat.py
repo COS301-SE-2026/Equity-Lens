@@ -8,7 +8,8 @@ from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages
-
+from app.utils.ai_rate_limit import check_limit
+from app.config import Settings
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 
@@ -29,6 +30,23 @@ class ChatResponse(BaseModel):
 
 class ChangeConversationName(BaseModel):
     title: str = Field(min_length = 1)
+
+
+def enforce_limit(current_user: UserResponse = Depends(get_current_user)):
+    allowed, retry_after = check_limit(
+        key = str(current_user.id),
+        limit = Settings.ai_message_limit,
+        window_seconds = Settings.ai_message_limit
+    )
+
+    if not allowed:
+        raise HTTPException(
+            status_code = 429,
+            detail = f"You have been rate-limited by sending messages too quick. Try again in {retry_after} seconds.",
+            headers = {"Retry-After": str(retry_after)}
+        )
+    return current_user
+
 
 @router.post("/", response_model = ChatResponse)
 async def ai_chat(
