@@ -76,13 +76,16 @@ const AIChat = () => {
         .catch(() => {});
       })
 
-      //Error checking incase ai call fails
-      .catch(() => {
-        const errorMessage = /**@type {ChatMessage} */ ({id: Date.now() + 1, role: 'assistant', text: "Something went wrong, try again."});
-        setMessages((prev) => [...prev, errorMessage]);
-      })
-      .finally(() => setIsThinking(false));
-    };
+    //Error checking incase ai call fails
+    .catch((err) => {
+      const text = err.response?.status === 429
+        ? (err.response?.data?.detail ?? "You have been rate-limited by sending messages too quick. Give it a minute.")
+        : "Something went wrong, try again.";
+      const errorMessage = /**@type {ChatMessage} */ ({id: Date.now() + 1, role: 'assistant', text});
+      setMessages((prev) => [...prev, errorMessage]);
+  })
+  .finally(() => setIsThinking(false));
+  };
   
   //now to load the messages
   /**@param {Conversation} convo*/

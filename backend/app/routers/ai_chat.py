@@ -9,7 +9,7 @@ from uuid import UUID
 from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages
 from app.utils.ai_rate_limit import check_limit
-from app.config import Settings
+from app.config import settings
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 
@@ -35,8 +35,8 @@ class ChangeConversationName(BaseModel):
 def enforce_limit(current_user: UserResponse = Depends(get_current_user)):
     allowed, retry_after = check_limit(
         key = str(current_user.id),
-        limit = Settings.ai_message_limit,
-        window_seconds = Settings.ai_message_limit
+        limit = settings.ai_message_limit,
+        window_seconds = settings.ai_window_limit
     )
 
     if not allowed:
@@ -52,7 +52,7 @@ def enforce_limit(current_user: UserResponse = Depends(get_current_user)):
 async def ai_chat(
     request: ChatRequest,
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: UserResponse = Depends(enforce_limit)
     ):
     try:
         reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id)
