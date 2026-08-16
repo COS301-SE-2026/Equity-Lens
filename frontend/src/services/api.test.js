@@ -30,4 +30,15 @@ describe('request interceptor', () => {
         expect(config.headers.Authorization).toBe('Bearer my-access-token');
     });
     
+    it('leaves the config when no access token present', async () => {
+        fetchAuthSession.mockResolvedValue({ tokens: {} });
+        const config = await requestFulfilled()({ headers: {} });
+        expect(config.headers.Authorization).toBeUndefined();
+    });
+
+    it('does not throw when fetch fails, still returns config', async () => {
+        fetchAuthSession.mockRejectedValue(new Error('session lookup failed'));
+        const config = await requestFulfilled()({ headers: {} });
+        expect(config.headers.Authorization).toBeUndefined();
+    });
 });
