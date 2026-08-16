@@ -200,6 +200,22 @@ body {
   border: 1px solid var(--signal-warning-border);
 }
 
+.money-value {
+  transition: filter 150ms ease;
+}
+.money-blurred .money-value {
+  filter: blur(6px);
+}
+
+.dashboard-highlight {
+  transition: box-shadow 300ms ease-in-out, background-color 300ms ease-in-out;
+  box-shadow: inset 0 0 0 3px transparent;
+}
+.dashboard-highlight.is-active {
+  box-shadow: inset 0 0 0 3px var(--accent-primary);
+  background-color: var(--accent-subtle);
+}
+
 *:focus-visible {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
