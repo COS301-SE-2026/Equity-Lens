@@ -8,31 +8,31 @@ const REDIRECTS = [
         title: 'Getting Started',
         body: 'In here you will learn the basic of EquityLens and where to find everything.',
         to: ROUTES.DASHBOARD,
-        icon: <LayoutDashboard size={12}/>
+        icon: <LayoutDashboard size={22}/>
     },
     {
         title: 'Import data',
         body: 'You can upload your portfolio either using PDF or Excel.',
         to: ROUTES.PORTFOLIO,
-        action: "Go to portfolio"
+        icon: <Upload size={22}/>
     },
     {
         title: 'Understand your Portfolio',
         body: 'You can view your holdings,allocation, and also portfolio analytics.',
         to: ROUTES.ANALYTICS,
-        action: "Go to analytics page"
+        icon: <ChartPie size={22}/>
     },
     {
         title: 'News & Market',
         body: 'To stay updated with the news about your investment.',
         to: ROUTES.NEWS,
-        action: "Go to news page"
+        icon: <Newspaper size={22}/>
     },
     {
         title: 'AI Assistant',
         body: 'Ask questions in plain english about your portfolio.',
         to: ROUTES.NEWS,
-        action: "Go to AI Assistant"
+        icon: <Bot size={22}/>
     },
 ];
 
@@ -74,7 +74,7 @@ const Help = () => {
     const [open, closed] = useState(null);
 
     return (
-    <div className = "mx-w-7xl mx-auto px-6 py-8 text-white">
+    <div className = "max-w-7xl mx-auto px-6 py-8 text-white">
 
         <div className="mb-10">
             <div className="flex items-center gap-3 mb-2">
@@ -89,8 +89,25 @@ const Help = () => {
         <h2 className="text-xl font-semibold mb-4">How can we help</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            
 
+            {REDIRECTS.map(({title, body, to, icon}) => (
+                <Link key={title} to={to} className="border border-gray-700 bg-gray-900 rounded-2xl p-5 hover:border-purple-500 hover:bg-gray-800 transition">
+                <div className="w-11 h-11 rounded-xl bg-purple-500 text-purple-400 flex items-center justify-center mb-4">{icon}</div>
+                <h3 className="font-semibold mb-2">{title}</h3>
+               <h3 className="text-sm text-gray-400">{body}</h3>
+                </Link>
+            ))}
+            
+        </div>
+
+        <div className="mt-6 border border-gray-700 rounded-2xl p-5 bg-">
+            <p className="text-purple-400 font-semibold">
+                Quick Tip
+            </p>
+
+            <p className="text-sm text-gray-400 mt-1">
+                Hover over charts and graphs to view more information about your portfolio data.
+            </p>
         </div>
 
         
