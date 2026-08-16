@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
 import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, TriangleAlert, Bot ,LoaderCircle } from "lucide-react"
@@ -381,10 +381,7 @@ const Portfolio = () => {
    * @type {[any[], function]}
    */
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState([]);
-  /**
-   * @type {[any[], function]}
-   */
-  const [GetTheLowest, setGetTheLowest] = useState([]);
+  const [GetTheLowest, setGetTheLowest] = useState({ name: "", value: 0 });
   /**
    * @type {[any[], function]}
    */
@@ -401,6 +398,89 @@ const Portfolio = () => {
    * @type {[boolean,function]}
    */
   const [LoadingPage, setLoadingPage] = useState(false);
+  const [accountType,setAccountType] = useState("");
+  const [showPortfolios,setShowPortfolios] = useState(false);
+  const [portfolios, setPortfolios] = useState([]);
+
+  useEffect( () => {
+    const getInfo = async () => {
+      const responses = await api.get("/portfolio/current");
+      setPortfolios(responses.data);
+      console.log(responses.data)
+    };
+
+    getInfo();
+
+  }, [])
+
+  const ViewSummary = async(id) => {
+
+  try{
+    setLoadingPage(true)
+
+
+          const getSummaryRequest = await api.get(
+        `/import_pdf_summary/summary/${id}`
+      )
+
+      const getSummary = getSummaryRequest.data;
+      setSummary(getSummary);
+
+      const SummaGetTheTopAllocationImportPDFRequest = await api.get(
+        `/import_pdf_summary/top_holdings/${id}`,
+      )
+
+      const getSummaGetTheTopAllocationImportPDFry = SummaGetTheTopAllocationImportPDFRequest.data;
+      setGetTheTopHoldingsImportPDF(getSummaGetTheTopAllocationImportPDFry);
+
+
+      const getSummaryGetTheTopHoldingsImportPDFRequest = await api.get(
+        `/import_pdf_summary/portfolio_allocation/${id}`
+      )
+
+      const getSummaryGetTheTopHoldingsImportPDF = getSummaryGetTheTopHoldingsImportPDFRequest.data;
+      setGetTheTopAllocationImportPDF(getSummaryGetTheTopHoldingsImportPDF);
+
+      const LowestHoldingsRequest = await api.get(
+        `/import_pdf_summary/lowest_holdings/${id}`
+      )
+
+      const LowestHoldings = LowestHoldingsRequest.data;
+      setGetTheLowest(LowestHoldings);
+
+       const TradingActivity = await api.get(
+        `/import_pdf_summary/trading_activity/${id}`
+      )
+
+      const TradingActivityImport = TradingActivity.data;
+      setGetTradingActivity(TradingActivityImport);
+
+       const CashFlow = await api.get(
+        `/import_pdf_summary/cash_flow/${id}`
+      )
+
+      const CashFlowImport = CashFlow.data;
+      setGetCashFlow(CashFlowImport);
+
+       const Income = await api.get(
+        `/import_pdf_summary/dividend_income/${id}`
+      )
+
+      const IncomeImport = Income.data;
+      setGetDividendIncome(IncomeImport);
+    
+  }
+
+  catch(error)
+  {
+    console.log(error)
+  }
+  finally
+  {
+    setLoadingPage(false)
+  }
+
+  }
 
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
 
@@ -409,6 +489,8 @@ const Portfolio = () => {
    * @param {any} data
    * @param {File} file
    */
+
+  
   const SavePortfolio = async (data, file) => {
 
     try {
@@ -431,6 +513,10 @@ const Portfolio = () => {
             document_id: document.document_id,
             account_number: portfolio.account_number,
             portfolio_name: portfolio.portfolio_name,
+            currency: "ZAR",
+            statement_end_date: "2026-08-14",
+            statement_start_date: "2026-01-01",
+            account_type: accountType
           }
       );
 
@@ -596,18 +682,15 @@ const Portfolio = () => {
       const IncomeImport = Income.data;
       setGetDividendIncome(IncomeImport);
 
-       const Expenses = await api.get(
-        `/import_pdf_summary/expenses/${savedPortfolio.portfolio_id}`
-      )
+      //  const Expenses = await api.get(
+      //   `/import_pdf_summary/expenses/${savedPortfolio.portfolio_id}`
+      // )
 
-      const ExpensesImport = Expenses.data;
-
-
+      // const ExpensesImport = Expenses.data;
 
     }
     catch (theErrors)
     {
-      // the alert below is generic on purpose but log the real cause so we can actually debug reports of this
       console.error("SavePortfolio failed:", theErrors)
 
       if(file.name.toLowerCase().endsWith(".pdf"))
@@ -626,39 +709,109 @@ const Portfolio = () => {
     if (LoadingPage)
     {
       return(
-        <div className="flex flex-col items-center mt-30">
-        <LoaderCircle className="w-20 h-16 animate-spin" />     
-        <h2 className="text-2xl text-white">Loading Portfolio</h2>
-        <p className="text-gray-400">Please wait until we import your portfolio</p>
+        <div className="flex flex-col items-center justify-center mt-30">
+        <LoaderCircle className="w-20 h-16 animate-spin text-orange-500" />     
+        <h2 className="text-2xl text-white font-bold mt-4">Loading Portfolio</h2>
+        <p className="text-gray-400">Please wait until we import your portfolio...</p>
         </div>
       )
     }
   
   return (
 
-    <div className="p-2">
+    
+    <div className="p-6">
 
-      <div className="max-w-4xl mx-auto p-6 border border-gray-700 rounded-3xl bg-gray-900">
+      <div className="max-w-6xl mx-auto p-6 bg-gray-900 border border-gray-700 rounded-3xl">
 
-        <div className="flex flex-col items-center">
-
-            <h2 className="text-5xl font-bold text-white text-center mb-5">
+        <div className="text-center mb-10">
+            <h2 className="text-4xl font-bold text-white mb-3">
               Upload Portfolio
             </h2>
 
-            <p className="text-gray-400 mt-2 mb-3 text-center max-w-2xl">
-              Download your portfolio statement from EasyEquities as a PDF, or use the Excel 
-              template to enter your portfolio manually if the PDF import is unavailable
+            <p className="text-gray-400 max-w-xl mx-auto">
+              Import your easyEquities portfolio but using your statement
+              or our Excel template
             </p>
+          </div>
 
-            <div className="flex flex-col items-center gap-4 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6">
 
-            <button onClick={DownloadEXCEL} className="bg-green-600 text-white px-5 py-2 rounded-lg">
-              Download Excel Template
-            </button>
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  My Portfolios
+                </h3>
 
-            <label className="bg-blue-600 text-white px-6 py-3 rounded-lg">
-              choose the Excel File
+    {portfolios.slice(0,2).map((portfolio, index) => (
+
+            <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
+              <div className="flex justify-between items-center">
+
+                 <p className="text-white font-semibold">
+                  {portfolio.portfolio_name}
+                </p>
+
+                <span className="text-purple-400 font-semibold">
+                  {portfolio.account_type}
+                </span>
+
+              </div>
+
+                <p className="text-sm text-gray-400">
+                  Account: {portfolio.account_number}
+                </p>
+           
+                <p className="text-sm text-gray-400">
+                  {portfolio.statement_start_date} - {portfolio.statement_end_date}
+                </p>
+
+                <button onClick={() => ViewSummary(portfolio.id)} className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
+                  View Summary
+                </button>
+            </div>
+
+          ))}
+
+                <button 
+                onClick={() => setShowPortfolios(true)}
+                className="block mx-auto text-orange-400 mt-4 hover:text-orange-300">
+                  view all
+                </button>
+
+              </div>
+
+
+        <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Upload your statement
+                </h3>
+
+                <p className="text-sm text-gray-400">
+                  Upload your EasyEquities PDF or Complete the Excel template
+                </p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-2"> Account Type</label>
+
+              <select
+                value={accountType}
+                onChange={(event) => setAccountType(event.target.value )}
+                className="w-full bg-gray-800 border border-gray-700 text-white p-3 rounded-xl"
+               
+              >
+                <option value=""> Select account type</option>
+                <option value="Taxable">Taxable</option>
+                <option value="TFSA">TFSA</option>
+                <option value="RA">RA</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <label className="block text-center cursor-pointer w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
+
+              choose the File
 
             <input
               type="file"
@@ -669,6 +822,13 @@ const Portfolio = () => {
 
                 if(!file)
                 {
+                  return;
+                }
+
+                if(!accountType)
+                {
+                  alert("Please select an account type first");
+                  event.target.value = "";
                   return;
                 }
 
@@ -717,13 +877,92 @@ const Portfolio = () => {
             />
           </label>
 
+          <p className="text-sm text-gray-500 text-center mt-3">
+            PDF or XLSX
+          </p>
+        </div>
+
+          <div className="border border-gray-700 rounded-2xl p-6">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-white mb-2">
+                Excel Template
+              </h3>
+
+              <p className="text-sm text-gray-400">
+                Don't have a supported PDF? Don't worry, You can enter your portfolio
+                manually using our template
+              </p>
+            </div>
+
+            <button onClick={DownloadEXCEL} className="w-full border border-orange-500 text-orange-400 hover:bg-orange-500 hover:text-white font-semibold py-3 rounded-xl transition">
+              Download Template
+            </button>
+            <p className="text-sm text-gray-500 text-center mt-3">
+              EquityLens Excel Template
+            </p>
           </div>
+        </div>
 
         </div>
 
-      </div>
 
-      
+
+      { showPortfolios && (
+
+        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+         <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-hidden">
+          <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  My Portfolios
+                </h3>
+
+              <button onClick={() => setShowPortfolios(false) } className="text-gray-400 hover:text-white">
+                X
+              </button>
+          </div>
+
+<div>
+  <div className="max-h-[65vh] overflow-y-auto pr-2">
+        {portfolios.map((portfolio, index) => (
+
+            <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
+              <div className="flex justify-between items-center">
+
+                 <p className="text-white font-semibold">
+                  {portfolio.portfolio_name}
+                </p>
+
+                <span className="text-purple-400 font-semibold">
+                  {portfolio.account_type}
+                </span>
+
+              </div>
+
+                <p className="text-sm text-gray-400">
+                  Account: {portfolio.account_number}
+                </p>
+           
+                <p className="text-sm text-gray-400">
+                  {portfolio.statement_start_date} - {portfolio.statement_end_date}
+                </p>
+
+                <button onClick={() => ViewSummary(portfolio.id)} className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
+                  View Summary
+                </button>
+            </div>
+
+          ))}
+          
+        </div>
+ </div>
+              </div>
+
+          </div>
+      )
+
+  
+
+      }
 
       { summary && <div className="grid grid-cols-6 gap-8 mt-8">
 
@@ -975,7 +1214,7 @@ const Portfolio = () => {
           <div className="flex justify-between border border-gray-700 rounded-xl p-4">
 
             <div>
-              <p className="text-xl text-white font-bold">{GetTheLowest?.name}</p>
+              <p className="text-xl text-white font-bold">{GetTheLowest?.name ?? "No holdings"}</p>
             </div>
 
             <div>

@@ -12,9 +12,12 @@ class PortfolioRequest(BaseModel):
     account_number: str
     portfolio_name: str
     currency: str = "ZAR"
+    statement_start_date: date
+    statement_end_date: date
+    account_type: str
 
 class HoldingsRequest(BaseModel):
-    portfolio_id: str
+    portfolio_id: UUID
     instrument_name: str
     ticker: str
     sector: str
@@ -24,7 +27,7 @@ class HoldingsRequest(BaseModel):
     weight_percentage: Decimal
 
 class InstrumentPurchasesAndSalesRequest(BaseModel):
-    portfolio_id: str
+    portfolio_id: UUID
     transaction_date: date
     transaction_name: str
     instrument_name: str
@@ -35,14 +38,14 @@ class InstrumentPurchasesAndSalesRequest(BaseModel):
     value_zar: Decimal
 
 class ContributionsAndWithdrawalsRequest(BaseModel):
-    portfolio_id: str
+    portfolio_id: UUID
     transaction_date: date
     settlement_date: date
     transaction_name: str
     value_zar: Decimal
 
 class DividendsAndWithholdingTaxRequest(BaseModel):
-    portfolio_id: str
+    portfolio_id: UUID
     transaction_date: date
     instrument_name: str
     ticker: str
@@ -53,7 +56,7 @@ class DividendsAndWithholdingTaxRequest(BaseModel):
     tax_rate: Decimal
 
 class TransactionExpensesRequest(BaseModel):
-    portfolio_id: str
+    portfolio_id: UUID
     transaction_date: date
     settlement_date: date
     narrative_name: str
