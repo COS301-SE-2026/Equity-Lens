@@ -1,4 +1,4 @@
-import { signUp } from "aws-amplify/auth";
+import { confirmSignUp, signUp } from "aws-amplify/auth";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock('aws-amplify/auth', () => ({
@@ -14,7 +14,7 @@ vi.mock('aws-amplify/auth', () => ({
     updateMFAPreference: vi.fn(),
 }));
 
-import { register } from "./authService";
+import { confirmRegistration, register } from "./authService";
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -30,5 +30,12 @@ describe('register', () => {
             options: { userAttributes: { email: 'john@example.com', name: 'John Pork' } },
         });
         expect(result).toEqual({ userId: 'user-123', email: 'john@example.com'});
+    });
+});
+
+describe('confirmRegister', () =>{
+    it('calls confirmSignUp with username and the confirmationCode', () => {
+        confirmRegistration('john@example.com', '123456');
+        expect(confirmSignUp).toHaveBeenCalledWith({ username: 'john@example.com', confirmationCode: '123456'});
     });
 });
