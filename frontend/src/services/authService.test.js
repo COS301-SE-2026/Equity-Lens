@@ -1,4 +1,4 @@
-import { confirmSignIn, confirmSignUp, setUpTOTP, signIn, signOut, signUp } from "aws-amplify/auth";
+import { confirmSignIn, confirmSignUp, fetchAuthSession, getCurrentUser, setUpTOTP, signIn, signOut, signUp, updateMFAPreference, verifyTOTPSetup } from "aws-amplify/auth";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock('aws-amplify/auth', () => ({
@@ -14,7 +14,7 @@ vi.mock('aws-amplify/auth', () => ({
     updateMFAPreference: vi.fn(),
 }));
 
-import { confirmRegistration, register, login, respondToMFA, initTOTPSetup, logout } from "./authService";
+import { confirmRegistration, register, login, respondToMFA, initTOTPSetup, logout, confirmTOTPSetup, getToken, isAuthenticated, getCurrentUserProfile } from "./authService";
 
 beforeEach(() => {
     vi.clearAllMocks();
@@ -67,3 +67,70 @@ describe('logout', () => {
         expect(signOut).toHaveBeenCalled();
     });
 });
+
+describe('confirmTOTPSetup', () => {
+    it('verifies TOTP code then sets MFA preference', async () => {
+        await confirmTOTPSetup('111222');
+        expect(verifyTOTPSetup).toHaveBeenCalledWith({ code: '111222' });
+        expect(updateMFAPreference).toHaveBeenCalledWith({ totp: 'PREFERRED' });
+    });
+});
+
+describe('getToken', () => {
+    it('returns the access token string when a session exists', async () => {
+        fetchAuthSession.mockResolvedValue({ tokens: { accessToken: { toString: () => 'aaa.bbb.ccc' } },});
+        const token = await getToken();
+        expect(token).toBe('aaa.bbb.ccc');
+    });
+
+    it('returns null when session has no tokens', async () => {
+        fetchAuthSession.mockResolvedValue({ tokens: null });
+        expect(await getToken()).toBeNull();
+    });
+
+    it('returns null when thrown', async () => {
+        fetchAuthSession.mockResolvedValue(new Error('network error'));
+        expect(await getToken()).toBeNull();
+    });
+});
+
+describe('isAuthenticated', () => {
+    it('returns true when valid session with existing token', async () => {
+        fetchAuthSession.mockResolvedValue({ tokens: { accessToken: 'test'} });
+        expect(await isAuthenticated()).toBe(true);
+    });
+
+    it('returns false when no token', async () => {
+        fetchAuthSession.mockResolvedValue({ tokens: { accessToken: null} });
+        expect(await isAuthenticated()).toBe(false);
+    });
+
+    it('returns false when thrown', async () => {
+        fetchAuthSession.mockRejectedValue(new Error('network error'));
+        expect(await isAuthenticated()).toBe(false);
+    });
+});
+
+describe('getCurrentUserProfile', () => {
+    it('returns sub, email and full name from current user and token', async () => {
+        getCurrentUser.mockResolvedValue({ userId: 'user-123'});
+        fetchAuthSession.mockResolvedValue({ tokens: { idToken: { payload: { email: 'john@example.com', name: 'John Pork'} } } });
+        const profile = await getCurrentUserProfile();
+        expect(profile).toEqual({ sub: 'user-123', email: 'john@example.com', full_name: 'John Pork' });
+    });
+
+    it('falls back to empty strings when payload is empty', async () => {
+        getCurrentUser.mockResolvedValue({ userId: 'user-123'});
+        fetchAuthSession.mockResolvedValue({ tokens: { idToken: { payload: {} },},});
+        const profile = await getCurrentUserProfile();
+        expect(profile).toEqual({ sub: 'user-123', email: '', full_name: '' });
+    });
+
+    it('falls back to empty when no idToken', async () => {
+        getCurrentUser.mockResolvedValue({ userId: 'user-123' });
+        fetchAuthSession.mockResolvedValue({ tokens: {} });
+        const profile = await getCurrentUserProfile();
+        expect(profile).toEqual({ sub: 'user-123', email: '', full_name: ''});
+    });
+});
+
