@@ -48,6 +48,26 @@ const QNA = [
     {
         q: "Is this financial advice?",
         a: "No. EquityLens is there to help you gain futher insight into your portfolio."
+    },
+    {
+        q: "Is this financial advice?",
+        a: "No. EquityLens is there to help you gain futher insight into your portfolio."
+    },
+    {
+        q: "Is this financial advice?",
+        a: "No. EquityLens is there to help you gain futher insight into your portfolio."
+    },
+    {
+        q: "Is this financial advice?",
+        a: "No. EquityLens is there to help you gain futher insight into your portfolio."
+    },
+    {
+        q: "Is this financial advice?",
+        a: "No. EquityLens is there to help you gain futher insight into your portfolio."
+    },
+    {
+        q: "Is this financial advice?",
+        a: "No. EquityLens is there to help you gain futher insight into your portfolio."
     }
 ];
 
@@ -71,7 +91,7 @@ const Help = () => {
     /**
      * @type {[number | null, function]}
      */
-    const [open, closed] = useState(null);
+    const [open, setOpen] = useState(null);
 
     return (
     <div className = "max-w-7xl mx-auto px-6 py-8 text-white">
@@ -108,6 +128,62 @@ const Help = () => {
             <p className="text-sm text-gray-400 mt-1">
                 Hover over charts and graphs to view more information about your portfolio data.
             </p>
+        </div>
+
+       <div className="mt-12">
+
+        <h2 className="text-xl font-semibold mb-2">
+          Frequently Asked Questions
+        </h2>
+
+        <p className="text-sm text-gray-400 mb-5">
+          Quick answers to common questions.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+          {QNA.map(({ q, a }, index) => (
+            <div
+              key={q}
+              className=" border border-gray-700 bg-gray-900 rounded-xl overflow-hidden
+              "
+            >
+
+              <button
+                type="button"
+                onClick={() =>
+                  setOpen(open === index ? null : index)
+                }
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-gray-800"
+              >
+                <span className="text-sm font-medium">
+                  {q}
+                </span>
+
+                {open === index ? (
+                  <ChevronUp size={18} className="text-purple-400"
+                  />
+                ) : (
+                  <ChevronDown size={18} className="text-purple-400"
+                  />
+                )}
+
+              </button>
+
+              {open === index && (
+                <p className="px-4 pb-4 text-sm text-gray-400">
+                  {a}
+                </p>
+              )}
+
+            </div>
+          ))}
+
+        </div>
+      </div>
+
+        <div>
+
         </div>
 
         
