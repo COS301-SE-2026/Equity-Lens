@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Bookmark, Star, Newspaper } from "lucide-react"
+import { TrendingUp, TrendingDown, Bookmark, Star, Newspaper, Globe, UserRound } from "lucide-react"
 import api from "../../services/api"
 
 
@@ -9,6 +9,7 @@ const NewsInvestment = () => {
   const [wishlistLowest, setWishlistLowest] = useState([]);
   const [wishlistHighest, setWishlistHighest] = useState([]);
   const [ticker, setTicker] = useState("");
+  const [activeTab, setActiveTab] = useState("portfolio")
 
 
 
@@ -143,6 +144,39 @@ const NewsInvestment = () => {
           </div>
         </div>
 
+      </div>
+
+
+      <div className="flex items-center mt-4 gap-2">
+        <button
+          onClick={() => setActiveTab("portfolio")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab == "portfolio"
+              ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
+              : "bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]"
+            }`}
+        >
+          <UserRound className="w-4 h-4" />
+          My portfolio
+        </button>
+
+        <button
+          onClick={() => setActiveTab("watchlist")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab == "watchlist"
+              ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
+              : "bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]"
+            }`}>
+          <Star className="w-4 h-4" />
+          Watchlist
+        </button>
+
+        <button onClick={() => setActiveTab("market")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab == "market"
+              ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
+              : "bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]"
+            }`}>
+          <UserRound className="w-4 h-4" />
+          All Market
+        </button>
       </div>
 
 
