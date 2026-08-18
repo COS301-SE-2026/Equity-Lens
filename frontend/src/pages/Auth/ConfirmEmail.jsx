@@ -83,7 +83,6 @@ import { ROUTES } from '../../utils/constants';
                   required
                 />
               )}
-              
               <FormInput
                 label="Verification code"
                 name="code"
@@ -93,7 +92,6 @@ import { ROUTES } from '../../utils/constants';
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="000000"
-                autoFocus
                 required
               />
               

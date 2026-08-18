@@ -84,7 +84,7 @@ const NewsInvestment = () => {
           <div className="flex justify-between">
             <div>
               <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Top Loser</h2>
-              {wishlist.length == 0 ? (<p className="text-[var(--text-secondary)]">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker}({wishlistLowest.sector})</p> <p className="text-[var(--signal-negative)]">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
+              {wishlist.length === 0 ? (<p className="text-[var(--text-secondary)]">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker}({wishlistLowest.sector})</p> <p className="text-[var(--signal-negative)]">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
             </div>
            <div>
           <TrendingDown className="w-10 h-10 text-[var(--signal-negative)]" />

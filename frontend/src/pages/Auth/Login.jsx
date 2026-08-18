@@ -139,7 +139,6 @@ const Login = () =>
         value={mfaCode}
         onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
         placeholder="000000"
-        autoFocus
         className="w-full text-center tracking-[0.3em] text-2xl p-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-mono outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]"
       />
       <Button

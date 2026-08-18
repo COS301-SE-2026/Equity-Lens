@@ -1,8 +1,8 @@
-import { useState,useEffect } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
+import { LoaderCircle, Wallet, Briefcase, ArrowLeftRight, Landmark, TrendingUp, CreditCard, TriangleAlert, Bot } from "lucide-react";
 import * as XLSX from "xlsx"
 
 import api from "../../services/api"
@@ -245,7 +245,7 @@ const ReadingPDFFile = async(file,password) =>
    const cost = getNumber()
    const quantity = getNumber()
 
-   if(cost == undefined || quantity == undefined)
+   if(cost === undefined || quantity === undefined)
    {
       return null;
    }
@@ -260,7 +260,7 @@ const ReadingPDFFile = async(file,password) =>
 
     return holdings;
 
-  }).filter((item) => item != null)
+  }).filter((item) => item !== null)
 
 
    const PurchaseandSales = PurchaseAndSalesTable.map((row) => {
@@ -305,7 +305,7 @@ const ReadingPDFFile = async(file,password) =>
       quantity,
     }
 
-  }).filter((item) => item != null)
+  }).filter((item) => item !== null)
 
 
    const ContributionsandWithdrawals = ContributionsTable.map((row) => {
@@ -328,7 +328,7 @@ const ReadingPDFFile = async(file,password) =>
       value: chackThousands ? secondLast + last : last
     }
 
-  }).filter((item) => item != null)
+  }).filter((item) => item !== null)
 
   
    const DividendsandWithholdingTax = TaxTable.map((row) => {
@@ -345,7 +345,7 @@ const ReadingPDFFile = async(file,password) =>
       gross_dividend: splitParts[splitParts.length - 4],
       tax_rate: splitParts[splitParts.length - 1],
     }
-  }).filter((item) => item != null)
+  }).filter((item) => item !== null)
 
    const Expenses = ExpensesTable.map((row) => {
     const splitParts = row.text.split(" ").filter((item => item !== ""))
@@ -361,7 +361,7 @@ const ReadingPDFFile = async(file,password) =>
       narrative:  splitParts.slice(2,-1).join(" "),
       value: splitParts[splitParts.length - 1],
     }
-  }).filter((item) => item != null)
+  }).filter((item) => item !== null)
 
   const results = {Portfolio,Holdings,PurchaseandSales,ContributionsandWithdrawals,DividendsandWithholdingTax,Expenses}
 
@@ -794,9 +794,10 @@ const Portfolio = () => {
             </div>
 
             <div className="mb-4">
-              <label className="block text-sm text-gray-400 mb-2"> Account Type</label>
+              <label htmlFor="account-type-select" className="block text-sm text-gray-400 mb-2"> Account Type</label>
 
               <select
+                id="account-type-select"
                 value={accountType}
                 onChange={(event) => setAccountType(event.target.value )}
                 className="w-full bg-gray-800 border border-gray-700 text-white p-3 rounded-xl"
@@ -810,11 +811,12 @@ const Portfolio = () => {
               </select>
             </div>
 
-            <label className="block text-center cursor-pointer w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
-
+            <label htmlFor="statement-file-input" className="block text-center cursor-pointer w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
               choose the File
+              </label>
 
             <input
+              id ="statement-file-input"
               type="file"
               accept=".pdf,.xlsx"
               className="hidden"
@@ -853,7 +855,7 @@ const Portfolio = () => {
                 await SavePortfolio(data,file);
               }
             
-            catch(theError)
+            catch
             {
               if(file.name.toLowerCase().endsWith(".pdf"))
               {
@@ -876,7 +878,7 @@ const Portfolio = () => {
             }
           }
             />
-          </label>
+          
 
           <p className="text-sm text-gray-500 text-center mt-3">
             PDF or XLSX
@@ -890,7 +892,7 @@ const Portfolio = () => {
               </h3>
 
               <p className="text-sm text-gray-400">
-                Don't have a supported PDF? Don't worry, You can enter your portfolio
+                Don&apos;t have a supported PDF? Don&apos;t worry, You can enter your portfolio
                 manually using our template
               </p>
             </div>
