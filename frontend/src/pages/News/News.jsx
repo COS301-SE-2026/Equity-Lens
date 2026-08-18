@@ -10,7 +10,17 @@ const NewsInvestment = () => {
   const [wishlistHighest, setWishlistHighest] = useState([]);
   const [ticker, setTicker] = useState("");
   const [activeTab, setActiveTab] = useState("portfolio");
-  const [activeCategory, setActiveCategory] = useState("portfolio")
+  const [activeCategory, setActiveCategory] = useState("portfolio");
+  const [portfoliosTickers, setPortfoliosTickers] = useState([]);
+
+  const ToGetPortfoliosTickers = async () => {
+    const reponse = await api.get("/news/portfolio-tickers");
+    setPortfoliosTickers(reponse.data.tickers || [] );
+  }
+
+useEffect(() => {
+  ToGetPortfoliosTickers();
+}, []);
 
 
 
@@ -180,24 +190,109 @@ const NewsInvestment = () => {
       </div>
 
       {activeTab === "portfolio" && (
-        <div className="mt-6 p-5 border border-[var(--border-subtle)] rounded-2xl">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">
-            Latest news
-          </h2>
-          <p className="text-[var(--text-secondary)]">
-            Still to do porfolionews
-          </p>
+        <div className="mt-6">
+
+          <div className="grid grid-cols-3 gap-6 mt-6">
+
+            <div className="col-span-3 p-5 border border-[var(--border-subtle)] rounded-2xl">
+
+              <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Portfolio News</h2>
+              <div className="flex flex-wrap gap-2">
+              {portfoliosTickers.map((ticker) => (
+                <button key={ticker} onClick={() => {setActiveCategory(ticker)}} className={`px-3 py-1 rounded-full ${activeCategory == ticker ? 
+                  "bg-blue-500/20 text-blue-400 border-blue-500/40" : 
+                  "bg-[var(--surface-card)] text-[var(--text-secdonary)] border-transparent"}`}>
+                  {ticker}
+                </button>
+              ))}
+              </div>
+
+              {articles.map((article) => (
+                <div key={article.article_id} className="flex items-center  border-b border-[var(--border-subtle)] p-5 gap-4">
+
+                  <div>
+                    <img
+                      src={article.image_url}
+                      alt="news"
+                      className="w-20 h-20 rounded-lg object-cover" />
+                  </div>
+
+
+                  <div className="flex-1">
+                    <h3 className="text-[var(--text-primary)]">{article.title}</h3>
+                    <p className="text-sm text-[var(--text-secondary)] mt-1">{article.description}</p>
+                    <p className="text-sm text-[var(--text-secondary)] mt-1">{article.pubDate}</p>
+                    <p className="text-sm text-[var(--text-secondary)] mt-1">{article.source_name}</p>
+                  </div>
+
+                  {article.category.map((article) => (
+                    <p key={article} className="px-3 py-1 text-sm rounded-full" style={{ background: 'var(--signal-positive-bg)', color: 'var(--signal-positive)' }}>
+                      {article}
+                    </p>
+                  ))}
+
+
+                </div>
+              ))}
+
+            </div>
+          </div>
         </div>
       )}
 
       {activeTab === "watchlist" && (
-        <div className="mt-6 p-5 border border-[var(--border-subtle)] rounded-2xl">
-          <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-4">
-            Latest news
-          </h2>
-          <p className="text-[var(--text-secondary)]">
-            Still to do porfolionews watchlist
-          </p>
+        <div className="mt-6">
+
+          <div className="grid grid-cols-3 gap-6 mt-6">
+
+            <div className="col-span-3 p-5 border border-[var(--border-subtle)] rounded-2xl">
+
+              <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Watchlist News</h2>
+              <div className="flex flex-wrap items-center gap-2 mt-3 mb-6">
+                <button onClick={() => {ToGetTheNews("All");
+                                       setActiveCategory("All")}} className={`px-3 py-1 rounded-full ${activeCategory == "All" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> All </button>
+                <button onClick={() => {ToGetTheNews("Top")
+                                       setActiveCategory("Top")}} className={`px-3 py-1 rounded-full ${activeCategory == "Top" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Top </button>
+                <button onClick={() => {ToGetTheNews("Business")
+                                       setActiveCategory("Business")}} className={`px-3 py-1 rounded-full ${activeCategory == "Business" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Business </button>
+                <button onClick={() => {ToGetTheNews("Technology")
+                                       setActiveCategory("Technology")}} className={`px-3 py-1 rounded-full ${activeCategory == "Technology" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Technology </button>
+                <button onClick={() => {ToGetTheNews("Politics")
+                                       setActiveCategory("Politics")}} className={`px-3 py-1 rounded-full ${activeCategory == "Politics" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Politics </button>
+                <button onClick={() => {ToGetTheNews("Crime")
+                                       setActiveCategory("Crime")}} className={`px-3 py-1 rounded-full ${activeCategory == "Crime" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Crime </button>
+              </div>
+
+              {articles.map((article) => (
+                <div key={article.article_id} className="flex items-center  border-b border-[var(--border-subtle)] p-5 gap-4">
+
+                  <div>
+                    <img
+                      src={article.image_url}
+                      alt="news"
+                      className="w-20 h-20 rounded-lg object-cover" />
+                  </div>
+
+
+                  <div className="flex-1">
+                    <h3 className="text-[var(--text-primary)]">{article.title}</h3>
+                    <p className="text-sm text-[var(--text-secondary)] mt-1">{article.description}</p>
+                    <p className="text-sm text-[var(--text-secondary)] mt-1">{article.pubDate}</p>
+                    <p className="text-sm text-[var(--text-secondary)] mt-1">{article.source_name}</p>
+                  </div>
+
+                  {article.category.map((article) => (
+                    <p key={article} className="px-3 py-1 text-sm rounded-full" style={{ background: 'var(--signal-positive-bg)', color: 'var(--signal-positive)' }}>
+                      {article}
+                    </p>
+                  ))}
+
+
+                </div>
+              ))}
+
+            </div>
+          </div>
         </div>
       )}
 
@@ -209,7 +304,7 @@ const NewsInvestment = () => {
 
             <div className="col-span-3 p-5 border border-[var(--border-subtle)] rounded-2xl">
 
-              <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Latest News</h2>
+              <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Market News</h2>
               <div className="flex flex-wrap items-center gap-2 mt-3 mb-6">
                 <button onClick={() => {ToGetTheNews("All");
                                        setActiveCategory("All")}} className={`px-3 py-1 rounded-full ${activeCategory == "All" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> All </button>

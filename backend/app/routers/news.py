@@ -6,6 +6,7 @@ from app.dependencies import get_current_user
 from app.database import get_db
 from app.schemas.auth import UserResponse
 from sqlalchemy.orm import Session
+from app.models.portfolio import Holdings, Portfolios
 
 load_dotenv()
 
@@ -41,7 +42,21 @@ def get_news(category: str="business"):
 
     return response.json()
 
+@router.get("/portfolio-tickers")
+def get_portfolio_tickers(
+  current_user: UserResponse = Depends(get_current_user),
+  db: Session = Depends(get_db),
+):
 
+  tickers = (db.query(Holdings.ticker).join(Portfolios, Holdings.portfolio_id == Portfolios.id)
+              .filter(Portfolios.user_id == current_user.id, Holdings.ticker.isnot(None), Holdings.ticker != "")
+              .distinct()
+              .all()
+            )
+
+  return {
+    "tickers": [ticker[0] for ticker in tickers]
+  }
 
 
 
