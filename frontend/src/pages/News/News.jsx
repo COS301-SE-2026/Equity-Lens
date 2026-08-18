@@ -9,7 +9,8 @@ const NewsInvestment = () => {
   const [wishlistLowest, setWishlistLowest] = useState([]);
   const [wishlistHighest, setWishlistHighest] = useState([]);
   const [ticker, setTicker] = useState("");
-  const [activeTab, setActiveTab] = useState("portfolio")
+  const [activeTab, setActiveTab] = useState("portfolio");
+  const [activeCategory, setActiveCategory] = useState("portfolio")
 
 
 
@@ -209,13 +210,19 @@ const NewsInvestment = () => {
             <div className="col-span-3 p-5 border border-[var(--border-subtle)] rounded-2xl">
 
               <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Latest News</h2>
-              <div>
-                <button onClick={() => ToGetTheNews("business")} className="px-3 py-1 rounded-full bg-[var(--surface-card)] text-[var(--text-secondary)] ml-4"> All </button>
-                <button onClick={() => ToGetTheNews("Top")} className="px-3 py-1 rounded-full bg-[var(--surface-card)] text-[var(--text-secondary)] ml-4"> Top </button>
-                <button onClick={() => ToGetTheNews("Business")} className="px-3 py-1 rounded-full bg-[var(--surface-card)] text-[var(--text-secondary)] ml-4"> Business </button>
-                <button onClick={() => ToGetTheNews("Technology")} className="px-3 py-1 rounded-full bg-[var(--surface-card)] text-[var(--text-secondary)] ml-4"> Technology </button>
-                <button onClick={() => ToGetTheNews("Politics")} className="px-3 py-1 rounded-full bg-[var(--surface-card)] text-[var(--text-secondary)] ml-4"> Politics </button>
-                <button onClick={() => ToGetTheNews("Crime")} className="px-3 py-1 rounded-full bg-[var(--surface-card)] text-[var(--text-secondary)] ml-4"> Crime </button>
+              <div className="flex flex-wrap items-center gap-2 mt-3 mb-6">
+                <button onClick={() => {ToGetTheNews("All");
+                                       setActiveCategory("All")}} className={`px-3 py-1 rounded-full ${activeCategory == "All" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> All </button>
+                <button onClick={() => {ToGetTheNews("Top")
+                                       setActiveCategory("Top")}} className={`px-3 py-1 rounded-full ${activeCategory == "Top" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Top </button>
+                <button onClick={() => {ToGetTheNews("Business")
+                                       setActiveCategory("Business")}} className={`px-3 py-1 rounded-full ${activeCategory == "Business" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Business </button>
+                <button onClick={() => {ToGetTheNews("Technology")
+                                       setActiveCategory("Technology")}} className={`px-3 py-1 rounded-full ${activeCategory == "Technology" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Technology </button>
+                <button onClick={() => {ToGetTheNews("Politics")
+                                       setActiveCategory("Politics")}} className={`px-3 py-1 rounded-full ${activeCategory == "Politics" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Politics </button>
+                <button onClick={() => {ToGetTheNews("Crime")
+                                       setActiveCategory("Crime")}} className={`px-3 py-1 rounded-full ${activeCategory == "Crime" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Crime </button>
               </div>
 
               {articles.map((article) => (
