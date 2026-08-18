@@ -1,10 +1,10 @@
 import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
 
-/** @param {{ children: any, className?: string }} props */
-export const GlassPanel = ({ children, className = '' }) => (
+/** @param {{ children: any, className?: string, style?: React.CSSProperties, elevated?: boolean }} props */
+export const GlassPanel = ({ children, className = '', style, elevated = false }) => (
   <div
-    className={`overflow-hidden rounded-2xl backdrop-blur-xl ${className}`}
-    style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }} >
+    className={`${elevated ? 'glass-surface-elevated' : 'glass-surface'} overflow-hidden rounded-2xl ${className}`}
+    style={style} >
     {children}
   </div>
 );
