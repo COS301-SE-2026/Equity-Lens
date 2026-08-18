@@ -27,12 +27,12 @@ class UserRepository:
         if user:
             return user
         
-        user = self.get_by_email(email)
-        if user:
-            user.cognito_sub = cognito_sub
-            self.db.commit()
-            self.db.refresh(user)
-            return user
+        # user = self.get_by_email(email)
+        # if user:
+        #     user.cognito_sub = cognito_sub
+        #     self.db.commit()
+        #     self.db.refresh(user)
+        #     return user
 
         user = User(id=uuid4(), email=email, hashed_password=None, full_name=full_name, cognito_sub=cognito_sub)
         self.db.add(user)
