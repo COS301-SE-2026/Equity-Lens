@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
+
 import DashboardHero from './DashboardHero';
 
 const DATA = { holdings: [{ ticker: 'NPN', sector: 'Technology', value: 45000, daily_change_pct: 1.2 }],

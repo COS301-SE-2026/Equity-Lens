@@ -1,7 +1,7 @@
+import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import AppRouter from './router/AppRouter';
-import ErrorBoundary from './components/common/ErrorBoundary/ErrorBoundary';
 import './styles/globals.css';
 
 const App = () => (

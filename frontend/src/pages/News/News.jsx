@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Bookmark, Star, Newspaper, Globe, UserRound } from "lucide-react"
+import { TrendingUp, TrendingDown, Bookmark } from "lucide-react"
 import api from "../../services/api"
 
 
@@ -29,10 +29,10 @@ useEffect(() => {
       return;
     }
 
-    await api.post("/watchlist/", {
-      ticker: ticker,
-    }
-    )
+  await api.post("/watchlist/",{
+    ticker: ticker,
+  }
+  )
 
     setTicker("");
     ToGetWishlist();
@@ -76,9 +76,14 @@ useEffect(() => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
 
-        <div className="flex items-center gap-4 p-4 border border-[var(--border-subtle)] rounded-xl">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-blue-500/15">
-            <Newspaper className="w-6 h-6 text-blue-500" />
+        <div className="p-6 border border-[var(--border-subtle)] rounded-2xl">
+          <div className="flex justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Top Gainer</h2>
+              {wishlist.length === 0 ? (<p className="text-[var(--text-secondary)]"> No Watchlist added</p>) : wishlistHighest.change_percent > 0 ? (<> <p>{wishlistHighest.ticker}({wishlistHighest.sector})</p> <p className="text-[var(--signal-positive)]">+{wishlistHighest.change_percent}</p> </>) : (<p>No Top Gainer</p>)}
+            </div>
+           <div>
+          <TrendingUp className="w-10 h-10 text-[var(--signal-positive)]"></TrendingUp>
           </div>
 
           <div>
@@ -115,10 +120,14 @@ useEffect(() => {
           </div>
         </div>
 
-
-        <div className="flex items-center gap-4 p-4 border border-[var(--border-subtle)] rounded-xl">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/15">
-            <TrendingDown className="w-6 h-6 text-red-500" />
+        <div className="p-6 border border-[var(--border-subtle)] rounded-2xl">
+          <div className="flex justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Top Loser</h2>
+              {wishlist.length == 0 ? (<p className="text-[var(--text-secondary)]">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker}({wishlistLowest.sector})</p> <p className="text-[var(--signal-negative)]">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
+            </div>
+           <div>
+          <TrendingDown className="w-10 h-10 text-[var(--signal-negative)]"></TrendingDown>
           </div>
 
           <div>
@@ -134,24 +143,18 @@ useEffect(() => {
 
           </div>
         </div>
-
-
-        <div className="flex items-center gap-4 p-4 border border-[var(--border-subtle)] rounded-xl">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/15">
-            <Star className="w-6 h-6 text-purple-500" />
-          </div>
-
-          <div>
-            <p className="text-sm font-bold text-[vat(--text-primary)]">
-              Holdings Mentioned
-            </p>
-            <p className="text-xl font-bold text-[vat(--text-primary)]">
-              12
-            </p>
-            <p className="text-sm text-[vat(--text-primary)]">
-              Companies
-            </p>
-
+      
+        </div>
+        
+        <div className="p-6 border border-[var(--border-subtle)] rounded-2xl">
+          <div className="flex justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">My Watchlist</h2>
+              <p>{wishlist.length}</p>
+              <p>Stocks</p>
+            </div>
+           <div>
+          <Bookmark className="w-10 h-10 text-[var(--accent-primary)]"></Bookmark>
           </div>
         </div>
 

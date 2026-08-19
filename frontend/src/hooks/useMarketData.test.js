@@ -1,13 +1,14 @@
+import { renderHook, act } from "@testing-library/react";
 import { beforeEach, describe, it, expect, vi } from "vitest";
-import { renderHook, waitFor, act } from "@testing-library/react";
 
 vi.mock('../services/marketDataService', () => ({
     getStockDetails: vi.fn(),
     getHistorialData: vi.fn(),
     searchStocks: vi.fn(),
 }))
-import { useMarketData } from './useMarketData'
 import { getHistorialData, getStockDetails, searchStocks } from "../services/marketDataService";
+
+import { useMarketData } from './useMarketData'
 describe('useMarketData', () => {
     beforeEach(() => {
         vi.clearAllMocks();

@@ -1,5 +1,6 @@
-import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, it, expect } from "vitest";
+
 import CsvTable from "./CsvTable";
 
 describe("This testing is for the CsvTable", () => 
