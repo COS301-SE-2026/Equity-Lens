@@ -1,8 +1,9 @@
+import { useState,useEffect } from "react";
 import * as ShowPdf from "pdfjs-dist";
 import PDFworker from "pdfjs-dist/build/pdf.worker.mjs?worker";
-import { useState,useEffect } from "react";
+import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, TriangleAlert, Bot ,LoaderCircle } from "lucide-react"
 import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
-import { LoaderCircle, Wallet, Briefcase, ArrowLeftRight, Landmark, TrendingUp, CreditCard, TriangleAlert, Bot } from "lucide-react";
+import api from "../../services/api"
 import * as XLSX from "xlsx"
 
 ShowPdf.GlobalWorkerOptions.workerPort = new PDFworker();
@@ -85,7 +86,7 @@ const ReadingPDFFile = async(file,password) =>
 
   const convertPdf = await ShowPdf.getDocument({
         data: await file.arrayBuffer(),
-        password,
+        password: password,
       }).promise;
 
 
@@ -185,7 +186,7 @@ const ReadingPDFFile = async(file,password) =>
   }
 
   const gettingthData = statementIndex.text.split("to")[1].trim()
-  const date = new Date(gettingthData).toISOString().split("T")[0]
+  let date = new Date(gettingthData).toISOString().split("T")[0]
 
 
   const Portfolio = [{
@@ -243,14 +244,14 @@ const ReadingPDFFile = async(file,password) =>
    const cost = getNumber()
    const quantity = getNumber()
 
-   if(cost === undefined || quantity === undefined)
+   if(cost == undefined || quantity == undefined)
    {
       return null;
    }
 
     const holdings =  {
       instrument_name: instrumentName.trim(),
-      quantity,
+      quantity: quantity,
       total_cost: (cost),
     }
 
@@ -258,7 +259,7 @@ const ReadingPDFFile = async(file,password) =>
 
     return holdings;
 
-  }).filter((item) => item !== null)
+  }).filter((item) => item != null)
 
 
    const PurchaseandSales = PurchaseAndSalesTable.map((row) => {
@@ -299,11 +300,11 @@ const ReadingPDFFile = async(file,password) =>
       transaction_date: splitParts[0].replaceAll("/","-"),
       transaction_name: splitParts[1],
       instrument_name: instrumentname,
-      price,
-      quantity,
+      price: price,
+      quantity: quantity,
     }
 
-  }).filter((item) => item !== null)
+  }).filter((item) => item != null)
 
 
    const ContributionsandWithdrawals = ContributionsTable.map((row) => {
@@ -326,7 +327,7 @@ const ReadingPDFFile = async(file,password) =>
       value: chackThousands ? secondLast + last : last
     }
 
-  }).filter((item) => item !== null)
+  }).filter((item) => item != null)
 
   
    const DividendsandWithholdingTax = TaxTable.map((row) => {
@@ -343,7 +344,7 @@ const ReadingPDFFile = async(file,password) =>
       gross_dividend: splitParts[splitParts.length - 4],
       tax_rate: splitParts[splitParts.length - 1],
     }
-  }).filter((item) => item !== null)
+  }).filter((item) => item != null)
 
    const Expenses = ExpensesTable.map((row) => {
     const splitParts = row.text.split(" ").filter((item => item !== ""))
@@ -359,7 +360,7 @@ const ReadingPDFFile = async(file,password) =>
       narrative:  splitParts.slice(2,-1).join(" "),
       value: splitParts[splitParts.length - 1],
     }
-  }).filter((item) => item !== null)
+  }).filter((item) => item != null)
 
   const results = {Portfolio,Holdings,PurchaseandSales,ContributionsandWithdrawals,DividendsandWithholdingTax,Expenses}
 
@@ -564,8 +565,8 @@ const Portfolio = () => {
               instrument_name: eachItems.instrument_name,
               ticker: " ",
               sector: " ",
-              price,
-              quantity,
+              price: price,
+              quantity: quantity,
               value_zar: (price * quantity),
             }
           )
@@ -583,7 +584,7 @@ const Portfolio = () => {
               transaction_date: eachItems.transaction_date,
               settlement_date: eachItems.statement_date,
               transaction_name: eachItems.transaction_name,
-              value_zar,
+              value_zar: value_zar,
           } 
         );
       }
@@ -601,10 +602,10 @@ const Portfolio = () => {
               instrument_name: eachItems.instrument_name,
               ticker: " ",
               sector: " ",
-              gross_dividend,
+              gross_dividend: gross_dividend,
               withholding_tax: (gross_dividend *  (tax_rate/100)),
-              net_dividend,
-              tax_rate,
+              net_dividend: net_dividend,
+              tax_rate: tax_rate,
             }
            )
           }
@@ -620,7 +621,7 @@ const Portfolio = () => {
               transaction_date: eachItems.transaction_date,
               settlement_date: eachItems.settlement_date,
               narrative_name: eachItems.narrative,
-              value_zar,
+              value_zar: value_zar,
             }
         );
       }
@@ -784,10 +785,9 @@ const Portfolio = () => {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="account-type-select" className="block text-sm text-gray-400 mb-2"> Account Type</label>
+              <label className="block text-sm text-gray-400 mb-2"> Account Type</label>
 
               <select
-                id="account-type-select"
                 value={accountType}
                 onChange={(event) => setAccountType(event.target.value )}
                 className="w-full bg-gray-800 border border-gray-700 text-white p-3 rounded-xl"
@@ -801,12 +801,11 @@ const Portfolio = () => {
               </select>
             </div>
 
-            <label htmlFor="statement-file-input" className="block text-center cursor-pointer w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
+            <label className="block text-center cursor-pointer w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
+
               choose the File
-              </label>
 
             <input
-              id ="statement-file-input"
               type="file"
               accept=".pdf,.xlsx"
               className="hidden"
@@ -845,7 +844,7 @@ const Portfolio = () => {
                 await SavePortfolio(data,file);
               }
             
-            catch
+            catch(theError)
             {
               if(file.name.toLowerCase().endsWith(".pdf"))
               {
@@ -868,7 +867,7 @@ const Portfolio = () => {
             }
           }
             />
-          
+          </label>
 
           <p className="text-sm text-gray-500 text-center mt-3">
             PDF or XLSX
@@ -882,7 +881,7 @@ const Portfolio = () => {
               </h3>
 
               <p className="text-sm text-gray-400">
-                Don&apos;t have a supported PDF? Don&apos;t worry, You can enter your portfolio
+                Don't have a supported PDF? Don't worry, You can enter your portfolio
                 manually using our template
               </p>
             </div>
@@ -1042,10 +1041,15 @@ const Portfolio = () => {
       }
 
 
-      <div className="grid grid-cols-4 gap-8 mt-8" />
+      <div className="grid grid-cols-4 gap-8 mt-8">
+         
+      </div>
 
 
-      <div className="grid grid-cols-2 gap-8" />
+      <div className="grid grid-cols-2 gap-8">
+        
+
+      </div>
 
 
       { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 mb-7">
@@ -1170,7 +1174,9 @@ const Portfolio = () => {
                      style={{
                       width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
                       backgroundColor: colours[index % colours.length]
-                     }} />
+                     }}>
+
+                </div>
               </div>
 
             </div>
@@ -1186,7 +1192,7 @@ const Portfolio = () => {
         <div className="p-6 border border-red-700 rounded-2xl">
 
           <div className="flex items-center gap-2">
-            <TriangleAlert size={24} className="text-red-500" />
+            <TriangleAlert size={24} className="text-red-500"></TriangleAlert>
             <h2 className="text-xl font-bold text-red">
               Lowest Holding
             </h2>
@@ -1214,7 +1220,7 @@ const Portfolio = () => {
         <div className="p-6 border border-purple-500 rounded-2xl">
 
           <div className="flex items-center gap-2">
-            <Bot size={24} className="text-purple-500" />
+            <Bot size={24} className="text-purple-500"></Bot>
             <h2 className="text-xl font-bold">
               AI Portfolio Assistant
             </h2>

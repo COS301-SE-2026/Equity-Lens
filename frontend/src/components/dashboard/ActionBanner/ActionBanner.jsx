@@ -1,7 +1,6 @@
 import { CheckCircle2, Upload } from 'lucide-react';
-import { Link } from 'react-router-dom';
-
 import { GlassPanel, PanelHead } from '../shared/GlassPanel';
+import { Link } from 'react-router-dom';
 
 const SEVERITY = {
   risk: { color: 'var(--signal-negative)', bg: 'var(--signal-negative-bg)', label: 'Risk' },

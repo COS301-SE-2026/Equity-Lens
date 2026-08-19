@@ -1,6 +1,5 @@
-import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-
+import { render, screen } from '@testing-library/react';
 import StockTickerCard from './StockTickerCard';
 
 const mockProps = {

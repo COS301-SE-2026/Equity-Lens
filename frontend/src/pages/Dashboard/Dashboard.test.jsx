@@ -1,7 +1,6 @@
 import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
-
 import Dashboard from './Dashboard';
 
 vi.mock('recharts', async () => {

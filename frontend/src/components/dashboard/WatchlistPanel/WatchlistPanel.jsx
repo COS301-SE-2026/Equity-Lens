@@ -1,9 +1,9 @@
-import { Plus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { Plus } from 'lucide-react';
 
-import useWatchlist from '../../../hooks/useWatchlist';
 import { GlassPanel } from '../shared/GlassPanel';
 import WatchlistItem from '../WatchlistItem/WatchlistItem';
+import useWatchlist from '../../../hooks/useWatchlist';
 
 const VISIBLE_LIMIT = 3;
 

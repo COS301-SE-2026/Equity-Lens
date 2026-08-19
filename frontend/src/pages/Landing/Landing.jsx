@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   Menu,
@@ -10,9 +12,7 @@ import {
   Layers,
   KeyRound,
 } from 'lucide-react';
-import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
 import {
   PieChart,
   Pie,
@@ -20,7 +20,6 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts';
-
 import { ROUTES } from '../../utils/constants';
 
 const CONTACT_EMAIL = 'thebigfivetb5@gmail.com';
@@ -941,7 +940,8 @@ const ShowcaseFrame = ({ src, alt }) => {
         <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-zinc-900/60">
           
           {hasError ? (
-            <div className="flex flex-col items-center gap-2" />
+            <div className="flex flex-col items-center gap-2">
+            </div>
           ) : (
             <>
               <img

@@ -1,7 +1,6 @@
 import { motion, useReducedMotion  } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
 import { zar, zarFull } from '../../../utils/currency';
 import SecondaryButton from '../shared/SecondaryButton';
 

@@ -1,6 +1,5 @@
-import { AlertTriangle, Lightbulb, MessageCircle, CheckCircle2, Upload } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
+import { AlertTriangle, Lightbulb, MessageCircle, CheckCircle2, Upload } from 'lucide-react';
 import { GlassPanel, PanelHead } from '../shared/GlassPanel';
 
 const SEVERITY = {

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-
 import { getWatchlist, addToWatchlist, removeFromWatchlist } from '../services/watchlistService';
 
 /**

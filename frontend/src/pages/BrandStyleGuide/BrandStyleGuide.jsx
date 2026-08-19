@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -7,13 +9,10 @@ import {
   ChevronRight,
   Lightbulb,
 } from 'lucide-react';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-
 import Button from '../../components/common/Button/Button';
-import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
 import FormInput from '../../components/forms/FormInput/FormInput';
 import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
+import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
 import { ROUTES } from '../../utils/constants';
 
 /** @type {import('framer-motion').HTMLMotionProps<'section'>} */
