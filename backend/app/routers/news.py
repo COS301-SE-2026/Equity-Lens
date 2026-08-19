@@ -96,10 +96,8 @@ def test_aapl_news(ticker: str):
 
                 if sentiment > 0:
                     positive += 1
-
-                if sentiment > 0:
+                elif sentiment < 0:
                     negative += 1
-            
                 else:
                     neutral += 1
 

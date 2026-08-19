@@ -11,6 +11,11 @@ const NewsInvestment = () => {
   const [activeTab, setActiveTab] = useState("portfolio");
   const [activeCategory, setActiveCategory] = useState("portfolio");
   const [portfoliosTickers, setPortfoliosTickers] = useState([]);
+  const [positive, setPositive] = useState(0);
+  const [negative, setNegative] = useState(0);
+  const [neutral, setNeutral] = useState(0);
+  const [totalArticles, setTotalArticles] = useState(0);
+
 
   const ToGetTickerNews = async (ticker) => {
     const response = await api.get(`/news/test-aapl/${ticker}`);
@@ -28,6 +33,12 @@ const NewsInvestment = () => {
     }))
 
     setArticles(formattedArticles)
+    setPositive(response.data.positive || 0);
+    setNegative(response.data.negative || 0);
+    setNeutral(response.data.neutral || 0);
+    setTotalArticles(response.data.total_articles || 0)
+
+  
   };
 
   const ToGetPortfoliosTickers = async () => {
@@ -62,6 +73,12 @@ const NewsInvestment = () => {
     const gettingTheNews = await api.get(`/news/?category=${getName}`);
     setArticles(gettingTheNews.data.results || []);
 
+    setPositive(0);
+    setNegative(0);
+    setNeutral(0);
+    setTotalArticles((gettingTheNews.data.results || []).length);
+
+
   }
 
   const ToGetWishlist = async () => {
@@ -79,6 +96,7 @@ const NewsInvestment = () => {
   }
 
   useEffect(() => { ToGetTheNews() }, []);
+  
   useEffect(() => { ToGetWishlist() }, []);
 
 
@@ -103,7 +121,7 @@ const NewsInvestment = () => {
               Relevant Articles
             </p>
             <p className="text-xl font-bold text-[var(--text-primary)]">
-              12
+              {totalArticles}
             </p>
             <p className="text-sm text-[var(--text-primary)]">
               Today
@@ -123,7 +141,7 @@ const NewsInvestment = () => {
               Positive Impact
             </p>
             <p className="text-xl font-bold text-[var(--text-primary)]">
-              12
+              {positive}
             </p>
             <p className="text-sm text-[var(--text-primary)]">
               On your holdings
@@ -143,7 +161,7 @@ const NewsInvestment = () => {
               Negative Impact
             </p>
             <p className="text-xl font-bold text-[var(--text-primary)]">
-              12
+              {negative}
             </p>
             <p className="text-sm text-[var(--text-primary)]">
               Today
@@ -160,13 +178,13 @@ const NewsInvestment = () => {
 
           <div>
             <p className="text-sm font-bold text-[var(--text-primary)]">
-              Holdings Mentioned
+              Neutral Impact
             </p>
             <p className="text-xl font-bold text-[var(--text-primary)]">
-              12
+              {neutral}
             </p>
             <p className="text-sm text-[var(--text-primary)]">
-              Companies
+              Today
             </p>
 
           </div>
