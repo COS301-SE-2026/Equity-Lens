@@ -13,7 +13,7 @@ import api from '../../services/api'
 
 const SUGGESTED_PROMPTS = [
   'How is MTN doing?',
-  "What's Sasol trading at?",
+  "What is the news with Sasol?",
   'How is my portfolio performing compared to the JSE benchmark?'
 ];
 
