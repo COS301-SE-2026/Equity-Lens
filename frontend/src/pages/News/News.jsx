@@ -73,11 +73,10 @@ const NewsInvestment = () => {
     const gettingTheNews = await api.get(`/news/?category=${getName}`);
     setArticles(gettingTheNews.data.results || []);
 
-    setPositive(0);
-    setNegative(0);
-    setNeutral(0);
-    setTotalArticles((gettingTheNews.data.results || []).length);
-
+    setPositive(gettingTheNews.data.positive || 0);
+    setNegative(gettingTheNews.data.negative || 0);
+    setNeutral(gettingTheNews.data.neutral || 0);
+    setTotalArticles(gettingTheNews.data.total_articles || 0);
 
   }
 
@@ -214,7 +213,7 @@ const NewsInvestment = () => {
           Watchlist
         </button>
 
-        <button onClick={() => setActiveTab("market")}
+        <button onClick={() => {setActiveTab("market"); setActiveCategory("Business"); ToGetTheNews("business")}}
           className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab === "market"
             ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
             : "bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]"
