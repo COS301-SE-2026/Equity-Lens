@@ -12,6 +12,7 @@ import NotFound from '../pages/NotFound/NotFound';
 import News from '../pages/News/News';
 import AIChat from '../pages/AIChat/AIChat';
 import Help from '../pages/Help/Help';
+// import HelpLandingPage from '../pages/HelpLandingPage/HelpLandingPage';
 import { ROUTES } from '../utils/constants';
 import Analytics from '../pages/Analytics/Analytics';
 import ConfirmEmail from '../pages/Auth/ConfirmEmail';
@@ -81,6 +82,7 @@ export const AppRoutes = () => (
       <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
       <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
       <Route path={ROUTES.HELP} element={<HelpRoute />} />
+      {/* <Route path="/help-landing" element={<HelpLandingPage />} /> */}
 
       <Route path={ROUTES.HOME} element={<Landing />} />  
       <Route path={ROUTES.BRAND_GUIDE} element={<BrandStyleGuide />} />

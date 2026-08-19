@@ -1,0 +1,36 @@
+# copy to terraform.tfvars and fill in. terraform.tfvars is gitignored
+# frontend/.env.example elsewhere in this repo.
+
+aws_region = "af-south-1"
+
+environment = "production"
+
+instance_type = "t3.micro"
+
+tags = {
+  Project   = "EquityLens"
+  Team      = "TB5"
+  ManagedBy = "Terraform"
+}
+
+# defaults already match this repo (COS301-SE-2026/Equity-Lens)
+# github_org  = "COS301-SE-2026"
+# github_repo = "Equity-Lens"
+
+# BACKEND_ECR_REPOSITORY / FRONTEND_ECR_REPOSITORY on the real repo
+backend_ecr_repository_name  = ""
+frontend_ecr_repository_name = ""
+
+# vpc_id / subnet_id / availability_zone / rds_security_group_id /
+# key_pair_name already default to the real values (same VPC/subnet/
+# RDS-access group as current production, and the "equitylens-prod-new"
+# key pair) - only override below if those change.
+# vpc_id                 = "vpc-0f7e42a91d611b645"
+# subnet_id              = "subnet-05821aad112942f72"
+# availability_zone      = "af-south-1b"
+# rds_security_group_id  = "sg-0a2366186e858c5d3"
+# key_pair_name          = "equitylens-prod-new"
+
+# optional but we can flip to true after confirming the narrower hand-written
+# SSM policy actually works (see modules/iam/main.tf)
+# use_minimal_ssm_policy = false

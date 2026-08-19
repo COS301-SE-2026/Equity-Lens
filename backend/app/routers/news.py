@@ -4,7 +4,7 @@ import requests
 from dotenv import load_dotenv
 from app.dependencies import get_current_user
 from app.database import get_db
-from app.schemas.auth import UserResponse
+from app.models.user import User
 from sqlalchemy.orm import Session
 from app.models.portfolio import Holdings, Portfolios
 
@@ -13,7 +13,7 @@ load_dotenv()
 router = APIRouter(prefix="/api/news", tags=["importing news"])
 
 @router.get("/all")
-def get_news():
+def get_news(current_user: User = Depends(get_current_user)):
     api_key=os.getenv("NEWSDATA_API_KEY")
 
     response = requests.get("https://newsdata.io/api/1/latest",
@@ -27,7 +27,7 @@ def get_news():
     return response.json()
 
 @router.get("/")
-def get_news(category: str="business"):
+def get_news(category: str="business", current_user: User = Depends(get_current_user)):
     api_key=os.getenv("NEWSDATA_API_KEY")
 
     response = requests.get("https://newsdata.io/api/1/latest",

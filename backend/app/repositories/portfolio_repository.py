@@ -80,3 +80,22 @@ class PortfolioRepository:
             }
             for row in rows
         ]
+
+    def get_latest_portfolio(self, user_id: UUID):
+        stmt = (
+            select(Portfolios)
+            .where(Portfolios.user_id == user_id)
+            .order_by(Portfolios.created_at.desc())
+        )
+        return self.db.scalers(stmt).first()
+
+    def get_current_portfolios(self, user_id: UUID):
+        stmt = (
+            select(Portfolios)
+            .where(Portfolios.user_id == user_id)
+            .order_by(Portfolios.created_at.desc())
+        )
+        return list(self.db.scalars(stmt).all())
+    
+
+    
