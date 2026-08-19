@@ -1,12 +1,12 @@
 import { useState } from "react";
 import * as ShowPdf from "pdfjs-dist";
-import showOnUrl from "pdfjs-dist/build/pdf.worker.mjs?url";
+import PDFworker from "pdfjs-dist/build/pdf.worker.mjs?worker";
 import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, TriangleAlert, Bot ,LoaderCircle } from "lucide-react"
 import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
 import api from "../../services/api"
 import * as XLSX from "xlsx"
 
-ShowPdf.GlobalWorkerOptions.workerSrc = showOnUrl;
+ShowPdf.GlobalWorkerOptions.workerPort = new PDFworker();
 
 const DownloadEXCEL = () =>{ window.open("/template/EquityLens_Portfolio_Excel_Template.xlsx") }
 
