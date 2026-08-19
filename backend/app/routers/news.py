@@ -22,10 +22,41 @@ def get_news(current_user: User = Depends(get_current_user)):
         "apikey": api_key,
         "language" : "en",
       },
-      timeout=4,
-  )
+      timeout=10,
+    )
 
-    return response.json()
+    data = response.json()
+
+    if "error" in data:
+        return data
+
+    articles = data.get("results", [])
+
+    positive = 0
+    negative = 0
+    neutral = 0
+
+    for article in articles:
+        sentiment = article.get("sentiment")
+
+        if sentiment is None:
+            continue
+
+        if sentiment == "positive":
+            positive += 1
+        elif sentiment == "negative":
+            negative += 1
+        elif sentiment == "neutral":
+            neutral += 1
+
+    return {
+        "total_articles": len(articles),
+        "positive": positive,
+        "negative": negative,
+        "neutral": neutral,
+        "results": articles
+    }
+
 
 @router.get("/")
 def get_news(category: str="business", current_user: User = Depends(get_current_user)):
@@ -37,11 +68,42 @@ def get_news(category: str="business", current_user: User = Depends(get_current_
         "category": category,
         "language" : "en",
       },
-      timeout=4,
+      timeout=10,
     )
 
+    data = response.json()
 
-    return response.json()
+    if "error" in data:
+        return data
+
+    articles = data.get("results", [])
+
+    positive = 0
+    negative = 0
+    neutral = 0
+
+    for article in articles:
+        sentiment = article.get("sentiment")
+
+        print("Errors:", sentiment)
+
+        if sentiment is None:
+            continue
+
+        if sentiment == "positive":
+            positive += 1
+        elif sentiment == "negative":
+            negative += 1
+        elif sentiment == "neutral":
+            neutral += 1
+
+    return {
+        "total_articles": len(articles),
+        "positive": positive,
+        "negative": negative,
+        "neutral": neutral,
+        "results": articles
+    }
 
 @router.get("/portfolio-tickers")
 def get_portfolio_tickers(
