@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Bookmark,Star,UserRound, Newspaper, Globe, UserRound } from "lucide-react"
-
+import { TrendingUp, TrendingDown, Bookmark,Star, Newspaper, Globe, UserRound } from "lucide-react";
+import api from "../../services/api"
 
 const NewsInvestment = () => {
   const [articles, setArticles] = useState([]);
@@ -81,19 +81,18 @@ useEffect(() => {
           </div>
 
           <div>
-            <p className="text-sm font-bold text-[vat(--text-primary)]">
+            <p className="text-sm font-bold text-[var(--text-primary)]">
               Relevant Articles
             </p>
-            <p className="text-xl font-bold text-[vat(--text-primary)]">
+            <p className="text-xl font-bold text-[var(--text-primary)]">
               12
             </p>
-            <p className="text-sm text-[vat(--text-primary)]">
+            <p className="text-sm text-[var(--text-primary)]">
               Today
             </p>
 
           </div>
         </div>
-      </div>
 
 
         <div className="flex items-center gap-4 p-4 border border-[var(--border-subtle)] rounded-xl">
@@ -102,13 +101,13 @@ useEffect(() => {
           </div>
 
           <div>
-            <p className="text-sm font-bold text-[vat(--text-primary)]">
+            <p className="text-sm font-bold text-[var(--text-primary)]">
               Positive Impact
             </p>
-            <p className="text-xl font-bold text-[vat(--text-primary)]">
+            <p className="text-xl font-bold text-[var(--text-primary)]">
               12
             </p>
-            <p className="text-sm text-[vat(--text-primary)]">
+            <p className="text-sm text-[var(--text-primary)]">
               On your holdings
             </p>
 
@@ -122,13 +121,13 @@ useEffect(() => {
           </div>
 
           <div>
-            <p className="text-sm font-bold text-[vat(--text-primary)]">
+            <p className="text-sm font-bold text-[var(--text-primary)]">
               Negative Impact
             </p>
-            <p className="text-xl font-bold text-[vat(--text-primary)]">
+            <p className="text-xl font-bold text-[var(--text-primary)]">
               12
             </p>
-            <p className="text-sm text-[vat(--text-primary)]">
+            <p className="text-sm text-[var(--text-primary)]">
               Today
             </p>
 
@@ -142,13 +141,13 @@ useEffect(() => {
           </div>
 
           <div>
-            <p className="text-sm font-bold text-[vat(--text-primary)]">
+            <p className="text-sm font-bold text-[var(--text-primary)]">
               Holdings Mentioned
             </p>
-            <p className="text-xl font-bold text-[vat(--text-primary)]">
+            <p className="text-xl font-bold text-[var(--text-primary)]">
               12
             </p>
-            <p className="text-sm text-[vat(--text-primary)]">
+            <p className="text-sm text-[var(--text-primary)]">
               Companies
             </p>
 
@@ -160,7 +159,7 @@ useEffect(() => {
       <div className="flex items-center mt-4 gap-2">
         <button
           onClick={() => setActiveTab("portfolio")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab == "portfolio"
+          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab === "portfolio"
             ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
             : "bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]"
             }`}
@@ -171,7 +170,7 @@ useEffect(() => {
 
         <button
           onClick={() => setActiveTab("watchlist")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab == "watchlist"
+          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab === "watchlist"
             ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
             : "bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]"
             }`}>
@@ -180,7 +179,7 @@ useEffect(() => {
         </button>
 
         <button onClick={() => setActiveTab("market")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab == "market"
+          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab === "market"
             ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
             : "bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]"
             }`}>
@@ -199,7 +198,7 @@ useEffect(() => {
               <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Portfolio News</h2>
               <div className="flex flex-wrap gap-2">
               {portfoliosTickers.map((ticker) => (
-                <button key={ticker} onClick={() => {setActiveCategory(ticker)}} className={`px-3 py-1 rounded-full ${activeCategory == ticker ? 
+                <button key={ticker} onClick={() => {setActiveCategory(ticker)}} className={`px-3 py-1 rounded-full ${activeCategory === ticker ? 
                   "bg-blue-500/20 text-blue-400 border-blue-500/40" : 
                   "bg-[var(--surface-card)] text-[var(--text-secdonary)] border-transparent"}`}>
                   {ticker}
@@ -352,8 +351,7 @@ useEffect(() => {
           </div>
         </div>
       )}
-    </div>
- </div>
+      </div>
   );
 };
 
