@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Bookmark,Star, Newspaper, Globe, UserRound } from "lucide-react";
+import { TrendingUp, TrendingDown, Bookmark, Star, Newspaper, Globe, UserRound } from "lucide-react";
 import api from "../../services/api"
 
 const NewsInvestment = () => {
@@ -12,14 +12,32 @@ const NewsInvestment = () => {
   const [activeCategory, setActiveCategory] = useState("portfolio");
   const [portfoliosTickers, setPortfoliosTickers] = useState([]);
 
+  const ToGetTickerNews = async (ticker) => {
+    const response = await api.get(`/news/test-aapl/${ticker}`);
+
+    const tickerArticles = response.data.articles || [];
+
+    const formattedArticles = tickerArticles.map((article) => ({
+      article_id: article.uuid,
+      title: article.title,
+      description: article.description,
+      image_url: article.image_url,
+      pubDate: article.published_at,
+      source_name: article.source,
+      category: [ticker]
+    }))
+
+    setArticles(formattedArticles)
+  };
+
   const ToGetPortfoliosTickers = async () => {
     const reponse = await api.get("/news/portfolio-tickers");
-    setPortfoliosTickers(reponse.data.tickers || [] );
+    setPortfoliosTickers(reponse.data.tickers || []);
   }
 
-useEffect(() => {
-  ToGetPortfoliosTickers();
-}, []);
+  useEffect(() => {
+    ToGetPortfoliosTickers();
+  }, []);
 
 
 
@@ -197,13 +215,14 @@ useEffect(() => {
 
               <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Portfolio News</h2>
               <div className="flex flex-wrap gap-2">
-              {portfoliosTickers.map((ticker) => (
-                <button key={ticker} onClick={() => {setActiveCategory(ticker)}} className={`px-3 py-1 rounded-full ${activeCategory === ticker ? 
+                {portfoliosTickers.map((ticker) => (
+                <button key={ticker} onClick={() => {setActiveCategory(ticker); ToGetTickerNews(ticker);}} className={`px-3 py-1 rounded-full ${activeCategory === ticker ? 
                   "bg-blue-500/20 text-blue-400 border-blue-500/40" : 
                   "bg-[var(--surface-card)] text-[var(--text-secdonary)] border-transparent"}`}>
                   {ticker}
                 </button>
               ))}
+ 
               </div>
 
               {articles.map((article) => (
@@ -248,18 +267,30 @@ useEffect(() => {
 
               <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Watchlist News</h2>
               <div className="flex flex-wrap items-center gap-2 mt-3 mb-6">
-                <button onClick={() => {ToGetTheNews("All");
-                                       setActiveCategory("All")}} className={`px-3 py-1 rounded-full ${activeCategory == "All" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> All </button>
-                <button onClick={() => {ToGetTheNews("Top")
-                                       setActiveCategory("Top")}} className={`px-3 py-1 rounded-full ${activeCategory == "Top" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Top </button>
-                <button onClick={() => {ToGetTheNews("Business")
-                                       setActiveCategory("Business")}} className={`px-3 py-1 rounded-full ${activeCategory == "Business" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Business </button>
-                <button onClick={() => {ToGetTheNews("Technology")
-                                       setActiveCategory("Technology")}} className={`px-3 py-1 rounded-full ${activeCategory == "Technology" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Technology </button>
-                <button onClick={() => {ToGetTheNews("Politics")
-                                       setActiveCategory("Politics")}} className={`px-3 py-1 rounded-full ${activeCategory == "Politics" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Politics </button>
-                <button onClick={() => {ToGetTheNews("Crime")
-                                       setActiveCategory("Crime")}} className={`px-3 py-1 rounded-full ${activeCategory == "Crime" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Crime </button>
+                <button onClick={() => {
+                  ToGetTheNews("All");
+                  setActiveCategory("All")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "All" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> All </button>
+                <button onClick={() => {
+                  ToGetTheNews("Top")
+                  setActiveCategory("Top")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "Top" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Top </button>
+                <button onClick={() => {
+                  ToGetTheNews("Business")
+                  setActiveCategory("Business")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "Business" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Business </button>
+                <button onClick={() => {
+                  ToGetTheNews("Technology")
+                  setActiveCategory("Technology")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "Technology" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Technology </button>
+                <button onClick={() => {
+                  ToGetTheNews("Politics")
+                  setActiveCategory("Politics")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "Politics" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Politics </button>
+                <button onClick={() => {
+                  ToGetTheNews("Crime")
+                  setActiveCategory("Crime")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "Crime" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Crime </button>
               </div>
 
               {articles.map((article) => (
@@ -305,18 +336,30 @@ useEffect(() => {
 
               <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Market News</h2>
               <div className="flex flex-wrap items-center gap-2 mt-3 mb-6">
-                <button onClick={() => {ToGetTheNews("All");
-                                       setActiveCategory("All")}} className={`px-3 py-1 rounded-full ${activeCategory == "All" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> All </button>
-                <button onClick={() => {ToGetTheNews("Top")
-                                       setActiveCategory("Top")}} className={`px-3 py-1 rounded-full ${activeCategory == "Top" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Top </button>
-                <button onClick={() => {ToGetTheNews("Business")
-                                       setActiveCategory("Business")}} className={`px-3 py-1 rounded-full ${activeCategory == "Business" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Business </button>
-                <button onClick={() => {ToGetTheNews("Technology")
-                                       setActiveCategory("Technology")}} className={`px-3 py-1 rounded-full ${activeCategory == "Technology" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Technology </button>
-                <button onClick={() => {ToGetTheNews("Politics")
-                                       setActiveCategory("Politics")}} className={`px-3 py-1 rounded-full ${activeCategory == "Politics" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Politics </button>
-                <button onClick={() => {ToGetTheNews("Crime")
-                                       setActiveCategory("Crime")}} className={`px-3 py-1 rounded-full ${activeCategory == "Crime" ? "bg-blue-500/20 text-blue border border-blue-500/40 ": "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Crime </button>
+                <button onClick={() => {
+                  ToGetTheNews("All");
+                  setActiveCategory("All")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "All" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> All </button>
+                <button onClick={() => {
+                  ToGetTheNews("Top")
+                  setActiveCategory("Top")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "Top" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Top </button>
+                <button onClick={() => {
+                  ToGetTheNews("Business")
+                  setActiveCategory("Business")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "Business" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Business </button>
+                <button onClick={() => {
+                  ToGetTheNews("Technology")
+                  setActiveCategory("Technology")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "Technology" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Technology </button>
+                <button onClick={() => {
+                  ToGetTheNews("Politics")
+                  setActiveCategory("Politics")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "Politics" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Politics </button>
+                <button onClick={() => {
+                  ToGetTheNews("Crime")
+                  setActiveCategory("Crime")
+                }} className={`px-3 py-1 rounded-full ${activeCategory == "Crime" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Crime </button>
               </div>
 
               {articles.map((article) => (
@@ -351,7 +394,7 @@ useEffect(() => {
           </div>
         </div>
       )}
-      </div>
+    </div>
   );
 };
 
