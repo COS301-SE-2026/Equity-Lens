@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, TrendingDown, Bookmark } from "lucide-react"
+import { TrendingUp, TrendingDown, Bookmark,Star,UserRound } from "lucide-react"
 import api from "../../services/api"
 
 
@@ -99,6 +99,7 @@ useEffect(() => {
 
           </div>
         </div>
+      </div>
 
 
         <div className="flex items-center gap-4 p-4 border border-[var(--border-subtle)] rounded-xl">
@@ -356,8 +357,7 @@ useEffect(() => {
         </div>
       )}
     </div>
-
-
+ </div>
   );
 };
 
