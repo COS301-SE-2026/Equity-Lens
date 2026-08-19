@@ -10,17 +10,16 @@ const Button = ({
   className = '',
 }) => {
   const baseStyles = `
-    inline-flex items-center justify-center gap-2
-    font-semibold rounded-lg transition-all duration-150
-    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-primary)]
-    disabled:opacity-40 disabled:cursor-not-allowed
+    pressable inline-flex items-center justify-center gap-2
+    font-semibold rounded-lg
+    disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100
   `;
 
   const variants = {
     primary: 'bg-[var(--accent-primary)] text-[var(--text-on-accent)] hover:bg-[var(--accent-hover)]',
     secondary: 'bg-transparent text-[var(--accent-primary)] border border-[var(--accent-primary)] hover:bg-[var(--accent-subtle)]',
     ghost: 'bg-transparent text-[var(--text-primary)] border border-[var(--border-default)] hover:bg-[var(--bg-secondary)]',
-    danger: 'bg-[var(--color-danger)] text-white hover:bg-red-700',
+    danger: 'bg-[var(--color-danger)] text-[var(--text-on-accent)] hover:brightness-90',
   };
 
   const sizes = {
