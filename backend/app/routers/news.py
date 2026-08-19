@@ -59,15 +59,15 @@ def get_portfolio_tickers(
     "tickers": [ticker[0] for ticker in tickers]
   }
 
-@router.get("/test-aapl")
-def test_aapl_news():
+@router.get("/test-aapl/{ticker}")
+def test_aapl_news(ticker: str):
     api_key = os.getenv("MARKET_API_KEY")
 
     response = requests.get(
         "https://api.marketaux.com/v1/news/all",
         params={
             "api_token": api_key,
-            "symbols": "AAPL",
+            "symbols": ticker,
             "filter_entities": "true",
             "language": "en",
             "limit": 20
@@ -88,7 +88,7 @@ def test_aapl_news():
 
     for article in articles:
         for entity in article.get("entities",[]):
-            if entity.get("symbol") == "AAPL":
+            if entity.get("symbol") == ticker:
                 sentiment = entity.get("sentiment_score")
 
                 if sentiment is None:
@@ -104,7 +104,7 @@ def test_aapl_news():
                     neutral += 1
 
     return {
-        "ticker": "AAPL",
+        "ticker": ticker,
         "total_articles": len(articles),
         "positive": positive,
         "negative": negative,
