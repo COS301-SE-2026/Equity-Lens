@@ -5,10 +5,6 @@ import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Lin
 import { LoaderCircle, Wallet, Briefcase, ArrowLeftRight, Landmark, TrendingUp, CreditCard, TriangleAlert, Bot } from "lucide-react";
 import * as XLSX from "xlsx"
 
-import api from "../../services/api"
-
-import api from "../../services/api"
-
 ShowPdf.GlobalWorkerOptions.workerPort = new PDFworker();
 
 const DownloadEXCEL = () =>{ window.open("/template/EquityLens_Portfolio_Excel_Template.xlsx") }
