@@ -7,6 +7,7 @@ from app.database import get_db
 from app.models.user import User
 from sqlalchemy.orm import Session
 from app.models.portfolio import Holdings, Portfolios
+from app.schemas.auth import UserResponse
 
 load_dotenv()
 

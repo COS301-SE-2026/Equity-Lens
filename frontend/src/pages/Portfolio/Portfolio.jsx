@@ -406,7 +406,6 @@ const Portfolio = () => {
     const getInfo = async () => {
       const responses = await api.get("/portfolio/current");
       setPortfolios(responses.data);
-      console.log(responses.data)
     };
 
     getInfo();
@@ -473,7 +472,7 @@ const Portfolio = () => {
 
   catch(error)
   {
-    console.log(error)
+
   }
   finally
   {
@@ -682,16 +681,9 @@ const Portfolio = () => {
       const IncomeImport = Income.data;
       setGetDividendIncome(IncomeImport);
 
-      //  const Expenses = await api.get(
-      //   `/import_pdf_summary/expenses/${savedPortfolio.portfolio_id}`
-      // )
-
-      // const ExpensesImport = Expenses.data;
-
     }
     catch (theErrors)
     {
-      console.error("SavePortfolio failed:", theErrors)
 
       if(file.name.toLowerCase().endsWith(".pdf"))
       {
