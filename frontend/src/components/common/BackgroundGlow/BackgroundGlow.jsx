@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react';
 
-const LERP = 0.045;
 const SIZE = 520;
+const MIN_LERP = 0.004;
+const MAX_LERP = 0.012;
+const MIN_WAIT_MS = 4000;
+const MAX_WAIT_MS = 9000;
+
+/** @param {number} min @param {number} max */
+const randomBetween = (min, max) => min + Math.random() * (max - min);
 
 const BackgroundGlow = () => {
   /** @type {import('react').RefObject<HTMLDivElement>} */
@@ -15,25 +21,29 @@ const BackgroundGlow = () => {
     let y = window.innerHeight / 2;
     let targetX = x;
     let targetY = y;
+    let lerp = randomBetween(MIN_LERP, MAX_LERP);
     el.style.transform = `translate3d(${x - SIZE / 2}px, ${y - SIZE / 2}px, 0)`;
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduceMotion) return;
 
-    /** @param {MouseEvent} e */
-    const handleMove = (e) => {
-      targetX = e.clientX;
-      targetY = e.clientY;};
-    window.addEventListener('mousemove', handleMove);
+    /** @type {ReturnType<typeof setTimeout>} */
+    let wanderTimeout;
+    const pickNewTarget = () => {
+      targetX = randomBetween(0, window.innerWidth);
+      targetY = randomBetween(0, window.innerHeight);
+      lerp = randomBetween(MIN_LERP, MAX_LERP);
+      wanderTimeout = setTimeout(pickNewTarget, randomBetween(MIN_WAIT_MS, MAX_WAIT_MS));};
+    wanderTimeout = setTimeout(pickNewTarget, randomBetween(MIN_WAIT_MS, MAX_WAIT_MS));
 
     let frame = requestAnimationFrame(function tick() {
-      x += (targetX - x) * LERP;
-      y += (targetY - y) * LERP;
+      x += (targetX - x) * lerp;
+      y += (targetY - y) * lerp;
       el.style.transform = `translate3d(${x - SIZE / 2}px, ${y - SIZE / 2}px, 0)`;
       frame = requestAnimationFrame(tick);});
 
     return () => {
-      window.removeEventListener('mousemove', handleMove);
+      clearTimeout(wanderTimeout);
       cancelAnimationFrame(frame);
     };
   }, []);

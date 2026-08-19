@@ -40,7 +40,10 @@ const ThemeTogglePill = () => {
         <Moon size={12} className="relative" style={{ color: isDark ? 'var(--text-on-accent)' : 'var(--text-ghost)' }} />
       </span>
 
-      <span className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--text-secondary)' }}>
+      <span
+        className="inline-block w-9 font-mono text-[10px] tracking-widest"
+        style={{ color: 'var(--text-secondary)' }}
+      >
         {isDark ? 'Dark' : 'Light'}
       </span>
     </button>);};

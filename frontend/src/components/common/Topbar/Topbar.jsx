@@ -1,17 +1,16 @@
-import { Menu, Sun, Moon } from 'lucide-react';
-import { useThemeContext } from '../../../context/ThemeContext.jsx';
+import { Menu, X, Eye, EyeOff } from 'lucide-react';
+import useBlur from '../../../hooks/useBlur';
 import useAuth from '../../../hooks/useAuth';
-
-// pulled for demo 2 - was hardcoded mock data, not live. revisit properly for demo 3.
-// const MARKET_DATA = [
-//   { label: 'JSE·ALSI', value: '81,204', change: '+0.84%', positive: true },
-//   { label: 'USD/ZAR', value: '18.42', change: '-0.31%', positive: false },
-//   { label: 'BRENT', value: '83.14', change: '+1.12%', positive: true },
-// ];
-
-const Topbar = ({ onMenuClick }) => {
+import useDashboardTicker from '../../../hooks/useDashboardTicker';
+import HoldingsTicker from '../../dashboard/HoldingsTicker/HoldingsTicker';
+import ThemeTogglePill from '../ThemeTogglePill/ThemeTogglePill';
+/*
+ * @param {{ onMenuClick: () => void, sidebarOpen: boolean }} props
+ */
+const Topbar = ({ onMenuClick, sidebarOpen }) => {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useThemeContext();
+  const { blurMoney, toggleBlurMoney } = useBlur();
+  const { holdings } = useDashboardTicker();
 
   const initials = user?.full_name
     ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -21,26 +20,64 @@ const Topbar = ({ onMenuClick }) => {
 
   return (
     <header
+      className="glass-surface"
       style={{
-        height: '36px',
+        height: '72px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 16px',
-        background: 'var(--surface-raised)',
-        borderBottom: '1px solid var(--border-subtle)',
+        padding: '0 28px',
+        borderRadius: 0,
+        borderTop: 'none',
+        borderLeft: 'none',
+        borderRight: 'none',
         flexShrink: 0,
+        position: 'relative',
+        zIndex: 40,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
         <button
           onClick={onMenuClick}
-          className="lg:hidden"
-          style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer' }}
-          aria-label="Open menu"
+          data-nav-trigger="true"
+          className="pressable glass-surface glass-control"
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: sidebarOpen ? 'var(--accent-primary)' : 'var(--text-secondary)',
+            flexShrink: 0,
+          }}
+          aria-label={sidebarOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={sidebarOpen}
         >
-          <Menu size={14} />
+          {sidebarOpen ? <X size={16} /> : <Menu size={16} />}
         </button>
+
+        <span style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}>
+          <span
+            style={{
+              fontSize: '13px',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              color: 'var(--text-primary)',
+              fontFamily: 'var(--font-mono)',}}>
+            EQUITY
+          </span>
+          <span
+            style={{
+              fontSize: '13px',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              color: 'var(--accent-primary)',
+              fontFamily: 'var(--font-mono)',}}>
+            LENS
+          </span>
+        </span>
 
         <span style={{
           fontSize: '10px',
@@ -54,73 +91,52 @@ const Topbar = ({ onMenuClick }) => {
           {timestamp} · SAST
         </span>
 
-        <span style={{ color: 'var(--border-mid)', fontSize: '14px' }}>|</span>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }} className="hidden md:flex">
-          {/* {MARKET_DATA.map((m) => (
-            <div
-              key={m.label}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                fontSize: '10px',
-                fontFamily: 'var(--font-mono)',
-                fontVariantNumeric: 'tabular-nums',
-              }}
-            >
-              <span style={{ color: 'var(--text-ghost)' }}>{m.label}</span>
-              <span style={{ color: 'var(--text-primary)' }}>{m.value}</span>
-              <span style={{ color: m.positive ? 'var(--signal-positive)' : 'var(--signal-negative)' }}>
-                {m.change}
-              </span>
-            </div>
-          ))} */}
-        </div>
+        <HoldingsTicker holdings={holdings} />
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span
-          className="hidden sm:block"
-          style={{ fontSize: '10px', color: 'var(--text-secondary)', fontFamily: 'var(--font-primary)' }}
-        >
-          {user?.full_name?.split(' ')[0] ?? 'there'}
-        </span>
-
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <button
-          onClick={toggleTheme}
-          style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
+          onClick={toggleBlurMoney}
+          aria-pressed={blurMoney}
+          className="pressable glass-surface glass-control"
+          style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '50%',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            color: blurMoney ? 'var(--accent-primary)' : 'var(--text-secondary)',
+            flexShrink: 0,}}
+          aria-label={blurMoney ? 'Show monetary values' : 'Blur monetary values'}
+          title="Blur rand values - handy while screen-sharing. Blurred text is still selectable, this only hides it visually.">
+          {blurMoney ? <EyeOff size={13} /> : <Eye size={13} />}
         </button>
+        <ThemeTogglePill />
 
         <button
           onClick={logout}
+          className="pressable glass-surface glass-control"
           style={{
             fontSize: '10px',
-            color: 'var(--text-secondary)',
             fontFamily: 'var(--font-primary)',
-            background: 'none',
-            border: 'none',
+            color: 'var(--text-secondary)',
             cursor: 'pointer',
-            transition: 'color 120ms ease-out',
+            padding: '6px 14px',
+            borderRadius: '9999px',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text-primary)')}
-          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
         >
           Sign out
         </button>
 
-        <div style={{
-          width: '20px',
-          height: '20px',
+        <div className="glass-surface glass-control" style={{
+          width: '28px',
+          height: '28px',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: 'var(--accent-subtle)',
-          border: '1px solid var(--border-accent)',
           fontSize: '9px',
           fontWeight: 700,
           color: 'var(--accent-primary)',
