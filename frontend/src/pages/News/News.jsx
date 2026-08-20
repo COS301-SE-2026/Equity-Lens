@@ -15,6 +15,8 @@ const NewsInvestment = () => {
   const [negative, setNegative] = useState(0);
   const [neutral, setNeutral] = useState(0);
   const [totalArticles, setTotalArticles] = useState(0);
+  const [sentimentFilter, setSentimentFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("latest");
 
 
   const ToGetTickerNews = async (ticker) => {
@@ -22,21 +24,40 @@ const NewsInvestment = () => {
 
     const tickerArticles = response.data.articles || [];
 
-    const formattedArticles = tickerArticles.map((article) => ({
-      article_id: article.uuid,
+    const formattedArticles = tickerArticles.map((article) => {
+      const entity = article.entities?.find((entity) => entity.symbol === ticker);
+
+      const score = entity?.sentiment_score;
+
+      let sentiment = "neutral";
+
+      if(score > 0 )
+      {
+        sentiment = "positive"
+      }
+      else if(score < 0)
+      {
+        sentiment = "negative"
+      }
+      return { article_id: article.uuid,
       title: article.title,
       description: article.description,
       image_url: article.image_url,
       pubDate: article.published_at,
       source_name: article.source,
-      category: [ticker]
-    }))
+      category: [ticker],
+      sentiment: sentiment,
+      sentiment_score: score ?? 0,
+      };
+    });
 
     setArticles(formattedArticles)
     setPositive(response.data.positive || 0);
     setNegative(response.data.negative || 0);
     setNeutral(response.data.neutral || 0);
-    setTotalArticles(response.data.total_articles || 0)
+    setTotalArticles(response.data.total_articles || 0);
+
+    setSentimentFilter("all");
 
 
   };
@@ -100,7 +121,18 @@ const NewsInvestment = () => {
 
 
 
+
+const filteredArticles = articles.filter((article) => {
+  if(sentimentFilter === "all") 
+  {
+    return true;
+  }
+
+  return article.sentiment = sentimentFilter;
+});
+
   return (
+    
 
     <div className="mb-8">
 
@@ -224,6 +256,7 @@ const NewsInvestment = () => {
       </div>
 
       {activeTab === "portfolio" && (
+        
         <div className="mt-6">
 
           <div className="grid grid-cols-3 gap-6 mt-6">
@@ -245,12 +278,13 @@ const NewsInvestment = () => {
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
 
-                    <button className="px-4 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition"> All </button>
-                    <button className="px-4 py-2 rounded-lg border border-green-500/40 bg-green-500/20 text-green-400 hover:bg-green-500/30 transition"> Positive </button>
-                    <button className="px-4 py-2 rounded-lg border border-red-500/40 bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"> Negative </button>
-                    <button className="px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition"> Neutral </button>
+                    <button onClick={() => setSentimentFilter("all")} className="px-4 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition"> All </button>
+                    <button onClick={() => setSentimentFilter("positive")} className="px-4 py-2 rounded-lg border border-green-500/40 bg-green-500/20 text-green-400 hover:bg-green-500/30 transition"> Positive </button>
+                    <button onClick={() => setSentimentFilter("negative")} className="px-4 py-2 rounded-lg border border-red-500/40 bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"> Negative </button>
+                    <button onClick={() => setSentimentFilter("neutral")} className="px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition"> Neutral </button>
 
                   </div>
+
 
                   <select className="px-4 py-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[">
                     <option value="latest">Sort by: Latest</option>
@@ -260,7 +294,7 @@ const NewsInvestment = () => {
                 </div>
               </div>
 
-              {articles.map((article) => (
+              {filteredArticles.map((article) => (
                 <div key={article.article_id} className="flex items-center  border-b border-[var(--border-subtle)] p-5 gap-4">
 
                   <div>
