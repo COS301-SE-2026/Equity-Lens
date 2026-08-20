@@ -1,5 +1,6 @@
-import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+
 import { GlassPanel, PanelHead } from '../shared/GlassPanel';
 import SecondaryButton from '../shared/SecondaryButton';
 

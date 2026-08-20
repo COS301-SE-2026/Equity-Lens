@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 const CsvUpload = ({ onCsvValid }) => {
   const [error, setError] = useState("");
@@ -17,12 +17,12 @@ const CsvUpload = ({ onCsvValid }) => {
   const handleFileChange = (event) => {
     const toGetFile = event.target.files[0];
 
-    if (toGetFile == null) {
+    if (!toGetFile) {
       setError("Please select a CSV file.");
       return;
     }
 
-    if (toGetFile.name.endsWith(".csv") == false) {
+    if (!toGetFile.name.endsWith(".csv")) {
       setError("Sorry, Please make sure that it's a csv file.");
       return;
     }

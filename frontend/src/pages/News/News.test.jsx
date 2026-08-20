@@ -1,8 +1,12 @@
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import NewsInvestment from "./News"
-import api from "../../services/api"
 import userEvent from "@testing-library/user-event"
+import { describe, it, expect, vi } from "vitest";
+
+import api from "../../services/api"
+
+import NewsInvestment from "./News"
+
+
 
 vi.mock("../../services/api", () => ({
     default: {

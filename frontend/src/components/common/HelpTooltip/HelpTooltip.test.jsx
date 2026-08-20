@@ -1,5 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+
 import HelpTooltip from './HelpTooltip';
 
 describe('HelpTooltip', () => {

@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown, Bookmark } from "lucide-react"
+import { useEffect, useState } from "react";
+
 import api from "../../services/api"
 
 
@@ -19,7 +20,7 @@ const NewsInvestment = () => {
   }
 
   await api.post("/watchlist/",{
-    ticker: ticker,
+    ticker,
   }
   )
 
@@ -72,7 +73,7 @@ const NewsInvestment = () => {
               {wishlist.length === 0 ? (<p className="text-[var(--text-secondary)]"> No Watchlist added</p>) : wishlistHighest.change_percent > 0 ? (<> <p>{wishlistHighest.ticker}({wishlistHighest.sector})</p> <p className="text-[var(--signal-positive)]">+{wishlistHighest.change_percent}</p> </>) : (<p>No Top Gainer</p>)}
             </div>
            <div>
-          <TrendingUp className="w-10 h-10 text-[var(--signal-positive)]"></TrendingUp>
+          <TrendingUp className="w-10 h-10 text-[var(--signal-positive)]" />
           </div>
           
         </div>
@@ -83,10 +84,10 @@ const NewsInvestment = () => {
           <div className="flex justify-between">
             <div>
               <h2 className="text-xl font-bold text-[var(--text-primary)] mb-2">Top Loser</h2>
-              {wishlist.length == 0 ? (<p className="text-[var(--text-secondary)]">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker}({wishlistLowest.sector})</p> <p className="text-[var(--signal-negative)]">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
+              {wishlist.length === 0 ? (<p className="text-[var(--text-secondary)]">No Watchlist added</p>) : wishlistLowest.change_percent < 0 ? (<> <p>{wishlistLowest.ticker}({wishlistLowest.sector})</p> <p className="text-[var(--signal-negative)]">{wishlistLowest.change_percent}</p> </>) : (<p>No Top Loser</p>)}
             </div>
            <div>
-          <TrendingDown className="w-10 h-10 text-[var(--signal-negative)]"></TrendingDown>
+          <TrendingDown className="w-10 h-10 text-[var(--signal-negative)]" />
           </div>
           
         </div>
@@ -101,7 +102,7 @@ const NewsInvestment = () => {
               <p>Stocks</p>
             </div>
            <div>
-          <Bookmark className="w-10 h-10 text-[var(--accent-primary)]"></Bookmark>
+          <Bookmark className="w-10 h-10 text-[var(--accent-primary)]" />
           </div>
           
         </div>

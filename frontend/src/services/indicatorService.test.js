@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
 import api from "./api"
 import { getIndicatorData } from "./indicatorService";
 

@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+
+import Button from '../../components/common/Button/Button';
+import FormInput from '../../components/forms/FormInput/FormInput';
 import useAuth from '../../hooks/useAuth';
 import { ROUTES } from '../../utils/constants';
-import FormInput from '../../components/forms/FormInput/FormInput';
-import Button from '../../components/common/Button/Button';
 
   const ConfirmEmail = () => {
   const { confirmEmail } = useAuth();
@@ -82,7 +83,6 @@ import Button from '../../components/common/Button/Button';
                   required
                 />
               )}
-              
               <FormInput
                 label="Verification code"
                 name="code"
@@ -92,7 +92,6 @@ import Button from '../../components/common/Button/Button';
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="000000"
-                autoFocus
                 required
               />
               
