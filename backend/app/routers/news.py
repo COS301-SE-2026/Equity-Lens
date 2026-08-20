@@ -112,7 +112,7 @@ def get_portfolio_tickers(
 ):
 
   tickers = (db.query(Holdings.ticker).join(Portfolios, Holdings.portfolio_id == Portfolios.id)
-              .filter(Portfolios.user_id == current_user.id, Holdings.ticker.isnot(None), Holdings.ticker != "")
+              .filter(Portfolios.user_id == current_user.id, Holdings.ticker.isnot(None), Holdings.ticker != "", Holdings.ticker != "None",Holdings.ticker != "none")
               .distinct()
               .all()
             )

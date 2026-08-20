@@ -128,7 +128,7 @@ const filteredArticles = articles.filter((article) => {
     return true;
   }
 
-  return article.sentiment = sentimentFilter;
+  return article.sentiment === sentimentFilter;
 });
 
   return (
