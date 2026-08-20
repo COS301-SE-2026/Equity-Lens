@@ -38,7 +38,7 @@ const NewsInvestment = () => {
     setNeutral(response.data.neutral || 0);
     setTotalArticles(response.data.total_articles || 0)
 
-  
+
   };
 
   const ToGetPortfoliosTickers = async () => {
@@ -95,7 +95,7 @@ const NewsInvestment = () => {
   }
 
   useEffect(() => { ToGetTheNews() }, []);
-  
+
   useEffect(() => { ToGetWishlist() }, []);
 
 
@@ -213,7 +213,7 @@ const NewsInvestment = () => {
           Watchlist
         </button>
 
-        <button onClick={() => {setActiveTab("market"); setActiveCategory("Business"); ToGetTheNews("business")}}
+        <button onClick={() => { setActiveTab("market"); setActiveCategory("Business"); ToGetTheNews("business") }}
           className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab === "market"
             ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
             : "bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]"
@@ -231,17 +231,34 @@ const NewsInvestment = () => {
             <div className="col-span-3 p-5 border border-[var(--border-subtle)] rounded-2xl">
 
               <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Portfolio News</h2>
-              <div className="flex flex-wrap gap-2">
-                {portfoliosTickers.map((ticker) => (
-                <button key={ticker} onClick={() => {setActiveCategory(ticker); ToGetTickerNews(ticker);}} className={`px-3 py-1 rounded-full ${activeCategory === ticker ? 
-                  "bg-blue-500/20 text-blue-400 border-blue-500/40" : 
-                  "bg-[var(--surface-card)] text-[var(--text-secdonary)] border-transparent"}`}>
-                  {ticker}
-                </button>
-              ))}
- 
-              </div>
+              <div className="flex items-center justify-between w-full mb-4">
+                <div className="flex flex-wrap gap-2">
+                  {portfoliosTickers.map((ticker) => (
+                    <button key={ticker} onClick={() => { setActiveCategory(ticker); ToGetTickerNews(ticker); }} className={`px-3 py-1 rounded-full ${activeCategory === ticker ?
+                      "bg-blue-500/20 text-blue-400 border-blue-500/40" :
+                      "bg-[var(--surface-card)] text-[var(--text-secdonary)] border-transparent"}`}>
+                      {ticker}
+                    </button>
+                  ))}
+                </div>
 
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+
+                    <button className="px-4 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition"> All </button>
+                    <button className="px-4 py-2 rounded-lg border border-green-500/40 bg-green-500/20 text-green-400 hover:bg-green-500/30 transition"> Positive </button>
+                    <button className="px-4 py-2 rounded-lg border border-red-500/40 bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"> Negative </button>
+                    <button className="px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition"> Neutral </button>
+
+                  </div>
+
+                  <select className="px-4 py-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[">
+                    <option value="latest">Sort by: Latest</option>
+                    <option value="latest">Most Positive</option>
+                    <option value="latest">Most Negative</option>
+                  </select>
+                </div>
+              </div>
               {articles.map((article) => (
                 <div key={article.article_id} className="flex items-center  border-b border-[var(--border-subtle)] p-5 gap-4">
 
