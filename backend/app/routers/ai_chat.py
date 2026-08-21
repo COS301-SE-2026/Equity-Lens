@@ -10,6 +10,9 @@ from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages
 from app.utils.ai_rate_limit import check_limit
 from app.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 
@@ -61,7 +64,10 @@ async def ai_chat(
         reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id)
         return ChatResponse(reply = reply, conversation_id = conversation_id)
     except Exception as e:
-        print(f"AI chat fail: {e}")
+        logger.exception(
+            "AI chat failed for user %s (conversation %s): %s",
+            current_user.id, request.conversation_id, e,
+        )
         raise HTTPException(status_code = 500, detail = "Something went wrong")
 
 # now to return all conversations for the logged user
