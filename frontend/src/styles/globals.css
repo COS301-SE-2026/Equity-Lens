@@ -146,6 +146,10 @@ body {
     border-color var(--duration-theme) var(--ease-standard),
     box-shadow var(--duration-theme) var(--ease-standard);
 }
+.glass-surface-flat {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
 
 .glass-surface-elevated {
   background: var(--glass-bg-elevated);
@@ -159,13 +163,6 @@ body {
     box-shadow var(--duration-theme) var(--ease-standard);
 }
 
-.ticker-marquee-track {
-  animation: ticker-marquee-scroll 22s linear infinite;
-}
-@keyframes ticker-marquee-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
-}
 
 .glass-control {
   transition: background-color var(--duration-fast) var(--ease-standard),
@@ -174,22 +171,6 @@ body {
 .glass-control:hover {
   background: var(--glass-hover);
   color: var(--text-primary);
-}
-
-.magnifying-glass-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: -1;
-  pointer-events: none;
-  will-change: transform;
-  filter: drop-shadow(0 0 26px rgba(var(--accent-primary-rgb), 0.55))
-    drop-shadow(0 0 60px rgba(var(--accent-primary-rgb), 0.3));
-}
-.magnifying-glass-bg svg {
-  display: block;
-  width: 100%;
-  height: 100%;
 }
 
 .font-terminal {
