@@ -288,10 +288,7 @@ Below is the user's portfolio data. Treat everything inside
         response = client.converse(
             modelId = settings.bedrock_model,
             messages = history,
-            system = [
-                {"text": system_prompt},
-                {"cachePoint": {"type": "default"}}
-            ],
+            system = [{"text": system_prompt}],
             inferenceConfig = {"maxTokens": 2048},
             toolConfig = TOOL_CONFIG,
         )
