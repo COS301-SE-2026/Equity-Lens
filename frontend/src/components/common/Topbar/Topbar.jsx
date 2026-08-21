@@ -1,19 +1,18 @@
 import { Menu, X, Eye, EyeOff } from 'lucide-react';
 import useBlur from '../../../hooks/useBlur';
 import useAuth from '../../../hooks/useAuth';
-import useDashboardTicker from '../../../hooks/useDashboardTicker';
-import HoldingsTicker from '../../dashboard/HoldingsTicker/HoldingsTicker';
 import ThemeTogglePill from '../ThemeTogglePill/ThemeTogglePill';
-/*
- * @param {{ onMenuClick: () => void, sidebarOpen: boolean }} props
+/**
+ * @param {Object} props
+ * @param {() => void} props.onMenuClick
+ * @param {boolean} [props.sidebarOpen]
  */
 const Topbar = ({ onMenuClick, sidebarOpen }) => {
   const { user, logout } = useAuth();
   const { blurMoney, toggleBlurMoney } = useBlur();
-  const { holdings } = useDashboardTicker();
 
   const initials = user?.full_name
-    ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? user.full_name.split(' ').map((/** @type {string} */ n) => n[0]).join('').toUpperCase().slice(0, 2)
     : 'U';
 
   const timestamp = new Date().toISOString().slice(0, 10);
@@ -34,6 +33,7 @@ const Topbar = ({ onMenuClick, sidebarOpen }) => {
         flexShrink: 0,
         position: 'relative',
         zIndex: 40,
+        boxShadow: 'inset 0 1px 0 var(--glass-highlight)',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -90,8 +90,6 @@ const Topbar = ({ onMenuClick, sidebarOpen }) => {
         >
           {timestamp} · SAST
         </span>
-
-        <HoldingsTicker holdings={holdings} />
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
