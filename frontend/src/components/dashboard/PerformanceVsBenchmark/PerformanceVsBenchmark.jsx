@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   LineChart,
   Line,
@@ -7,19 +8,71 @@ import {
   ResponsiveContainer,
   Tooltip,
   CartesianGrid,
+  ReferenceDot,
 } from 'recharts';
+import { Search } from 'lucide-react';
 
 import { GlassPanel } from '../shared/GlassPanel';
 import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
-import SecondaryButton from '../shared/SecondaryButton';
+import Money from '../../common/Money/Money';
+import MoneyAxisTick from '../shared/MoneyAxisTick';
 import { zar } from '../../../utils/currency';
-import { formatShortCurrency } from '../../../utils/formatters';
-import { buildChartStats, filterByRange, buildExplanation, classifyContext, buildDriver,
+import { buildChartStats, filterByRange, buildExplanation, buildingHistoryLabel, buildPerformanceQuestions,
 } from '../../../utils/dashboardInsights';
+import { ROUTES } from '../../../utils/constants';
+import ContributionsChart from '../ContributionsChart/ContributionsChart';
+import CardMascotTrigger from '../../chat/CardMascotTrigger/CardMascotTrigger';
 
 /** @typedef {'1D'|'1W'|'1M'|'3M'|'1Y'|'ALL'} RangeKey */
 /** @type {RangeKey[]} */
 const RANGES = ['1D', '1W', '1M', '3M', '1Y', 'ALL'];
+const ANOMALY_NEUTRAL_BAND_PCT = 1;
+const POPOVER_FLIP_THRESHOLD_PX = 110;
+
+/** @param {number} changePct */
+function anomalyColor(changePct) {
+  if (changePct > ANOMALY_NEUTRAL_BAND_PCT) return 'var(--signal-positive)';
+  if (changePct < -ANOMALY_NEUTRAL_BAND_PCT) return 'var(--signal-negative)';
+  return 'var(--text-ghost)';}
+
+/** @param {{date:string, ticker:string, changePct:number, headline:string}} anomaly */
+function askAiAboutAnomaly(anomaly) {
+  const direction = anomaly.changePct >= 0 ? 'gain' : 'drop';
+  const sign = anomaly.changePct >= 0 ? '+' : '';
+  return `Why did ${anomaly.ticker} move ${sign}${anomaly.changePct.toFixed(1)}% (${direction}) around ${anomaly.date}? News: "${anomaly.headline}"`;}
+
+/**
+ * @template T
+ * @param {T | null} value
+ * @returns {value is T}
+ */
+function isNotNull(value) {
+  return value !== null;}
+
+/**
+ * @param {{ cx?: number, cy?: number, anomaly: any, onSelect: (anomaly: any, cx: number, cy: number) => void }} props
+ */
+const AnomalyMarker = ({ cx, cy, anomaly, onSelect }) => {
+  if (cx === undefined || cx === null || cy === undefined || cy === null) return null;
+  const color = anomalyColor(anomaly.changePct);
+  return (
+    <g
+      role="button"
+      tabIndex={0}
+      aria-label={`News for ${anomaly.ticker} on ${anomaly.date}`}
+      style={{ cursor: 'pointer' }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect(anomaly, cx, cy);}}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onSelect(anomaly, cx, cy);
+        }}}>
+      <circle cx={cx} cy={cy} r={9} fill={color} fillOpacity={0.16} stroke={color} strokeWidth={1.5} />
+      <Search x={cx - 6} y={cy - 6} width={12} height={12} color={color} strokeWidth={2.5} />
+    </g>
+  );};
 
 /** @param {{ diff: string, diffPct: number, benchAvailable: boolean }} stats
  *  @param {string} benchmarkLabel */
@@ -35,12 +88,12 @@ function takeaway(stats, benchmarkLabel) {
 }
 
 /** @param {{ active?: boolean, payload?: any[], label?: string, benchmarkLabel: string }} props */
-const PerfTooltip = ({ active, payload, label, benchmarkLabel }) => {
+export const PerfTooltip = ({ active, payload, label, benchmarkLabel }) => {
   if (!active || !payload?.length) return null;
   return (
     <div
-      className="rounded-lg px-3 py-2 font-mono text-[11px] backdrop-blur-xl"
-      style={{ background: 'var(--surface-raised)', border: '1px solid var(--glass-border)' }}>
+      className="rounded-lg px-3 py-2 font-mono text-[11px]"
+      style={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--border-mid)' }}>
       <div className="mb-1 text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
         {label}
       </div>
@@ -57,7 +110,7 @@ const PerfTooltip = ({ active, payload, label, benchmarkLabel }) => {
               <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
               <span style={{ color: 'var(--text-secondary)' }}>{who}</span>
             </span>
-            <span className="ml-auto font-semibold">R{Math.round(p.value).toLocaleString('en-ZA')}</span>
+            <Money className="ml-auto font-semibold">{zar(p.value)}</Money>
           </div>
         );
       })}
@@ -97,166 +150,6 @@ const Stat = ({ label, value, tone, help, loading }) => {
     </div>
   );};
 
-const CONTEXT_TONE = {
-  normal: 'var(--text-ghost)',
-  market: 'var(--signal-info)',
-  sector: 'var(--signal-info)',
-  company: 'var(--signal-info)',
-  unusual: 'var(--signal-warning)',
-};
-
-/** @type {Partial<Record<'normal'|'market'|'sector'|'company'|'unusual', { label: string, target: string }>>} */
-const CONTEXT_CTA = {
-  sector: { label: 'Review Holdings', target: 'holdings-table' },
-};
-
-/**
- * @param {{
- *   label: string,
- *   row: { ticker: string, contribution: number } | null,
- *   holding: any,
- *   holdings: any[],
- *   anomalies: any[],
- *   onScrollTo?: (target: string) => void,
- *   emptyText: string,
- * }} props
- */
-const MoveCard = ({ label, row, holding, holdings, anomalies, onScrollTo, emptyText }) => {
-  if (!row || !holding) {
-    return (
-      <div className="rounded-lg p-3" style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-subtle)' }}>
-        <div className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>{label}</div>
-        <p className="mt-2 text-[11px]" style={{ color: 'var(--text-ghost)' }}>{emptyText}</p>
-      </div>
-    );}
-
-  const pos = row.contribution >= 0;
-
-  let color;
-  if (pos) {
-    color = 'var(--signal-positive)';
-  } else {
-    color = 'var(--signal-negative)';
-  }
-
-  const contributionSign = pos ? '+' : '-';
-
-  let changeSign;
-  if (pos) {
-    changeSign = '+';
-  } else {
-    changeSign = '';
-  }
-
-  const context = classifyContext({ holding, holdings, anomalies });
-  /** @type {{ label: string, target?: string } | undefined} */
-  let cta;
-  if (context.level === 'unusual') {
-    cta = { label: 'Ask AI Why' };
-  } else {
-    cta = CONTEXT_CTA[context.level];}
-
-  let ctaButton = null;
-  if (cta) {
-    if (context.level === 'unusual') {
-      ctaButton = (
-        <SecondaryButton size="sm" to={`/ai?q=${encodeURIComponent(`Why did ${row.ticker} move today?`)}`}>
-          {cta.label}
-        </SecondaryButton>);
-    } else {
-      ctaButton = (
-        <SecondaryButton size="sm" onClick={() => cta.target && onScrollTo?.(cta.target)}>
-          {cta.label}
-        </SecondaryButton>);}}
-
-  return (
-    <div
-      className="rounded-lg p-3"
-      style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-subtle)', borderLeft: `3px solid ${color}` }}>
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>{label}</span>
-        {holding.sector && (
-          <span className="font-mono text-[9px]" style={{ color: 'var(--text-ghost)' }}>{holding.sector}</span>)}
-      </div>
-
-      <div className="mt-1 flex items-baseline gap-2">
-        <span className="font-mono text-[14px] font-bold">{row.ticker}</span>
-        <span className="font-mono text-[13px] font-semibold" style={{ color }}>
-          {contributionSign}{zar(Math.abs(row.contribution))}
-        </span>
-        <span className="font-mono text-[11px]" style={{ color }}>
-          ({changeSign}{(holding.daily_change_pct ?? 0).toFixed(1)}%)
-        </span>
-      </div>
-
-      <div className="mt-2 rounded-md p-2" style={{ background: 'var(--surface-hover)' }}>
-        <div className="font-mono text-[8px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>Context</div>
-        <p className="mt-0.5 text-[10px] font-semibold leading-snug" style={{ color: CONTEXT_TONE[context.level] }}>
-          {context.label}
-        </p>
-        <p className="text-[10px] leading-snug" style={{ color: 'var(--text-ghost)' }}>{context.detail}</p>
-      </div>
-
-      {ctaButton && <div className="mt-2">{ctaButton}</div>}
-    </div>
-  );};
-
-/**
- * @param {{ driver: { text: string, tickers: string[] } | null }} props
- */
-const DriverCard = ({ driver }) => {
-  if (!driver) return null;
-  return (
-    <div
-      className="rounded-lg p-3"
-      style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-subtle)', borderLeft: '3px solid var(--accent-primary)' }}>
-      <div className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>Today&apos;s Driver</div>
-      <p className="mt-2 text-[12px] leading-snug" style={{ color: 'var(--text-primary)' }}>{driver.text}</p>
-    </div>
-  );};
-
-/**
- * @param {{
- *   holdings: any[],
- *   attribution: { contributors: any[], drags: any[], todayReturn: number },
- *   anomalies: any[],
- *   onScrollTo?: (target: string) => void,
- * }} props
- */
-const TodaysMoves = ({ holdings, attribution, anomalies, onScrollTo }) => {
-  if (!holdings.length) return null;
-  /** @param {string} ticker */
-  const findHolding = (ticker) => {
-    return holdings.find((h) => h.ticker === ticker);
-  };
-  const gain = attribution.contributors[0] ?? null;
-  const loss = attribution.drags[0] ?? null;
-  const { driver } = buildDriver({ holdings, attribution });
-
-  return (
-    <div className="grid grid-cols-1 gap-3 px-5 py-4 sm:grid-cols-3" style={{ borderTop: '1px solid var(--border-subtle)' }}>
-      <MoveCard
-        label="Today's Biggest Gain"
-        row={gain}
-        holding={gain && findHolding(gain.ticker)}
-        holdings={holdings}
-        anomalies={anomalies}
-        onScrollTo={onScrollTo}
-        emptyText="Nothing pushing your portfolio up today."
-      />
-      <MoveCard
-        label="Today's Biggest Loss"
-        row={loss}
-        holding={loss && findHolding(loss.ticker)}
-        holdings={holdings}
-        anomalies={anomalies}
-        onScrollTo={onScrollTo}
-        emptyText="Nothing dragging your portfolio down today."
-      />
-      <DriverCard driver={driver} />
-    </div>
-  );};
-
 /** @param {{ range: string, active: boolean, onClick: () => void }} props */
 const RangeButton = ({ range, active, onClick }) => {
   let background;
@@ -282,41 +175,102 @@ const RangeButton = ({ range, active, onClick }) => {
 /**
  * @param {{
  *   series: {date:string, name:string, value:number, benchmark?:number}[],
- *   anomalies?: {date:string, ticker:string, changePct:number, headline:string}[],
+ *   contributionSeries?: {date:string, name:string, portfolio_value:number, cumulative_net_contributions:number, cumulative_market_gain:number}[],
+ *   anomalies?: {date:string, ticker:string, changePct:number, headline:string,
+ *                articleId?:string|null, articleLink?:string|null,
+ *                articleSource?:string|null}[],
  *   attribution?: { contributors: any[], drags: any[], todayReturn: number },
- *   holdings?: any[],
- *   onScrollTo?: (target: string) => void,
  *   benchmarkLabel?: string,
+ *   historyDays?: number,
  * }} props
  */
 const PerformanceVsBenchmark = ({
   series,
+  contributionSeries = [],
   anomalies = [],
   attribution = { contributors: [], drags: [], todayReturn: 0 },
-  holdings = [],
-  onScrollTo,
   benchmarkLabel = 'JSE ALSI',
+  historyDays = 0,
 }) => {
-
+  const navigate = useNavigate();
   const [range, setRange] = useState(/** @type {RangeKey} */ ('ALL'));
+  const [activeAnomaly, setActiveAnomaly] = useState(
+  /** @type {{ anomaly: any, cx: number, cy: number } | null} */ (null));
+  /** @type {React.MutableRefObject<HTMLDivElement | null>} */
+  const popoverRef = useRef(null);
+  /** @type {React.MutableRefObject<HTMLDivElement | null>} */
+  const chartContainerRef = useRef(null);
+  const lastStepAtRef = useRef(0);
+  const STEP_COOLDOWN_MS = 250;
+  /** @param {WheelEvent} event */
+  const handleWheelZoom = useCallback((/** @type {WheelEvent} */ event) => {
+  const idx = RANGES.indexOf(range);
+  const scrollingToShorter = event.deltaY > 0;
+  const atFloor = idx === 0 && scrollingToShorter;
+  const atCeiling = idx === RANGES.length - 1 && !scrollingToShorter;
+  if (atFloor || atCeiling) return;
+  event.preventDefault();
+  const now = Date.now();
+  if (now - lastStepAtRef.current < STEP_COOLDOWN_MS) return;
+  lastStepAtRef.current = now;
+  setRange(RANGES[scrollingToShorter ? idx - 1 : idx + 1]);}, [range]);
+
+  useEffect(() => {
+    const node = chartContainerRef.current;
+    if (!node) return undefined;
+    node.addEventListener('wheel', handleWheelZoom, { passive: false });
+    return () => node.removeEventListener('wheel', handleWheelZoom);}, [handleWheelZoom]);
+
+useEffect(() => {
+  if (!activeAnomaly) return undefined;
+  /** @param {MouseEvent} e */
+  const handleClick = (e) => {
+    if (popoverRef.current && !popoverRef.current.contains(/** @type {Node} */ (e.target))) {
+      setActiveAnomaly(null);
+    }};
+  /** @param {KeyboardEvent} e */
+  const handleKeyDown = (e) => {
+    if (e.key === 'Escape') setActiveAnomaly(null);};
+  document.addEventListener('mousedown', handleClick);
+  document.addEventListener('keydown', handleKeyDown);
+  return () => {
+    document.removeEventListener('mousedown', handleClick);
+    document.removeEventListener('keydown', handleKeyDown);
+  };}, [activeAnomaly]);
+
+  /**
+ * @param {any} anomaly
+ * @param {number} cx
+ * @param {number} cy
+ */
+  const handleSelectAnomaly = useCallback(
+  (/** @type {any} */ anomaly, /** @type {number} */ cx, /** @type {number} */ cy) => {
+    setActiveAnomaly((current) => (current?.anomaly === anomaly ? null : { anomaly, cx, cy }));},[],);
 
   const { series: visibleSeries } = useMemo(() => {
     return filterByRange(series, range);
   }, [series, range]);
 
+  const { series: visibleContributionSeries } = useMemo(() => {
+    return filterByRange(contributionSeries, range);}, [contributionSeries, range]);
+
   const stats = useMemo(() => {
-    return buildChartStats(visibleSeries);
-  }, [visibleSeries]);
+    return buildChartStats(visibleSeries, { historyDays });}, [visibleSeries, historyDays]);
 
   const { explanation } = useMemo(() => {
     return buildExplanation({ stats, attribution, anomalies, visibleSeries });
   }, [stats, attribution, anomalies, visibleSeries]);
+    const visibleAnomalies = useMemo(() => {
+      return anomalies.map((a) => {
+          const point = visibleSeries.find((p) => p.date === a.date);
+          return point ? { ...a, name: point.name, y: point.value } : null;})
+        .filter(isNotNull);
+    }, [anomalies, visibleSeries]);
 
-  // chart dots for anomaly events pulled as not feesible in time - will be a demo 3 thing
-
-  /** @type {'good'|'bad'} */
+  /** @type {'good'|'bad'|'neutral'} */
   let portTone;
-  if (stats.portReturn.startsWith('-')) {
+  if (!stats.portAvailable) {
+    portTone = 'neutral'; } else if (stats.portReturn.startsWith('-')) {
     portTone = 'bad';
   } else {
     portTone = 'good';
@@ -352,20 +306,31 @@ const PerformanceVsBenchmark = ({
           />
           <YAxis
             stroke="var(--text-ghost)"
-            tick={{ fontSize: 10, fontFamily: 'monospace' }}
+            tick={<MoneyAxisTick />}
             tickLine={false}
             axisLine={false}
-            tickFormatter={formatShortCurrency}
           />
           <Tooltip content={<PerfTooltip benchmarkLabel={benchmarkLabel} />} />
           <Line type="monotone" dataKey="benchmark" stroke="var(--text-secondary)" strokeWidth={1.5} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} />
-          <Line type="monotone" dataKey="value" stroke="var(--accent-primary)" strokeWidth={2} dot={false} activeDot={{ r: 5, stroke: 'var(--bg-primary)', strokeWidth: 2 }} />
+          <Line type="monotone" dataKey="value" stroke="var(--accent-primary)" strokeWidth={2} dot={false} activeDot={{ r: 5, fill: 'var(--accent-primary)', stroke: 'var(--surface-card)', strokeWidth: 2 }} />
+          {visibleAnomalies.map((a) => (
+            <ReferenceDot
+              key={`${a.ticker}-${a.date}`}
+              x={a.name}
+              y={a.y}
+              shape={(shapeProps) => <AnomalyMarker {...shapeProps} anomaly={a} onSelect={handleSelectAnomaly} />}
+            />))}
         </LineChart>
       </ResponsiveContainer>
     );}
 
   return (
-    <GlassPanel className="flex h-full flex-col">
+      <div className="group relative">
+        <CardMascotTrigger
+        questions={buildPerformanceQuestions({ diffPct: stats.diffPct, benchAvailable: stats.benchAvailable, benchmarkLabel })}
+        label="Ask AI about performance vs benchmark"
+        className="-right-6 top-16"/>
+      <GlassPanel className="flex flex-col">
       <div
         className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
         style={{ borderBottom: '1px solid var(--border-subtle)' }}>
@@ -386,7 +351,7 @@ const PerformanceVsBenchmark = ({
       </div>
 
       <div className="grid grid-cols-3 gap-4 px-5 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <Stat label="Portfolio return" value={stats.portReturn} tone={portTone} />
+        <Stat label="Portfolio return" value={stats.portAvailable ? stats.portReturn : buildingHistoryLabel(stats.historyDays)} tone={portTone} help="Time-weighted return - removes the effect of when you deposited or withdrew money, so it can be fairly compared to an index."/>
         <Stat label={`${benchmarkLabel} return`} value={stats.benchReturn} tone="neutral" loading={!stats.benchAvailable} />
         <Stat
           label="Vs benchmark"
@@ -406,9 +371,68 @@ const PerformanceVsBenchmark = ({
               {explanation}
             </p>)}
         </div>)}
-      <div className="h-[420px] p-5">{chartArea}</div>
-      <TodaysMoves holdings={holdings} attribution={attribution} anomalies={anomalies} onScrollTo={onScrollTo} />
-    </GlassPanel>
+      <div ref={chartContainerRef} className="relative h-[420px] p-5">
+        {chartArea}
+        {activeAnomaly && ( <div className="pointer-events-none absolute inset-5">
+            <div
+              ref={popoverRef}
+              role="menu"
+              className="pointer-events-auto absolute z-20 w-60 rounded-xl p-1.5 shadow-lg"
+              style={{ left: activeAnomaly.cx, top: activeAnomaly.cy, transform:
+                  activeAnomaly.cy < POPOVER_FLIP_THRESHOLD_PX
+                  ? 'translate(-50%, 14px)'
+                  : 'translate(-50%, calc(-100% - 14px))',
+                background: 'var(--surface-raised)',
+                border: '1px solid var(--border-subtle)',}}>
+              <div className="px-2 pb-1.5 pt-1">
+                <div
+                  className="flex items-center gap-1.5 font-mono text-[10px] font-semibold"
+                  style={{ color: anomalyColor(activeAnomaly.anomaly.changePct) }}>
+                  <span>{activeAnomaly.anomaly.ticker}</span>
+                  <span>
+                    {activeAnomaly.anomaly.changePct >= 0 ? '+' : ''}
+                    {activeAnomaly.anomaly.changePct.toFixed(1)}%
+                  </span>
+                </div>
+                <p className="mt-1 line-clamp-2 text-[11px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
+                  {activeAnomaly.anomaly.headline}
+                </p>
+              </div>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  const { articleId, articleLink } = activeAnomaly.anomaly;
+                  const identifier = articleId || articleLink;
+                  navigate(
+                    identifier ? `${ROUTES.NEWS}?article=${encodeURIComponent(identifier)}`
+                      : ROUTES.NEWS,);
+                  setActiveAnomaly(null);}}
+                className="block w-full rounded-lg px-2.5 py-1.5 text-left text-[11px] leading-snug transition-colors hover:bg-[var(--surface-hover)]"
+                style={{ color: 'var(--text-secondary)' }}>
+                {activeAnomaly.anomaly.articleId || activeAnomaly.anomaly.articleLink
+                  ? 'View article'
+                  : 'View latest news'}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  navigate(`${ROUTES.AI_CHAT}?q=${encodeURIComponent(askAiAboutAnomaly(activeAnomaly.anomaly))}`);
+                  setActiveAnomaly(null);}}
+                className="block w-full rounded-lg px-2.5 py-1.5 text-left text-[11px] leading-snug transition-colors hover:bg-[var(--surface-hover)]"
+                style={{ color: 'var(--text-secondary)' }}>
+                Ask AI to explain
+              </button>
+            </div>
+          </div>
+        )}</div>
+
+      <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
+        <ContributionsChart series={visibleContributionSeries} />
+      </div>
+      </GlassPanel>
+    </div>
   );};
 
 /** @param {{ color: string, label: string, dashed?: boolean }} props */
