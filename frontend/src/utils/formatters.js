@@ -12,6 +12,13 @@ export const formatPercent = (value) =>
 /** @param {number} value */
 export const formatShortCurrency = (value) => {
   const abs = Math.abs(value ?? 0);
+
+  if (abs >= 1_000_000_000_000) {
+    return `R ${(value / 1_000_000_000_000).toFixed(abs >= 10_000_000_000_000 ? 0 : 1)}t`;
+  }
+  if (abs >= 1_000_000_000) {
+    return `R ${(value / 1_000_000_000).toFixed(abs >= 10_000_000_000 ? 0 : 1)}b`;
+  }
   if (abs >= 1_000_000) {
     return `R ${(value / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}m`;
   }

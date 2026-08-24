@@ -5,9 +5,12 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
   PORTFOLIO: '/portfolio',
   ANALYTICS: '/analytics',
+  PLAN: '/plan',
   NEWS: '/news',
   AI_CHAT: '/ai',
   CONFIRM_EMAIL: '/confirm-email',
+  FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
   HELP: '/help',
   BRAND_GUIDE: '/brand',
 };
