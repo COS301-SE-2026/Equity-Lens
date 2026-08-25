@@ -88,23 +88,23 @@ describe('Topbar', () => {
   describe('hamburger nav trigger', () => {
     it("marks  button data-nav-trigger", () => {
       render(<Topbar onMenuClick={() => {}} sidebarOpen={false} />);
-      const trigger = screen.getByLabelText('Open nav menu');
+      const trigger = screen.getByLabelText('Open navigation menu');
       expect(trigger).toHaveAttribute('data-nav-trigger', 'true');});
 
     it('shows the closed state', () => {
       render(<Topbar onMenuClick={() => {}} sidebarOpen={false} />);
-      const trigger = screen.getByLabelText('Open nav menu');
+      const trigger = screen.getByLabelText('Open navigation menu');
       expect(trigger).toHaveAttribute('aria-expanded', 'false');});
 
     it('shows the open state', () => {
       render(<Topbar onMenuClick={() => {}} sidebarOpen={true} />);
-      const trigger = screen.getByLabelText('Close nav menu');
+      const trigger = screen.getByLabelText('Close navigation menu');
       expect(trigger).toHaveAttribute('aria-expanded', 'true');});
 
     it('calls onMenuClick', () => {
       const onMenuClick = vi.fn();
       render(<Topbar onMenuClick={onMenuClick} sidebarOpen={false} />);
-      fireEvent.click(screen.getByLabelText('Open nav menu'));
+      fireEvent.click(screen.getByLabelText('Open navigation menu'));
       expect(onMenuClick).toHaveBeenCalled();
     });});
 });
