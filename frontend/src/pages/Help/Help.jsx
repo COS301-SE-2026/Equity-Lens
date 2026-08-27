@@ -64,7 +64,7 @@ const LINKS = [
     }
 ];
 
-const CARD = 'terminal-card flex flex-col p-4';
+const CARD = 'glass-surface rounded-xl flex flex-col p-4';
 
 const Help = () => {
     /**
@@ -73,24 +73,24 @@ const Help = () => {
     const [open, closed] = useState(null);
 
     return (
-    <div className = "mx-auto w-full wax-w-4x1">
-        <h1 className = "text-3xl font-semibold text-center">Help</h1>
+    <div className = "mx-auto w-full max-w-4xl">
+        <h1 className = "text-3xl font-semibold text-center text-[var(--text-page)]">Help</h1>
 
         <div className = "mt-6 grid gap-3 sm:grid-cols-2">
             {REDIRECTS.map(({title, body, to, action}) => (
                 <div key = {title} className = {CARD}>
                     <h2 className = "text-sm font-medium">{title}</h2>
                     <p className = "mt-1.5 flex-1 text-xs text-text-secondary">{body}</p>
-                    <Link to = {to} className = "mt-3 self-start text-xs font-medium text-[var(--signal-gold)]">{action}</Link>
+                    <Link to = {to} className = "mt-3 self-start text-xs font-medium text-[var(--accent-primary)]">{action}</Link>
                 </div>
             ))}
         </div>
 
-        <h2 className = "mt-10 text-x1 font-semiBold">FAQs</h2>
+        <h2 className = "mt-10 text-xl font-semibold text-[var(--text-page)]">FAQs</h2>
 
         <div className = "mt-4 flex flex-col gap-2">
             {QNA.map(({q,a}, i) => (
-                <div key = {q} className = "terminal-card">
+                <div key = {q} className = "glass-surface rounded-xl">
                     <button type = "button" onClick = {() => closed(open === i ? null : i)} aria-expanded = {open === i} 
                             className = "flex w-full items-center justify-between p-4 text-left text-sm font-medium">
                         {q}
@@ -101,7 +101,7 @@ const Help = () => {
             ))}
         </div>
 
-        <h2 className = "mt-10 text-x1 font-semiBold">Resources (Click box to get output)</h2>
+        <h2 className = "mt-10 text-xl font-semibold text-[var(--text-page)]">Resources (Click box to get output)</h2>
 
         <div className = "mt-4 grid gap-3 sm:grid-cols-3">
             {LINKS.map(({label, body, href, download}) => (
