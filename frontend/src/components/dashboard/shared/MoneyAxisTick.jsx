@@ -1,7 +1,7 @@
 import { formatShortCurrency } from '../../../utils/formatters';
 
 /**
- * @param {{ x?: number, y?: number, payload?: { value: number } }} props
+ * @param {{ x?: number, y?: number, textAnchor?: 'start'|'middle'|'end'|'inherit', payload?: { value: number } }} props
  */
 const MoneyAxisTick = ({ payload, ...rest }) => (
   <text
