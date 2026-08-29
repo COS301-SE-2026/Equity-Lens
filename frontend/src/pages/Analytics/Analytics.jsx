@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {useNavigate} from 'react-router-dom';
 
 import useIndicators from '../../hooks/useIndicators';
@@ -70,6 +70,28 @@ const INDICATORS = {
     formula: 'RSI = 100 - [100 / (1 + Average Gain / Average Loss)], typically over a 14-day window',
   },
 };
+
+const ALL_INDICATORS = Object.keys(INDICATORS);
+
+const presets = [
+  {id: 'popular', label: 'Most Popular', keys: ['capm', 'pe_ratio', 'sharpe', 'beta']},
+  {id: 'value', label: 'Value Investing', keys: ['pe_ratio', 'altman_z', 'capm']},
+  {id: 'risk', label: 'Risk & Volatility', keys: ['beta', 'sharpe', 'sortino', 'altman_z']},
+  {id: 'technical', label: 'Technical / Momentum', keys: ['rsi', 'beta']},
+  {id: 'all', label: 'All Indicators', keys: ALL_INDICATORS},
+];
+
+const STORAGE_KEY = 'analytics_indicator_pref';
+
+function loadIndicatorPrefs(){
+  try{
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch{
+    return {};
+  }
+}
 
 const Tooltip = ({ text, children, align = 'left' }) => {
   const [show, setShow] = useState(false);
