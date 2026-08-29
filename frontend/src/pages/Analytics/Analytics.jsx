@@ -132,12 +132,12 @@ const InfoIcon = () => (
   </svg>
 );
 
-const EditIcon = () => {
+const EditIcon = () => (
   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 20h9"/>
     <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>
   </svg>
-}
+);
 
 const formatValue = (value) => {
   const numericValue = Number(value);
@@ -191,7 +191,7 @@ const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
   );
 };
 
-const StockRow = ({ stock, loading, results, index, onCellSelect }) => (
+const StockRow = ({ stock, loading, results, index, onCellSelect, visibleKeys, onEdit, onQuickRemove }) => (
   <div className="terminal-card"
     style={{ animation: 'fadeSlideIn 0.3s ease both', animationDelay: `${index * 70}ms` }}>
     <div className="flex items-center gap-3 px-4 py-3"
@@ -204,16 +204,30 @@ const StockRow = ({ stock, loading, results, index, onCellSelect }) => (
         <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{stock.ticker}</p>
         <p className="text-[10px]" style={{ color: 'var(--text-ghost)' }}>{stock.name}</p>
       </div>
+      <button onClick={onEdit} aria-label={`Customize indicators for ${stock.ticker}`}
+      className="flex items-center gap-1 text-[9px] font-mono px-2 py-1.5 rounded flex-shrink-0 cursor-pointer"
+      style={{color: 'var(--text-ghost)', border: '1px solid var(--border-subtle)'}}>
+        <EditIcon />
+        Edit
+      </button>
     </div>
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7" style={{ overflow: 'visible' }}>
-      {Object.keys(INDICATORS).map((key, i) => (
-        <div key={key} className="px-3 pb-3" style={{ position: 'relative', overflow: 'visible', borderRight: i < 6 ? '1px solid var(--border-subtle)' : 'none' }}>
-          <Tooltip text={INDICATORS[key].tooltip} align={i >= 4 ? 'right' : 'left'}>
-            <span className="text-[9px] uppercase tracking-widest font-medium flex items-center gap-1 pt-3"
+    <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', overflow: 'visible'}}>
+      {visibleKeys.map((key, i) => (
+        <div key={key} className="px-3 pb-3" style={{ position: 'relative', overflow: 'visible', borderRight: i < visibleKeys.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+          <div className="flex items-start justify-between gap-1 pt-3">
+            <Tooltip text={INDICATORS[key].tooltip} align={i >= visibleKeys.length - 2 ? 'right' : 'left'}>
+            <span className="text-[9px] uppercase tracking-widest font-medium flex items-center gap-1"
               style={{ color: 'var(--text-ghost)' }}>
               {INDICATORS[key].label} <InfoIcon />
             </span>
           </Tooltip>
+          <button onClick={() => onQuickRemove(key)} aria-label={`Remove ${INDICATORS[key].label}`}
+            title={`Remove ${INDICATORS[key].label}`}
+            className="opacity-0 group-hover:opacity-100 text-[11px] leading-none flex-shrink-0 cursor-pointer"
+            style={{color: 'var(--text-ghost)'}}>
+            x
+          </button>
+          </div>
           <IndicatorCell indicatorKey={key} result={results?.[key]} loading={loading} onSelect={() => onCellSelect(key, stock.ticker)}
             />
         </div>
@@ -326,7 +340,7 @@ const IndicatorPickerModal = ({ticker, name, selectedKeys, onSave, onClose}) => 
 
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4" style={{background: 'rgba(0,0,0,0.6)', zIndex: 10000}} onClick={onClose} role="presentation">
-      <div className="terminal-card w-full max-w-d max-h-[85vh] overflow-y-auto" style={{background: 'var(--bg-primary,#0a0a0a)', border: '1px solid var(--border-subtle,#2a2a2a)'}} onClick={(e) => e.stopPropagation()}>
+      <div className="terminal-card w-full max-w-md max-h-[85vh] overflow-y-auto" style={{background: 'var(--bg-primary,#0a0a0a)', border: '1px solid var(--border-subtle,#2a2a2a)'}} onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between px-5 py-4" style={{borderBottom: '1px solid var(--border-subtle,#2a2a2a)'}}>
           <div>
             <h2 className="text-xs font-medium uppercase tracking-widest" style={{color: 'var(--text-primary,#e5e5e5)'}}>
@@ -339,8 +353,8 @@ const IndicatorPickerModal = ({ticker, name, selectedKeys, onSave, onClose}) => 
           </button>
         </div>
         <div className="px-5 py-4 flex flex-col gap-4">
-          <div className="text-[9px] uppercase tracking-widest font-medium mb-2" style={{color: 'var(--text-ghost,#444)'}}>
-            <p>
+          <div>
+            <p className="text-[9px] uppercase tracking-widest font-medium mb-2" style={{color: 'var(--text-ghost,#444)'}}>
               Presets
             </p>
             <div className="flex flex-wrap gap-1.5">
