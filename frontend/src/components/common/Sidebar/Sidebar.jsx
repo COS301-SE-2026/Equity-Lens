@@ -1,3 +1,4 @@
+import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Newspaper,
@@ -7,8 +8,6 @@ import {
   BarChart2,
   HelpCircle
 } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
-
 import { ROUTES } from '../../../utils/constants';
 
 const navItems = [
@@ -86,7 +85,8 @@ const Sidebar = ({ open, onClose }) => {
             color: 'var(--text-ghost)',
             padding: '0 16px 8px',
             fontFamily: 'var(--font-primary)',
-          }} />
+          }}>
+          </p>
 
           {navItems.map(({ label, icon: Icon, to, badge, pinBottom }) => (
             <NavLink

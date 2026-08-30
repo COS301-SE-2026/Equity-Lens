@@ -1,6 +1,5 @@
-import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-
+import { render, screen } from '@testing-library/react';
 import PerformanceLineChart from './PerformanceLineChart';
 describe('PerformanceLineChart', () => {
   it('renders chart container', () => {

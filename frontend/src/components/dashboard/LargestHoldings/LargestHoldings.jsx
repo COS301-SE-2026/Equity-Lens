@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
-
-import { zar } from '../../../utils/currency';
 import { GlassPanel, PanelHead } from '../shared/GlassPanel';
+import { zar } from '../../../utils/currency';
 
 /** @param {{ label: string, value: string }} props */
 const ExposureStat = ({ label, value }) => (

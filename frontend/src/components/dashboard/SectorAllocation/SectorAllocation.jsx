@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-
-import { zar } from '../../../utils/currency';
 import { GlassPanel, PanelHead } from '../shared/GlassPanel';
+import { zar } from '../../../utils/currency';
 
 /** @type {Record<string, string>} */
 const SECTOR_COLORS = {

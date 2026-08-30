@@ -1,5 +1,4 @@
 import { expect, test } from "@playwright/test";
-
 import { bypassAuth } from "./helpers/auth";
 
 test.describe("portfolio e2e testing", () => {

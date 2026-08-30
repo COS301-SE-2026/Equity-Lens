@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-
 import {
   register as registerService,
   login as loginService,

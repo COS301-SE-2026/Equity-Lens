@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
-
-import { zar } from '../../../utils/currency';
-import { CONCENTRATION_HIGH, getConcRisk } from '../../../utils/dashboardInsights';
 import { GlassPanel, PanelHead } from '../shared/GlassPanel';
 import SecondaryButton from '../shared/SecondaryButton';
+import { zar } from '../../../utils/currency';
+import { CONCENTRATION_HIGH, getConcRisk } from '../../../utils/dashboardInsights';
 
 /** @type {Record<string, string>} */
 const SECTOR_COLORS = {

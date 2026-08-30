@@ -1,10 +1,8 @@
 import { render, screen, fireEvent} from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-
+import AIChat from "./AIChat.jsx";
 import useAuth from "../../hooks/useAuth.js";
 import api from "../../services/api.js";
-
-import AIChat from "./AIChat.jsx";
 
 vi.mock("../../hooks/useAuth.js");
 vi.mock("../../services/api.js");

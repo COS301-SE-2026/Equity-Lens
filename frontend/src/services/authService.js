@@ -14,12 +14,12 @@ import {
 export async function register(fullName, email, password) {
   const result = await signUp({
     username: email,
-    password,
+    password: password,
     options: {
-      userAttributes: { email, name: fullName, },
+      userAttributes: { email: email, name: fullName, },
     },
   });
-  return { userId: result.userId, email };
+  return { userId: result.userId, email: email };
 }
 
 
@@ -73,7 +73,7 @@ export async function getCurrentUserProfile() {
 
   return {
     sub: user.userId,
-    email,
+    email: email,
     full_name: fullName,
   };
 }

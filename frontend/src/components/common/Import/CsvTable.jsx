@@ -1,3 +1,4 @@
+import React from "react";
 
 const CsvTable = ({ data }) => {
   if (!data || data.length === 0) {

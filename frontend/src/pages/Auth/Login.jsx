@@ -1,14 +1,13 @@
-import { QRCodeSVG } from 'qrcode.react';
-import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-
-import Button from '../../components/common/Button/Button';
-import FormInput from '../../components/forms/FormInput/FormInput';
-import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
 import useAuth from '../../hooks/useAuth';
 import useForm from '../../hooks/useForm';
-import { ROUTES } from '../../utils/constants';
+import FormInput from '../../components/forms/FormInput/FormInput';
+import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
+import Button from '../../components/common/Button/Button';
 import { validateEmail } from '../../utils/validators';
+import { ROUTES } from '../../utils/constants';
+import { QRCodeSVG } from 'qrcode.react';
+import { useState, useEffect } from 'react';
 
 const validate = (values) => 
   {
@@ -139,6 +138,7 @@ const Login = () =>
         value={mfaCode}
         onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
         placeholder="000000"
+        autoFocus
         className="w-full text-center tracking-[0.3em] text-2xl p-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-mono outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]"
       />
       <Button

@@ -1,24 +1,23 @@
-import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-
+import { useState } from 'react';
+import useAuth from '../hooks/useAuth';
 import LoadingSpinner from '../components/common/LoadingSpinner/LoadingSpinner';
 import Sidebar from '../components/common/Sidebar/Sidebar';
 import Topbar from '../components/common/Topbar/Topbar';
-import useAuth from '../hooks/useAuth';
-import Analytics from '../pages/Analytics/Analytics';
-import ConfirmEmail from '../pages/Auth/ConfirmEmail';
 import Login from '../pages/Auth/Login';
 import Register from '../pages/Auth/Register';
-import BrandStyleGuide from '../pages/BrandStyleGuide/BrandStyleGuide';
 import Dashboard from '../pages/Dashboard/Dashboard';
-import Help from '../pages/Help/Help';
-import Landing from '../pages/Landing/Landing';
 import Portfolio from '../pages/Portfolio/Portfolio';
 import NotFound from '../pages/NotFound/NotFound';
 import News from '../pages/News/News';
 import AIChat from '../pages/AIChat/AIChat';
+import Help from '../pages/Help/Help';
 // import HelpLandingPage from '../pages/HelpLandingPage/HelpLandingPage';
 import { ROUTES } from '../utils/constants';
+import Analytics from '../pages/Analytics/Analytics';
+import ConfirmEmail from '../pages/Auth/ConfirmEmail';
+import Landing from '../pages/Landing/Landing';
+import BrandStyleGuide from '../pages/BrandStyleGuide/BrandStyleGuide';
 
 /** @param {{ children: React.ReactNode }} props */
 const AppLayout = ({ children }) => {

@@ -2,7 +2,6 @@ import { render, screen, fireEvent, within } from '@testing-library/react';
 import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
 import Landing from './Landing';
 
 vi.mock('recharts', async () => {

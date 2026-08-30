@@ -1,5 +1,4 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-
 import { getStockDetails, getHistorialData, searchStocks } from "./marketDataService";
 
 vi.mock('./api', () => ({
