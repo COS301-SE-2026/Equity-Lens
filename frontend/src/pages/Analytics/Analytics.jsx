@@ -433,6 +433,35 @@ export default function Analytics() {
   const navigate = useNavigate();
   const stocks = Object.values(stockData).map((s) => s.results).filter(Boolean);
   const [selected, setSelected] = useState(null);
+  const [editingTicker, setEditingTicker] = useState(null);
+  const [indicatorPrefs, setIndicatorPrefs] = useState(loadIndicatorPrefs);
+
+  useEffect(() => {
+    try{
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(indicatorPrefs));
+    }
+    catch{
+      //Local storage not available
+    }
+  }, [indicatorPrefs]);
+
+  const getVisibleKeys = (ticker) => {
+    const saved = indicatorPrefs[ticker];
+    return saved && saved.length > 0 ? saved : ALL_INDICATORS;
+  }
+
+  const updateVisibleKeys = (ticker, keys) => {
+    setIndicatorPrefs((prev) => ({...prev, [ticker]: keys}));
+  };
+
+  const handleQuickRemove = (ticker, key) => {
+    const current = getVisibleKeys(ticker);
+    const next = current.filter((k) => k !== key);
+    if(next.length === 0) return;
+    updateVisibleKeys(ticker, next);
+  }
+
+  const editingStock = stocks.find((s) => s.ticker === editingTicker)
 
   return (
     <>
@@ -506,7 +535,10 @@ export default function Analytics() {
                   index={i}
                   loading={false}
                   results={stock}
+                  visibleKeys={getVisibleKeys(stock.ticker)}
                   onCellSelect={(indicatorKey, ticker) => setSelected({ indicatorKey, ticker })}
+                  onEdit={() => setEditingTicker(stock.ticker)}
+                  onQuickRemove={(key) => handleQuickRemove(stock.ticker, key)}
                 />
               ))
           }
@@ -519,6 +551,15 @@ export default function Analytics() {
         stocks={stocks}
         onClose={() => setSelected(null)}
       />
+      {editingTicker && (
+        <IndicatorPickerModal
+        ticker={editingTicker}
+        name={editingStock?.name}
+        selectedKeys={getVisibleKeys(editingTicker)}
+        onSave={(keys) => {updateVisibleKeys(editingTicker, keys); setEditingTicker(null);}}
+        onClose={() => setEditingTicker(null)}
+        />
+      )}
     </>
   );
 }
