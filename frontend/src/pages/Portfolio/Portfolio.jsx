@@ -376,31 +376,31 @@ const Portfolio = () => {
   /**
    * @type {[any[], function]}
    */
-  const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState([]);
+  const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState(/** @type {any[]}*/[]);
   /**
    * @type {[any[], function]}
    */
-  const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState([]);
+  const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState(/** @type {any[]}*/[]);
   const [GetTheLowest, setGetTheLowest] = useState({ name: "", value: 0 });
   /**
    * @type {[any[], function]}
    */
-  const [GetTradingActivity, setGetTradingActivity] = useState([]);
+  const [GetTradingActivity, setGetTradingActivity] = useState(/** @type {any[]}*/[]);
   /**
    * @type {[any[], function]}
    */
-  const [GetCashFlow, setGetCashFlow] = useState([]);
+  const [GetCashFlow, setGetCashFlow] = useState(/** @type {any[]}*/[]);
   /**
    * @type {[any[], function]}
    */
-  const [GetDividendIncome, setGetDividendIncome] = useState([]);
+  const [GetDividendIncome, setGetDividendIncome] = useState(/** @type {any[]}*/[]);
   /**
    * @type {[boolean,function]}
    */
   const [LoadingPage, setLoadingPage] = useState(false);
   const [accountType,setAccountType] = useState("");
   const [showPortfolios,setShowPortfolios] = useState(false);
-  const [portfolios, setPortfolios] = useState([]);
+  const [portfolios, setPortfolios] = useState(/** @type {any[]}*/[]);
 
   useEffect( () => {
     const getInfo = async () => {
@@ -412,6 +412,10 @@ const Portfolio = () => {
 
   }, [])
 
+  /**
+   * 
+   * @param {*} id 
+   */
   const ViewSummary = async(id) => {
 
   try{
@@ -734,7 +738,9 @@ const Portfolio = () => {
                   My Portfolios
                 </h3>
 
-    {portfolios.slice(0,2).map((portfolio, index) => (
+
+
+    {portfolios.slice(0,2).map(/** @param {any} portfolio*/(portfolio, index) => (
 
             <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
               <div className="flex justify-between items-center">
@@ -915,7 +921,7 @@ const Portfolio = () => {
 
 <div>
   <div className="max-h-[65vh] overflow-y-auto pr-2">
-        {portfolios.map((portfolio, index) => (
+        {portfolios.map(/** @param {any} portfolio*/(portfolio, index) => (
 
             <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
               <div className="flex justify-between items-center">
