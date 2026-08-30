@@ -10,6 +10,7 @@ export const ROUTES = {
   CONFIRM_EMAIL: '/confirm-email',
   HELP: '/help',
   BRAND_GUIDE: '/brand',
+  SETTINGS: '/settings',
 };
 
 export const PASSWORD_MIN_LENGTH = 8;
