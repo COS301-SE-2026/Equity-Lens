@@ -10,19 +10,29 @@ from app.models.market_data import MarketData, FundamentalsCache
 _REFRESH_LOCKS = set()
 _PRICE_REFRESH_COOLDOWN_UNTIL: dict[str, datetime] = {}
 _YFINANCE_GLOBAL_COOLDOWN_UNTIL: datetime | None = None
-YFINANCE_RATE_LIMIT_COOLDOWN_MINUTES = 30
+_YFINANCE_COOLDOWN_STRIKES = 0
+YFINANCE_BASE_COOLDOWN_MINUTES = 3
+YFINANCE_MAX_COOLDOWN_MINUTES = 30
 
 def _is_rate_limit_error(exc: Exception) -> bool:
     message = str(exc)
     return "Too Many Requests" in message or "Rate limited" in message
 
 def _trip_yfinance_global_cooldown() -> None:
-    global _YFINANCE_GLOBAL_COOLDOWN_UNTIL
-    _YFINANCE_GLOBAL_COOLDOWN_UNTIL = datetime.now(timezone.utc) + timedelta(minutes=YFINANCE_RATE_LIMIT_COOLDOWN_MINUTES)
+    global _YFINANCE_GLOBAL_COOLDOWN_UNTIL, _YFINANCE_COOLDOWN_STRIKES
+    minutes = min(YFINANCE_BASE_COOLDOWN_MINUTES * (2 ** _YFINANCE_COOLDOWN_STRIKES), YFINANCE_MAX_COOLDOWN_MINUTES)
+    _YFINANCE_GLOBAL_COOLDOWN_UNTIL = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+    _YFINANCE_COOLDOWN_STRIKES += 1
     print(f"Yahoo rate limit hit - pausing all yfinance calls until {_YFINANCE_GLOBAL_COOLDOWN_UNTIL.isoformat()}")
 
 def _yfinance_globally_cooling_down() -> bool:
-    return _YFINANCE_GLOBAL_COOLDOWN_UNTIL is not None and datetime.now(timezone.utc) < _YFINANCE_GLOBAL_COOLDOWN_UNTIL
+    global _YFINANCE_COOLDOWN_STRIKES
+    if _YFINANCE_GLOBAL_COOLDOWN_UNTIL is None:
+        return False
+    if datetime.now(timezone.utc) >= _YFINANCE_GLOBAL_COOLDOWN_UNTIL:
+        _YFINANCE_COOLDOWN_STRIKES = 0
+        return False
+    return True
 
 PRICE_REFRESH_COOLDOWN_MINUTES = 10
 #weekly - comfortable time as eases rates on yfinance
@@ -406,7 +416,7 @@ def get_cached_fundamentals(ticker: str) -> dict:
     
     if _yfinance_globally_cooling_down():
         print(f"Skipping {ticker} fundamentals fetch - global rate limit")
-        return {"info": {}, "balance_shet": pd.DataFrame(), "financials": pd.DataFrame()}
+        return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
     
     cooldown_until = _FUNDAMENTALS_RATE_LIMITED_UNTIL.get(ticker)
     if cooldown_until and datetime.now(timezone.utc) < cooldown_until:
