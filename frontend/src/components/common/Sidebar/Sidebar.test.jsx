@@ -45,14 +45,4 @@ describe('Sidebar', () => {
     expect(screen.getByText('News')).toBeInTheDocument();
   });
 
-
-  it('links to the Plan page, and points it at the right route', () => {
-    render(
-      <MemoryRouter>
-        <Sidebar open={true} onClose={() => {}} />
-      </MemoryRouter>
-    );
-
-    expect(screen.getByText('Plan')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Plan' })).toHaveAttribute('href', '/plan');
-  });});
+});

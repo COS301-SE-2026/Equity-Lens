@@ -7,7 +7,6 @@ const navItems = [
   { label: 'Dashboard', to: ROUTES.DASHBOARD },
   { label: 'Portfolio', to: ROUTES.PORTFOLIO },
   { label: 'Analytics', to: ROUTES.ANALYTICS },
-  { label: 'Plan', to: ROUTES.PLAN },
   { label: 'News', to: ROUTES.NEWS },
   { label: 'AI Assistant', to: ROUTES.AI_CHAT },
   { label: 'Help', to: ROUTES.HELP },
