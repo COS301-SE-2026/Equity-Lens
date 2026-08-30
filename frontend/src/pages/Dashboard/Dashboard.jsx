@@ -103,6 +103,7 @@ const Dashboard = () => {
 
   return (
     <div
+      data-testid="dashboard-visualizations"
       className="min-h-screen"
       style={{ background: 'var(--bg-primary)', color: 'var(--text-primary)', fontFamily: 'var(--font-primary)' }} >
       <main className="mx-auto max-w-[1800px] space-y-10 px-6 py-8 lg:px-12" aria-label="Portfolio dashboard">
