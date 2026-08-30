@@ -82,6 +82,7 @@ const presets = [
 ];
 
 const STORAGE_KEY = 'analytics_indicator_pref';
+const CUSTOM_PRESETS_KEY = 'analytics_custom_presets';
 
 function loadIndicatorPrefs(){
   try{
@@ -90,6 +91,16 @@ function loadIndicatorPrefs(){
     return parsed && typeof parsed === 'object' ? parsed : {};
   } catch{
     return {};
+  }
+}
+
+function loadCustomPresets(){
+  try{
+    const raw = window.localStorage.getItem(CUSTOM_PRESETS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch{
+    return [];
   }
 }
 
@@ -435,6 +446,7 @@ export default function Analytics() {
   const [selected, setSelected] = useState(null);
   const [editingTicker, setEditingTicker] = useState(null);
   const [indicatorPrefs, setIndicatorPrefs] = useState(loadIndicatorPrefs);
+  const [customPresets, setCustomPresets] = useState(loadCustomPresets);
 
   useEffect(() => {
     try{
@@ -444,6 +456,15 @@ export default function Analytics() {
       //Local storage not available
     }
   }, [indicatorPrefs]);
+
+  useEffect(() => {
+    try{
+      window.localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(customPresets));
+    }
+    catch{
+      //Local Storage not available
+    }
+  }, [customPresets]);
 
   const getVisibleKeys = (ticker) => {
     const saved = indicatorPrefs[ticker];
@@ -459,6 +480,25 @@ export default function Analytics() {
     const next = current.filter((k) => k !== key);
     if(next.length === 0) return;
     updateVisibleKeys(ticker, next);
+  }
+
+  const handleApplyToAllHoldings = (keys) => {
+    setIndicatorPrefs((prev) => {
+      const next = {...prev};
+      stocks.forEach((s) => {
+        next[s.ticker] = keys;
+      });
+      return next;
+    });
+  };
+
+  const handleSaveCustomPreset = (label, keys) => {
+    const id = `custom-${Date.now()}`;
+    setCustomPresets((prev) => [...prev, {id, label, keys}]);
+  };
+
+  const handleDeleteCustomPreset = (id) => {
+    setCustomPresets((prev) => prev.filter((p) => p.id !== id));
   }
 
   const editingStock = stocks.find((s) => s.ticker === editingTicker)
