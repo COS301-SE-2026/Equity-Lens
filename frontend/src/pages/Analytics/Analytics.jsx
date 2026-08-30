@@ -341,13 +341,33 @@ const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) =
     )
 }
 
-const IndicatorPickerModal = ({ticker, name, selectedKeys, onSave, onClose}) => {
+const IndicatorPickerModal = ({ticker, name, selectedKeys, customPresets, onSave, onApplyToAll, onSaveCustomPreset, onDeleteCustomPreset, onClose}) => {
   const [draft, setDraft] = useState(selectedKeys);
+  const [newPresetName, setNewPresetName] = useState('');
+  const[applyToAll, setApplyToAll] = useState(false);
+
   const toggle = (key) => {
     setDraft((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
   };
 
   const canSave = draft.length > 0;
+  const canSavePreset = canSave && newPresetName.trim().length > 0;
+
+  const handleSaveAsPreset = () => {
+    const trimmed = newPresetName.trim();
+    if(!trimmed || draft.length === 0) return;
+    onSaveCustomPreset(trimmed, draft);
+    setNewPresetName('');
+  };
+
+  const handleSave = () => {
+    if(!canSave) return;
+    if(applyToAll) {
+      onApplyToAll(draft);
+    } else{
+      onSave(draft);
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center p-4" style={{background: 'rgba(0,0,0,0.6)', zIndex: 10000}} onClick={onClose} role="presentation">
@@ -378,6 +398,25 @@ const IndicatorPickerModal = ({ticker, name, selectedKeys, onSave, onClose}) => 
               ))}
             </div>
           </div>
+          {customPresets.length > 0 && (
+            <div>
+              <p className="text-[9px] uppercase tracking-widest font-medium mb-2" style={{color: 'var(--text-ghost,#444)'}}>
+                Your Presets
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {customPresets.map((preset) => (
+                  <span key={preset.id} className="inline-flex items-center rounded overflow-hidden" style={{border: '1px solid var(--border-subtle,#2a2a2a)'}}>
+                    <button onClick={() => setDraft(preset.keys)} className="text-[10px] font-mono pl-2.5 pr-1.5 py-1.5 cursor-pointer" style={{color: 'var(--text-secondary,#a0a0a0)', background: 'transparent', border: 'none'}}>
+                      {preset.label}
+                    </button>
+                    <button onClick={() => onDeleteCustomPreset(preset.id)} aria-label={`Delete preset ${preset.label}`} title={`Delete preset ${preset.label}`} className="text-[10px] pr-2 cursor-pointer" style={{color: 'var(--text-ghost,#444)', background: 'transparent', border: 'none'}}>
+                      x
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-[9px] uppercase tracking-widest font-medium" style={{color: 'var(--text-ghost,#444)'}}>
@@ -414,24 +453,56 @@ const IndicatorPickerModal = ({ticker, name, selectedKeys, onSave, onClose}) => 
               })}
             </div>
           </div>
+          <div>
+            <p className="text-[9px] uppercase tracking-widest font-medium mb-2" style={{color: 'var(--text-ghost,#444)'}}>
+              Save Current Selection As Preset
+            </p>
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                value={newPresetName}
+                onChange={(e) => setNewPresetName(e.target.value)}
+                placeholder="Preset name"
+                className="flex-1 text-[10px] font-mono px-2.5 py-1.5 rounded"
+                style={{background: 'transparent', border: '1px solid var(--border-subtle,#2a2a2a)', color: 'var(--text-primary,#e5e5e5)'}}
+                />
+                <button onClick={handleSaveAsPreset} disabled={!canSavePreset} className="text-[10px] font-mono px-2.5 py-1.5 rounded" style={{border: '1px solid var(--border-subtle,#2a2a2a)', color: canSavePreset ? 'var(--text-primary,#e5e5e5)' : 'var(--text-ghost,#444)',
+                  cursor: canSavePreset ? 'pointer' : 'not-allowed',
+                  background: 'transparent',
+                }}>
+                  Add
+                </button>
+            </div>
+          </div>
           {!canSave && (
             <p className="text-[10px]" style={{color: 'var(--signal-negative,#ef4444)'}}>
               Select at least one indicator.
             </p>
           )}
+          <div className="flex flex-col gap-2 pt-1">
+            <label className="flex items-center gap-3 text-[10px] cursor-pointer" style={{color: 'var(--text-secondary,#a0a0a0)'}}>
+              <input
+                type="checkbox"
+                checked={applyToAll}
+                onChange={(e) => setApplyToAll(e.target.checked)}
+                style={{accentColor: 'var(--text-primary,#e5e5e5)'}}
+                />
+                Apply to all holdings instead of just {ticker}
+            </label>
           <div className="flex items-center justify-end gap-2 pt-1">
             <button onClick={onClose} className="text-[10px] font-mono px-3.5 py-2 rounded cursor-pointer"
             style={{color: 'var(--text-ghost,#444)', border: '1px solid var(--border-subtle,#2a2a2a)'}}>
               Cancel
             </button>
-            <button onClick={() => canSave && onSave(draft)} disabled={!canSave} className="text-[10px] font-mono px-3.5 py-2 rounded"
+            <button onClick={handleSave} disabled={!canSave} className="text-[10px] font-mono px-3.5 py-2 rounded"
               style={{
                 background: canSave ? 'var(--text-primary,#e5e5e5)' : 'var(--border-subtle,#2a2a2a)',
                 color: canSave ? 'var(--bg-primary,#0a0a0a)' : 'var(--text-ghost,#444)',
                 cursor: canSave ? 'pointer' : 'not-allowed',
               }}>
-                Save
+                {applyToAll ? 'Apply to All' : 'Save'}
               </button>
+            </div>
           </div>
         </div>
       </div>
@@ -596,7 +667,11 @@ export default function Analytics() {
         ticker={editingTicker}
         name={editingStock?.name}
         selectedKeys={getVisibleKeys(editingTicker)}
+        customPresets={customPresets}
         onSave={(keys) => {updateVisibleKeys(editingTicker, keys); setEditingTicker(null);}}
+        onApplyToAll={(keys) => {handleApplyToAllHoldings(keys); setEditingTicker(null);}}
+        onSaveCustomPreset={handleSaveCustomPreset}
+        onDeleteCustomPreset={handleDeleteCustomPreset}
         onClose={() => setEditingTicker(null)}
         />
       )}
