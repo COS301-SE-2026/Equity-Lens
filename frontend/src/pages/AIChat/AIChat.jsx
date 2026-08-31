@@ -242,12 +242,27 @@ const AIChat = () => {
   const { user } = useAuth();
   /**@type {React.MutableRefObject<number|undefined>}*/
   const copyTimer = useRef(undefined);
+  const droppedTail = useRef(/**@type {ChatMessage[]}*/ ([]));
   const {theme} = useTheme();
+
   const palette = useMemo(() => paletteFor(theme === 'light'), [theme]);
   const mdComponents = useMemo(() => buildMarkdownComponents(palette), [palette]);
   const firstName = user?.full_name?.split(' ')[0] ?? 'there';
   const cooling = cooldownLeft > 0;
+  const busy = isThinking || regeneratingId !== null;
   const locked = busy || cooling;
+
+  const msgBtnStyle = /**@type {React.CSSProperties}*/ ({
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: 4,
+    borderRadius: 8,
+    padding: '2px 4px',
+    color: 'var(--text-secondary)',
+    opacity: locked ? 0.45 : 1,
+    cursor: locked ? 'not-allowed' : 'pointer',
+  });
+
   useEffect(() => {
     if (cooldownUntil === 0) 
       return undefined;
@@ -304,18 +319,38 @@ const AIChat = () => {
         }).finally(() => setIsThinking(false));
     };
 
+  /** @param {ChatMessage} message */
+  const regenerate = (message) => {
+    if (locked) return;
+
+    const index = messages.findIndex((m) => m.id === message.id);
+    if (index === -1) return;
+
+    const priorUser = [...messages.slice(0, index)].reverse().find((m) => m.role === 'user');
+    if (!priorUser) return;
+
+    droppedTail.current = messages.slice(index + 1);
+    setMessages((prev) => prev.slice(0, index + 1));
+    setRegeneratingId(message.id);
+
+    api
+      .post('/ai_chat/', { message: priorUser.text, conversation_id: conversationId })
       .then((res) => {
-        const responseMessage = /** @type {ChatMessage} */({id: Date.now() + 1, role: 'assistant', text: res.data.reply,});
+        droppedTail.current = [];
         setConversationId(res.data.conversation_id);
-        setMessages((prev) => [...prev, responseMessage]);
-
-        api.get('/ai_chat/conversations/')
-        .then((res) => setConversations(res.data))
-        .catch(() => {});
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === message.id ? { ...m, text: res.data.reply, at: new Date(), failed: false }: m
+          ));
+        refreshConversations();
       })
-
-    //Error checking incase ai call fails
     .catch((err) => {
+        const { text: errorText, retryAfter } = readError(err);
+        startCooldown(retryAfter);
+        setMessages((prev) => [...prev.map((m) => (m.id === message.id ? { ...m, text: errorText, failed: true } : m)), ...droppedTail.current]);
+        droppedTail.current = [];
+      }).finally(() => setRegeneratingId(null));
+  };
 
   /** @param {ChatMessage} message */
   const copyMessage = async (message) => {
@@ -514,10 +549,27 @@ const AIChat = () => {
                           <div className="mt-1 flex items-center gap-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
                             <span>{timeLabel(message.at)}</span>
                             {copyButton(message)}
+                          {regeneratingId === message.id ? (
+                            <ReplyLoader />) : (<>
                               <div className="mt-2 flex items-center gap-4 text-xs"
                                 style={{color: 'var(--text-secondary)'}}>
                                 <span>{timeLabel(message.at)}</span>
+
+                                {message.failed ? (<button type="button" onClick={() => regenerate(message)} disabled={locked}
+                                  className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
+                                    <RefreshCw size={16} aria-hidden="true"/>
+                                    {cooling ? `Retry in ${cooldownLeft}s` : 'Retry'}
+                                  </button>) 
+                                : (<>
+                                    {copyButton(message)}
+                                    <button type="button" onClick={() => regenerate(message)} disabled={locked}
+                                      className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
+                                      <RefreshCw size={16} aria-hidden="true"/>
+                                        Regenerate
+                                    </button>
+                                  </>)}
                 </div>
+                            </>)}
                 {isThinking && <ReplyLoader/>}
     </div>
 
