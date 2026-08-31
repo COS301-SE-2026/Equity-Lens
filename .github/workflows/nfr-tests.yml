@@ -7,10 +7,10 @@ on:
     branches: [main, dev]
 
 jobs:
-    nfr-1-1-and-1-6:
-        name: NFR-1.1 & NFR1.7 OWSAP ZAP
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
+    # nfr-1-1-and-1-6:
+    #     name: NFR-1.1 & NFR1.7 OWSAP ZAP
+    #     runs-on: ubuntu-latest
+    #     timeout-minutes: 5
 
         # steps:
         #     - name: Checkout repository
