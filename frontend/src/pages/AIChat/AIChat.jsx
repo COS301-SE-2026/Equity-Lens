@@ -1,14 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback} from 'react';
 import ReactMarkdown from 'react-markdown';
+import {Sparkles, Plus, Pencil, Trash2, MessageSquare, Search, Copy, Check, PanelLeftClose, X, Send, RefreshCw, PanelLeftOpen} from 'lucide-react';
 
 import Button from '../../components/common/Button/Button';
 import useAuth from '../../hooks/useAuth';
+import useTheme from '../../hooks/useTheme';
 import api from '../../services/api'
 
 /**
  * @typedef {{id: number | string, role: 'user' | 'assistant', text: string}} ChatMessage
  * @typedef {{id: number, title: string}} Conversation
  * @typedef {{id: number, role: 'user' | 'assistant', content:string}} ApiMessage
+ * @typedef {{border: string, panelBg: string, bubbleBg: string, bubbleBorder: string, activeBg: string}} Palette
  */
 
 const SUGGESTED_PROMPTS = [
@@ -16,21 +19,113 @@ const SUGGESTED_PROMPTS = [
   "What is the news with Sasol?",
   'How is my portfolio performing compared to the JSE benchmark?'
 ];
+const PANEL_WIDTH = 260;
+const HOVER = 'transition-colors duration-150 hover:bg-[var(--surface-hover)]';
+/**
+ * @param {boolean} isLight
+ * @returns {Palette}
+ */
+const paletteFor = (isLight) => ({
+    border: isLight ? '#d6d1c6' : 'var(--border-subtle)',
+    panelBg: isLight ? '#f2f0ea' : 'var(--surface-base)',
+    bubbleBg: isLight ? '#ebe7de' : '#07080b',
+    bubbleBorder: isLight ? '#dad4c8' : 'var(--border-mid)',
+    activeBg: isLight ? 'rgba(255, 107, 0, 0.13)' : 'rgba(255, 107, 0, 0.14)',
+});
+
+
+/**@param {string} value*/
+const signalColour = (value) => {
+  if (value.startsWith('+')) return 'var(--signal-positive)';
+  if (value.startsWith('-')) return 'var(--signal-negative)';
+  return 'var(--text-primary)';
+};
+/** @param {string} text */
+const richText = (text) =>
+  text.split(/(\s+)/).map((inputWord, i) =>
+    /\d/.test(inputWord)  ? (<span key={i} style={{fontFamily: 'var(--font-mono)', color: signalColour(word)}}>{word}</span>) : (word));
+
+
+/** @param {any} children */
+const withRich = (children) =>
+  React.Children.map(children, (child) => (typeof child === 'string' ? richText(child) : child));
+
+
+
+//md
+/**
+ * @param {Palette} palette
+ * @returns {import('react-markdown').Components}
+ */
+const buildMarkdownComponents = (palette) => {
+  /** @param {string} size */
+  const heading = (size) => ({fontSize: size, fontWeight: 600, lineHeight: 1.3, marginTop: 20, marginBottom: 8 });
+
+  return {
+    h1: ({children}) => <h1 style={heading('1.25rem')}>{children}</h1>,
+    h2: ({children}) => <h2 style={heading('1.125rem')}>{children}</h2>,
+    h3: ({children}) => <h3 style={heading('1rem')}>{children}</h3>,
+    h4: ({children}) => (<h4 style={{ ...heading('1rem'), color: 'var(--text-secondary)' }}>{children}</h4>),
+    p: ({children}) => <p style={{ marginBottom: 12 }}>{withRich(children)}</p>,
+    strong: ({children}) => <strong>{withRich(children)}</strong>,
+    ul: ({children}) => (<ul style={{ listStyle: 'disc', paddingLeft: 20, marginBottom: 12 }}>{children}</ul>),
+    ol: ({children}) => (
+      <ol style={{ listStyle: 'decimal', paddingLeft: 20, marginBottom: 12 }}>{children}</ol>
+    ),
+    li: ({children}) => <li style={{ marginBottom: 4 }}>{withRich(children)}</li>,
+    a: ({href, children}) => (<a href={href} target="_blank" rel="noreferrer" style={{color: 'var(--accent-primary)', textDecoration: 'underline',textUnderlineOffset: 2,}}>
+                                  {children}
+                                </a>),
+    code: ({children}) => (<code style={{fontFamily: 'var(--font-mono)', fontSize: '0.9em', background: 'var(--surface-inset)', border: `1px solid ${palette.border}`, borderRadius: 4, padding: '1px 5px'}}>
+                            {children}
+                          </code>),
+    pre: ({ children }) => <pre style={{ marginBottom: 12, overflowX: 'auto' }}>{children}</pre>,
+    blockquote: ({ children }) => (<blockquote
+        style={{borderLeft: '2px solid var(--border-mid)', paddingLeft: 12, marginBottom: 12, color: 'var(--text-secondary)'}}>
+        {children}
+      </blockquote>),
+    hr: () => (<hr style={{ border: 0, borderTop: `1px solid ${palette.border}`, margin: '16px 0' }} />),
+    table: ({ children }) => (
+      <table
+        style={{width: '100%', borderCollapse: 'collapse', marginBottom: 12, fontSize: '0.875rem'}}>
+        {children}
+      </table>),
+    th: ({ children }) => (<th
+        style={{ border: `1px solid ${palette.border}`, padding: '6px 8px', textAlign: 'left', background: 'var(--surface-inset)',fontWeight: 600,}}>
+        {children}
+      </th>),
+    td: ({ children }) => (
+      <td style={{ border: `1px solid ${palette.border}`, padding: '6px 8px', textAlign: 'left' }}>
+        {children}
+      </td>),
+  };
+};
+
 
 const AIChat = () => {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState(/**@type {ChatMessage[]}*/ ([]));
   const [isThinking, setIsThinking] = useState(false);
-  const [cooldown, setCooldown] = useState(0);
   const [conversationId, setConversationId] = useState(/**@type {number | null}*/(null));
   const [conversations, setConversations] = useState(/**@type {Conversation[]}*/([]));
-  const { user } = useAuth();
   /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const bottomRef = useRef(null);
   const [editingId, setEditingId] = useState(/**@type {number | null}*/(null));
   const [editTitle, setEditTitle] = useState('');
   /**@type {React.MutableRefObject<HTMLInputElement | null>}*/
   const renameRef = useRef(null)
+  const [panelOpen, setPanelOpen] = useState(true);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [headerEditing, setHeaderEditing] = useState(false);
+  const [copiedId, setCopiedId] = useState(/**@type {string|number|null}*/(null));
+  const [regeneratingId, setRegeneratingId] = useState(/**@type {string|number|null}*/(null));
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
+  const [composerFocused, setComposerFocused] = useState(false);
+  const { user } = useAuth();
+  const {theme} = useTheme();
+  const palette = useMemo(() => paletteFor(theme === 'light'), [theme]);
+  const mdComponents = useMemo(() => buildMarkdownComponents(palette), [palette]);
   const firstName = user?.full_name?.split(' ')[0] ?? 'there';
 
   //scroll to bottom of new messages
