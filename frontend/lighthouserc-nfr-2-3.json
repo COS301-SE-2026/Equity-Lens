@@ -1,7 +1,7 @@
 {
     "ci" : {
         "collect" :{
-            "url": ["http://localhost:5173/dashboard"]
+            "url": ["http://localhost:4173/dashboard"]
         },
         "assert": {
             "assertions": {
