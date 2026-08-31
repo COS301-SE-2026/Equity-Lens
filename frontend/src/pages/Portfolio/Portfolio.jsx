@@ -800,10 +800,9 @@ const Portfolio = () => {
                
               >
                 <option value=""> Select account type</option>
-                <option value="Taxable">Taxable</option>
                 <option value="TFSA">TFSA</option>
+                <option value="TFSA">ZAR</option>
                 <option value="RA">RA</option>
-                <option value="Other">Other</option>
               </select>
             </div>
 
