@@ -19,10 +19,14 @@ const SUGGESTED_PROMPTS = [
   "What is the news with Sasol?",
   'How is my portfolio performing compared to the JSE benchmark?'
 ];
+
 const PANEL_WIDTH = 260;
 const HOVER = 'transition-colors duration-150 hover:bg-[var(--surface-hover)]';
 const COPIED_LABEL_MS = 3200;
+const GENERIC_ERROR = "Something went wrong, try again.";
 const SWEEP_MS = 3200;
+
+
 /**
  * @param {boolean} isLight
  * @returns {Palette}
@@ -52,6 +56,24 @@ const richText = (text) =>
 const withRich = (children) =>
   React.Children.map(children, (child) => (typeof child === 'string' ? richText(child) : child));
 
+
+/** 
+ * @param {any} err
+  * @returns {{text: string, retryAfter: number}}
+  */
+const readError = (err) => {
+  if (err?.response?.status !== 429) return {text: GENERIC_ERROR, retryAfter: 0};
+
+  const errDetail = err.response.data?.detail;
+  const retryHeader = Number(err.response.headers?.['retry-after']);
+  const retryAfter = Number(errDetail?.retry_after) ||(retryHeader > 0 ? retryHeader : 60);
+
+  return {
+    text:
+      typeof errDetail?.message === 'string'? errDetail.message: `You have been rate limited. Please try again in ${retryAfter} seconds.`,
+       retryAfter
+  };
+};
 
 
 /** 
@@ -224,11 +246,23 @@ const AIChat = () => {
   const palette = useMemo(() => paletteFor(theme === 'light'), [theme]);
   const mdComponents = useMemo(() => buildMarkdownComponents(palette), [palette]);
   const firstName = user?.full_name?.split(' ')[0] ?? 'there';
-
-  //scroll to bottom of new messages
+  const cooling = cooldownLeft > 0;
+  const locked = busy || cooling;
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({behavior: 'smooth'});
-  }, [messages, isThinking]);
+    if (cooldownUntil === 0) 
+      return undefined;
+
+    const tick = () => {
+      const lhs = Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000));
+      setCooldownLeft(lhs);
+      if (lhs === 0) 
+        setCooldownUntil(0);
+    };
+
+    tick();
+    const id = window.setInterval(tick, 1000);
+    return () => window.clearInterval(id);
+  }, [cooldownUntil]);
 
   // fetch conversations 
   useEffect(() => {
@@ -241,18 +275,20 @@ const AIChat = () => {
   useEffect(() => () => window.clearTimeout(copyTimer.current), []);
 
   useEffect(() => {
-    if(editingId !== null) {
-      renameRef.current?.focus();
-    }
-  }, [editingId]);
 
-  /** @param {string}  rawText*/
+  /** @param {number} seconds */
+  const startCooldown = (seconds) => {
+    if (seconds > 0) setCooldownUntil(Date.now() + seconds * 1000);
+  };
+
+  /** @param {string} rawText */
   const sendMessage = (rawText) => {
-    if (isThinking || cooldown > 0) {
+    if (locked) 
       return;
-    }
+
     const text = rawText.trim();
-    if (!text) {
+
+    if (!text) 
       return;
 
     const userMessage = /**@type {ChatMessage}*/ ({id: Date.now(), role: 'user', text, at: new Date()});
@@ -261,6 +297,13 @@ const AIChat = () => {
     setIsThinking(true);
 
           setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', text: res.data.reply, at: new Date() },]);
+        .catch((err) => {
+          const { text: errorText, retryAfter} = readError(err);
+          startCooldown(retryAfter);
+          setMessages((prev) => [...prev,{id: Date.now() + 1, role: 'assistant', text: errorText,at: new Date(),failed: true}]);
+        }).finally(() => setIsThinking(false));
+    };
+
       .then((res) => {
         const responseMessage = /** @type {ChatMessage} */({id: Date.now() + 1, role: 'assistant', text: res.data.reply,});
         setConversationId(res.data.conversation_id);
@@ -486,18 +529,18 @@ const AIChat = () => {
       >
         <input
           type="text"
-          value={input}
+                  placeholder={cooling ? `Rate limited - ${cooldownLeft}s left` : 'Ask the assistant...'}
           onChange={(e) => setInput(e.target.value)}
           placeholder= "Ask the assistant..."
           maxLength={500}
-          className="flex-1 rounded-lg border border-[var(--border-default)]
-                     bg-[var(--bg-secondary)] px-3 py-2.5 text-sm
-                     text-[var(--text-primary)] placeholder:text-[var(--text-dim)]
-                     focus-visible:outline-none focus-visible:ring-2
-                     focus-visible:ring-[var(--accent-primary)]"
-        />
-        <Button type="submit" variant="primary" disabled={isThinking || cooldown > 0 || !input.trim()}>
-          {cooldown > 0 ? `Wait ${cooldown}s` : 'Send'}
+                <Button type="submit" variant="primary" size="sm" className="min-w-[3.25rem]" disabled={locked || !input.trim()}>
+                  {cooling ? (<span className="tabular-nums" aria-label={`Rate limited, ${cooldownLeft} seconds left`}>
+                      {cooldownLeft}s </span>) : (<> <Send size={16} aria-hidden="true" />
+                        <span className="sr-only">
+                          Send
+                          </span>
+                      </>
+                  )}
         </Button>
       </form>
       <p className="mt-2 text-[12px] text-[var(--text-dim)]">
