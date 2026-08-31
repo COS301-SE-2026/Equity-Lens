@@ -172,8 +172,8 @@ jobs:
 
             - name: Run NFR-5.2
               working-directory: frontend
-              run: npx playwright test test/nfr/test_5_2.spec.js
+              run: npx playwright test test/nfr/nfr_5_2.spec.js
 
             - name: Run NFR-5.3
               working-directory: frontend
-              run: npx playwright test test/nfr/test_5_3.spec.js
+              run: npx playwright test test/nfr/nfr_5_3.spec.js

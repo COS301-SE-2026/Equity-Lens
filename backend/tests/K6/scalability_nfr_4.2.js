@@ -8,7 +8,7 @@ export const options = {
 
 
     thresholds: {
-        checks: ["rate==0.1"]
+        checks: ["rate==1.0"]
     }
 }
 
