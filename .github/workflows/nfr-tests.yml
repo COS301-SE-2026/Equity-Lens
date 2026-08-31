@@ -10,6 +10,7 @@ jobs:
     nfr-1-1-and-1-6:
         name: NFR-1.1 & NFR1.7 OWSAP ZAP
         runs-on: ubuntu-latest
+        timeout-minutes: 5
 
         # steps:
         #     - name: Checkout repository
@@ -25,6 +26,7 @@ jobs:
     nfr-1-4:
         name: NFR-1.4 TLS
         runs-on: ubuntu-latest
+        timeout-minutes: 2
 
         steps:
             - name: To chekc the HTTPs connection
@@ -39,6 +41,7 @@ jobs:
     nfr-1-5:
         name: NFR-1.5 GitLeaks
         runs-on: ubuntu-latest
+        timeout-minutes: 2
 
         steps:
             - name: Checkout repository
@@ -52,6 +55,7 @@ jobs:
     nfr-2-1-and-3-1-and-3-2:
         name: NFR-2.1 & NFR-4.1 &  NFR-4.2 & NFR-4.3 K6 Performance and scalability
         runs-on: ubuntu-latest
+        timeout-minutes: 2
 
         steps:
             - name: Checkout repository
@@ -79,6 +83,7 @@ jobs:
     nfr-2-2-and-2-3:
         name: NFR-2.2 & NFR-2.3 lighthouse
         runs-on: ubuntu-latest
+        timeout-minutes: 2
 
         steps:
             - name: Checkout repository
@@ -112,6 +117,7 @@ jobs:
     nfr-2-4-and-3-1-and-3-2-and-3-3:
         name: NFR-2.4 & NFR-3.1 & NFR-3.2 & NFR-3.3 Pytest
         runs-on: ubuntu-latest
+        timeout-minutes: 2
 
         steps:
             - name: Checkout repository
@@ -148,6 +154,7 @@ jobs:
     nfr-5-3-and-5-2:
         name: NFR-5-3 & NFR-5-4 
         runs-on: ubuntu-latest
+        timeout-minutes: 2
 
         steps:
             - name: Checkout repository
