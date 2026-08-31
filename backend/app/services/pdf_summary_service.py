@@ -19,17 +19,6 @@ def checkPortfolioID(database,portfolioID, user_id):
             detail="The portfolio is not found"
         )
 
-def _iso_or_none(portfolio, field: str):
-    if portfolio:
-        value = getattr(portfolio, field, None)
-    else:
-        value = None
-    
-    if value:
-        return value.isoformat()
-    else:
-        return None
-
 
 def get_summary_import_PDF(database,portfolioID, user_id):
     checkPortfolioID(database,portfolioID,user_id)
