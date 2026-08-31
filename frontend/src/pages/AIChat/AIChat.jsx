@@ -50,6 +50,46 @@ const richText = (text) =>
 const withRich = (children) =>
   React.Children.map(children, (child) => (typeof child === 'string' ? richText(child) : child));
 
+/** @param {Date} d */
+const timeLabel = (d) =>
+  d.toLocaleTimeString('en-ZA', {hour: '2-digit', minute: '2-digit', hour12: false});
+
+
+/** @param {Date} d */
+const dayLabel = (d) => {
+  const todayDate = new Date();
+  const yesterday = new Date();
+
+  yesterday.setDate(todayDate.getDate() - 1);
+
+  if (d.toDateString() === todayDate.toDateString()) {
+    return 'Today';
+  };
+
+  if (d.toDateString() === yesterday.toDateString()) {
+    return 'Yesterday';
+  };
+
+  return d.toLocaleDateString('en-ZA', {day: 'numeric', month: 'long', year: 'numeric'});
+};
+
+
+/** @param {string|undefined} iso */
+const stampLabel = (iso) => {
+  if (!iso) {
+    return '';
+  }
+  const d = new Date(iso);
+
+  if (Number.isNaN(d.getTime())) return '';
+  if (d.toDateString() === new Date().toDateString()) {
+    return timeLabel(d);
+  }
+
+  return `${d.toLocaleDateString('en-ZA',{weekday: 'short'})} ${timeLabel(d)}`;
+};
+
+
 
 
 //md
@@ -162,14 +202,13 @@ const AIChat = () => {
     const text = rawText.trim();
     if (!text) {
       return;
-    }
-    const userMessage = /** @type {ChatMessage} */({ id: Date.now(), role: 'user', text });
+
+    const userMessage = /**@type {ChatMessage}*/ ({id: Date.now(), role: 'user', text, at: new Date()});
     setMessages((prev) => [...prev, userMessage]);
     setInput('');
     setIsThinking(true);
 
-    // The ai assistant replying now 
-    return api.post('/ai_chat/', {message: text, conversation_id: conversationId})
+          setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', text: res.data.reply, at: new Date() },]);
       .then((res) => {
         const responseMessage = /** @type {ChatMessage} */({id: Date.now() + 1, role: 'assistant', text: res.data.reply,});
         setConversationId(res.data.conversation_id);
@@ -207,7 +246,7 @@ const AIChat = () => {
             id: m.id,
             role: m.role,
             text: m.content
-          }))
+            at: m.created_at ? new Date(m.created_at) : new Date()}))
         )
       })
       .catch(() => {})
@@ -256,6 +295,8 @@ const AIChat = () => {
     e.preventDefault();
     sendMessage(input);
   };
+                          {stampLabel(convo.updated_at)}
+    let lastDay = '';
 
   return (
   <div className="flex h-[calc(100vh-64px)] -m-4">
@@ -351,21 +392,25 @@ const AIChat = () => {
         </div>
 
       ) : (
-        <ul className="flex flex-col gap-3">
-          {messages.map((message) => (
-            <li
-              key={message.id}
-              className={`flex ${
-                message.role === 'user' ? 'justify-end' : 'justify-start'
-              }`}
-            >
+                  const day = dayLabel(message.at);
+                  const showDay = day !== lastDay;
+
+                  lastDay = day;
+
+                  return (<div key={message.id}>
+                      {showDay && (<p className="mb-6 text-center text-xs" style={{ color: 'var(--text-secondary)' }}>
+                                      {day}
+                                  </p>
+                      )}
+
               {message.role === 'user' ? (
                 <p className="max-w-[80%] rounded-lg bg-[var(--bg-tertiary)] px-3 py-2 text-sm text-[var(--text-primary)]">
                   {message.text}
-                </p>
-              ) : (
-                <div className="max-w-[80%] text-sm text-[var(--text-secondary)] [&>p]:mb-2 [&>ul]:mb-2 [&>ul]:list-disc [&>ul]:pl-5 [&>ol]:mb-2 [&>ol]:list-decimal [&>ol]:pl-5 [&>h3]:font-semibold [&>h3]:mb-1 [&>strong]:font-semibold [&>p:last-child]:mb-0">
-                    <ReactMarkdown>{message.text}</ReactMarkdown>
+                          <div className="mt-1 flex items-center gap-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                            <span>{timeLabel(message.at)}</span>
+                              <div className="mt-2 flex items-center gap-4 text-xs"
+                                style={{color: 'var(--text-secondary)'}}>
+                                <span>{timeLabel(message.at)}</span>
                 </div>
               )}
             </li>
