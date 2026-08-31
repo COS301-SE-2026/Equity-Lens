@@ -23,7 +23,7 @@ const DeleteAccountModal = ({ userEmail, onClose, onConfirmed }) => {
     };
     return (
         <div className="fixed inset-0 flex items-center justify-center p-4" style={{background: 'rgba(0,0,0,0.6)', zIndex: 10000}} onClick={deleting ? undefined : onClose} role="presentation">
-            <div className="glass-surface-elevated rounded-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="glass-surface-elevated rounded-xl w-full max-w-md" style={{ border: '1px solid rgba(239,68,68,0.6)' }} onClick={(e) => e.stopPropagation()}>
                 <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)'}}>
                     <h2 className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--signal-negative,#ef4444)'}}>
                         Delete Account
