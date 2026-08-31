@@ -1,0 +1,146 @@
+name: NFR Security Tests
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+jobs:
+    nfr-1-1-and-1-6:
+        name: NFR-1.1 & NFR1.7 OWSAP ZAP
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: RUN the OWSAP ZAP to scan all the API
+              uses: zaproxy/action-api-scan@v0.10.0
+              with:
+                target: "https://api.equitylens.co.za/openapi.json"
+                format: openapi
+                fail_action: true
+
+    nfr-1-4:
+        name: NFR-1.4 TLS
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: To chekc the HTTPs connection
+              run: | 
+                set -e
+                    curl --fail --show-error \
+                    https://api.equitylens.co.za/health
+                    curl --fail --show-error \
+                    https://www.equitylens.co.za
+                    echo "PASS All the HTTPs/TLS connection"
+
+    nfr-1-5:
+        name: NFR-1.5 GitLeaks
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                fetch-depth: 0
+
+            - name: Run GitLeaks
+              uses: gitleaks/gitleaks-action@v2
+
+    nfr-2-1-and-3-1-and-3-2:
+        name: NFR-2.1 & NFR-4.1 &  NFR-4.2 & NFR-4.3 K6 Performance and scalability
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup K6
+              uses: grafana/setup-k6-action@v1
+
+            - name: Run K6 Performance test
+              run: |
+                k6 run backend/tests/K6/performance.js
+
+            - name: Run K6 scalability 4.1
+              run: |
+                k6 run backend/tests/K6/scalability_nfr_4.1.js
+
+            - name: Run K6 scalability 4.2
+              run: |
+                k6 run backend/tests/K6/scalability_nfr_4.2.js
+
+            - name: Run K6 scalability 4.3
+              run: |
+                k6 run backend/tests/K6/scalability_nfr_4.3.js
+
+    nfr-2-2-and-2-3:
+        name: NFR-2.2 & NFR-2.3 lighthouse
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                node-version: "22"
+            
+            - name: install frontend dependencies
+              working-directory: frontend
+              run: npm ci
+
+            - name: Start frontend
+              working-directory: frontend
+              run: |
+                npm run dev -- --host 0.0.0.0 &
+                npx wait-on http://localhost:5173
+
+            - name: Run NFR-2.2 Lighthouse
+              uses: treosh/lighthouse-ci-action@v12
+              with: 
+                configPath: ./frontend/lighthouse-nfr-2.2.json
+
+            - name: Run NFR-2.3 Lighthouse
+              uses: treosh/lighthouse-ci-action@v12
+              with: 
+                configPath: ./frontend/lighthouse-nfr-2.3.json
+
+    nfr-2-4-and-3-1-and-3-2-and-3-3:
+        name: NFR-2.4 & NFR-3.1 & NFR-3.2 & NFR-3.3 Pytest
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Python
+              uses: actions/setup-python@v6
+              with:
+                python-version: "3.11"
+
+            - name: Install dependencies
+              working-directory: backend
+              run: |
+               python -m pip install --upgrade pip setuptools
+               pip install -r requirements.txt
+               pip install -r requirements-dev.txt
+
+            - name: RUN NFR-2.4 Cache Test
+              working-directory: backend
+              run: python -m pytest tests/integration/test_nfr_cache.py
+            
+            - name: RUN NFR-3.1 Failure Of one part(isolation)
+              working-directory: backend
+              run: python -m pytest tests/integration/test_nfr_failure_isolation.py
+
+            - name: RUN NFR-3.2 the AI failure to check the API
+              working-directory: backend
+              run: python -m pytest tests/integration/test_nfr_ai_failure.py
+
+            - name: RUN NFR-3.3 Failure for the market data
+              working-directory: backend
+              run: python -m pytest tests/integration/test_nfr_holding_failure.py
