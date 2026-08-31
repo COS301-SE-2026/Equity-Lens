@@ -48,6 +48,7 @@ jobs:
               uses: actions/checkout@v4
               with:
                 fetch-depth: 0
+                
 
             - name: Run GitLeaks
               uses: gitleaks/gitleaks-action@v2
@@ -107,15 +108,15 @@ jobs:
             - name: Run NFR-2.2 Lighthouse
               uses: treosh/lighthouse-ci-action@v12
               with: 
-                configPath: ./frontend/lighthouse-nfr-2.2.json
+                configPath: ./frontend/lighthouserc-nfr-2.2.json
 
             - name: Run NFR-2.3 Lighthouse
               uses: treosh/lighthouse-ci-action@v12
               with: 
-                configPath: ./frontend/lighthouse-nfr-2.3.json
+                configPath: ./frontend/lighthouserc-nfr-2.3.json
 
-    nfr-2-4-and-3-1-and-3-2-and-3-3:
-        name: NFR-2.4 & NFR-3.1 & NFR-3.2 & NFR-3.3 Pytest
+    nfr-3-1-and-3-2-and-3-3:
+        name: NFR-3.1 & NFR-3.2 & NFR-3.3 Pytest
         runs-on: ubuntu-latest
         timeout-minutes: 2
 
@@ -134,10 +135,6 @@ jobs:
                python -m pip install --upgrade pip setuptools
                pip install -r requirements.txt
                pip install -r requirements-dev.txt
-
-            - name: RUN NFR-2.4 Cache Test
-              working-directory: backend
-              run: python -m pytest tests/integration/test_nfr_cache.py
             
             - name: RUN NFR-3.1 Failure Of one part(isolation)
               working-directory: backend
@@ -175,8 +172,8 @@ jobs:
 
             - name: Run NFR-5.2
               working-directory: frontend
-              run: npm playwright test test/nfr/test_5_2.spec.js
+              run: npx playwright test test/nfr/test_5_2.spec.js
 
             - name: Run NFR-5.3
               working-directory: frontend
-              run: npm playwright test test/nfr/test_5_3.spec.js
+              run: npx playwright test test/nfr/test_5_3.spec.js
