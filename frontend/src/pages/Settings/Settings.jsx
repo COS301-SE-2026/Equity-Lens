@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { deleteAccount } from "../../services/authService";
+import { useAuthContext } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../utils/constants";
 
 
 const DeleteAccountModal = ({ userEmail, onClose, onConfirmed }) => {
@@ -86,3 +89,71 @@ const DeleteAccountModal = ({ userEmail, onClose, onConfirmed }) => {
         </div>
     );
 };
+
+export default function Settings(){
+    const {user, logout} = useAuthContext();
+    const navigate = useNavigate();
+    const [typedEmail, setTypedEmail] = useState('');
+    const [showConfirm, setShowConfirm] = useState(false);
+
+    const userEmail = user?.email || '';
+    const emailMatches = typedEmail.trim().toLowerCase() === userEmail.trim().toLowerCase() && userEmail.length > 0;
+
+    const handleDeleted = async () => {
+        await logout();
+        navigate(ROUTES.HOME);
+    };
+
+    return (
+    <div className="p-4 flex flex-col gap-4 max-w-[800px] mx-auto w-full" aria-label="Settings page">
+      <div className="flex items-center justify-between pb-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+        <h1 className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--text-page,#e5e5e5)' }}>
+          Settings
+        </h1>
+      </div>
+
+      <div className="glass-surface rounded-xl p-5">
+        <p className="text-[9px] uppercase tracking-widest font-medium mb-2" style={{ color: 'var(--signal-negative,#ef4444)' }}>
+          Danger Zone
+        </p>
+        <p className="text-[11px] leading-relaxed mb-4" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>
+          Permanently delete your account and all associated data. This action cannot be undone.
+        </p>
+
+        <label className="text-[9px] uppercase tracking-widest font-medium mb-2 block" style={{ color: 'var(--text-ghost,#444)' }}>
+          Type your email ({userEmail}) to enable deletion
+        </label>
+        <div className="flex gap-2">
+          <input
+            type="email"
+            value={typedEmail}
+            onChange={(e) => setTypedEmail(e.target.value)}
+            placeholder={userEmail}
+            className="flex-1 text-[11px] font-mono px-3 py-2 rounded"
+            style={{ background: 'transparent', border: '1px solid var(--border-subtle,#2a2a2a)', color: 'var(--text-primary,#e5e5e5)' }}
+          />
+          <button
+            onClick={() => setShowConfirm(true)}
+            disabled={!emailMatches}
+            className="text-[10px] font-mono px-3.5 py-2 rounded"
+            style={{
+              background: emailMatches ? 'var(--signal-negative,#ef4444)' : 'var(--border-subtle,#2a2a2a)',
+              color: emailMatches ? '#fff' : 'var(--text-ghost,#444)',
+              cursor: emailMatches ? 'pointer' : 'not-allowed',
+            }}>
+            Delete Account
+          </button>
+        </div>
+      </div>
+
+      {showConfirm && (
+        <DeleteAccountModal
+          userEmail={userEmail}
+          onClose={() => setShowConfirm(false)}
+          onConfirmed={handleDeleted}
+        />
+      )}
+    </div>
+  );
+}
+
