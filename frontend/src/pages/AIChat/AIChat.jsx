@@ -21,6 +21,7 @@ const SUGGESTED_PROMPTS = [
 ];
 const PANEL_WIDTH = 260;
 const HOVER = 'transition-colors duration-150 hover:bg-[var(--surface-hover)]';
+const SWEEP_MS = 3200;
 /**
  * @param {boolean} isLight
  * @returns {Palette}
@@ -90,6 +91,44 @@ const stampLabel = (iso) => {
 };
 
 
+//loader
+const ReplyLoader = () => {
+  /**@type {React.MutableRefObject<HTMLSpanElement|null>}*/
+  const loaderIcon = useRef(null);
+
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return undefined;
+    }
+
+    let frame = 0;
+    const start = performance.now();
+
+    /** @param {number} now */
+    const loop = (now) => {
+      const angle = (((now - start) % SWEEP_MS) / SWEEP_MS) * Math.PI * 2;
+      const x = 10 * Math.sin(angle);
+      const y = 4 * Math.sin(angle * 2);
+      if (loaderIcon.current) loaderIcon.current.style.transform = `translate(${x}px, ${y}px)`;
+      frame = requestAnimationFrame(loop);
+    };
+
+    frame = requestAnimationFrame(loop);
+
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  return (
+    <div
+      aria-live="polite"
+      aria-label="Assistant is replying"
+      style={{display: 'inline-flex', alignItems: 'center',gap: 8, padding: '4px 12px', color: 'var(--text-secondary)'}}>
+      <span ref={loaderIcon} style={{ display: 'inline-flex', willChange: 'transform' }}>
+        <Search size={20} aria-hidden="true" />
+      </span>
+    </div>
+  );
+};
 
 
 //md
@@ -412,27 +451,7 @@ const AIChat = () => {
                                 style={{color: 'var(--text-secondary)'}}>
                                 <span>{timeLabel(message.at)}</span>
                 </div>
-              )}
-            </li>
-          ))}
-
-          {/* Typing indicator while the assistant "thinks" */}
-          {isThinking && (
-            <li className="flex justify-start">
-              <span className="flex items-center gap-1 px-1 py-2">
-                {[0, 150, 300].map((delay) => (
-                  <span
-                    key={delay}
-                    className="h-2 w-2 animate-bounce rounded-full bg-[var(--text-dim)]"
-                    style={{ animationDelay: `${delay}ms` }}
-                  />
-                ))}
-              </span>
-            </li>
-          )}
-        </ul>
-      )}
-      <div ref={bottomRef} />
+                {isThinking && <ReplyLoader/>}
     </div>
 
     {/* Composer */}
