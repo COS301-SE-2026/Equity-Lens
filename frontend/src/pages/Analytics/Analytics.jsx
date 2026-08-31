@@ -190,7 +190,7 @@ const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
 
   const sig = meta.signal(result.value);
   return (
-    <button onClick={onSelect} className="flex flex-col gap-0.5 pt-1 text-left w-full cursor-pointer">
+    <button data-testid={`indicator-${indicatorKey}`} onClick={onSelect} className="flex flex-col gap-0.5 pt-1 text-left w-full cursor-pointer">
       <span className="text-sm font-mono font-semibold tabular-nums"
         style={{ color: color(sig), letterSpacing: '-0.02em' }}>
         {formatValue(result.value)}{result.unit}

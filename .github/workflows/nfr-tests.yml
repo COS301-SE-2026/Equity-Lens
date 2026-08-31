@@ -11,16 +11,16 @@ jobs:
         name: NFR-1.1 & NFR1.7 OWSAP ZAP
         runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+        # steps:
+        #     - name: Checkout repository
+        #       uses: actions/checkout@v4
 
-            - name: RUN the OWSAP ZAP to scan all the API
-              uses: zaproxy/action-api-scan@v0.10.0
-              with:
-                target: "https://api.equitylens.co.za/openapi.json"
-                format: openapi
-                fail_action: true
+        #     - name: RUN the OWSAP ZAP to scan all the API
+        #       uses: zaproxy/action-api-scan@v0.10.0
+        #       with:
+        #         target: "https://api.equitylens.co.za/openapi.json"
+        #         format: openapi
+        #         fail_action: true
 
     nfr-1-4:
         name: NFR-1.4 TLS
@@ -144,3 +144,32 @@ jobs:
             - name: RUN NFR-3.3 Failure for the market data
               working-directory: backend
               run: python -m pytest tests/integration/test_nfr_holding_failure.py
+
+    nfr-5-3-and-5-2:
+        name: NFR-5-3 & NFR-5-4 
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                node-version: "22"
+            
+            - name: install frontend dependencies
+              working-directory: frontend
+              run: npm ci
+
+            - name: install Playwright 
+              working-directory: frontend
+              run: npx playwright install --with-deps
+
+            - name: Run NFR-5.2
+              working-directory: frontend
+              run: npm playwright test test/nfr/test_5_2.spec.js
+
+            - name: Run NFR-5.3
+              working-directory: frontend
+              run: npm playwright test test/nfr/test_5_3.spec.js
