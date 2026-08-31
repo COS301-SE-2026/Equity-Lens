@@ -50,9 +50,9 @@ def serialize_indicator_row(row: dict) -> dict:
         normalized[key] = serialize_indicator_value(row.get(key), unit)
     return normalized
 
-def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series) -> dict:
+def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, price_history: pd.DataFrame | None = None) -> dict:
     try:
-        hist = get_cached_price_history(symbol,period="1y")
+        hist = price_history if price_history is not None else get_cached_price_history(symbol,period="1y")
         if hist.empty or "Close" not in hist:
             raise ValueError("No price data")
         
