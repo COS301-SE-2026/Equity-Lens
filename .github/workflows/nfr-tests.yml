@@ -108,12 +108,12 @@ jobs:
             - name: Run NFR-2.2 Lighthouse
               uses: treosh/lighthouse-ci-action@v12
               with: 
-                configPath: ./frontend/lighthouserc-nfr-2.2.json
+                configPath: ./frontend/lighthouserc-nfr-2-2.json
 
             - name: Run NFR-2.3 Lighthouse
               uses: treosh/lighthouse-ci-action@v12
               with: 
-                configPath: ./frontend/lighthouserc-nfr-2.3.json
+                configPath: ./frontend/lighthouserc-nfr-2-3.json
 
     nfr-3-1-and-3-2-and-3-3:
         name: NFR-3.1 & NFR-3.2 & NFR-3.3 Pytest
