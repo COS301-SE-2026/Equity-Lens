@@ -28,6 +28,7 @@ class Portfolios(Base):
     statement_start_date = Column(Date)
     account_type = Column(String(10), nullable=True)
     currency = Column(String(10), nullable=False, default="ZAR")
+    account_type = Column(String(20), nullable=True)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at  = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))

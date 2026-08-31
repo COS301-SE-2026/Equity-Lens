@@ -50,6 +50,7 @@ class HistoryResponse(BaseModel):
 class SearchResultItem(BaseModel):
     symbol: str
     name: str
+    quote_type: Optional[str] = None
 
 class SearchResponse(BaseModel):
     query: str

@@ -2,16 +2,17 @@ from datetime import date
 from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
-from app.models.portfolio import PortfolioSnapshot, Portfolios
-
-
+from app.models.portfolio import (
+    ContributionsAndWithdrawals,
+    DividendsAndWithholdingTax,
+    InstrumentPurchasesAndSales,
+    PortfolioSnapshot,
+    Portfolios,
+    TransactionExpenses,
+)
 class PortfolioRepository:
     def __init__(self, db: Session):
         self.db = db
-
-    def get_portfolio_ids(self, user_id: UUID) -> list[UUID]:
-        stmt = select(Portfolios.id).where(Portfolios.user_id == user_id)
-        return list(self.db.scalars(stmt).all())
 
     def get_latest_portfolio_id(self, user_id: UUID) -> UUID | None:
         stmt = (
@@ -28,6 +29,21 @@ class PortfolioRepository:
             .order_by(Portfolios.created_at.desc())
         )
         return self.db.scalars(stmt).first()
+
+    def get_current_portfolios(self, user_id: UUID, account_type: str | None = None) -> list[Portfolios]:
+        latest = self.get_latest_portfolio(user_id)
+        if latest is None:
+            return []
+        if account_type is not None and latest.account_type != account_type:
+            return []
+        return [latest]
+
+    def set_account_type(self, portfolio_id: UUID, account_type: str | None) -> Portfolios | None:
+        portfolio = self.db.get(Portfolios, portfolio_id)
+        if portfolio is None:
+            return None
+        portfolio.account_type = account_type
+        return portfolio
 
     def upsert_snapshot(
         self,
@@ -81,21 +97,42 @@ class PortfolioRepository:
             for row in rows
         ]
 
-    def get_latest_portfolio(self, user_id: UUID):
+    def get_instrument_transactions(self, portfolio_ids: list[UUID]) -> list[InstrumentPurchasesAndSales]:
+        if not portfolio_ids:
+            return []
         stmt = (
-            select(Portfolios)
-            .where(Portfolios.user_id == user_id)
-            .order_by(Portfolios.created_at.desc())
-        )
-        return self.db.scalers(stmt).first()
-
-    def get_current_portfolios(self, user_id: UUID):
-        stmt = (
-            select(Portfolios)
-            .where(Portfolios.user_id == user_id)
-            .order_by(Portfolios.created_at.desc())
+            select(InstrumentPurchasesAndSales)
+            .where(InstrumentPurchasesAndSales.portfolio_id.in_(portfolio_ids))
+            .order_by(InstrumentPurchasesAndSales.transaction_date.asc())
         )
         return list(self.db.scalars(stmt).all())
-    
 
-    
+    def get_contributions_and_withdrawals(self, portfolio_ids: list[UUID]) -> list[ContributionsAndWithdrawals]:
+        if not portfolio_ids:
+            return []
+        stmt = (
+            select(ContributionsAndWithdrawals)
+            .where(ContributionsAndWithdrawals.portfolio_id.in_(portfolio_ids))
+            .order_by(ContributionsAndWithdrawals.transaction_date.asc())
+        )
+        return list(self.db.scalars(stmt).all())
+
+    def get_dividends(self, portfolio_ids: list[UUID]) -> list[DividendsAndWithholdingTax]:
+        if not portfolio_ids:
+            return []
+        stmt = (
+            select(DividendsAndWithholdingTax)
+            .where(DividendsAndWithholdingTax.portfolio_id.in_(portfolio_ids))
+            .order_by(DividendsAndWithholdingTax.transaction_date.asc())
+        )
+        return list(self.db.scalars(stmt).all())
+
+    def get_transaction_expenses(self, portfolio_ids: list[UUID]) -> list[TransactionExpenses]:
+        if not portfolio_ids:
+            return []
+        stmt = (
+            select(TransactionExpenses)
+            .where(TransactionExpenses.portfolio_id.in_(portfolio_ids))
+            .order_by(TransactionExpenses.transaction_date.asc())
+        )
+        return list(self.db.scalars(stmt).all())
