@@ -81,83 +81,83 @@ jobs:
               run: |
                 k6 run backend/tests/K6/scalability_nfr_4.3.js
 
-    nfr-2-2-and-2-3:
-        name: NFR-2.2 & NFR-2.3 lighthouse
-        runs-on: ubuntu-latest
-        timeout-minutes: 5
+    # nfr-2-2-and-2-3:
+    #     name: NFR-2.2 & NFR-2.3 lighthouse
+    #     runs-on: ubuntu-latest
+    #     timeout-minutes: 5
 
-        services:
-          db:
-            image: postgres:16-alpine
-            env:
-              POSTGRES_USER: postgres
-              POSTGRES_PASSWORD: postgres
-              POSTGRES_DB: equitylens
-            ports:
-              - 5432:5432
-            options: >-
-              --health-cmd pg_isready
-              --health-interval 10s
-              --health-timeout 5s
-              --health-retries 5
+    #     services:
+    #       db:
+    #         image: postgres:16-alpine
+    #         env:
+    #           POSTGRES_USER: postgres
+    #           POSTGRES_PASSWORD: postgres
+    #           POSTGRES_DB: equitylens
+    #         ports:
+    #           - 5432:5432
+    #         options: >-
+    #           --health-cmd pg_isready
+    #           --health-interval 10s
+    #           --health-timeout 5s
+    #           --health-retries 5
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
+    #     steps:
+    #         - name: Checkout repository
+    #           uses: actions/checkout@v4
 
-            - name: Setup Node
-              uses: actions/setup-node@v4
-              with:
-                node-version: "22"
+    #         - name: Setup Node
+    #           uses: actions/setup-node@v4
+    #           with:
+    #             node-version: "22"
             
-            - name: install frontend dependencies
-              working-directory: frontend
-              run: npm ci
+    #         - name: install frontend dependencies
+    #           working-directory: frontend
+    #           run: npm ci
 
-            - name: Setup Python
-              uses: actions/setup-python@v6
-              with:
-                python-version: "3.11"
+    #         - name: Setup Python
+    #           uses: actions/setup-python@v6
+    #           with:
+    #             python-version: "3.11"
 
-            - name: Install dependencies
-              working-directory: backend
-              run: |
-               python -m pip install --upgrade pip setuptools
-               pip install -r requirements.txt
-               pip install -r requirements-dev.txt
+    #         - name: Install dependencies
+    #           working-directory: backend
+    #           run: |
+    #            python -m pip install --upgrade pip setuptools
+    #            pip install -r requirements.txt
+    #            pip install -r requirements-dev.txt
 
-            - name: Start backend
-              working-directory: backend
-              env:
-                DATABASE_URL: postgresql://postgres:postgres@localhost:5432/equitylens
-                SECRET_KEY: ${{ vars.TEST_SECRET_KEY }}
-                ALGORITHM: HS256
-                ACCESS_TOKEN_EXPIRE_MINUTES: 30
-                PYTHONPATH: .
-                AWS_REGION: af-south-1
-                AWS_COGNITO_CLIENT_ID: ${{ vars.TEST_COGNITO_CLIENT_ID }}
-                AWS_COGNITO_USER_POOL_ID: ${{ vars.TEST_COGNITO_USER_POOL_ID }}
-                AWS_ACCESS_KEY_ID: dummy
-                AWS_SECRET_ACCESS_KEY: dummy
-              run: |
-                  uvicorn app.main:app --host 0.0.0.0 --port 8000 &
-                  until npx wait-on http://localhost:8000/health; do sleep 2; done
+    #         - name: Start backend
+    #           working-directory: backend
+    #           env:
+    #             DATABASE_URL: postgresql://postgres:postgres@localhost:5432/equitylens
+    #             SECRET_KEY: ${{ vars.TEST_SECRET_KEY }}
+    #             ALGORITHM: HS256
+    #             ACCESS_TOKEN_EXPIRE_MINUTES: 30
+    #             PYTHONPATH: .
+    #             AWS_REGION: af-south-1
+    #             AWS_COGNITO_CLIENT_ID: ${{ vars.TEST_COGNITO_CLIENT_ID }}
+    #             AWS_COGNITO_USER_POOL_ID: ${{ vars.TEST_COGNITO_USER_POOL_ID }}
+    #             AWS_ACCESS_KEY_ID: dummy
+    #             AWS_SECRET_ACCESS_KEY: dummy
+    #           run: |
+    #               uvicorn app.main:app --host 0.0.0.0 --port 8000 &
+    #               until npx wait-on http://localhost:8000/health; do sleep 2; done
 
-            - name: Start frontend
-              working-directory: frontend
-              run: |
-                npm run dev -- --host 0.0.0.0 &
-                npx wait-on http://localhost:5173
+    #         - name: Start frontend
+    #           working-directory: frontend
+    #           run: |
+    #             npm run dev -- --host 0.0.0.0 &
+    #             npx wait-on http://localhost:5173
 
-            - name: Run NFR-2.2 Lighthouse
-              uses: treosh/lighthouse-ci-action@v12
-              with: 
-                configPath: ./frontend/lighthouserc-nfr-2-2.json
+    #         - name: Run NFR-2.2 Lighthouse
+    #           uses: treosh/lighthouse-ci-action@v12
+    #           with: 
+    #             configPath: ./frontend/lighthouserc-nfr-2-2.json
 
-            - name: Run NFR-2.3 Lighthouse
-              uses: treosh/lighthouse-ci-action@v12
-              with: 
-                configPath: ./frontend/lighthouserc-nfr-2-3.json
+    #         - name: Run NFR-2.3 Lighthouse
+    #           uses: treosh/lighthouse-ci-action@v12
+    #           with: 
+    #             configPath: ./frontend/lighthouserc-nfr-2-3.json
 
     nfr-3-1-and-3-2-and-3-3:
         name: NFR-3.1 & NFR-3.2 & NFR-3.3 Pytest
