@@ -21,6 +21,7 @@ const SUGGESTED_PROMPTS = [
 ];
 const PANEL_WIDTH = 260;
 const HOVER = 'transition-colors duration-150 hover:bg-[var(--surface-hover)]';
+const COPIED_LABEL_MS = 3200;
 const SWEEP_MS = 3200;
 /**
  * @param {boolean} isLight
@@ -50,6 +51,21 @@ const richText = (text) =>
 /** @param {any} children */
 const withRich = (children) =>
   React.Children.map(children, (child) => (typeof child === 'string' ? richText(child) : child));
+
+
+
+/** 
+ * @param {string} text 
+ * @returns {Promise<boolean>}
+*/
+const copyToClipboard = async (text) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    return false;
+  }
+};
 
 /** @param {Date} d */
 const timeLabel = (d) =>
@@ -202,6 +218,8 @@ const AIChat = () => {
   const [cooldownLeft, setCooldownLeft] = useState(0);
   const [composerFocused, setComposerFocused] = useState(false);
   const { user } = useAuth();
+  /**@type {React.MutableRefObject<number|undefined>}*/
+  const copyTimer = useRef(undefined);
   const {theme} = useTheme();
   const palette = useMemo(() => paletteFor(theme === 'light'), [theme]);
   const mdComponents = useMemo(() => buildMarkdownComponents(palette), [palette]);
@@ -220,12 +238,7 @@ const AIChat = () => {
   }, []);
 
   useEffect(() => {
-    if (cooldown <= 0) {
-      return;
-    }
-    const timer = setTimeout(() => setCooldown((s) => s - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [cooldown]);
+  useEffect(() => () => window.clearTimeout(copyTimer.current), []);
 
   useEffect(() => {
     if(editingId !== null) {
@@ -260,18 +273,17 @@ const AIChat = () => {
 
     //Error checking incase ai call fails
     .catch((err) => {
-      const detail = err.response?.data?.detail;
-      let text;
-      if (err.response?.status === 429) {
-        text = detail?.message ?? "You have been rate-limited by sending messages too quick. Give it a minute.";
-        setCooldown(detail?.retry_after ?? 60);
-      } else {
-        text = "Something went wrong, try again.";
-      }
-      const errorMessage = /**@type {ChatMessage} */ ({id: Date.now() + 1, role: 'assistant', text});
-      setMessages((prev) => [...prev, errorMessage]);
-  })
-  .finally(() => setIsThinking(false));
+
+  /** @param {ChatMessage} message */
+  const copyMessage = async (message) => {
+    const ok = await copyToClipboard(message.text);
+      
+    if (!ok) 
+      return;
+
+    setCopiedId(message.id);
+    window.clearTimeout(copyTimer.current);
+    copyTimer.current = window.setTimeout(() => setCopiedId(null), COPIED_LABEL_MS);
   };
   
   //now to load the messages
@@ -334,6 +346,17 @@ const AIChat = () => {
     e.preventDefault();
     sendMessage(input);
   };
+
+  /** @param {ChatMessage} message */
+  const copyButton = (message) => (
+    <button type="button" onClick={() => copyMessage(message)} className={`rounded-lg ${HOVER}`} style={{ ...msgBtnStyle, opacity: 1, cursor: 'pointer' }}>
+      
+      {copiedId === message.id ? (<Check size={16} aria-hidden="true" />) 
+      : (<Copy size={16} aria-hidden="true" />)}
+      {copiedId === message.id ? 'Copied' : 'Copy'}
+    </button>
+  );
+
                           {stampLabel(convo.updated_at)}
     let lastDay = '';
 
@@ -447,6 +470,7 @@ const AIChat = () => {
                   {message.text}
                           <div className="mt-1 flex items-center gap-3 text-xs" style={{ color: 'var(--text-secondary)' }}>
                             <span>{timeLabel(message.at)}</span>
+                            {copyButton(message)}
                               <div className="mt-2 flex items-center gap-4 text-xs"
                                 style={{color: 'var(--text-secondary)'}}>
                                 <span>{timeLabel(message.at)}</span>
