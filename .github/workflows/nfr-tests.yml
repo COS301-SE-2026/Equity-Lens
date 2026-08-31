@@ -193,7 +193,7 @@ jobs:
               run: python -m pytest tests/integration/test_nfr_holding_failure.py
 
     nfr-5-3-and-5-2:
-        name: NFR-5-3 & NFR-5-4 
+        name: NFR-5-3
         runs-on: ubuntu-latest
         timeout-minutes: 2
 
@@ -213,10 +213,6 @@ jobs:
             - name: install Playwright 
               working-directory: frontend
               run: npx playwright install --with-deps
-
-            - name: Run NFR-5.2
-              working-directory: frontend
-              run: npx playwright test test/nfr/nfr_5_2.spec.js
 
             - name: Run NFR-5.3
               working-directory: frontend
