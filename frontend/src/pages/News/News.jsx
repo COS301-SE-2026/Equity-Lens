@@ -283,16 +283,6 @@ const NewsInvestment = () => {
           My portfolio
         </button>
 
-        <button
-          onClick={() => setActiveTab("watchlist")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab === "watchlist"
-            ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
-            : "bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]"
-            }`}>
-          <Star className="w-4 h-4" />
-          Watchlist
-        </button>
-
         <button onClick={() => { setActiveTab("market"); setActiveCategory("Business"); ToGetTheNews("business") }}
           className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab === "market"
             ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
