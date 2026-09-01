@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import {useNavigate} from 'react-router-dom';
+import {useNavigate, Link} from 'react-router-dom';
 
 import useIndicators from '../../hooks/useIndicators';
+import { ROUTES } from '../../utils/constants';
 
 const INDICATORS = {
   capm: {
@@ -203,7 +204,7 @@ const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
 };
 
 const StockRow = ({ stock, loading, results, index, onCellSelect, visibleKeys, onEdit, onQuickRemove }) => (
-  <div className="glass-surface overflow-hidden rounded-xl"
+  <div className="glass-surface rounded-xl"
     style={{ animation: 'fadeSlideIn 0.3s ease both', animationDelay: `${index * 70}ms` }}>
     <div className="flex items-center gap-3 px-4 py-3"
       style={{ borderBottom: '1px solid var(--border-subtle)' }}>
@@ -217,7 +218,7 @@ const StockRow = ({ stock, loading, results, index, onCellSelect, visibleKeys, o
       </div>
       <button onClick={onEdit} aria-label={`Customize indicators for ${stock.ticker}`}
       className="flex items-center gap-1 text-[9px] font-mono px-2 py-1.5 rounded flex-shrink-0 cursor-pointer"
-      style={{color: 'var(--text-ghost)', border: '1px solid var(--border-subtle)'}}>
+      style={{color: 'var(--text-secondary)', border: '1px solid var(--border-mid)'}}>
         <EditIcon />
         Edit
       </button>
@@ -268,7 +269,7 @@ const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) =
     return (
       <div className="fixed inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 10000}} onClick={onClose} role="presentation">
         {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
-        <div className="glass-surface-elevated rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="terminal-card w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)' }}>
             <h2 className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--text-primary,#e5e5e5)' }}>
               {meta.label}
@@ -397,6 +398,11 @@ const IndicatorPickerModal = ({ticker, name, selectedKeys, customPresets, onSave
                 </button>
               ))}
             </div>
+            <Link to={ROUTES.AI_CHAT} target="_blank" rel="noopener noreferrer"
+            className="text-[9px] mt-2 inline-block underline"
+            style={{color: 'var(--accent-primary)'}}>
+              Not sure which preset to pick? Ask the AI Assistant
+            </Link>
           </div>
           {customPresets.length > 0 && (
             <div>
@@ -591,6 +597,11 @@ export default function Analytics() {
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost,#444)' }}>
               How your holdings are doing - hover a label for a quick explanation, click a value to learn more
               </p>
+              <Link to={ROUTES.AI_CHAT} target="_blank" rel="noopener noreferrer"
+              className="text-[10px] mt-1 inline-block underline"
+              style={{ color: 'var(--accent-primary)' }}>
+                Still not understanding the indicators? Ask the AI Assistant
+              </Link>
           </div>
           <span className="text-[10px] px-2 py-1 rounded font-mono"
             style={{ color: 'var(--text-ghost)', border: '1px solid var(--border-subtle)' }}>
