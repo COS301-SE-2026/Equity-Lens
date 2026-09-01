@@ -8,9 +8,9 @@ import useTheme from '../../hooks/useTheme';
 import api from '../../services/api'
 
 /**
- * @typedef {{id: number | string, role: 'user' | 'assistant', text: string}} ChatMessage
- * @typedef {{id: number, title: string}} Conversation
- * @typedef {{id: number, role: 'user' | 'assistant', content:string}} ApiMessage
+ * @typedef {{id: number | string, role: 'user' | 'assistant', text: string, at: Date, failed?: boolean}} ChatMessage
+ * @typedef {{id: number, title: string, updated_at: string}} Conversation
+ * @typedef {{id: number, role: 'user' | 'assistant', content:string, created_at?: string | null}} ApiMessage
  * @typedef {{border: string, panelBg: string, bubbleBg: string, bubbleBorder: string, activeBg: string}} Palette
  */
 
@@ -20,7 +20,7 @@ const SUGGESTED_PROMPTS = [
   'How is my portfolio performing compared to the JSE benchmark?'
 ];
 
-const PANEL_WIDTH = 260;
+const PANEL_WIDTH = 'max-w-[860px]';
 const HOVER = 'transition-colors duration-150 hover:bg-[var(--surface-hover)]';
 const COMPOSER_MAX_ROWS = 1500;
 const COPIED_LABEL_MS = 3200;
@@ -489,7 +489,7 @@ const AIChat = () => {
     title: "block break-words text-sm leading-snug",
     date: "mt-1 block text-xs"
   };
-
+  
   const conversationList = (
     <div>
       <div className="flex items-center justify-between px-4 py-4" style={{borderBottom: `1px solid ${palette.border}`}}>
@@ -503,7 +503,7 @@ const AIChat = () => {
           <X size={16}/>
         </button>
       </div>
-
+      
       <div className = "pNumber-3">
         <Button type="button" variant="primary" fullWidth onClick={createNewChat}>
           <Plus size={16} aria-hidden="true"></Plus>
@@ -556,14 +556,14 @@ const AIChat = () => {
                         style={{color: 'var(--text-secondary)'}}>
                         <Trash2 size={16} />
                       </button>
-                    </div>
+                    </>
                   )}
                 </div>
               );
             })
           )}
         </div>
-      </>
+      </div>
     );
 
     let lastDay = '';
@@ -653,7 +653,7 @@ const AIChat = () => {
           <div className="min-h-0 flex-1 overflow-y-auto">
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center px-4 text-center">
-                <div className="max-w-[680px]">
+                <div className="[CONTENT_MAX]">
                   <p className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>
                     Hello {firstName}
                   </p>
@@ -676,7 +676,7 @@ const AIChat = () => {
                 </div>
               </div>
             ) : (
-              <div className="mx-auto flex max-w-[680px] flex-col gap-6 px-4 py-6">
+              <div className="mx-auto [CONTENT_MAX] flex-col gap-6 px-4 py-6">
                 {messages.map((message) => {
                   const day = dayLabel(message.at);
                   const showDay = day !== lastDay;
@@ -740,7 +740,7 @@ const AIChat = () => {
           </div>
 
           <div className="shrink-0 px-4 pb-4 pt-3" style={{ borderTop: `1px solid ${palette.border}` }}>
-            <form className="mx-auto max-w-[680px]" onSubmit={handleSubmit}>
+            <form className="mx-auto [CONTENT_MAX]" onSubmit={handleSubmit}>
               <div style={{display: 'flex', alignItems: 'flex-end', gap: 8, background: 'var(--surface-card)',
                     border: `1px solid ${composerFocused ? 'var(--accent-primary)' : palette.border}`,
                     boxShadow: composerFocused ? '0 0 0 1px var(--accent-primary)' : 'none',
@@ -762,7 +762,7 @@ const AIChat = () => {
                 </Button>
               </div>
             </form>
-            <p className="mx-auto mt-2 max-w-[680px] text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <p className="mx-auto mt-2 [CONTENT_MAX] text-xs" style={{ color: 'var(--text-secondary)' }}>
               AI responses are informational only and not financial advice.
             </p>
         </div>
