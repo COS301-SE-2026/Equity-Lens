@@ -54,7 +54,10 @@ def login(req: LoginReq):
 
 @router.post("/mfa/verify-login")
 def verify_mfa_login(req: MFAChallengeReq):
-    return cognito.cognito_respond_to_mfa(req.session, req.email, req.totp_code)
+    try:
+        return cognito.cognito_respond_to_mfa(req.session, req.email, req.totp_code)
+    except Exception:
+        raise HTTPException(status_code=400, detail="The MFA not working")
 
 @router.post("/mfa/associate")
 def associate_totp(cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):

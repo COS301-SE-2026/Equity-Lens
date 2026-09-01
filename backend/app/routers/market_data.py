@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
 from app.services.market_data_service import get_current_price, get_historical_data, search_stocks
@@ -20,7 +20,10 @@ def stock_history(
     current_user: UserResponse = Depends(get_current_user),
 ):
     """Get historical OHLCV data"""
-    return get_historical_data(params.symbol,params.period)
+    try:
+        return get_historical_data(params.symbol,params.period)
+    except Exception:
+        raise HTTPException(status_code=400, detail="The History not working")
 
 @router.get("/search", response_model=SearchResponse)
 def search_stocks_endpoint(

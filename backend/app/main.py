@@ -5,7 +5,7 @@ from app.database import create_tables
 from app.config import settings
 from app.models import user
 from app.models import market_data
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import JSONResponse
 import traceback
 from app.routers import news
 from app.routers import import_pdf
@@ -29,7 +29,7 @@ app.add_middleware(
 async def general_exception_handler(request: Request, exc: Exception):
     tb = traceback.format_exc()
     print(tb)
-    return PlainTextResponse(str(tb), status_code=500)
+    return JSONResponse(status_code=500, content={"detail" : "Something went wrong"})
 
 @app.on_event("startup")
 async def startup():

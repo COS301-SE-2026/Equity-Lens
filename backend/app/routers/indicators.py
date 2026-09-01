@@ -10,6 +10,7 @@ from app.services.indicator_service import build_live_indicator_row, serialize_i
 from app.services.instruments import resolve_known_instrument
 from app.services.portfolio_service import INVALID_TICKER_MARKERS
 from app.utils.market_cache import get_market_returns
+from app.utils.stock_cache import get_cached_price_histories
 
 router = APIRouter(prefix="/api/indicators", tags=["indicators"])
 
@@ -43,11 +44,11 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
 
     if not tickers:
         return []
-    
+    price_histories = get_cached_price_histories(tickers, period="1y")
     results = []
     for index, ticker in enumerate(tickers):
         name = ticker_to_name.get(ticker, ticker)
-        row = build_live_indicator_row(ticker,name,market_returns)
+        row = build_live_indicator_row(ticker,name,market_returns, price_history=price_histories.get(ticker))
         results.append(serialize_indicator_row(row))
         #Small delay between tickers to try and avoid yfinance rate limiting
         if index < len(tickers) - 1:
