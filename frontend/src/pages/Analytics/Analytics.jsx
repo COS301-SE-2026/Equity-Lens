@@ -190,7 +190,7 @@ const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
 
   const sig = meta.signal(result.value);
   return (
-    <button onClick={onSelect} className="flex flex-col gap-0.5 pt-1 text-left w-full cursor-pointer">
+    <button data-testid={`indicator-${indicatorKey}`} onClick={onSelect} className="flex flex-col gap-0.5 pt-1 text-left w-full cursor-pointer">
       <span className="text-sm font-mono font-semibold tabular-nums"
         style={{ color: color(sig), letterSpacing: '-0.02em' }}>
         {formatValue(result.value)}{result.unit}
@@ -282,7 +282,7 @@ const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) =
               <p className="text-[9px] uppercase tracking-widest font-medium mb-1.5" style={{ color: 'var(--text-ghost,#444)' }}>
                 Why it matters
               </p>
-              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>
+              <p data-testid="indicator-explanation" className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>
                 {meta.why}
               </p>
             </div>

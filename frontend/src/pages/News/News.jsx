@@ -1,16 +1,17 @@
 import { useEffect, useState } from "react";
 import { TrendingUp, TrendingDown, Bookmark, Star, Newspaper, Globe, UserRound } from "lucide-react";
 import api from "../../services/api"
+import { all } from "axios";
 
 const NewsInvestment = () => {
-  const [articles, setArticles] = useState([]);
-  const [wishlist, setWishlist] = useState([]);
-  const [wishlistLowest, setWishlistLowest] = useState([]);
-  const [wishlistHighest, setWishlistHighest] = useState([]);
+  const [articles, setArticles] = useState(/** @type {any[]}*/([]));
+  const [wishlist, setWishlist] = useState(/** @type {any[]}*/([]));
+  const [wishlistLowest, setWishlistLowest] = useState(/** @type {any[]}*/([]));
+  const [wishlistHighest, setWishlistHighest] = useState(/** @type {any[]}*/([]));
   const [ticker, setTicker] = useState("");
   const [activeTab, setActiveTab] = useState("portfolio");
   const [activeCategory, setActiveCategory] = useState("portfolio");
-  const [portfoliosTickers, setPortfoliosTickers] = useState([]);
+  const [portfoliosTickers, setPortfoliosTickers] = useState(/** @type {any[]}*/([]));
   const [positive, setPositive] = useState(0);
   const [negative, setNegative] = useState(0);
   const [neutral, setNeutral] = useState(0);
@@ -19,35 +20,82 @@ const NewsInvestment = () => {
   const [sortBy, setSortBy] = useState("latest");
 
 
-  const ToGetTickerNews = async (ticker) => {
+
+  const ToGetAllPortfolioNews = async () => {
+    /** @type{any[]}*/
+    let AllArticles = [];
+
+    for(const ticker of portfoliosTickers)
+    {
     const response = await api.get(`/news/test-aapl/${ticker}`);
 
+    /** @type {Array<any>} */
     const tickerArticles = response.data.articles || [];
 
     const formattedArticles = tickerArticles.map((article) => {
-      const entity = article.entities?.find((entity) => entity.symbol === ticker);
+      const entity = article.entities?.find( /** @param {any} entity*/(entity) => entity.symbol === ticker);
 
       const score = entity?.sentiment_score;
 
       let sentiment = "neutral";
 
-      if(score > 0 )
-      {
+      if (score > 0) {
         sentiment = "positive"
       }
-      else if(score < 0)
-      {
+      else if (score < 0) {
         sentiment = "negative"
       }
-      return { article_id: article.uuid,
-      title: article.title,
-      description: article.description,
-      image_url: article.image_url,
-      pubDate: article.published_at,
-      source_name: article.source,
-      category: [ticker],
-      sentiment: sentiment,
-      sentiment_score: score ?? 0,
+      return {
+        article_id: article.uuid,
+        title: article.title,
+        description: article.description,
+        image_url: article.image_url,
+        pubDate: article.published_at,
+        source_name: article.source,
+        category: [ticker],
+        sentiment: sentiment,
+        sentiment_score: score ?? 0,
+      };
+    });
+      AllArticles = [...AllArticles, ...formattedArticles];
+  }
+    setArticles(AllArticles);
+    setActiveCategory("all");
+    setSentimentFilter("all");
+
+
+  };
+
+  /** @param {string} ticker*/
+  const ToGetTickerNews = async (ticker) => {
+    const response = await api.get(`/news/test-aapl/${ticker}`);
+
+    /** @type {Array<any>} */
+    const tickerArticles = response.data.articles || [];
+
+    const formattedArticles = tickerArticles.map((article) => {
+      const entity = article.entities?.find( /** @param {any} entity*/(entity) => entity.symbol === ticker);
+
+      const score = entity?.sentiment_score;
+
+      let sentiment = "neutral";
+
+      if (score > 0) {
+        sentiment = "positive"
+      }
+      else if (score < 0) {
+        sentiment = "negative"
+      }
+      return {
+        article_id: article.uuid,
+        title: article.title,
+        description: article.description,
+        image_url: article.image_url,
+        pubDate: article.published_at,
+        source_name: article.source,
+        category: [ticker],
+        sentiment: sentiment,
+        sentiment_score: score ?? 0,
       };
     });
 
@@ -72,7 +120,7 @@ const NewsInvestment = () => {
   }, []);
 
 
-
+  /** @param {string} ticker*/
   const AddStock = async (ticker) => {
     if (ticker === "") {
       return;
@@ -110,6 +158,7 @@ const NewsInvestment = () => {
 
   }
 
+   /** @param {string} WatchlistID*/
   const ToDeleteWishlist = async (WatchlistID) => {
     await api.delete(`/watchlist/${WatchlistID}`);
     ToGetWishlist();
@@ -122,17 +171,16 @@ const NewsInvestment = () => {
 
 
 
-const filteredArticles = articles.filter((article) => {
-  if(sentimentFilter === "all") 
-  {
-    return true;
-  }
+  const filteredArticles = articles.filter((article) => {
+    if (sentimentFilter === "all") {
+      return true;
+    }
 
-  return article.sentiment === sentimentFilter;
-});
+    return article.sentiment === sentimentFilter;
+  });
 
   return (
-    
+
 
     <div className="mb-8">
 
@@ -235,16 +283,6 @@ const filteredArticles = articles.filter((article) => {
           My portfolio
         </button>
 
-        <button
-          onClick={() => setActiveTab("watchlist")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab === "watchlist"
-            ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
-            : "bg-transparent text-[var(--text-secondary)] border-[var(--border-subtle)]"
-            }`}>
-          <Star className="w-4 h-4" />
-          Watchlist
-        </button>
-
         <button onClick={() => { setActiveTab("market"); setActiveCategory("Business"); ToGetTheNews("business") }}
           className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${activeTab === "market"
             ? "bg-blue-500/20 text-blue-400 border-blue-500/40"
@@ -256,7 +294,7 @@ const filteredArticles = articles.filter((article) => {
       </div>
 
       {activeTab === "portfolio" && (
-        
+
         <div className="mt-6">
 
           <div className="grid grid-cols-3 gap-6 mt-6">
@@ -266,6 +304,11 @@ const filteredArticles = articles.filter((article) => {
               <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Portfolio News</h2>
               <div className="flex items-center justify-between w-full mb-4">
                 <div className="flex flex-wrap gap-2">
+                  <button onClick={ToGetAllPortfolioNews} className={`px-3 py-1 rounded-full ${activeCategory === "all" ?
+                    "bg-blue-500/20 text-blue-400 border-blue-500/40" : "bg-[var(--surface-card)] text-[var(--text-secondary)] border-transparent"
+                  }`}>
+                    All
+                  </button>
                   {portfoliosTickers.map((ticker) => (
                     <button key={ticker} onClick={() => { setActiveCategory(ticker); ToGetTickerNews(ticker); }} className={`px-3 py-1 rounded-full ${activeCategory === ticker ?
                       "bg-blue-500/20 text-blue-400 border-blue-500/40" :
@@ -285,12 +328,6 @@ const filteredArticles = articles.filter((article) => {
 
                   </div>
 
-
-                  <select className="px-4 py-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[">
-                    <option value="latest">Sort by: Latest</option>
-                    <option value="latest">Most Positive</option>
-                    <option value="latest">Most Negative</option>
-                  </select>
                 </div>
               </div>
 
@@ -312,14 +349,30 @@ const filteredArticles = articles.filter((article) => {
                     <p className="text-sm text-[var(--text-secondary)] mt-1">{article.source_name}</p>
                   </div>
 
-                  {article.category.map((article) => (
-                    <p key={article} className="px-3 py-1 text-sm rounded-full" style={{ background: 'var(--signal-positive-bg)', color: 'var(--signal-positive)' }}>
+                  
+                  {article.category.map(/** @param {string} article*/(article) => (
+                    <p key={article} className="px-3 py-1 text-sm rounded-full bg-blue-500/20 text-blue-400">
                       {article}
                     </p>
                   ))}
+                  <p className={`px-3 py-1 text-sm rounded-full capitalize flex items-center gap-1 
+                  ${article.sentiment === "positive" ? "bg-green-500/20 text-green-400" : article.sentiment === "negative" ? "bg-red-500/20 text-red-400" : "bg-purple-500/20 text-purple-400"}`} >
 
+                  {article.sentiment === "positive" && (
+                    <TrendingUp className="w-4 h-4" />)}
 
+                  {article.sentiment === "negative" && (
+                    <TrendingDown className="w-4 h-4" />)}
+
+                  {article.sentiment === "neutral" && (
+                    <span>-</span>)}
+
+                  {article.sentiment}
+                  </p>
                 </div>
+
+
+
               ))}
 
             </div>
@@ -373,11 +426,6 @@ const filteredArticles = articles.filter((article) => {
 
                   </div>
 
-                  <select className="px-4 py-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[">
-                    <option value="latest">Sort by: Latest</option>
-                    <option value="latest">Most Positive</option>
-                    <option value="latest">Most Negative</option>
-                  </select>
                 </div>
               </div>
 
@@ -398,12 +446,6 @@ const filteredArticles = articles.filter((article) => {
                     <p className="text-sm text-[var(--text-secondary)] mt-1">{article.pubDate}</p>
                     <p className="text-sm text-[var(--text-secondary)] mt-1">{article.source_name}</p>
                   </div>
-
-                  {article.category.map((article) => (
-                    <p key={article} className="px-3 py-1 text-sm rounded-full" style={{ background: 'var(--signal-positive-bg)', color: 'var(--signal-positive)' }}>
-                      {article}
-                    </p>
-                  ))}
 
 
                 </div>
@@ -460,12 +502,6 @@ const filteredArticles = articles.filter((article) => {
                     <button className="px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition"> Neutral </button>
 
                   </div>
-
-                  <select className="px-4 py-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] text-[">
-                    <option value="latest">Sort by: Latest</option>
-                    <option value="latest">Most Positive</option>
-                    <option value="latest">Most Negative</option>
-                  </select>
                 </div>
               </div>
 
@@ -489,12 +525,27 @@ const filteredArticles = articles.filter((article) => {
                     <p className="text-sm text-[var(--text-secondary)] mt-1">{article.source_name}</p>
                   </div>
 
-                  {article.category.map((article) => (
-                    <p key={article} className="px-3 py-1 text-sm rounded-full" style={{ background: 'var(--signal-positive-bg)', color: 'var(--signal-positive)' }}>
+                  {article.category.map(/** @param {string} article*/(article) => (
+                    <p key={article} className="px-3 py-1 text-sm rounded-full bg-blue-500/20 text-blue-400">
                       {article}
                     </p>
                   ))}
+                  <p className={`px-3 py-1 text-sm rounded-full capitalize flex items-center gap-1 
+                  ${article.sentiment === "positive" ? "bg-green-500/20 text-green-400" : article.sentiment === "negative" ? "bg-red-500/20 text-red-400" : "bg-purple-500/20 text-purple-400"}`} >
 
+
+                  {article.sentiment === "positive" && (
+                    <TrendingUp className="w-4 h-4" />)}
+
+                  {article.sentiment === "negative" && (
+                    <TrendingDown className="w-4 h-4" />)}
+
+                  {article.sentiment === "neutral" && (
+                    <span>-</span>)}
+
+                  {article.sentiment}
+
+                  </p>
 
                 </div>
               ))}
