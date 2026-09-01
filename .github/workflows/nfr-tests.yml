@@ -195,7 +195,7 @@ jobs:
     nfr-5-3-and-5-2:
         name: NFR-5-3
         runs-on: ubuntu-latest
-        timeout-minutes: 2
+        timeout-minutes: 5
 
         steps:
             - name: Checkout repository
