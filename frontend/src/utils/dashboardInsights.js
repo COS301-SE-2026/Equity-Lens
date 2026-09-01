@@ -185,11 +185,10 @@ function findMissing(holdings, sectorData) {
  *   holdings: any[],
  *   attribution: { contributors: { ticker: string, contribution: number }[], drags: { ticker: string, contribution: number }[], todayReturn: number },
  *   sectorData?: { name: string, value: number }[],
- *   anomalies?: { date: string, ticker: string, headline: string }[],
  * }} args
  * @returns {{ insights: { type: string, text: string, why: string, action: { label: string, to?: string, target?: string } | null }[] }}
  */
-export function buildInsights({ holdings, attribution, sectorData = [], anomalies = [] }) {
+export function buildInsights({ holdings, attribution, sectorData = [] }) {
   if (!holdings.length) return { insights: [] };
 
   const insights = [];
@@ -200,7 +199,7 @@ export function buildInsights({ holdings, attribution, sectorData = [], anomalie
   const rowAction = (row) => {
     const holding = findHolding(row.ticker);
     if (!holding) return null;
-    const context = classifyContext({ holding, holdings, anomalies });
+    const context = classifyContext({ holding, holdings });
     if (context.level === 'unusual') {
       return { label: 'Ask AI Why', to: `/ai?q=${encodeURIComponent(`Why did ${row.ticker} move today?`)}` };
     }
@@ -216,7 +215,7 @@ export function buildInsights({ holdings, attribution, sectorData = [], anomalie
     insights.push({
       type: 'gain',
       text: `${gain.ticker} is today's biggest gainer, up ${(gainHolding.daily_change_pct ?? 0).toFixed(1)}% (+${zar(Math.abs(gain.contribution))}).`,
-      why: classifyContext({ holding: gainHolding, holdings, anomalies }).detail,
+      why: classifyContext({ holding: gainHolding, holdings }).detail,
       action: rowAction(gain),
     });
   }
@@ -227,7 +226,7 @@ export function buildInsights({ holdings, attribution, sectorData = [], anomalie
     insights.push({
       type: 'loss',
       text: `${loss.ticker} is today's biggest drag, down ${Math.abs(lossHolding.daily_change_pct ?? 0).toFixed(1)}% (-${zar(Math.abs(loss.contribution))}).`,
-      why: classifyContext({ holding: lossHolding, holdings, anomalies }).detail,
+      why: classifyContext({ holding: lossHolding, holdings }).detail,
       action: rowAction(loss),
     });
   }
@@ -409,28 +408,13 @@ export function buildSummary({ holdings, sectorData, attribution, chartStats, da
  * @param {{
  *   stats: { diff: string, diffPct: number, benchAvailable: boolean },
  *   attribution: { contributors: any[], drags: any[] },
- *   anomalies?: { date: string, ticker: string, changePct: number }[],
- *   visibleSeries?: { date: string }[],
  * }} args
  * @returns {{ explanation: string | null }}
  */
-export function buildExplanation({ stats, attribution, anomalies = [], visibleSeries = [] }) {
+export function buildExplanation({ stats, attribution }) {
   if (!stats.benchAvailable) { return { explanation: null }; }
   const diffPct = stats.diffPct ?? 0;
   if (Math.abs(diffPct) < 1) { return { explanation: null }; }
-
-  const word = diffPct >= 0 ? 'outperformance' : 'underperformance';
-  const visibleDates = new Set(visibleSeries.map((p) => p.date));
-  const relevantAnomaly = [...anomalies]
-    .filter((a) => visibleDates.has(a.date))
-    .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct))[0];
-
-  if (relevantAnomaly) {
-    const direction = relevantAnomaly.changePct >= 0 ? 'gain' : 'drop';
-    return {
-      explanation: `Most of this ${word} traces back to ${relevantAnomaly.ticker}'s ${Math.abs(relevantAnomaly.changePct).toFixed(1)}% ${direction} on ${relevantAnomaly.date}.`,
-    };
-  }
 
   const driver = diffPct >= 0 ? attribution.contributors[0] : attribution.drags[0];
   if (driver) {
@@ -441,10 +425,10 @@ export function buildExplanation({ stats, attribution, anomalies = [], visibleSe
 }
 
 /**
- * @param {{ holding: any, holdings: any[], anomalies?: { date: string, ticker: string, headline: string }[] }} args
- * @returns {{ level: 'normal'|'market'|'sector'|'company'|'unusual', label: string, detail: string }}
+ * @param {{ holding: any, holdings: any[] }} args
+ * @returns {{ level: 'normal'|'market'|'sector'|'unusual', label: string, detail: string }}
  */
-function classifyContext({ holding, holdings, anomalies = [] }) {
+function classifyContext({ holding, holdings }) {
   const changePct = holding?.daily_change_pct ?? 0;
 
   if (Math.abs(changePct) < MOVE_LIM) {
@@ -478,12 +462,6 @@ function classifyContext({ holding, holdings, anomalies = [] }) {
       label: 'Market-wide move',
       detail: `Most of your holdings moved the same direction today - broader market conditions, not ${holding.ticker} alone.`,
     };
-  }
-
-  const today = new Date().toISOString().slice(0, 10);
-  const todaysNews = anomalies.find((a) => a.ticker === holding.ticker && a.date === today);
-  if (todaysNews) {
-    return { level: 'company', label: 'Company-specific', detail: todaysNews.headline };
   }
 
   return {
@@ -749,7 +727,7 @@ export function buildTaxQuestions(tax) {
   if (!tax) return [];
 
   if (!tax.available) {
-    if (tax.reason === 'tfsa_exempt' || tax.reason === 'retirement_annuity_exempt') {
+    if (tax.reason === 'tfsa_exempt') {
       return ["Why isn't tax shown for this account?"];
     }
     return [];

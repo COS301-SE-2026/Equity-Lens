@@ -1,5 +1,6 @@
 import logging
 
+from app.schemas.portfolio import ALLOWED_ACCOUNT_TYPES
 from app.services.returns import average_cost_positions
 
 logger = logging.getLogger(__name__)
@@ -8,13 +9,7 @@ TAX_YEAR_LABEL = "2026/2027"
 ANNUAL_EXCLUSION_ZAR = 50_000.0
 INCLUSION_RATE_INDIVIDUAL = 0.40
 
-ACCOUNT_TYPE_USD = "usd"
-ACCOUNT_TYPE_TFSA = "tfsa"
-ACCOUNT_TYPE_RA = "retirement_annuity"
-CGT_EXEMPT_REASONS = {
-    ACCOUNT_TYPE_TFSA: "tfsa_exempt",
-    ACCOUNT_TYPE_RA: "retirement_annuity_exempt",
-}
+CGT_EXEMPT_REASONS = {"tfsa": "tfsa_exempt"}
 
 
 def _assumptions() -> dict:
@@ -51,10 +46,15 @@ def estimate_cgt(
     priced_holdings: list[dict],
     instrument_txns: list[dict],
 ) -> dict:
+    if account_type is None:
+        return _unavailable("account_type_unknown")
+
     if account_type in CGT_EXEMPT_REASONS:
         return _unavailable(CGT_EXEMPT_REASONS[account_type])
 
-    if account_type is None:
+    if account_type == "usd":
+        return _unavailable("usd_fx_not_supported")
+    if account_type not in ALLOWED_ACCOUNT_TYPES:
         return _unavailable("account_type_unknown")
 
     if not priced_holdings:

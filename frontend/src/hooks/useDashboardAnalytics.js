@@ -1,25 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 
-import { getMarketContext, getAnomalies } from '../services/portfolioService';
+import { getMarketContext } from '../services/portfolioService';
 
 const useDashboardAnalytics = () => {
   const [marketContext, setMarketContext] = useState(/** @type {any} */ (null));
-  const [anomalies, setAnomalies] = useState(/** @type {any[]} */ ([]));
   const [loading, setLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const [market, anomaliesResult] = await Promise.allSettled([
-      getMarketContext(),
-      getAnomalies(),
-    ]);
-
-    if (market.status === 'fulfilled') setMarketContext(market.value);
-    else console.warn('market context fetch failed:', market.reason);
-
-    if (anomaliesResult.status === 'fulfilled') setAnomalies(anomaliesResult.value ?? []);
-    else console.warn('anomalies fetch failed:', anomaliesResult.reason);
-
+    try {
+      setMarketContext(await getMarketContext());
+    } catch (err) {
+      console.warn('market context fetch failed:', err);
+    }
     setLoading(false);
   }, []);
 
@@ -29,7 +22,6 @@ const useDashboardAnalytics = () => {
 
   return {
     marketContext,
-    anomalies,
     loading,
     refetch: fetchAll,
   };
