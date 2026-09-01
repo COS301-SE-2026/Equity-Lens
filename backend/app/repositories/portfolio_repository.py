@@ -10,6 +10,7 @@ from app.models.portfolio import (
     Portfolios,
     TransactionExpenses,
 )
+from app.schemas.portfolio import ACCOUNT_TYPE_CURRENCY
 class PortfolioRepository:
     def __init__(self, db: Session):
         self.db = db
@@ -43,6 +44,8 @@ class PortfolioRepository:
         if portfolio is None:
             return None
         portfolio.account_type = account_type
+        if account_type is not None:
+            portfolio.currency = ACCOUNT_TYPE_CURRENCY[account_type]
         return portfolio
 
     def upsert_snapshot(

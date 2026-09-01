@@ -18,6 +18,8 @@ def _cents_to_major(symbol: str) -> float:
         return 1.0
     return 100.0 if symbol.upper().endswith(".JO") else 1.0
 
+WATCHLIST_QUOTE_TYPES = {"EQUITY", "ETF", "INDEX"}
+
 def get_current_price(symbol: str) -> CurrentPriceResponse:
     history = get_cached_price_history(symbol, period="1y")
 
@@ -91,9 +93,10 @@ def search_stocks(query: str) -> SearchResponse:
         SearchResultItem(
             symbol=quote.get("symbol", "N/A"),
             name=quote.get("longname") or quote.get("shortname") or quote.get("name", "N/A"),
+            quote_type=quote.get("quoteType"),
         )
         for quote in getattr(search_results, "quotes", []) or []
-        if quote.get("symbol")
+        if quote.get("symbol") and quote.get("quoteType") in WATCHLIST_QUOTE_TYPES
     ]
     response = SearchResponse(query=query, results=results)
     _SEARCH_CACHE[normalized_query] = (time.time(), response)

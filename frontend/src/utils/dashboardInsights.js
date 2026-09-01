@@ -407,7 +407,7 @@ export function buildSummary({ holdings, sectorData, attribution, chartStats, da
 /**
  * @param {{
  *   stats: { diff: string, diffPct: number, benchAvailable: boolean },
- *   attribution: { contributors: any[], drags: any[] },
+ *   attribution: { contributors: any[], drags: any[], todayReturn?: number },
  * }} args
  * @returns {{ explanation: string | null }}
  */
@@ -416,9 +416,10 @@ export function buildExplanation({ stats, attribution }) {
   const diffPct = stats.diffPct ?? 0;
   if (Math.abs(diffPct) < 1) { return { explanation: null }; }
 
-  const driver = diffPct >= 0 ? attribution.contributors[0] : attribution.drags[0];
+  const positive = (attribution.todayReturn ?? 0) >= 0;
+  const driver = positive ? attribution.contributors[0] : attribution.drags[0];
   if (driver) {
-    return { explanation: `Today's biggest mover ${driver.ticker} is a contributor` };
+    return { explanation: `${driver.ticker} was today's biggest ${positive ? 'contributor' : 'drag'}.` };
   }
 
   return { explanation: null };
