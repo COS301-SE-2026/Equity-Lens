@@ -23,7 +23,7 @@ const FLASH_TIME = 2500;
 
 const Dashboard = () => {
   const { portfolioData, loading, error, fetchedAt, refreshQuietly } = usePortfolio();
-  const { marketContext, anomalies } = useDashboardAnalytics();
+  const { marketContext } = useDashboardAnalytics();
   const { user } = useAuth();
   const [watchlistOpen, setWatchlistOpen] = useState(false);
   const [flashedTarget, setFlashedTarget] = useState(/** @type {string|null} */ (null));
@@ -111,7 +111,6 @@ const Dashboard = () => {
           <PerformanceVsBenchmark
             series={perfSeries}
             contributionSeries={contributionSeries}
-            anomalies={anomalies}
             attribution={attribution}
             benchmarkLabel={benchmarkLabel}
             historyDays={historyDays}/>
