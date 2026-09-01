@@ -38,6 +38,7 @@ def serialize_indicator_row(row: dict) -> dict:
     normalized = {
         "ticker": row.get("ticker"),
         "name": row.get("name"),
+        "live_fetch": row.get("live_fetch", False),
     }
 
     if row.get("error"):
@@ -107,6 +108,7 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
         info = fundamentals.get("info",{})
         balance_sheet = fundamentals.get("balance_sheet")
         financials = fundamentals.get("financials")
+        live_fetch = fundamentals.get("live_fetch", False)
 
         #Altman Z and PE not applicable to Mutual funds and ETF
         quote_type = (info.get("quoteType") or "").upper()
@@ -186,6 +188,7 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
             "rsi": rsi_value,
             "sharpe": sharpe,
             "sortino": sortino,
+            "live_fetch": live_fetch,
         }
     except Exception as e:
         print(f"build_live_indicator_row failed for {symbol}: {e}")
@@ -200,4 +203,5 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
             "rsi": None,
             "sharpe": None,
             "sortino": None,
+            "live_fetch": False,
 }
