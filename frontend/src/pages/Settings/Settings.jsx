@@ -3,6 +3,7 @@ import { deleteAccount } from "../../services/authService";
 import { useAuthContext } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/constants";
+import ThemeToggle from "../../components/common/ThemeToggle/ThemeToggle";
 
 
 const DeleteAccountModal = ({ userEmail, onClose, onConfirmed }) => {
@@ -23,7 +24,7 @@ const DeleteAccountModal = ({ userEmail, onClose, onConfirmed }) => {
     };
     return (
         <div className="fixed inset-0 flex items-center justify-center p-4" style={{background: 'rgba(0,0,0,0.6)', zIndex: 10000}} onClick={deleting ? undefined : onClose} role="presentation">
-            <div className="glass-surface-elevated rounded-xl w-full max-w-md" style={{ border: '1px solid rgba(239,68,68,0.6)' }} onClick={(e) => e.stopPropagation()}>
+            <div className="rounded-xl w-full max-w-md" style={{ background: 'var(--bg-primary,#0a0a0a)', border: '1px solid rgba(239,68,68,0.6)' }} onClick={(e) => e.stopPropagation()}>
                 <div className="px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)'}}>
                     <h2 className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--signal-negative,#ef4444)'}}>
                         Delete Account
@@ -110,6 +111,18 @@ export default function Settings(){
         <h1 className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--text-page,#e5e5e5)' }}>
           Settings
         </h1>
+      </div>
+
+      <div className="glass-surface rounded-xl p-5">
+        <p className="text-[9px] uppercase tracking-widest font-medium mb-2" style={{ color: 'var(--text-ghost,#444)'}}>
+            Appearance
+        </p>
+        <div className="flex items-center gap-3">
+            <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary,#a0a0a0)'}}>
+                Switch between light and dark mode.
+            </p>
+            <ThemeToggle />
+        </div>
       </div>
 
       <div className="glass-surface rounded-xl p-5">
