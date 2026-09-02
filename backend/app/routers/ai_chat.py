@@ -15,6 +15,8 @@ from app.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
+from pydantic import BaseModel
+from typing import Any
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 
