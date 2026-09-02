@@ -9,6 +9,7 @@ import FormInput from '../FormInput/FormInput';
  *  @param {*} [objects.value]
  *  @param {*} [objects.onChange]
  *  @param {*} [objects.onBlur]
+ *  @param {*} [objects.onFocus]
  *  @param {*} [objects.error]
  *  @param {*} [objects.placeholder]
  *  @param {*} [objects.required]
@@ -19,6 +20,7 @@ const PasswordInput = ({
   value,
   onChange,
   onBlur,
+  onFocus,
   error,
   placeholder = 'Enter your password',
   required = false,
@@ -34,6 +36,7 @@ const PasswordInput = ({
         value={value}
         onChange={onChange}
         onBlur={onBlur}
+        onFocus={onFocus}
         error={error}
         placeholder={placeholder}
         required={required}
@@ -41,7 +44,7 @@ const PasswordInput = ({
       <button
         type="button"
         onClick={() => setShowPassword((prev) => !prev)}
-        className="absolute right-3 top-9 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+        className="pressable absolute right-3 top-9 text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         aria-label={showPassword ? 'Hide password' : 'Show password'}
       >
         {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}

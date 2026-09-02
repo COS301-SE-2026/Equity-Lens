@@ -58,6 +58,16 @@ describe("chartFormatters", () => {
       expect(formatShortCurrency(15_000_000)).toBe("R 15m");
     });
 
+    it("switches to billions instead of falling through to a nonsense millions figure", () => {
+      expect(formatShortCurrency(2_600_000_000)).toBe("R 2.6b");
+      expect(formatShortCurrency(15_000_000_000)).toBe("R 15b");
+    });
+
+    it("switches to trillions instead of falling through to a nonsense millions figure", () => {
+      expect(formatShortCurrency(2_600_000_000_000)).toBe("R 2.6t");
+      expect(formatShortCurrency(15_000_000_000_000)).toBe("R 15t");
+    });
+
     it("handles negatives", () => {
       expect(formatShortCurrency(-9482)).toBe("R -9.5k");
     });

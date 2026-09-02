@@ -1,9 +1,13 @@
+from functools import lru_cache
+
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.portfolio import Portfolios, Document, Holdings
 from app.models.chat import ChatConversation, ChatMessages
 from app.utils.stock_cache import get_cached_price_history
 from app.services.market_data_service import _cents_to_major
+from app.services.health_score import compute_health_score
+from app.services.portfolio_service import _price_holdings
 from datetime import datetime, timezone
 from functools import lru_cache
 from app.services.health_score import compute_health_score
@@ -85,7 +89,7 @@ TOOL_CONFIG = { "tools": [
 }
 
 
-@lru_cache(maxsize = 1)
+@lru_cache(maxsize=1)
 def get_bedrock_client():
     import boto3
     return boto3.client(
@@ -111,6 +115,7 @@ def get_user_portfolio_context(db: Session, user_id):
             knowledge += (f"- {i.instrument_name} ({i.ticker}),  sector: {i.sector},  "
                           f"quantity: {i.quantity}, cost price: R{i.cost_price}, "
                           f"overall cost: R{i.total_cost}, weight: {i.weight_percentage}%\n")
+
         health = compute_health_score(_price_holdings(holdings))
         if health["score"] is not None:
             knowledge += f"\nPortfolio Health: {health['score']}/10 ({health['label']})\n"
@@ -281,46 +286,46 @@ def _indicator_reading(key: str, value: float) -> str:
     return ""
 
 
-    def get_indicators_tool(ticker: str) -> str:
-        ticker = (ticker or "").strip().upper()
-        if not ticker:
-            return "No ticker was provided."
+def get_indicators_tool(ticker: str) -> str:
+    ticker = (ticker or "").strip().upper()
+    if not ticker:
+        return "No ticker was provided."
 
-        price_history = get_cached_price_history(ticker, period="1y")
+    price_history = get_cached_price_history(ticker, period="1y")
 
-        if price_history.empty:
-            return (
-                f"No cached price history is available for {ticker}, so its indicators cannot be "
-                "calculated right now. Tell the user the analytics for this share have not been built "
-                "yet, and that opening the Analytics page will calculate them."
-            )
-
-        row = serialize_indicator_row(
-            build_live_indicator_row(ticker, ticker, get_market_returns(), price_history=price_history)
-        )
-
-        if row.get("error"):
-              return f"Indicators could not be calculated for {ticker}."
-
-        lines = []
-        for key, label in INDICATOR_LABELS.items():
-            entry = row.get(key) or {}
-            status = entry.get("status")
-
-            if status == "ok":
-                value = entry["value"]
-                unit = entry.get("unit") or ""
-                reading = _indicator_reading(key, value)
-                lines.append(f"- {label}: {value:.2f}{unit}{f' - {reading}' if reading else ''}")
-            elif status == "insufficient_data":
-                lines.append(f"- {label}: not available ({entry.get('reason', 'insufficient data')})")
-            else:
-                lines.append(f"- {label}: not available")
-
+    if price_history.empty:
         return (
-            f"EquityLens analytics indicators for {ticker}, calculated from the last year of "
-            f"end-of-day prices:\n" + "\n".join(lines)
+            f"No cached price history is available for {ticker}, so its indicators cannot be "
+            "calculated right now. Tell the user the analytics for this share have not been built "
+            "yet, and that opening the Analytics page will calculate them."
         )
+
+    row = serialize_indicator_row(
+        build_live_indicator_row(ticker, ticker, get_market_returns(), price_history=price_history)
+    )
+
+    if row.get("error"):
+        return f"Indicators could not be calculated for {ticker}."
+
+    lines = []
+    for key, label in INDICATOR_LABELS.items():
+        entry = row.get(key) or {}
+        status = entry.get("status")
+
+        if status == "ok":
+            value = entry["value"]
+            unit = entry.get("unit") or ""
+            reading = _indicator_reading(key, value)
+            lines.append(f"- {label}: {value:.2f}{unit}{f' - {reading}' if reading else ''}")
+        elif status == "insufficient_data":
+            lines.append(f"- {label}: not available ({entry.get('reason', 'insufficient data')})")
+        else:
+            lines.append(f"- {label}: not available")
+
+    return (
+        f"EquityLens analytics indicators for {ticker}, calculated from the last year of "
+        f"end-of-day prices:\n" + "\n".join(lines)
+    )
 
 
 def run_tool(name: str, tool_input: dict) -> str:

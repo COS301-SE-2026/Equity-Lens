@@ -18,24 +18,20 @@ const validate = (values) =>
   return errors;
   };
 
-const Card = ({ title, subtitle, serverError, children }) => (
-  <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
-    <div className="w-full max-w-md">
-      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-2xl p-8 shadow-[var(--shadow-card)]">
-        <div className="mb-8">
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">{title}</h1>
-          <p className="text-sm text-[var(--text-secondary)]">{subtitle}</p>
-        </div>
-        
-        {serverError && (
-          <div className="mb-6 p-3 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] text-[var(--color-danger)] text-sm" role="alert">
-            {serverError}
-          </div>
-        )}
-        
-        {children}
-      </div>
+export const Card = ({ title, subtitle, serverError, children }) => (
+  <div className="glass-surface-elevated rounded-2xl p-8">
+    <div className="mb-8">
+      <h1 className="text-2xl font-bold text-[var(--text-primary)] mb-1">{title}</h1>
+      <p className="text-sm text-[var(--text-secondary)]">{subtitle}</p>
     </div>
+
+    {serverError && (
+      <div className="mb-6 p-3 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] text-[var(--color-danger)] text-sm" role="alert">
+        {serverError}
+      </div>
+    )}
+
+    {children}
   </div>
 );
 
@@ -43,8 +39,8 @@ const Login = () =>
   {
   const { login, submitMFACode, activateTOTP } = useAuth();
   const navigate = useNavigate();
-  
-  const [view, setView] = useState('login'); 
+
+  const [view, setView] = useState('login');
   const [serverError, setServerError] = useState(null);
   const [mfaCode, setMfaCode] = useState('');
   const [isMfaLoading, setIsMfaLoading] = useState(false);
@@ -86,9 +82,9 @@ const Login = () =>
         return;
       }
 
-      navigate(ROUTES.DASHBOARD, { replace: true });
-    } 
-      catch 
+      setTimeout(() => navigate(ROUTES.DASHBOARD, { replace: true }), 700);
+    }
+      catch
     {
       const msg = 'Incorrect email or password';
       sessionStorage.setItem('login_error', msg);
@@ -112,12 +108,12 @@ const Login = () =>
       {
         await submitMFACode(mfaCode);
       }
-      else 
+      else
       {
         await activateTOTP(mfaCode);
       }
-      navigate(ROUTES.DASHBOARD, { replace: true });
-    } 
+      setTimeout(() => navigate(ROUTES.DASHBOARD, { replace: true }), 700);
+    }
       catch (err)
     {
       setServerError(err.message || 'Code invalid');
@@ -239,6 +235,14 @@ const Login = () =>
             placeholder="Enter your password"
             required
           />
+          <div className="flex justify-end">
+            <Link
+              to={ROUTES.FORGOT_PASSWORD}
+              className="text-sm text-[var(--accent-primary)] hover:underline font-medium transition-all"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <Button type="submit" variant="primary" fullWidth loading={isSubmitting}>
             Sign In
           </Button>

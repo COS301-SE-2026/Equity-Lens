@@ -7,6 +7,8 @@ import {
   isAuthenticated,
   confirmRegistration,
   respondToMFA,
+  requestPasswordReset as requestPasswordResetService,
+  confirmPasswordReset as confirmPasswordResetService,
 } from '../services/authService';
 
 const AuthContext = createContext(/** @type {any} */ (null));
@@ -54,6 +56,24 @@ useEffect(() => {
       await confirmRegistration(email, code);
     } catch (err) {
       throw new Error((err instanceof Error ? err.message : null) || 'Confirmation failed');
+    }
+  };
+
+  /** @param {string} email */
+  const requestPasswordReset = async (email) => {
+    try {
+      await requestPasswordResetService(email);
+    } catch (err) {
+      throw new Error((err instanceof Error ? err.message : null) || 'Could not send reset code');
+    }
+  };
+
+  /** @param {string} email @param {string} code @param {string} newPassword */
+  const confirmPasswordReset = async (email, code, newPassword) => {
+    try {
+      await confirmPasswordResetService(email, code, newPassword);
+    } catch (err) {
+      throw new Error((err instanceof Error ? err.message : null) || 'Reset failed');
     }
   };
 
@@ -116,6 +136,8 @@ useEffect(() => {
         mfaState,
         register,
         confirmEmail,
+        requestPasswordReset,
+        confirmPasswordReset,
         login,
         submitMFACode,
         activateTOTP: submitMFACode, //This is aliased to prevent breaking downstream UI

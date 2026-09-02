@@ -56,16 +56,13 @@ export default function HelpTooltip({ text }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 4, scale: shouldReduceMotion ? 1 : 0.95 }}
               transition={{ duration: 0.15 }}
-              className="pointer-events-none fixed rounded-lg px-3 py-2 text-[11px] leading-snug"
+              className="glass-surface-elevated pointer-events-none fixed rounded-lg px-3 py-2 text-[11px] leading-snug"
               style={{
                 left: pos.left,
                 bottom: pos.bottom,
                 width: 208,
                 zIndex: 9999,
-                background: 'var(--surface-elevated)',
-                border: '1px solid var(--border-mid)',
                 color: 'var(--text-secondary)',
-                boxShadow: 'var(--shadow-elevated)',
               }} >
               {text}
             </motion.span>
