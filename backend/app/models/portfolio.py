@@ -57,6 +57,8 @@ class Holdings(Base):
     total_cost = Column(Numeric(18,2))
     cost_price = Column(Numeric(18,2))
     weight_percentage = Column(Numeric(18,2))
+    statement_price = Column(Numeric(18,2))
+    statement_value = Column(Numeric(18,2))
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime,default=lambda: datetime.now(timezone.utc),onupdate=lambda: datetime.now(timezone.utc))

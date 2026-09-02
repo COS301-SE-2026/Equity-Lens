@@ -1,3 +1,6 @@
+import logging
+import math
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -16,12 +19,26 @@ from app.repositories.portfolio_repository import PortfolioRepository
 
 router = APIRouter(prefix="/api/portfolio", tags=["Portfolio"])
 
+logger = logging.getLogger(__name__)
+
+
+def drop_non_finite(node, path: str = "dashboard"):
+    if isinstance(node, dict):
+        return {key: drop_non_finite(value, f"{path}.{key}") for key, value in node.items()}
+    if isinstance(node, list):
+        return [drop_non_finite(item, f"{path}[{i}]") for i, item in enumerate(node)]
+    if isinstance(node, float) and not math.isfinite(node):
+        logger.error("dropping non-finite value %r at %s", node, path)
+        return None
+    return node
+
+
 @router.get("")
 def get_portfolio(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    return PortfolioService(db).get_dashboard(current_user.id)
+    return drop_non_finite(PortfolioService(db).get_dashboard(current_user.id))
 
 
 @router.get("/summary")

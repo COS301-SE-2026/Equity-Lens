@@ -44,6 +44,8 @@ _ETFS = {
     "Sygnia Itrix Top 40 Exchange Traded Fund": ("SYGT40.JO", EXPOSURE_SA_EQUITY, REGION_SA),
     "Satrix Nasdaq 100 Exchange Traded Fund": ("STXNDQ.JO", EXPOSURE_US_EQUITY, REGION_US),
     "Sygnia Itrix S&P 500 Exchange Traded Fund": ("SYG500.JO", EXPOSURE_US_EQUITY, REGION_US),
+    "Satrix S&P 500 ETF": ("STX500.JO", EXPOSURE_US_EQUITY, REGION_US),
+    "1NVEST S&P 500 Index STANLIB Feeder ETF": ("ETF500.JO", EXPOSURE_US_EQUITY, REGION_US),
     "Satrix MSCI World Exchange Traded Fund": ("STXWDM.JO", EXPOSURE_GLOBAL_EQUITY, REGION_GLOBAL),
     "Satrix MSCI Emerging Markets Exchange Traded Fund": (
         "STXEMG.JO", EXPOSURE_EM_EQUITY, REGION_EM

@@ -5,43 +5,56 @@ from app.repositories.import_pdf import save_instrument_purchases_and_sales
 from app.repositories.import_pdf import save_contributions_and_withdrawals
 from app.repositories.import_pdf import save_dividends_and_withholding_tax
 from app.repositories.import_pdf import save_transaction_expenses
+from app.repositories.import_pdf import delete_portfolio
+import logging
 import yfinance as yf
 import re
 from yfinance.exceptions import YFRateLimitError
 import time
 from app.repositories.import_pdf import get_latest_portfolio, save_portfolios
-# from app.services.instrument import resolve_known_instrument
+from app.services.instruments import resolve_known_instrument
+from app.services.portfolio_service import invalidate_priced_holdings
 from requests.exceptions import ReadTimeout
 
+logger = logging.getLogger(__name__)
+
 SECONDS_In_HOUR = 3600
+SECONDS_In_FAILED_LOOKUP = 300
+
 Cache: dict[str, tuple[float, dict]] = {}
 
-# def search_ticket_number(instrumentName: str):
-#     The_Keys = instrumentName.strip().lower()
 
-#     TheKnownsOne = resolve_known_instrument(instrumentName)
-
-#     if TheKnownsOne:
-#         return {"Found": True, "ticker":TheKnownsOne.ticker, "sector":TheKnownsOne.sector}
+def _not_found(transient: bool) -> dict:
+    return {"Found": False, "ticker": "none", "sector": "none", "Transient": transient}
 
 
 def search_ticket_number(instrumentName: str):
-    
+    known = resolve_known_instrument(instrumentName)
+    if known:
+        return {"Found": True, "ticker": known.ticker, "sector": known.sector}
+
+    logger.warning(
+        "%r is not in KNOWN_INSTRUMENTS - falling back to an unfiltered Yahoo search, "
+        "which may return a listing on the wrong exchange", instrumentName,
+    )
+
     The_Keys = instrumentName.strip().lower()
     cached = Cache.get(The_Keys)
 
-    if cached and (time.time() - cached[0]) < SECONDS_In_HOUR:
-        return cached[1]
+    if cached:
+        cached_at, cached_result = cached
+        ttl = SECONDS_In_HOUR if cached_result["Found"] else SECONDS_In_FAILED_LOOKUP
+        if (time.time() - cached_at) < ttl:
+            return cached_result
 
     result = _search_ticker_number_uncached(instrumentName)
 
-    if not result["Found"]:
+    if not result["Found"] and result.get("Transient"):
         time.sleep(2)
         result = _search_ticker_number_uncached(instrumentName)
-    
-    if result["Found"]:
-        Cache[The_Keys] = (time.time(), result)
-    
+
+    Cache[The_Keys] = (time.time(), result)
+
     return result
 
 
@@ -51,17 +64,13 @@ def _search_ticker_number_uncached(instrument_name: str):
         quotes = yf.Search(query).quotes
             
         if not quotes:
-            return{
-                "Found": False,
-                "ticker": "none",
-                "sector": "none",
-            }
-        
+            return _not_found(transient=False)
+
         gettingTicker = quotes[0]["symbol"]
         gettingTheInfo = yf.Ticker(gettingTicker).info
 
         if(quotes[0].get("quoteType") or "").upper() == "ETF":
-            category = gettingTheInfo.get("category") 
+            category = gettingTheInfo.get("category")
             return {
                 "Found": True,
                 "ticker": gettingTicker,
@@ -76,18 +85,10 @@ def _search_ticker_number_uncached(instrument_name: str):
         }
     
     except YFRateLimitError as exc:
-        return {
-            "Found": False,
-            "ticker": "none",
-            "sector": "none",
-        }
+        return _not_found(transient=True)
 
     except ReadTimeout as exc:
-        return {
-            "Found": False,
-            "ticker": "none",
-            "sector": "none",
-        }
+        return _not_found(transient=True)
 
 def search_queries(instrumentName):
     gettingName = " ".join(instrumentName.split())
@@ -135,10 +136,21 @@ def get_my_portfolio(database, user_id):
 def save_holdings_import(database,user_id,data):
     ticker = search_ticket_number(data.instrument_name)
     document = save_holdings(database,user_id,data,ticker["ticker"],ticker["sector"])
+    invalidate_priced_holdings(user_id)
 
     return {
         "Success": True,
         "Message": "Holdings has been saved successfully"
+    }
+
+
+def delete_portfolio_import(database,user_id,portfolio_id):
+    delete_portfolio(database,user_id,portfolio_id)
+    invalidate_priced_holdings(user_id)
+
+    return {
+        "Success": True,
+        "Message": "Portfolio has been removed"
     }
 
 

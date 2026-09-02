@@ -1,6 +1,8 @@
 from datetime import date
 from uuid import UUID
 from sqlalchemy import func, select
+from sqlalchemy.dialects.postgresql import insert as postgres_insert
+from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
 from app.models.portfolio import (
     ContributionsAndWithdrawals,
@@ -55,24 +57,24 @@ class PortfolioRepository:
         total_value: float,
         benchmark_value: float | None,
     ) -> None:
-        stmt = select(PortfolioSnapshot).where(
-            PortfolioSnapshot.portfolio_id == portfolio_id,
-            PortfolioSnapshot.snapshot_date == snapshot_date,
+        insert = sqlite_insert if self.db.get_bind().dialect.name == "sqlite" else postgres_insert
+        stmt = insert(PortfolioSnapshot).values(
+            portfolio_id=portfolio_id,
+            snapshot_date=snapshot_date,
+            total_value=total_value,
+            benchmark_value=benchmark_value,
         )
-        existing = self.db.scalars(stmt).first()
-
-        if existing:
-            existing.total_value = total_value
-            if benchmark_value is not None:
-                existing.benchmark_value = benchmark_value
-        else:
-            existing = PortfolioSnapshot(
-                portfolio_id=portfolio_id,
-                snapshot_date=snapshot_date,
-                total_value=total_value,
-                benchmark_value=benchmark_value,
+        self.db.execute(
+            stmt.on_conflict_do_update(
+                index_elements=["portfolio_id", "snapshot_date"],
+                set_={
+                    "total_value": stmt.excluded.total_value,
+                    "benchmark_value": func.coalesce(
+                        stmt.excluded.benchmark_value, PortfolioSnapshot.benchmark_value
+                    ),
+                },
             )
-            self.db.add(existing)
+        )
 
     def get_snapshot_history(self, portfolio_ids: list[UUID]) -> list[dict]:
         if not portfolio_ids:
