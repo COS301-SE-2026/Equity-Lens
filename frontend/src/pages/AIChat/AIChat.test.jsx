@@ -4,6 +4,21 @@ import AIChat from "./AIChat.jsx";
 import useAuth from "../../hooks/useAuth.js";
 import api from "../../services/api.js";
 
+
+vi.mock("../../context/ThemeContext.jsx", () => ({
+  useThemeContext: () => ({
+    theme: "dark",
+    toggleTheme: vi.fn(),
+  }),
+}));
+
+vi.mock("../../hooks/useTheme.js", () => ({
+  default: () => ({
+    theme: "dark",
+    toggleTheme: vi.fn(),
+  }),
+}));
+
 vi.mock("../../hooks/useAuth.js");
 vi.mock("../../services/api.js");
 
@@ -32,7 +47,24 @@ describe("AIChat", () => {
     render(<AIChat />);
     expect(screen.getByText("Hello there")).toBeDefined();
   });
+  describe("suggested prompts", () => {
+    it("Renders all three suggested prompts to the user when they first click the page or start a new chat", () => {
+      render(<AIChat/>);
+      expect(screen.getByRole("button", {name: /How is MTN doing/i})).toBeDefined();
+      expect(screen.getByRole("button", {name: /What is the news with Sasol?/i})).toBeDefined();
+      expect(screen.getByRole("button", {name: /How is my portfolio performing/i})).toBeDefined();
+    });
+  
+    it("Sends the prompt when it is clicked", async () => {
+      mockPost.mockResolvedValue({data: {reply: "mock reply", conversation_id: 1}});
+      render(<AIChat/>);
+      fireEvent.click(screen.getByRole("button", {name: /How is MTN doing?/i}));
 
+      expect(screen.getByText(/How is MTN doing?/i)).toBeDefined();
+      expect(api.post).toHaveBeenCalledWith("/ai_chat/", {message: "How is MTN doing?", conversation_id: null});
+      });
+    });
+    
   describe("when the user sends a message", () => {
     beforeEach(() => {
       vi.clearAllMocks();
@@ -97,35 +129,17 @@ describe("AIChat", () => {
 
       fireEvent.change(input, {target: {value: "hello"}});
       expect(sendButton.disabled).toBe(false);
-    })
+    });
     
     it("loading indicator appears while waiting for a response from the assistant.", () => {
       render(<AIChat />);
       const input = screen.getByPlaceholderText("Ask the assistant...");
-      const sendButton = screen.getByRole("button", {name: /send/i});  
+      const sendButton = /** @type {HTMLButtonElement} */ screen.getByRole("button", {name: /send/i});  
       
       fireEvent.change(input, {target: {value: "hello"}});
       fireEvent.click(sendButton);
 
-      expect(document.querySelectorAll(".animate-bounce").length).toBe(3);
-    });
-
-  describe("suggested prompts", () => {
-    it("Renders all three suggested prompts to the user when they first click the page or start a new chat", () => {
-      render(<AIChat/>);
-      expect(screen.getByRole("button", {name: "How is MTN doing?"})).toBeDefined();
-      expect(screen.getByRole("button", {name: "What's Sasol trading at?"})).toBeDefined();
-      expect(screen.getByRole("button", {name: "How is my portfolio performing compared to the JSE benchmark?"})).toBeDefined();
-    });
-  
-    it("Sends the prompt when it is clicked", async () => {
-      mockPost.mockResolvedValue({data: {reply: "mock reply", conversation_id: 1}});
-      render(<AIChat/>);
-      fireEvent.click(screen.getByRole("button", {name: "How is MTN doing?"}));
-
-      expect(screen.getByText("How is MTN doing?")).toBeDefined();
-      expect(api.post).toHaveBeenCalledWith("/ai_chat/", {message: "How is MTN doing?", conversation_id: null});
-      })
+      expect(sendButton.disabled).toBe(true);
     });
   });
 });

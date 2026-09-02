@@ -15,7 +15,7 @@ describe('ThemeToggle', () => {
   it('calls toggleTheme', () => {
     render(<ThemeToggle />);
 
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(screen.getByRole('switch'));
 
     expect(mockToggleTheme).toHaveBeenCalled();
   });
