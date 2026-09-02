@@ -1,7 +1,6 @@
 import { Menu, X, Eye, EyeOff } from 'lucide-react';
 import useBlur from '../../../hooks/useBlur';
 import useAuth from '../../../hooks/useAuth';
-import ThemeTogglePill from '../ThemeTogglePill/ThemeTogglePill';
 /**
  * @param {Object} props
  * @param {() => void} props.onMenuClick
@@ -111,8 +110,6 @@ const Topbar = ({ onMenuClick, sidebarOpen }) => {
           title="Blur rand values - handy while screen-sharing. Blurred text is still selectable, this only hides it visually.">
           {blurMoney ? <EyeOff size={13} /> : <Eye size={13} />}
         </button>
-        <ThemeTogglePill />
-
         <button
           onClick={logout}
           className="pressable glass-surface glass-control"
