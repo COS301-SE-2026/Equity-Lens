@@ -18,7 +18,7 @@ describe('SectorAllocation', () => {
     const onSelectSector = vi.fn();
     render(
       <SectorAllocation sectorData={SECTOR_DATA} selected={null} onSelectSector={onSelectSector} />,);
-    fireEvent.click(screen.getByRole('button', { name: /Technology/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Technology/i }));
     expect(onSelectSector).toHaveBeenCalledWith('Technology');});
 
   it('clicking the already-selected sector row clears it', () => {
@@ -29,7 +29,7 @@ describe('SectorAllocation', () => {
         selected="Technology"
         onSelectSector={onSelectSector}
       />,);
-    fireEvent.click(screen.getByRole('button', { name: /Technology/i }));
+    fireEvent.click(screen.getByRole('button', { name: /^Technology/i }));
     expect(onSelectSector).toHaveBeenCalledWith(null);});
   it('has no Clear control of its own regardless of selection state', () => {
     render(
@@ -61,11 +61,11 @@ describe('SectorAllocation', () => {
     ];
     render(<SectorAllocation sectorData={data} selected={null} onSelectSector={() => {}} />);
 
-  const techSwatch = screen.getByRole('button', { name: /Technology/i }).querySelector('span');
+  const techSwatch = screen.getByRole('button', { name: /^Technology/i }).querySelector('span');
   if (!techSwatch) throw new Error('expected the Technology swatch to render');
-  expect(techSwatch.style.background).toBe('var(--signal-negative)');
+  expect(techSwatch.style.background).toBe('var(--signal-negative)');;
 
-  const finSwatch = screen.getByRole('button', { name: /Financials/i }).querySelector('span');
+  const finSwatch = screen.getByRole('button', { name: /^Financials/i }).querySelector('span');
   if (!finSwatch) throw new Error('expected the Financials swatch to render');
   expect(finSwatch.style.background).toBe('var(--signal-positive)');
 });});

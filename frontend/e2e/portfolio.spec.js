@@ -8,7 +8,7 @@ test.describe("portfolio e2e testing", () => {
   });
 
   test("should go to portfolio page and show upload UI", async ({ page }) => {
-    await page.goto("/portfolio");
+    await page.goto("/portfolio", { waitUntil: "domcontentloaded" });
 
     await expect(page).toHaveURL(/portfolio/i);
 

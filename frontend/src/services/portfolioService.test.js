@@ -4,7 +4,6 @@ import {
   getPortfolioSummary,
   getSectorAllocation,
   getPerformanceHistory,
-  getMockPortfolioData,
 } from './portfolioService';
 
 vi.mock('./api', () => ({
@@ -83,72 +82,6 @@ describe('portfolioService', () => {
       api.get.mockResolvedValueOnce({ data: history });
       const result = await getPerformanceHistory();
       expect(result).toEqual(history);
-    });
-  });
-
-  describe('getMockPortfolioData', () => {
-    it('returns an object with summary', () => {
-      const data = getMockPortfolioData();
-      expect(data).toHaveProperty('summary');
-    });
-
-    it('returns an object with holdings array', () => {
-      const data = getMockPortfolioData();
-      expect(Array.isArray(data.holdings)).toBe(true);
-    });
-
-    it('returns 8 holdings', () => {
-      const data = getMockPortfolioData();
-      expect(data.holdings).toHaveLength(8);
-    });
-
-    it('returns holdings with required fields', () => {
-      const data = getMockPortfolioData();
-      const holding = data.holdings[0];
-      expect(holding).toHaveProperty('ticker');
-      expect(holding).toHaveProperty('name');
-      expect(holding).toHaveProperty('sector');
-      expect(holding).toHaveProperty('quantity');
-      expect(holding).toHaveProperty('avg_price');
-      expect(holding).toHaveProperty('current_price');
-      expect(holding).toHaveProperty('value');
-      expect(holding).toHaveProperty('gain_loss');
-      expect(holding).toHaveProperty('gain_loss_pct');
-    });
-
-    it('returns sector allocation array', () => {
-      const data = getMockPortfolioData();
-      expect(Array.isArray(data.sectorAllocation)).toBe(true);
-      expect(data.sectorAllocation.length).toBeGreaterThan(0);
-    });
-
-    it('returns performance history with 12 months', () => {
-      const data = getMockPortfolioData();
-      expect(data.performanceHistory).toHaveLength(12);
-    });
-
-    it('summary has correct fields', () => {
-      const { summary } = getMockPortfolioData();
-      expect(summary).toHaveProperty('total_value');
-      expect(summary).toHaveProperty('total_gain_loss');
-      expect(summary).toHaveProperty('total_gain_loss_pct');
-      expect(summary).toHaveProperty('num_holdings');
-    });
-
-    it('summary total_value is a number', () => {
-      const { summary } = getMockPortfolioData();
-      expect(typeof summary.total_value).toBe('number');
-    });
-
-    it('NPN is the first holding', () => {
-      const data = getMockPortfolioData();
-      expect(data.holdings[0].ticker).toBe('NPN');
-    });
-
-    it('SOL has a negative gain_loss', () => {
-      const data = getMockPortfolioData();
-      const sol = data.holdings.find(h => h.ticker === 'SOL');
-      expect(sol.gain_loss).toBeLessThan(0);
     });
   });
 });

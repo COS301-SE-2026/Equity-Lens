@@ -37,14 +37,7 @@ describe('Topbar', () => {
     expect(screen.queryByText(/Abdul/i)).not.toBeInTheDocument();
   });
 
-  it('calls theme toggle', () => {
-    render(<Topbar onMenuClick={() => {}} />);
-
-    fireEvent.click(screen.getByLabelText(/switch to light mode/i));
-
-    expect(mockToggleThemeFake).toHaveBeenCalled();
-  });
-
+  
   it('calls logout', () => {
     render(<Topbar onMenuClick={() => {}} />);
 

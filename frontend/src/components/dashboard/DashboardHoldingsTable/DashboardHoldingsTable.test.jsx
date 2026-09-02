@@ -8,27 +8,32 @@ const HOLDINGS = [
   { ticker: 'SBK', name: 'Standard Bank', sector: 'Financials', value: 4200, current_price: 420, daily_change_pct: 4.2 },
 ];
 
+const SECTOR_DATA = [
+  { name: 'Technology', value: 61.7 },
+  { name: 'Financials', value: 38.3 },
+];
+
 /** @param {any[]} holdings */
 const renderTable = (holdings) =>
   render(
     <MemoryRouter>
-      <DashboardHoldingsTable holdings={holdings} />
+      <DashboardHoldingsTable holdings={holdings} sectorData={SECTOR_DATA} />
     </MemoryRouter>,
   );
 
 describe('DashboardHoldingsTable', () => {
-  it('renders one row per holding', () => {
+  it('renders one row per holding', async () => {
     renderTable(HOLDINGS);
     expect(screen.getByText('NPN')).toBeInTheDocument();
     expect(screen.getByText('SBK')).toBeInTheDocument();
-    expect(screen.getByText('Technology')).toBeInTheDocument();
-    expect(screen.getByText('Financials')).toBeInTheDocument();
+    expect(await screen.findByText('Technology')).toBeInTheDocument();
+    expect(await screen.findByText('Financials')).toBeInTheDocument();
   });
 
   it('shows positive today', () => {
     renderTable(HOLDINGS);
-    expect(screen.getByText(/\(\+6\.70%\)/)).toBeInTheDocument();
-    expect(screen.getByText(/\(\+4\.20%\)/)).toBeInTheDocument();
+    expect(screen.getByText(/\+6\.70%/)).toBeInTheDocument();
+    expect(screen.getByText(/\+4\.20%/)).toBeInTheDocument();
   });
 
   it('shows an empty state', () => {

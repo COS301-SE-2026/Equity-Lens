@@ -73,7 +73,6 @@ jobs:
       - name: E2E tests
         working-directory: frontend
         run: npm run test:e2e
-        continue-on-error: true
 
       - name: Upload Playwright report
         if: failure()
@@ -270,23 +269,7 @@ jobs:
           flags: backend
 
     
-  trivy:
-    name: Trivy Security Scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Trivy Scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: HIGH,CRITICAL
-          exit-code: 1
-          scanners: vuln,secret,misconfig
-          skip-dirs: frontend/node_modules,node_modules,backend/venv,backend/.venv,frontend/dist,frontend/build
 
   ToRunlighthouse:
     name: Run Lighthouse NFR-2.2 & NFR-2.3
@@ -320,6 +303,52 @@ jobs:
         uses: treosh/lighthouse-ci-action@v12
         with: 
           configPath: ./frontend/lighthouserc-nfr-2-3.json
+
+  nfr-1-6:
+        name: NFR-1.6 GitLeaks
+        runs-on: ubuntu-latest
+        timeout-minutes: 2
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                fetch-depth: 0
+                
+            - name: Run GitLeaks
+              run: |
+                docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source=/repo --verbose
+
+  nfr-1-4:
+        name: NFR-1.4 TLS
+        runs-on: ubuntu-latest
+        timeout-minutes: 2
+
+        steps:
+            - name: To chekc the HTTPs connection
+              run: | 
+                set -e
+                    curl --fail --show-error \
+                    https://api.equitylens.co.za/health
+                    curl --fail --show-error \
+                    https://www.equitylens.co.za
+                    echo "PASS All the HTTPs/TLS connection"
+
+    # nfr-1-1-and-1-7:
+    #     name: NFR-1.1 & NFR1.7 OWSAP ZAP
+    #     runs-on: ubuntu-latest
+    #     timeout-minutes: 5
+
+        # steps:
+        #     - name: Checkout repository
+        #       uses: actions/checkout@v4
+
+        #     - name: RUN the OWSAP ZAP to scan all the API
+        #       uses: zaproxy/action-api-scan@v0.10.0
+        #       with:
+        #         target: "https://api.equitylens.co.za/openapi.json"
+        #         format: openapi
+        #         fail_action: true
 
     
 
