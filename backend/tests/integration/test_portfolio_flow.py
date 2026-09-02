@@ -59,14 +59,15 @@ def test_import_to_dashboard(client, auth_headers, importe_portfolio, stub_data)
     response = client.get("/api/portfolio", headers=auth_headers)
     assert response.status_code == 200
 
-    body  = response.json()
+    body = response.json()
     assert body["summary"] == {
         "total_value": 5000.00,
         "total_cost": 4000.00,
         "total_gain_loss": 1000.00,
         "total_gain_loss_pct": 25.00,
         "num_holdings": 1,
-        "daily_change": 25.00
+        "daily_change_pct": 25.00,
+        "daily_change_value": 1250.00,
     }
 
     naspers = body["holdings"][0]
@@ -79,3 +80,58 @@ def test_import_to_dashboard(client, auth_headers, importe_portfolio, stub_data)
     assert body["sectorAllocation"] == [
         {"sector": "Technology", "value": 5000.00, "percentage": 100.00},
     ]
+
+    returns = body["returns"]
+    assert returns["portfolio_value"] == 5000.00
+    assert returns["invested_capital"] == 4000.00
+    assert returns["simple_return_pct"] == 25.00
+    assert returns["net_contributions"] == 0.0
+    assert returns["time_weighted_return_pct"] is None  
+    assert returns["money_weighted_return_pct"] is None 
+    assert returns["holdings_count"] == 1
+    assert returns["priced_live_count"] == 1
+
+    health = body["health"]
+    assert health["score"] is not None
+    by_key = {s["key"]: s for s in health["subscores"]}
+    assert by_key["sectorConcentration"]["value"] < 2
+    assert by_key["singleStockRisk"]["value"] < 2
+    assert by_key["portfolioBreadth"]["value"] < 3
+
+    assert body["accountType"] is None
+    assert body["cgt"]["available"] is False
+    assert body["cgt"]["reason"] == "account_type_unknown"
+
+
+def test_tagging_a_portfolio_tfsa_suppresses_the_cgt_estimate(client, auth_headers, importe_portfolio, stub_data):
+    patch_response = client.patch("/api/portfolio/account-type", json={"account_type": "tfsa"}, headers=auth_headers)
+    assert patch_response.status_code == 200
+    assert patch_response.json()["account_type"] == "tfsa"
+
+    response = client.get("/api/portfolio", headers=auth_headers)
+    body = response.json()
+
+    assert body["accountType"] == "tfsa"
+    assert body["cgt"]["available"] is False
+    assert body["cgt"]["reason"] == "tfsa_exempt"
+
+
+def test_tagging_a_portfolio_zar_with_a_priced_gain_produces_a_real_estimate(
+    client, auth_headers, importe_portfolio, stub_data
+):
+    patch_response = client.patch("/api/portfolio/account-type", json={"account_type": "zar"}, headers=auth_headers)
+    assert patch_response.status_code == 200
+
+    response = client.get("/api/portfolio", headers=auth_headers)
+    body = response.json()
+
+    cgt = body["cgt"]
+    assert cgt["available"] is True
+    assert cgt["net_unrealised_gain"] == pytest.approx(1000.0)
+    assert cgt["taxable_capital_gain"] == 0.0
+    assert cgt["holdings_from_statement_only"] == ["NPN.JO"]
+
+
+def test_rejects_an_unknown_account_type(client, auth_headers, importe_portfolio):
+    response = client.patch("/api/portfolio/account-type", json={"account_type": "crypto_wallet"}, headers=auth_headers)
+    assert response.status_code == 422
