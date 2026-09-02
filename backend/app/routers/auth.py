@@ -9,7 +9,20 @@ from app.dependencies import get_current_user
 from app.database import get_db
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
-from app.schemas.auth import UserResponse
+from app.schemas.auth import (
+    RegisterResponse,
+    StatusResponse,
+    TokenResponse,
+    TotpSecretResponse,
+    UserResponse,
+)
+# from app.schemas.responses import (
+#     BAD_REQUEST,
+#     CONFLICT,
+#     INVALID_CREDENTIALS,
+#     UNAUTHORISED,
+#     two_states,
+# )
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 auth_scheme = HTTPBearer()
@@ -39,32 +52,44 @@ class VerifyTOTPReq(BaseModel):
 class DeleteAccountReq(BaseModel):
     email: EmailStr
 
-@router.post("/register", status_code=201)
+@router.post(
+    "/register",
+    status_code=201,
+    response_model=RegisterResponse,
+)
 def register(req: RegisterReq):
     return cognito.cognito_register(req.full_name, req.email, req.password)
 
-@router.post("/confirm")
+@router.post("/confirm", response_model=StatusResponse)
 def confirm(req: ConfirmReq):
     cognito.cognito_confirm_registration(req.email, req.code)
     return {"status": "confirmed"}
 
-@router.post("/login")
+@router.post(
+    "/login",
+)
 def login(req: LoginReq):
     return cognito.cognito_login(req.email, req.password)
 
-@router.post("/mfa/verify-login")
+@router.post("/mfa/verify-login", response_model=TokenResponse)
 def verify_mfa_login(req: MFAChallengeReq):
     try:
         return cognito.cognito_respond_to_mfa(req.session, req.email, req.totp_code)
     except Exception:
         raise HTTPException(status_code=400, detail="The MFA not working")
 
-@router.post("/mfa/associate")
+@router.post(
+    "/mfa/associate",
+    response_model=TotpSecretResponse,
+)
 def associate_totp(cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     secret = cognito.cognito_associate_totp(cred.credentials)
     return {"secret": secret}
 
-@router.post("/mfa/confirm-setup")
+@router.post(
+    "/mfa/confirm-setup",
+    response_model=StatusResponse,
+)
 def confirm_totp_setup(req: VerifyTOTPReq, cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     cognito.cognito_verify_totp(cred.credentials, req.totp_code)
     return {"status": "mfa_configured"}
@@ -73,12 +98,15 @@ def confirm_totp_setup(req: VerifyTOTPReq, cred: HTTPAuthorizationCredentials = 
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
 
-@router.post("/logout")
+@router.post("/logout", response_model=StatusResponse)
 def logout(cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     cognito.cognito_logout(cred.credentials)
     return {"status": "logged_out"}
 
-@router.delete("/me")
+@router.delete(
+    "/me",
+    response_model=StatusResponse,
+)
 def delete_account(
     req: DeleteAccountReq,
     current_user: User = Depends(get_current_user),

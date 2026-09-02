@@ -1,16 +1,16 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback} from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import {Sparkles, Plus, Pencil, Trash2, MessageSquare, Search, Copy, Check, PanelLeftClose, X, Send, RefreshCw, PanelLeftOpen} from 'lucide-react';
 
 import Button from '../../components/common/Button/Button';
 import useAuth from '../../hooks/useAuth';
-import useTheme from '../../hooks/useTheme';
-import api from '../../services/api'
+import useChat from '../../hooks/useChat';
+import { useThemeContext } from '../../context/ThemeContext';
 
 /**
  * @typedef {{id: number | string, role: 'user' | 'assistant', text: string, at: Date, failed?: boolean}} ChatMessage
  * @typedef {{id: number, title: string, updated_at: string}} Conversation
- * @typedef {{id: number, role: 'user' | 'assistant', content:string, created_at?: string | null}} ApiMessage
  * @typedef {{border: string, panelBg: string, bubbleBg: string, bubbleBorder: string, activeBg: string}} Palette
  */
 
@@ -24,7 +24,6 @@ const PANEL_WIDTH = 'max-w-[860px]';
 const HOVER = 'transition-colors duration-150 hover:bg-[var(--surface-hover)]';
 const COMPOSER_MAX_ROWS = 1500;
 const COPIED_LABEL_MS = 3200;
-const GENERIC_ERROR = "Something went wrong, try again.";
 const SWEEP_MS = 3200;
 
 
@@ -58,25 +57,6 @@ const richText = (text) =>
 /** @param {any} children */
 const withRich = (children) =>
   React.Children.map(children, (child) => (typeof child === 'string' ? richText(child) : child));
-
-
-/** 
- * @param {any} err
-  * @returns {{text: string, retryAfter: number}}
-  */
-const readError = (err) => {
-  if (err?.response?.status !== 429) return {text: GENERIC_ERROR, retryAfter: 0};
-
-  const errDetail = err.response.data?.detail;
-  const retryHeader = Number(err.response.headers?.['retry-after']);
-  const retryAfter = Number(errDetail?.retry_after) ||(retryHeader > 0 ? retryHeader : 60);
-
-  return {
-    text:
-      typeof errDetail?.message === 'string'? errDetail.message: `You have been rate limited. Please try again in ${retryAfter} seconds.`,
-       retryAfter
-  };
-};
 
 
 /** 
@@ -224,10 +204,15 @@ const buildMarkdownComponents = (palette) => {
 
 const AIChat = () => {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState(/**@type {ChatMessage[]}*/ ([]));
-  const [isThinking, setIsThinking] = useState(false);
-  const [conversationId, setConversationId] = useState(/**@type {number | null}*/(null));
-  const [conversations, setConversations] = useState(/**@type {Conversation[]}*/([]));
+  const {
+    messages, isThinking, conversationId, conversations, regeneratingId,
+    sendMessage, regenerate, loadConversation, startNewChat, renameConversation,
+    deleteConversation,
+  } = /**@type {{messages: ChatMessage[], isThinking: boolean, conversationId: number|null,
+        conversations: Conversation[], regeneratingId: string|number|null, sendMessage: Function,
+        regenerate: Function, loadConversation: Function, startNewChat: Function,
+        renameConversation: Function, deleteConversation: Function}}*/ (useChat());
+  const [searchParams, setSearchParams] = useSearchParams();
   /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const bottomRef = useRef(null);
   const [editingId, setEditingId] = useState(/**@type {number | null}*/(null));
@@ -238,7 +223,6 @@ const AIChat = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [headerEditing, setHeaderEditing] = useState(false);
   const [copiedId, setCopiedId] = useState(/**@type {string|number|null}*/(null));
-  const [regeneratingId, setRegeneratingId] = useState(/**@type {string|number|null}*/(null));
   const [cooldownUntil, setCooldownUntil] = useState(0);
   const [cooldownLeft, setCooldownLeft] = useState(0);
   const [composerFocused, setComposerFocused] = useState(false);
@@ -247,8 +231,7 @@ const AIChat = () => {
   const composerRef = useRef(null);
   /**@type {React.MutableRefObject<number|undefined>}*/
   const copyTimer = useRef(undefined);
-  const droppedTail = useRef(/**@type {ChatMessage[]}*/ ([]));
-  const {theme} = useTheme();
+  const {theme} = useThemeContext();
 
   const palette = useMemo(() => paletteFor(theme === 'light'), [theme]);
   const mdComponents = useMemo(() => buildMarkdownComponents(palette), [palette]);
@@ -300,10 +283,16 @@ const AIChat = () => {
   }, [cooldownUntil]);
 
   useEffect(() => {
-    api.get('/ai_chat/conversations/')
-      .then((res) => setConversations(res.data))
-      .catch(() => {});
-  }, []);
+    const q = searchParams.get('q');
+    if (!q) return;
+
+    setInput(q);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete('q');
+      return next;
+    }, { replace: true });
+  }, [searchParams]);
 
   useEffect(() => {
     if (editingId !== null) renameRef.current?.focus();
@@ -322,77 +311,24 @@ const AIChat = () => {
     el.style.height = `${Math.min(el.scrollHeight, line * COMPOSER_MAX_ROWS)}px`;
   }, [input]);
 
-  const refreshConversations = useCallback(() => {
-    api.get('/ai_chat/conversations/')
-      .then((res) => setConversations(res.data))
-      .catch(() => {});
-  }, []);
-
   /** @param {number} seconds */
   const startCooldown = (seconds) => {
     if (seconds > 0) setCooldownUntil(Date.now() + seconds * 1000);
   };
 
-  /** @param {string} rawText */
-  const sendMessage = (rawText) => {
-    if (locked) 
-      return;
+  /** @param {string} text */
+  const submitMessage = (text) => {
+    const sent = sendMessage(text);
+    if (!sent) return;
 
-    const text = rawText.trim();
-
-    if (!text) 
-      return;
-
-    const userMessage = /**@type {ChatMessage}*/ ({id: Date.now(), role: 'user', text, at: new Date()});
-      setMessages((prev) => [...prev, userMessage]);
-      setInput('');
-      setIsThinking(true);
-
-      return api
-        .post('/ai_chat/', { message: text, conversation_id: conversationId })
-        .then((res) => {
-          setConversationId(res.data.conversation_id);
-          setMessages((prev) => [...prev, { id: Date.now() + 1, role: 'assistant', text: res.data.reply, at: new Date() },]);
-          refreshConversations();
-        })
-        .catch((err) => {
-          const { text: errorText, retryAfter} = readError(err);
-          startCooldown(retryAfter);
-          setMessages((prev) => [...prev,{id: Date.now() + 1, role: 'assistant', text: errorText,at: new Date(),failed: true}]);
-        }).finally(() => setIsThinking(false));
-    };
+    setInput('');
+    return sent.then(startCooldown);
+  };
 
   /** @param {ChatMessage} message */
-  const regenerate = (message) => {
-    if (locked) return;
-
-    const index = messages.findIndex((m) => m.id === message.id);
-    if (index === -1) return;
-
-    const priorUser = [...messages.slice(0, index)].reverse().find((m) => m.role === 'user');
-    if (!priorUser) return;
-
-    droppedTail.current = messages.slice(index + 1);
-    setMessages((prev) => prev.slice(0, index + 1));
-    setRegeneratingId(message.id);
-
-    api
-      .post('/ai_chat/', { message: priorUser.text, conversation_id: conversationId })
-      .then((res) => {
-        droppedTail.current = [];
-        setConversationId(res.data.conversation_id);
-        setMessages((prev) =>
-          prev.map((m) =>
-            m.id === message.id ? { ...m, text: res.data.reply, at: new Date(), failed: false }: m
-          ));
-        refreshConversations();
-      })
-      .catch((err) => {
-        const { text: errorText, retryAfter } = readError(err);
-        startCooldown(retryAfter);
-        setMessages((prev) => [...prev.map((m) => (m.id === message.id ? { ...m, text: errorText, failed: true } : m)), ...droppedTail.current]);
-        droppedTail.current = [];
-      }).finally(() => setRegeneratingId(null));
+  const retry = (message) => {
+    const started = regenerate(message);
+    return started ? started.then(startCooldown) : undefined;
   };
 
   /** @param {ChatMessage} message */
@@ -408,67 +344,35 @@ const AIChat = () => {
   };
 
   /** @param {Conversation} convo */
-  const loadConversation = (convo) => {
-    setConversationId(convo.id);
+  const openConversation = (convo) => {
+    loadConversation(convo);
     setSheetOpen(false);
-    api
-      .get(`/ai_chat/conversations/${convo.id}/messages/`)
-      .then((res) => {
-        setMessages(
-          /**@type {ApiMessage[]}*/ (res.data).map((m) => ({
-            id: m.id,
-            role: m.role,
-            text: m.content,
-            at: m.created_at ? new Date(m.created_at) : new Date()}))
-        );
-      })
-      .catch(() => {});
   };
 
   const createNewChat = () => {
-    setConversationId(null);
-    setMessages([]);
+    startNewChat();
     setSheetOpen(false);
   };
 
-  /** @param {number} convoId @param {string} nextTitle */
-  const renameConversation = (convoId, nextTitle) => {
-    const trimmed = nextTitle.trim();
-
-    if (!trimmed) 
-      return;
-
-    api
-      .put(`/ai_chat/conversations/${convoId}/`, { title: trimmed })
-      .then(() => {
-        setConversations((prev) => prev.map((c) => (c.id === convoId ? { ...c, title: trimmed } : c)));
-        setEditingId(null);
-        setHeaderEditing(false);
-      }).catch(() => {});
-  };
-
   /** @param {number} convoId */
-  const deleteConversation = (convoId) => {
-    api
-      .delete(`/ai_chat/conversations/${convoId}/`)
-      .then(() => {
-        setConversations((prev) => prev.filter((c) => c.id !== convoId));
-        if (conversationId === convoId) 
-          createNewChat();
-      }).catch(() => {});
+  const submitRename = (convoId) => {
+    return renameConversation(convoId, editTitle).then(() => {
+      setEditingId(null);
+      setHeaderEditing(false);
+    });
   };
 
   /** @param {React.FormEvent<HTMLFormElement>} e */
   const handleSubmit = (e) => {
     e.preventDefault();
-    sendMessage(input);
+    submitMessage(input);
   };
 
   /** @param {React.KeyboardEvent<HTMLTextAreaElement>} e */
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage(input);
+      submitMessage(input);
     }
   };
 
@@ -524,12 +428,12 @@ const AIChat = () => {
                 {editingId === convo.id ? (
                 <form className = "flex  w-full gap-1  py-1" onSubmit={(e) => {
                       e.preventDefault();
-                       renameConversation(convo.id, editTitle);}}>
+                       submitRename(convo.id);}}>
 
                 <input ref={renameRef} value={editTitle} onChange={(e) => setEditTitle(e.target.value)}
                     onBlur={ () => setEditingId(null)}  aria-label="Conversation title"  className="min-w-0 flex-1" style={fieldStyle}/>
                   </form>) : (<>
-                    <button type="button" onClick={()=> loadConversation(convo)} className={conversationStyles.button} style={{ color: 'var(--text-primary)' }}>
+                    <button type="button" onClick={()=> openConversation(convo)} className={conversationStyles.button} style={{ color: 'var(--text-primary)' }}>
                       <MessageSquare  size={16} className={conversationStyles.icon} aria-hidden="true" style={{ color: "var(--text-secondary)" }}/>
                         <span className={conversationStyles.content}>
                         <span className={conversationStyles.title}>
@@ -623,7 +527,7 @@ const AIChat = () => {
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
-                      renameConversation(activeConversation.id, editTitle);
+                      submitRename(activeConversation.id);
                     }}>
                     <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} onBlur={() => setHeaderEditing(false)}
                        aria-label="Conversation title" className="w-40" style={fieldStyle}/>
@@ -665,7 +569,7 @@ const AIChat = () => {
                       <button
                         key={prompt}
                         type="button"
-                        onClick={() => sendMessage(prompt)}
+                        onClick={() => submitMessage(prompt)}
                         className={`rounded-lg ${HOVER}`}
                         style={{background: 'var(--surface-card)', border: `1px solid ${palette.border}`,
                           color: 'var(--text-primary)', padding: '8px 12px', fontSize: '0.875rem'}}>
@@ -714,14 +618,14 @@ const AIChat = () => {
                                 style={{color: 'var(--text-secondary)'}}>
                                 <span>{timeLabel(message.at)}</span>
 
-                                {message.failed ? (<button type="button" onClick={() => regenerate(message)} disabled={locked}
+                                {message.failed ? (<button type="button" onClick={() => retry(message)} disabled={locked}
                                   className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
                                     <RefreshCw size={16} aria-hidden="true"/>
                                     {cooling ? `Retry in ${cooldownLeft}s` : 'Retry'}
                                   </button>) 
                                 : (<>
                                     {copyButton(message)}
-                                    <button type="button" onClick={() => regenerate(message)} disabled={locked}
+                                    <button type="button" onClick={() => retry(message)} disabled={locked}
                                       className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
                                       <RefreshCw size={16} aria-hidden="true"/>
                                         Regenerate

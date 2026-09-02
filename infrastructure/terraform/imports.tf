@@ -14,3 +14,8 @@ import {
   to = module.iam.aws_iam_openid_connect_provider.github
   id = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
 }
+
+import {
+  to = module.secrets.aws_secretsmanager_secret.backend_env["MARKET_API_KEY"]
+  id = "equitylens/backend/MARKET_API_KEY"
+}

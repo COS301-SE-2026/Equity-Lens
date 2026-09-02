@@ -16,10 +16,12 @@ from app.services.import_pdf import save_instrument_purchases_and_sales_import
 from app.services.import_pdf import save_contributions_and_withdrawals_import
 from app.services.import_pdf import save_dividends_and_withholding_tax_import
 from app.services.import_pdf import save_transaction_expenses_import
+from app.services.import_pdf import delete_portfolio_import
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
 from pydantic import BaseModel, Field
 from typing import Any
+from uuid import UUID
 
 class ImportPDFResponse(BaseModel):
     Success: bool = Field(examples=[True])
@@ -103,4 +105,12 @@ def save_transaction_expenses_import_DB(data: TransactionExpensesRequest,db : Se
         database=db,
         user_id=CurrentUser.id,
         data=data
+    )
+
+@router.delete("/portfolios/{portfolio_id}")
+def delete_portfolio_import_DB(portfolio_id: UUID,db : Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):
+    return delete_portfolio_import(
+        database=db,
+        user_id=CurrentUser.id,
+        portfolio_id=portfolio_id
     )
