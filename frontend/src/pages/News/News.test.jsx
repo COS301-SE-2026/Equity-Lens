@@ -1,8 +1,10 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import NewsInvestment from "./News"
-import api from "../../services/api"
-import userEvent from "@testing-library/user-event"
+import {render, screen, waitFor, within} from "@testing-library/react";
+import "@testing-library/jest-dom/vitest";
+import userEvent from "@testing-library/user-event";
+import {describe, it, expect, vi, beforeEach} from "vitest";
+import api from "../../services/api";
+import NewsInvestment from "./News";
+
 
 vi.mock("../../services/api", () => ({
     default: {
@@ -12,270 +14,248 @@ vi.mock("../../services/api", () => ({
     },
 }));
 
-describe("This testing is for the News Page", () => 
-{
+const mockGet = /**@type {any} */ (api.get);
+const mockPost = /**@type {any} */ (api.post);
 
-    api.get.mockImplementation((gettingThePage) =>{
-        if(gettingThePage === "/watchlist/")
-        {
-            return Promise.resolve({
-                data: {
-                    watchlist:[{id: 1, ticker: "AAPL",company_name: "Apple INC",current_price: 215.50, change_percent: 2.15,}],
-                    highest:{ticker:"AAPL", sector:"Technology",current_price: 215.30, change_percent: 2.15},
-                    lowest:{ticker: "TSLA", sector:"Politics",current_price: 310.50, change_percent: -1.35}
-                }
-            })
+const businessArticles = [
+  {
+    article_id: "n1",
+    title: "Markets rally on rate cut hopes",
+    description: "Local equities closed higher across the board.",
+    pubDate: "2026-07-15 09:00:00",
+    source_name: "Business Day",
+    image_url: "https://example.com/rally.jpg",
+    category: ["business"]
+  },
+];
+
+const newsResponse = {
+  data: {
+    results: businessArticles,
+    positive: 4,
+    negative: 2,
+    neutral: 1,
+    total_articles: 7
+  },
+};
+
+const watchlistResponse = {
+  data: {
+    watchlist: [
+      {
+        id: "w1",
+        ticker: "AAPL",
+        company_name: "Apple Inc",
+        current_price: 215.5,
+        change_percent: 2.15
+      }
+    ],
+    highest: {ticker: "AAPL", sector: "Technology", change_percent: 2.15},
+    lowest: {ticker: "TSLA", sector: "Automotive", change_percent: -1.35}
+  }
+};
+
+/**
+ * @param {string} ticker
+ */
+const tickerNews = (ticker) => ({
+  data: {
+    articles: [
+      {
+        uuid: `${ticker}-1`,
+        title: `${ticker} beats expectations`,
+        description: "Quarterly earnings came in ahead of forecast.",
+        image_url: "https://example.com/up.jpg",
+        published_at: "2026-07-14",
+        source: "Reuters",
+        entities: [{ symbol: ticker, sentiment_score: 0.62 }]
+      },
+      {
+        uuid: `${ticker}-2`,
+        title: `${ticker} faces supply issues`,
+        description: "Component shortages continue into the next quarter.",
+        image_url: "https://example.com/down.jpg",
+        published_at: "2026-07-13",
+        source: "Bloomberg",
+        entities: [{symbol: ticker, sentiment_score: -0.41}]
+      },
+      {
+        uuid: `${ticker}-3`,
+        title: `${ticker} holds steady`,
+        description: "No material change to guidance.",
+        image_url: "https://example.com/flat.jpg",
+        published_at: "2026-07-12",
+        source: "Moneyweb",
+        entities: [{symbol: ticker, sentiment_score: 0}]
+      }
+    ],
+    positive: 1, negative: 1, neutral: 1, total_articles: 3
+  }
+});
+
+/**
+ * @param {string} label
+ */
+const statCard = (label) =>
+  /** @type {HTMLElement} */ (screen.getByText(label).parentElement);
+
+describe("News page", () => {
+    beforeEach(() => {
+      mockGet.mockImplementation((/** @type {string} */ url) => {
+        if (url === "/news/portfolio-tickers") {
+          return Promise.resolve({ data: { tickers: ["AAPL", "MSFT"] } });
         }
-
-        if(gettingThePage.startsWith("/news/"))
-        {
-            return Promise.resolve({
-                data: {
-                    results:[{article_id: 1, title:"The stocks of today", description: "today was high", source_name: "source 1", image_url:"url_test", pubDate: "2026-07-15", category: ["Business"]}],
-                }
-            })
+        if (url === "/watchlist/") {
+          return Promise.resolve(watchlistResponse);
         }
+        if (url.startsWith("/news/test-aapl/")) {
+          return Promise.resolve(tickerNews(String(url.split("/").pop())));
+        }
+        if (url.startsWith("/news/?category=")) {
+          return Promise.resolve(newsResponse);
+        }
+        return Promise.resolve({ data: {} });
+      });
+      mockPost.mockResolvedValue({ data: {} });
+    });
+
+    it("renders the page heading and description", async () => {
+        render(<NewsInvestment />);
+
+        expect(screen.getByRole("heading", {level: 1, name: "Investment News"})).toBeInTheDocument();
+        expect(screen.getByText("Stay updated with the latest market news and insights")).toBeInTheDocument();
+
+        await screen.findByText("Markets rally on rate cut hopes");
+    });
+
+    it("loads portfolio tickers, business news and the watchlist on mount", async () => {
+        render(<NewsInvestment />);
+
+        await waitFor(() => {
+            expect(mockGet).toHaveBeenCalledWith("/news/portfolio-tickers");
+            expect(mockGet).toHaveBeenCalledWith("/news/?category=business");
+            expect(mockGet).toHaveBeenCalledWith("/watchlist/");
+        });
+    });
+
+    it("shows summary cards from the news response", async () => {
+        render(<NewsInvestment />);
 
-        return Promise.resolve({ data: {},})
-    })
+        await screen.findByText("Markets rally on rate cut hopes");
 
+        expect(within(statCard("Relevant Articles")).getByText("7")).toBeInTheDocument();
+        expect(within(statCard("Positive Impact")).getByText("4")).toBeInTheDocument();
+        expect(within(statCard("Negative Impact")).getByText("2")).toBeInTheDocument();
+        expect(within(statCard("Neutral Impact")).getByText("1")).toBeInTheDocument();
+    });
 
-  it("To Show the title of the page", () => {
-    render(<NewsInvestment />);
+    it("renders a filter button for every portfolio ticker", async () => {
+        render(<NewsInvestment />);
 
-    expect(
-      screen.getByText("Investment News")
-    ).toBeInTheDocument();
+        expect(await screen.findByRole("button", {name: "AAPL"})).toBeInTheDocument();
+        expect(screen.getByRole("button", {name: "MSFT"})).toBeInTheDocument();
+    });
 
-  });
+    it("renders article title, description, date and source in the feed", async () => {
+        render(<NewsInvestment />);
 
+    expect(await screen.findByText("Markets rally on rate cut hopes")).toBeInTheDocument();
+    expect(screen.getByText("Local equities closed higher across the board.")).toBeInTheDocument();
+    expect(screen.getByText("2026-07-15 09:00:00")).toBeInTheDocument();
+    expect(screen.getByText("Business Day")).toBeInTheDocument();
+});
 
-    it("To Show the page description", () => {
-    render(<NewsInvestment />);
+    it("fetches ticker news and maps each sentiment score to a label", async () => {
+        const user = userEvent.setup();
+        render(<NewsInvestment />);
 
-    expect(
-      screen.getByText("Stay updated with the latest market news and insights")
-    ).toBeInTheDocument();
+        await user.click(await screen.findByRole("button", {name: "AAPL" }));
 
-  });
+        expect(mockGet).toHaveBeenCalledWith("/news/test-aapl/AAPL");
+        expect(await screen.findByText("AAPL beats expectations")).toBeInTheDocument();
 
+        expect(screen.getByText("positive")).toBeInTheDocument();
+        expect(screen.getByText("negative")).toBeInTheDocument();
+        expect(screen.getByText("neutral")).toBeInTheDocument();
+    });
 
-   it("To Show the Top Gainer section", () => {
-    render(<NewsInvestment />);
+    it("filters the feed down to negative articles", async () => {
+        const user = userEvent.setup();
+        render(<NewsInvestment />);
 
-    expect(
-      screen.getByText("Top Gainer")
-    ).toBeInTheDocument();
+        await user.click(await screen.findByRole("button", {name: "AAPL"}));
+        await screen.findByText("AAPL beats expectations");
 
-  });
+        await user.click(screen.getByRole("button", {name: "Negative"}));
 
+        expect(screen.getByText("AAPL faces supply issues")).toBeInTheDocument();
+        expect(screen.queryByText("AAPL beats expectations")).not.toBeInTheDocument();
+        expect(screen.queryByText("AAPL holds steady")).not.toBeInTheDocument();
+    });
 
-  
-   it("To Show the Top Loser section", () => {
-    render(<NewsInvestment />);
+    it("aggregates news across every ticker when All is pressed", async () => {
+        const user = userEvent.setup();
+        render(<NewsInvestment />);
 
-    expect(
-      screen.getByText("Top Loser")
-    ).toBeInTheDocument();
+        await screen.findByRole("button", { name: "AAPL" });
+        mockGet.mockClear();
 
-  });
+        const allFilterBtn = screen.getByRole("button", { name: /^\s*All\s*$/i });
+        await user.click(allFilterBtn);
 
-    it("To Show the Latest News Section", () => {
-    render(<NewsInvestment />);
+        await waitFor(() => {
+        expect(mockGet).toHaveBeenCalledWith("/news/test-aapl/AAPL");
+        expect(mockGet).toHaveBeenCalledWith("/news/test-aapl/MSFT");
+        });
+        expect(await screen.findByText("MSFT beats expectations")).toBeInTheDocument();
+    });
 
-    expect(
-      screen.getByText("Latest News")
-    ).toBeInTheDocument();
+    it("now switches to the market tab and swaps thel heading", async () => {
+        const user = userEvent.setup();
+        render(<NewsInvestment />);
 
-  });
+        await screen.findByText("Portfolio News");
+        await user.click(screen.getByRole("button", { name: /All Market/ }));
 
+        expect(await screen.findByText("Market News")).toBeInTheDocument();
+        expect(screen.queryByText("Portfolio News")).not.toBeInTheDocument();
+        expect(mockGet).toHaveBeenCalledWith("/news/?category=business");
+    });
 
-  it("To Show the Latest News category buttons", () => {
-    render(<NewsInvestment />);
+    it("requests the matching endpoint for each of the market types", async () => {
+        const user = userEvent.setup();
+        render(<NewsInvestment />);
 
-    expect(
-      screen.getByText("All")
-    ).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: /All Market/ }));
+        await screen.findByText("Market News");
 
-    expect(
-      screen.getByText("Top")
-    ).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: "Top" }));
+        expect(mockGet).toHaveBeenCalledWith("/news/?category=Top");
 
-    expect(
-      screen.getByText("Business")
-    ).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: "Technology" }));
+        expect(mockGet).toHaveBeenCalledWith("/news/?category=Technology");
 
-    expect(
-      screen.getByText("Technology")
-    ).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: "Politics" }));
+        expect(mockGet).toHaveBeenCalledWith("/news/?category=Politics");
 
-    expect(
-      screen.getByText("Politics")
-    ).toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: "Crime" }));
+        expect(mockGet).toHaveBeenCalledWith("/news/?category=Crime");
 
-    expect(
-      screen.getByText("Crime")
-    ).toBeInTheDocument();
+        const [categoryAll] = screen.getAllByRole("button", { name: "All" });
+        await user.click(categoryAll);
+        expect(mockGet).toHaveBeenCalledWith("/news/?category=All");
+    });
 
-  });
+    it("returns to portfolio", async () => {
+        const user = userEvent.setup();
+        render(<NewsInvestment />);
 
+        await user.click(screen.getByRole("button", { name: /All Market/ }));
+        await screen.findByText("Market News");
 
-  it("To Show the watchlist table headings", () => {
-    render(<NewsInvestment />);
+        await user.click(screen.getByRole("button", { name: /My portfolio/ }));
 
-    expect(
-      screen.getByText("Ticker")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByText("Price")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByText("Change")
-    ).toBeInTheDocument();
-
-    expect(
-      screen.getByText("Action")
-    ).toBeInTheDocument();
-
-  });
-
-
-  it("To Show when the watchlist is empty", () => {
-    render(<NewsInvestment />);
-
-    expect(
-      screen.getByText("No watchlist stocks added")
-    ).toBeInTheDocument();
-
-
-  });
-
-
-  it("To Show the ticker and also the Add Button in the table", () => {
-    render(<NewsInvestment />);
-
-    expect(
-      screen.getByPlaceholderText("Ticker")
-    ).toBeInTheDocument();
-
-
-  });
-
-
-  });
-
-  it("To Show the data of the top gainer and top loser", async () => {
-    render(<NewsInvestment />);
-
-    expect(
-      await screen.findByText("AAPL(Technology)")
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("+2.15")
-    ).toBeInTheDocument();
-
-
-     expect(
-      await screen.findByText("TSLA(Politics)")
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("-1.35")
-    ).toBeInTheDocument();
-
-   });
-
-
-    it("To Show how many watchlist he has", async () => {
-
-    render(<NewsInvestment />);
-
-    expect(
-      screen.getAllByText("My Watchlist")
-    ).toHaveLength(2);
-     expect(
-      await screen.findByText("1")
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("Stocks")
-    ).toBeInTheDocument();
-
-     });
-
-      it("To Show both the watchlist and news data of the user", async () => {
-
-    render(<NewsInvestment />);
-
-     expect(
-      await screen.findByText("AAPL")
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("Apple INC")
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("215.5")
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("2.15")
-    ).toBeInTheDocument();
-
-
-     expect(
-      await screen.findByText("The stocks of today")
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("today was high")
-    ).toBeInTheDocument();
-    expect(
-      await screen.findByText("source 1")
-    ).toBeInTheDocument();
-
-     expect(
-      await screen.findByText("2026-07-15")
-    ).toBeInTheDocument();
-
-
-  });
-
-
-   it("Calls the correct API when a news category is pressed", async () => {
-
-    const userTyping = userEvent.setup();
-
-    render(<NewsInvestment />);
-
-    await userTyping.click(screen.getByText("All"))
-    expect(api.get).toHaveBeenCalledWith("/news/?category=business")
-
-    await userTyping.click(screen.getByText("Top"))
-    expect(api.get).toHaveBeenCalledWith("/news/?category=Top")
-
-    await userTyping.click(screen.getByText("Technology"))
-    expect(api.get).toHaveBeenCalledWith("/news/?category=Technology")
-
-    await userTyping.click(screen.getByText("Politics"))
-    expect(api.get).toHaveBeenCalledWith("/news/?category=Politics")
-
-    await userTyping.click(screen.getByText("Crime"))
-    expect(api.get).toHaveBeenCalledWith("/news/?category=Crime")
-
-
-     });
-
-
-     it("To add a stock in the database", async () => {
-
-    const userTyping = userEvent.setup();
-
-    render(<NewsInvestment />);
-
-    await userTyping.type(screen.getByPlaceholderText("Ticker"), "AAPL")
-    await userTyping.click(screen.getByText("Add"))
-    expect(api.post).toHaveBeenCalledWith("/watchlist/",{ticker: "AAPL"})
-
- 
-
-     });
-
-
+        expect(await screen.findByText("Portfolio News")).toBeInTheDocument();
+        expect(screen.queryByText("Market News")).not.toBeInTheDocument();
+    });
+});

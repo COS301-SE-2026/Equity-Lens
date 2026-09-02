@@ -9,7 +9,11 @@ import {
   setUpTOTP,
   verifyTOTPSetup,
   updateMFAPreference,
+  resetPassword,
+  confirmResetPassword,
 } from "aws-amplify/auth";
+
+import api from './api'
 
 export async function register(fullName, email, password) {
   const result = await signUp({
@@ -28,6 +32,11 @@ export const login = (email, password) => signIn({ username: email, password });
 export const respondToMFA = (totpCode) => confirmSignIn({ challengeResponse: totpCode });
 export const initTOTPSetup = () => setUpTOTP();
 export const logout = () => signOut();
+
+export const requestPasswordReset = (email) => resetPassword({ username: email });
+
+export const confirmPasswordReset = (email, code, newPassword) =>
+  confirmResetPassword({ username: email, confirmationCode: code, newPassword });
 
 export async function confirmTOTPSetup(totpCode) {
   await verifyTOTPSetup({ code: totpCode });
@@ -76,4 +85,14 @@ export async function getCurrentUserProfile() {
     email: email,
     full_name: fullName,
   };
+}
+
+export async function deleteAccount(email){
+  try{
+    const response = await api.delete('/auth/me', { data: { email } });
+    return response.data;
+  } catch (err) {
+    const detail = err.response?.data?.detail || 'Account deletion failed';
+    throw new Error(detail);
+  }
 }

@@ -14,9 +14,10 @@ export const getHistorialData = async (symbol, period = '1mo') => {
     return response.data;
 }
 
-export const searchStocks = async (query) => {
+export const searchStocks = async (query, signal) => {
     const response = await api.get('/stocks/search', {
         params: { query },
+        signal,
     });
     return response.data;
 }

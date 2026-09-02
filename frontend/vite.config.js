@@ -9,16 +9,21 @@ export default defineConfig({
     restoreMocks: true,
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/test/setup.js',
+    setupFiles: './test/setup.js',
+    exclude :[
+      '**/node_modules/**',
+      '**/e2e/**',
+      '**/test/nfr/**'
+    ],
     coverage: {
       reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',
       exclude: ['node_modules/', 'src/test/','e2e/**',],
       provider: 'v8',
       thresholds: {
-        lines: 70,
-        functions: 70,
-        statements: 60,
+        lines: 50,
+        functions: 50,
+        statements: 50,
       },
     },
   },

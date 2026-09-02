@@ -2,6 +2,9 @@ import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 import Dashboard from './Dashboard';
+vi.mock('../../services/api', () => ({
+  default: { get: vi.fn().mockResolvedValue({ data: [] }), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
+}));
 
 vi.mock('recharts', async () => {
   const actual = await vi.importActual('recharts');
@@ -41,11 +44,36 @@ vi.mock('../../hooks/usePortfolio', () => ({
           sector: 'Financials',
         },
       ],
-      summary: { total_value: 77000, total_gain_loss: 4700, total_gain_loss_pct: 6.5, daily_change: 0 },
+      summary: { total_value: 77000, total_gain_loss: 4700, total_gain_loss_pct: 6.5, daily_change_pct: 0, daily_change_value: 0 },
+      returns: { time_weighted_return_pct: 7.244430379746836, history_days: 62 },
+      health: {
+        score: 4.4,
+        label: 'Needs attention',
+        subscores: [
+          {
+            key: 'sectorConcentration', label: 'Sector Concentration', weight: 0.4, value: 5.7,
+            detail: 'Technology is 58% of your book (Herfindahl index 0.51 across 2 sectors).',
+            target: 'HHI at or below 0.15 (roughly 7+ evenly-weighted sectors)',
+            improvement: 'Adding exposure outside Technology would bring this HHI down and spread the risk.',
+          },
+          {
+            key: 'singleStockRisk', label: 'Single-Stock Risk', weight: 0.35, value: 4.2,
+            detail: 'NPN is 58% of your book. High concentration.',
+            target: 'Under 25% in any one holding',
+            improvement: 'Trim NPN or build up other positions so no single stock dominates your return.',
+          },
+          {
+            key: 'portfolioBreadth', label: 'Portfolio Breadth', weight: 0.25, value: 2.4,
+            detail: "2 positions in your book, but weighted by size that's only 1.9 effective positions - a raw count hides how much one holding can dominate.",
+            target: '8+ effective positions',
+            improvement: 'Adding positions - or trimming the ones that dominate - raises effective breadth toward the target.',
+          },
+        ],
+      },
       performanceHistory: [
-        { date: '2026-04-01', value: 790000, benchmark: 775000 },
-        { date: '2026-05-01', value: 805000, benchmark: 782000 },
-        { date: '2026-06-01', value: 847231, benchmark: 800000 },
+        { date: '2026-04-01', value: 790000, benchmark: 775000, twr_index: 100.0 },
+        { date: '2026-05-01', value: 805000, benchmark: 782000, twr_index: 103.16 },
+        { date: '2026-06-01', value: 847231, benchmark: 800000, twr_index: 107.24 },
       ],
     },
     loading: false,
@@ -73,62 +101,60 @@ const renderDashboard = () =>
   );
 
 describe('Dashboard', () => {
-  it('greets signed-in user and builds summary', () => {
+  it('greets signed-in user and shows portfolio health', () => {
     renderDashboard();
     expect(screen.getByText('Steven')).toBeInTheDocument();
     expect(screen.getAllByText(/needs attention/i).length).toBeGreaterThanOrEqual(1);
-    expect(
-      screen.getByText(/58% of your portfolio is in npn, making it your biggest source of risk/i),
-    ).toBeInTheDocument();
-    expect(screen.getByText('Concentration')).toBeInTheDocument();
-    const askWhy = screen.getByText('Ask AI Why');
-    expect(askWhy).toHaveAttribute(
-      'href',
-      '/ai?q=' + encodeURIComponent('Why is my NPN concentration considered a risk?'),
-    );});
+  });
 
-  it('surfaces concentration risk and low diversification', () => {
+  it('surfaces the missing-sector opportunity in Today\'s Insights', async () => {
     renderDashboard();
-    expect(screen.getByText(/npn alone is 58% of your book/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/high impact/i).length).toBeGreaterThanOrEqual(1);
-    expect(
-      screen.getByText(/trimming npn below 30% could improve your portfolio health by \+0\.7/i),
-    ).toBeInTheDocument();
-    expect(screen.getByText(/high impact · \+0\.7 health/i)).toBeInTheDocument();
+    expect(await screen.findByText('Today\'s Insights')).toBeInTheDocument();
+    expect(await screen.findByText(/you have no healthcare exposure/i)).toBeInTheDocument();
+    expect(screen.queryByText('Rebalancing Insights')).not.toBeInTheDocument();
+  });
+
+  it('no longer carries Goal Progress or Tax Analysis - both moved to the Plan page', async () => {
+    renderDashboard();
+    expect(await screen.findByText('Today\'s Insights')).toBeInTheDocument();
+    expect(screen.queryByText('Goal Progress')).not.toBeInTheDocument();
+    expect(screen.queryByText('Set Your Goal')).not.toBeInTheDocument();
+    expect(screen.queryByText('Tax Analysis')).not.toBeInTheDocument();
   });
 
   it('gives Portfolio Health own section', () => {
     renderDashboard();
-    expect(screen.getByText('5.0')).toBeInTheDocument();
-    expect(screen.getByText('Benchmark Performance')).toBeInTheDocument();
-    expect(screen.getByText('20% weight')).toBeInTheDocument();
+    expect(screen.getByText('4.4')).toBeInTheDocument();
+    expect(screen.getByText('Sector Concentration')).toBeInTheDocument();
+    expect(screen.getByText('40% weight')).toBeInTheDocument();
+    expect(screen.queryByText('Benchmark Performance')).not.toBeInTheDocument();
     expect(screen.queryByText(/adding a few more positions reduces how much any one holding drives your return/i)).not.toBeInTheDocument();
     const breadthRow = within(screen.getByTestId('health-factor-portfolioBreadth'));
     fireEvent.click(breadthRow.getByText('Why'));
-    expect(breadthRow.getByText(/adding a few more positions reduces how much any one holding drives your return/i)).toBeInTheDocument();
-    expect(breadthRow.getByText('8-12 positions')).toBeInTheDocument();
-
-    expect(screen.getByText('View Health Analysis')).toBeInTheDocument();
+    expect(breadthRow.getByText(/adding positions.*raises effective breadth/i)).toBeInTheDocument();
+    expect(breadthRow.getByText('8+ effective positions')).toBeInTheDocument();
   });
 
   it('shows a takeaway plus a why', () => {
     renderDashboard();
     expect(screen.getByText(/outperformed the jse alsi by 4.0%/i)).toBeInTheDocument();
-    expect(screen.getByText(/today's biggest mover npn is a contributor/i)).toBeInTheDocument();
+    expect(screen.getByText(/npn was today's biggest contributor/i)).toBeInTheDocument();
     expect(screen.getByText('ALL')).toBeInTheDocument();
   });
 
-  it('shows Biggest Gain/Loss cards with context', () => {
+  it("no longer shows Today's Biggest Gain/Loss inside Performance vs Benchmark - that moved to Today's Insights", () => {
     renderDashboard();
-    expect(screen.getByText(/nothing dragging your portfolio down today/i)).toBeInTheDocument();
-    expect(screen.getByText('Normal volatility')).toBeInTheDocument();
-    expect(screen.getByText(/77% of today's gain came from npn/i)).toBeInTheDocument();
+    expect(screen.queryByText("Today's Biggest Gain")).not.toBeInTheDocument();
+    expect(screen.queryByText("Today's Biggest Loss")).not.toBeInTheDocument();
+    expect(screen.queryByText("Today's Driver")).not.toBeInTheDocument();
   });
 
-  it('merges sector allocation and largest holdings', () => {
+  it('splits sector allocation and all positions into two independent cards', () => {
     renderDashboard();
-    expect(screen.getByText('Portfolio Overview')).toBeInTheDocument();
-    expect(screen.getByText(/high concentration - above the 45% threshold/i)).toBeInTheDocument();
+    const sectorPanel = document.getElementById('sector-allocation');
+    expect(within(sectorPanel).getAllByText('Sectors').length).toBeGreaterThan(0);
+    expect(screen.getByText('All Positions')).toBeInTheDocument();
+    expect(screen.getByTitle(/High concentration - \d+\.\d% of your book/i)).toBeInTheDocument();
     expect(screen.queryByText(/^largest$/i)).not.toBeInTheDocument();
   });
 
@@ -150,22 +176,24 @@ describe('Dashboard', () => {
     expect(screen.getByText(/at your current npn position size/i)).toBeInTheDocument();
   });
 
-  it("renders Today's Insights with lifetime gain/loss content", () => {
+  it("renders Today's Insights with today's move, not since-purchase/since-inception content", () => {
     renderDashboard();
-    expect(screen.getByText(/up 6\.5%.*since you started investing/i)).toBeInTheDocument();
-    expect(screen.getByText(/npn has been your best long-term performer, up 8\.4%/i)).toBeInTheDocument();
-    expect(screen.getByText(/sbk has gained the least since purchase, up just 4\.1%/i)).toBeInTheDocument();
-    expect(screen.getByText(/you currently have no healthcare exposure/i)).toBeInTheDocument();
+    expect(screen.getByText(/npn is today's biggest gainer, up 1\.2%/i)).toBeInTheDocument();
+    expect(screen.getByText(/77% of today's gain came from npn/i)).toBeInTheDocument();
+    expect(screen.queryByText(/today's biggest drag/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/since you started investing/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/since purchase/i)).not.toBeInTheDocument();
 
-    expect(screen.queryByText(/a common blind spot/i)).not.toBeInTheDocument();
     const whyButtons = screen.getAllByText('Why?');
-    fireEvent.click(whyButtons[whyButtons.length - 1]);
-    expect(screen.getByText(/a common blind spot/i)).toBeInTheDocument();
+    fireEvent.click(whyButtons[0]);
+    expect(screen.getByText(/within typical movement/i)).toBeInTheDocument();
   });
 
-  it('renders the watchlist as low-emphasis passive context', () => {
+  it('renders the watchlist as a floating toggle, not an always-visible card', async () => {
     renderDashboard();
-    expect(screen.getByText('Watchlist')).toBeInTheDocument();
+    expect(screen.queryByText('ABG')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /open watchlist/i }));
+    expect(await screen.findByText('Watchlist')).toBeInTheDocument();
     expect(screen.getByText('ABG')).toBeInTheDocument();
   });
 
@@ -179,22 +207,25 @@ describe('Dashboard', () => {
     expect(screen.getAllByLabelText('What does this mean?').length).toBeGreaterThanOrEqual(3);
   });
 
-  it('scrolls to and flashes the linked section', () => {
+  it('scrolls to and highlights the linked section (backlog 7.2 - fade, not flash)', () => {
     vi.useFakeTimers();
     Element.prototype.scrollIntoView = vi.fn();
     renderDashboard();
 
-    fireEvent.click(screen.getByText('Explore New Sectors'));
+    fireEvent.click(screen.getByText('Sector Concentration'));
     const sectorEl = document.getElementById('sector-allocation');
     if (!sectorEl) throw new Error('expected #sector-allocation to exist');
-    expect(sectorEl.className).toContain('ring-orange-500');
-    act(() => vi.advanceTimersByTime(2500));
+    expect(sectorEl.className).toContain('dashboard-highlight');
+    expect(sectorEl.className).toContain('is-active');
     expect(sectorEl.className).not.toContain('ring-orange-500');
+    expect(sectorEl.className).not.toContain('animate-pulse');
+    act(() => vi.advanceTimersByTime(2500));
+    expect(sectorEl.className).not.toContain('is-active');
 
-    fireEvent.click(screen.getByText('Benchmark Performance'));
-    const perfEl = document.getElementById('performance-vs-benchmark');
-    if (!perfEl) throw new Error('expected #performance-vs-benchmark to exist');
-    expect(perfEl.className).toContain('ring-orange-500');
+    fireEvent.click(screen.getByText('Single-Stock Risk'));
+    const holdingsEl = document.getElementById('holdings-table');
+    if (!holdingsEl) throw new Error('expected #holdings-table to exist');
+    expect(holdingsEl.className).toContain('is-active');
     vi.useRealTimers();
   });
 });

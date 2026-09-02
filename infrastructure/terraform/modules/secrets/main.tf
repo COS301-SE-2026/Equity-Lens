@@ -15,6 +15,7 @@ locals {
     "BEDROCK_MODEL",
     "MARKET_DATA_REFRESH_TTL_HOURS",
     "CORS_ORIGINS",
+    "MARKET_API_KEY",
   ]
 }
 

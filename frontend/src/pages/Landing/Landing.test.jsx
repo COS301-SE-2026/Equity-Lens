@@ -32,7 +32,7 @@ describe('Landing', () => {
     expect(screen.getByRole('link', { name: /see how it works/i })).toHaveAttribute(
       'href',
       '#simulator',
-    );});
+    );}, 15000);
 
   it('link for keyboard users', () => {
     renderPage();

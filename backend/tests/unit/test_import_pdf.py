@@ -50,6 +50,9 @@ def test_save_portfolios():
         account_number = "EE154",
         portfolio_name = "SouthAfrica",
         currency = "ZAR",
+        statement_start_date="2024-01-01",
+        statement_end_date="2024-12-31",
+        account_type="TFSA",
     )
 
     result = save_portfolios(
@@ -76,7 +79,9 @@ def test_save_holdings():
         quantity = 15,
         total_cost = 20,
         cost_price = 30,
-        weight_percentage = 24
+        weight_percentage = 24,
+        statement_price = 175.50,
+        statement_value = 2632.50,
     )
 
     result = save_holdings(
@@ -97,6 +102,8 @@ def test_save_holdings():
     assert result.weight_percentage == 24
     assert result.ticker == "testTicker"
     assert result.sector == "testSector"
+    assert result.statement_price == 175.50
+    assert result.statement_value == 2632.50
 
     theDatabase.add.assert_called_once_with(result)
     theDatabase.commit.assert_called_once()

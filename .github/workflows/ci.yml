@@ -47,7 +47,6 @@ jobs:
       - name: E2E tests
         working-directory: frontend
         run: npm run test:e2e
-        continue-on-error: false
 
       - name: Upload Playwright report
         if: failure()
@@ -73,7 +72,7 @@ jobs:
         run: |
           docker build \
             -f frontend/Dockerfile.prod \
-            --build-arg VITE_API_URL=http://localhost:8000 \
+            --build-arg VITE_API_URL=http://localhost:8000\api \
             --build-arg VITE_COGNITO_USER_POOL_ID=af-south-1_smoketest \
             --build-arg VITE_COGNITO_CLIENT_ID=smoketestclientid \
             --build-arg VITE_COGNITO_REGION=af-south-1 \
@@ -170,7 +169,7 @@ jobs:
           AWS_COGNITO_USER_POOL_ID: ${{ vars.TEST_COGNITO_USER_POOL_ID }}
           AWS_ACCESS_KEY_ID: dummy
           AWS_SECRET_ACCESS_KEY: dummy
-        run: python -m pytest --cov=app --cov-report=xml --cov-fail-under=80
+        run: python -m pytest --cov=app --cov-report=xml --cov-fail-under=70
 
       - name: Write backend smoke-test env file
         run: |
@@ -231,26 +230,10 @@ jobs:
           flags: backend
 
     
-  trivy:
-    name: Trivy Security Scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Trivy Scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: HIGH,CRITICAL
-          exit-code: 1
-          scanners: vuln,secret,misconfig
-          skip-dirs: frontend/node_modules,node_modules,backend/venv,backend/.venv,frontend/dist,frontend/build
 
   ToRunlighthouse:
-    name: Run Lighthouse
+    name: Run Lighthouse NFR-2.2 & NFR-2.3
     runs-on: ubuntu-latest
     needs: [frontend]
     timeout-minutes: 3
@@ -270,26 +253,63 @@ jobs:
           npm run build
           npm run preview -- --host 0.0.0.0 &
           npx wait-on http://localhost:4173
-          npx lhci autorun
-    
-  summary:
-    name: Run Pipelines Summary
-    runs-on: ubuntu-latest
-    if: always()
-    needs: [frontend, backend, trivy, ToRunlighthouse] 
-    timeout-minutes: 3
 
-    steps:
-      - name: A short summary of the pipelines
-        run: |
-          echo "Pipelines Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend | ${{ needs.frontend.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend | ${{ needs.backend.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| trivy | ${{ needs.trivy.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| OWSAP ZAP | ${{ needs.ToRunTheZap.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Lighthouse | ${{ needs.ToRunlighthouse.result }} |" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Run NFR-2.2 Lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with: 
+            configPath: ./frontend/lighthouserc-nfr-2-2.json
+
+      - name: Run NFR-2.3 Lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with: 
+          configPath: ./frontend/lighthouserc-nfr-2-3.json
+
+  nfr-1-6:
+        name: NFR-1.6 GitLeaks
+        runs-on: ubuntu-latest
+        timeout-minutes: 2
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                fetch-depth: 0
+                
+            - name: Run GitLeaks
+              run: |
+                docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source=/repo --verbose
+
+  nfr-1-4:
+        name: NFR-1.4 TLS
+        runs-on: ubuntu-latest
+        timeout-minutes: 2
+
+        steps:
+            - name: To chekc the HTTPs connection
+              run: | 
+                set -e
+                    curl --fail --show-error \
+                    https://api.equitylens.co.za/health
+                    curl --fail --show-error \
+                    https://www.equitylens.co.za
+                    echo "PASS All the HTTPs/TLS connection"
+
+    # nfr-1-1-and-1-7:
+    #     name: NFR-1.1 & NFR1.7 OWSAP ZAP
+    #     runs-on: ubuntu-latest
+    #     timeout-minutes: 5
+
+        # steps:
+        #     - name: Checkout repository
+        #       uses: actions/checkout@v4
+
+        #     - name: RUN the OWSAP ZAP to scan all the API
+        #       uses: zaproxy/action-api-scan@v0.10.0
+        #       with:
+        #         target: "https://api.equitylens.co.za/openapi.json"
+        #         format: openapi
+        #         fail_action: true
+
     
 

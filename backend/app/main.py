@@ -1,11 +1,16 @@
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.routers import auth, portfolio
 from app.database import create_tables
 from app.config import settings
 from app.models import user
 from app.models import market_data
-from fastapi.responses import PlainTextResponse
+from app.schemas.responses import STATUS_ERROR_CODES
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 import traceback
 from app.routers import news
 from app.routers import import_pdf
@@ -17,6 +22,10 @@ from app.routers import market_data as market_data_router
 
 app = FastAPI(title="EquityLens API")
 
+
+class HealthResponse(BaseModel):
+    status: str
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins,
@@ -25,11 +34,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    code = getattr(exc, "error_code", None) or STATUS_ERROR_CODES.get(exc.status_code, "ERROR")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error_code": code, "detail": exc.detail},
+        headers=exc.headers,
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"error_code": "VALIDATION_ERROR", "detail": jsonable_encoder(exc.errors())},
+    )
+
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     tb = traceback.format_exc()
     print(tb)
-    return PlainTextResponse(str(tb), status_code=500)
+    return JSONResponse(
+        status_code=500,
+        content={"error_code": "INTERNAL_ERROR", "detail": "Something went wrong"},
+    )
 
 @app.on_event("startup")
 async def startup():
@@ -38,7 +66,7 @@ async def startup():
 app.include_router(auth.router)
 app.include_router(portfolio.router)
 
-@app.get("/health")
+@app.get("/health", response_model=HealthResponse)
 async def health():
     return {"status": "ok"}
 

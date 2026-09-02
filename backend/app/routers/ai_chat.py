@@ -8,8 +8,26 @@ from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages
+from pydantic import BaseModel
+from typing import Any
+from app.utils.ai_rate_limit import check_limit
+from app.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
+from pydantic import BaseModel
+from typing import Any
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
+
+class NewsResponse(BaseModel):
+    total_articles: int
+    positive: int
+    negative: int
+    result: list[dict[str, Any]]
+
+class TickerResponse(BaseModel):
+    ticker: list[str]
 
 class ChatRequest(BaseModel):
     message: str
@@ -29,17 +47,40 @@ class ChatResponse(BaseModel):
 class ChangeConversationName(BaseModel):
     title: str = Field(min_length = 1)
 
+
+def enforce_limit(current_user: UserResponse = Depends(get_current_user)):
+    allowed, retry_after = check_limit(
+        key = str(current_user.id),
+        limit = settings.ai_message_limit,
+        window_seconds = settings.ai_window_limit
+    )
+
+    if not allowed:
+        raise HTTPException(
+            status_code = 429,
+            detail = {
+                "message": f"You have been rate-limited by sending messages too quick. Try again in {retry_after} seconds.",
+                "retry_after": retry_after
+            },
+            headers = {"Retry-After": str(retry_after)}
+        )
+    return current_user
+
+
 @router.post("/", response_model = ChatResponse)
 async def ai_chat(
     request: ChatRequest,
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: UserResponse = Depends(enforce_limit)
     ):
     try:
         reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id)
         return ChatResponse(reply = reply, conversation_id = conversation_id)
     except Exception as e:
-        print(f"AI chat fail: {e}")
+        logger.exception(
+            "AI chat failed for user %s (conversation %s): %s",
+            current_user.id, request.conversation_id, e,
+        )
         raise HTTPException(status_code = 500, detail = "Something went wrong")
 
 # now to return all conversations for the logged user

@@ -1,7 +1,9 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-  testDir: './e2e',
+  testDir: '.',
+
+  testMatch: ["tests/**/*.spec.js", "e2e/**/*.spec.js", "test/**/*.spec.js"],
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
 
   //this will be used for all the pages

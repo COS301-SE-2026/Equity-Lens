@@ -9,11 +9,37 @@ from app.models.market_data import MarketData, FundamentalsCache
 
 _REFRESH_LOCKS = set()
 _PRICE_REFRESH_COOLDOWN_UNTIL: dict[str, datetime] = {}
+_YFINANCE_GLOBAL_COOLDOWN_UNTIL: datetime | None = None
+_YFINANCE_COOLDOWN_STRIKES = 0
+YFINANCE_BASE_COOLDOWN_MINUTES = 3
+YFINANCE_MAX_COOLDOWN_MINUTES = 30
+
+def _is_rate_limit_error(exc: Exception) -> bool:
+    message = str(exc)
+    return "Too Many Requests" in message or "Rate limited" in message
+
+def _trip_yfinance_global_cooldown() -> None:
+    global _YFINANCE_GLOBAL_COOLDOWN_UNTIL, _YFINANCE_COOLDOWN_STRIKES
+    minutes = min(YFINANCE_BASE_COOLDOWN_MINUTES * (2 ** _YFINANCE_COOLDOWN_STRIKES), YFINANCE_MAX_COOLDOWN_MINUTES)
+    _YFINANCE_GLOBAL_COOLDOWN_UNTIL = datetime.now(timezone.utc) + timedelta(minutes=minutes)
+    _YFINANCE_COOLDOWN_STRIKES += 1
+    print(f"Yahoo rate limit hit - pausing all yfinance calls until {_YFINANCE_GLOBAL_COOLDOWN_UNTIL.isoformat()}")
+
+def _yfinance_globally_cooling_down() -> bool:
+    global _YFINANCE_COOLDOWN_STRIKES
+    if _YFINANCE_GLOBAL_COOLDOWN_UNTIL is None:
+        return False
+    if datetime.now(timezone.utc) >= _YFINANCE_GLOBAL_COOLDOWN_UNTIL:
+        _YFINANCE_COOLDOWN_STRIKES = 0
+        return False
+    return True
+
 PRICE_REFRESH_COOLDOWN_MINUTES = 10
 #weekly - comfortable time as eases rates on yfinance
 #and also short enough to where a company can release financials
 #on a random day mid-week and wont be long until the refresh to serve fresh data
 FUNDAMENTALS_TTL_HOURS = 24 * 7
+MARKET_DATA_MAX_AGE_DAYS = 4
 
 def should_refresh_market_data(last_fetched_at, ttl_hours: int | None = None) -> bool:
     if ttl_hours is None:
@@ -30,6 +56,26 @@ def should_refresh_market_data(last_fetched_at, ttl_hours: int | None = None) ->
 
     now = datetime.now(timezone.utc)
     return (now - last_fetched_at) > timedelta(hours=ttl_hours)
+
+def _price_cache_is_stale(ticker: str) -> bool:
+    db = SessionLocal()
+    try:
+        latest_record = (
+            db.query(MarketData)
+            .filter(MarketData.ticker == ticker)
+            .order_by(MarketData.date.desc(), MarketData.fetched_at.desc())
+            .first()
+        )
+    finally:
+        db.close()
+
+    if latest_record is None:
+        return True
+
+    if should_refresh_market_data(latest_record.fetched_at):
+        return True
+
+    return (datetime.now(timezone.utc).date() - latest_record.date).days > MARKET_DATA_MAX_AGE_DAYS
 
 def _load_local_price_history(ticker:str) -> pd.DataFrame:
     db = SessionLocal()
@@ -68,6 +114,8 @@ def _save_price_history(ticker: str, history: pd.DataFrame) -> None:
                 if hasattr(timestamp, "to_pydatetime")
                 else timestamp.date()
             )
+            if pd.isna(row["Close"]):
+                continue
             volume = float(row["Volume"]) if not pd.isna(row["Volume"]) else 0.0
             prev_close = float(row["Prev Close"]) if "Prev Close" in row and not pd.isna(row["Prev Close"]) else float(row["Close"])
             existing = (
@@ -144,18 +192,23 @@ def _fetch_from_alpha_vantage(ticker: str) -> pd.DataFrame:
 
 def _fetch_from_yfinance(ticker: str, period: str) -> pd.DataFrame:
     #mirrors get_cached_fundamentals, try .JO first then fallback to plain
+    if _yfinance_globally_cooling_down():
+        print(f"Skipping Yahoo fetch for {ticker} - global rate-limit cooldown active")
+        return pd.DataFrame()
     candidates = [ticker] if ticker.endswith(".JO") else [f"{ticker}.JO", ticker]
     for candidate in candidates:
         try:
             ticker_obj = yf.Ticker(candidate)
             history = ticker_obj.history(period=period, interval="1d", auto_adjust=True)
             if not history.empty:
-                
                 history = history[["Open", "High", "Low", "Close", "Volume"]].copy()
                 history["Prev Close"] = history["Close"].shift(1)
                 return history
         except Exception as exc:
             print(f"Yahoo history fetch failed for {candidate}: {exc}")
+            if _is_rate_limit_error(exc):
+                _trip_yfinance_global_cooldown()
+                break
     return pd.DataFrame()
 
 def _refresh_price_history(ticker: str, period: str, force_live: bool = False) -> pd.DataFrame:
@@ -177,26 +230,25 @@ def _refresh_price_history(ticker: str, period: str, force_live: bool = False) -
                 return _load_local_price_history(ticker)
         except Exception as exc:
             print(f"Yahoo refresh failed for {ticker}: {exc}")
+    else:
+        if ticker.upper().endswith(".JO"):
+            skipped = "Alpha Vantage does not cover .JO"
+        elif settings.alpha_vantage_api_key:
+            skipped = "Alpha Vantage failed above"
+        else:
+            skipped = "no ALPHA_VANTAGE_API_KEY"
+        print(
+            f"No price source available for {ticker}: {skipped}, and the Yahoo fallback is "
+            "off (set ALLOW_LIVE_MARKET_FALLBACK=true to enable it). Returning no data - "
+            "holdings will fall back to cost basis."
+        )
     return pd.DataFrame()
 
 def get_cached_price_history(ticker: str, period: str = "1y", force_live: bool = False) -> pd.DataFrame:
     ticker = ticker.upper()
     history = _load_local_price_history(ticker)
     if not history.empty:
-            latest_fetched_at = None
-            db = SessionLocal()
-            try:
-                latest_record = (
-                    db.query(MarketData)
-                    .filter(MarketData.ticker == ticker)
-                    .order_by(MarketData.date.desc(), MarketData.fetched_at.desc())
-                    .first()
-                )
-                if latest_record is not None:
-                    latest_fetched_at = latest_record.fetched_at
-            finally:
-                db.close()
-            if not should_refresh_market_data(latest_fetched_at):
+            if not _price_cache_is_stale(ticker):
                 print(f"Local price hit: {ticker}")
                 return history
     if ticker in _REFRESH_LOCKS:
@@ -217,6 +269,99 @@ def get_cached_price_history(ticker: str, period: str = "1y", force_live: bool =
         return history
     finally:
         _REFRESH_LOCKS.discard(ticker)
+
+# batched version of get_cached_price_history, one yf.download() call for
+# all cache-miss tickers instead of a separate .history() call per ticker
+def get_cached_price_histories(tickers: list[str], period: str = "1y", force_live: bool = False) -> dict[str, pd.DataFrame]:
+    tickers = [t.upper() for t in tickers]
+    results: dict[str, pd.DataFrame] = {}
+    needs_refresh: list[str] = []
+
+    for ticker in tickers:
+        history = _load_local_price_history(ticker)
+        results[ticker] = history
+        if not history.empty:
+            if not _price_cache_is_stale(ticker):
+                print(f"Local price hit: {ticker}")
+                continue
+
+        cooldown_until = _PRICE_REFRESH_COOLDOWN_UNTIL.get(ticker)
+        if cooldown_until and datetime.now(timezone.utc) < cooldown_until:
+            print(f"Skipping {ticker} price refresh - cooldown")
+            continue
+        if ticker in _REFRESH_LOCKS:
+            continue
+        needs_refresh.append(ticker)
+
+    if not needs_refresh:
+        return results
+
+    # Alpha Vantage doesn't support batching
+    av_tickers = [t for t in needs_refresh if settings.alpha_vantage_api_key and not t.endswith(".JO")]
+    yf_tickers = [t for t in needs_refresh if t not in av_tickers]
+
+    for ticker in av_tickers:
+        _REFRESH_LOCKS.add(ticker)
+        try:
+            try:
+                history = _fetch_from_alpha_vantage(ticker)
+                print(f"Alpha Vantage refresh: {ticker}")
+                _save_price_history(ticker, history)
+                refreshed = _load_local_price_history(ticker)
+                if not refreshed.empty:
+                    _PRICE_REFRESH_COOLDOWN_UNTIL.pop(ticker, None)
+                    results[ticker] = refreshed
+                    continue
+            except Exception as exc:
+                print(f"Alpha Vantage refresh failed for {ticker}: {exc}")
+            if settings.allow_live_market_fallback or force_live:
+                yf_tickers.append(ticker)
+        finally:
+            _REFRESH_LOCKS.discard(ticker)
+
+    if yf_tickers and (settings.allow_live_market_fallback or force_live):
+        if _yfinance_globally_cooling_down():
+            print(f"Skipping batched Yahoo fetch for {yf_tickers} - global rate-limit cooldown active")
+        else:
+            for ticker in yf_tickers:
+                _REFRESH_LOCKS.add(ticker)
+            try:
+                symbol_map = {t: (t if t.endswith(".JO") else f"{t}.JO") for t in yf_tickers}
+                symbols = list(symbol_map.values())
+                try:
+                    data = yf.download(
+                        symbols, period=period, interval="1d", auto_adjust=True,
+                        group_by="ticker", threads=True, progress=False,
+                    )
+                except Exception as exc:
+                    print(f"Batched Yahoo fetch failed: {exc}")
+                    if _is_rate_limit_error(exc):
+                        _trip_yfinance_global_cooldown()
+                    data = pd.DataFrame()
+
+                for ticker, yf_symbol in symbol_map.items():
+                    try:
+                        ticker_history = data if len(symbols) == 1 else (
+                            data[yf_symbol] if yf_symbol in data.columns.get_level_values(0) else pd.DataFrame()
+                        )
+                        if ticker_history is not None and not ticker_history.empty:
+                            ticker_history = ticker_history[["Open", "High", "Low", "Close", "Volume"]].copy()
+                            ticker_history["Prev Close"] = ticker_history["Close"].shift(1)
+                            ticker_history = ticker_history.dropna(subset=["Close"])
+                            if not ticker_history.empty:
+                                print(f"Yahoo refresh: {ticker}")
+                                _save_price_history(ticker, ticker_history)
+                                _PRICE_REFRESH_COOLDOWN_UNTIL.pop(ticker, None)
+                                results[ticker] = _load_local_price_history(ticker)
+                                continue
+                    except Exception as exc:
+                        print(f"Processing batched Yahoo data failed for {ticker}: {exc}")
+                    _PRICE_REFRESH_COOLDOWN_UNTIL[ticker] = datetime.now(timezone.utc) + timedelta(minutes=PRICE_REFRESH_COOLDOWN_MINUTES)
+            finally:
+                for ticker in yf_tickers:
+                    _REFRESH_LOCKS.discard(ticker)
+
+    return results
 
 def _load_cached_fundamentals(ticker: str) -> dict | None:
     db = SessionLocal()
@@ -289,11 +434,16 @@ def get_cached_fundamentals(ticker: str) -> dict:
     cached = _load_cached_fundamentals(ticker)
     if cached is not None:
         print(f"Fundamentals cache hit: {ticker}")
-        return cached
+        return {**cached, "live_fetch": False}
+    
+    if _yfinance_globally_cooling_down():
+        print(f"Skipping {ticker} fundamentals fetch - global rate limit")
+        return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame(), "live_fetch": False}
+    
     cooldown_until = _FUNDAMENTALS_RATE_LIMITED_UNTIL.get(ticker)
     if cooldown_until and datetime.now(timezone.utc) < cooldown_until:
         print(f"Skipping {ticker} fundamentals fetch - cooldown")
-        return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
+        return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame(), "live_fetch": False}
     ticker_candidates = [ticker] if ticker.endswith(".JO") else [f"{ticker}.JO", ticker]
     for candidate in ticker_candidates:
         try:
@@ -309,10 +459,12 @@ def get_cached_fundamentals(ticker: str) -> dict:
                     "info": info,
                     "balance_sheet": balance_sheet,
                     "financials": financials,
+                    "live_fetch": True,
                 }
         except Exception as exc:
             print(f"Yahoo fundamentals fetch failed for {candidate}: {exc}")
-            if "Too Many Requests" in str(exc) or "Rate limited" in str(exc):
+            if _is_rate_limit_error(exc):
                 _FUNDAMENTALS_RATE_LIMITED_UNTIL[ticker] = datetime.now(timezone.utc) + timedelta(minutes=10)
+                _trip_yfinance_global_cooldown()
                 break
-    return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
+    return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame(), "live_fetch": True}

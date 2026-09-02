@@ -39,3 +39,17 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = ["app.routers.*", "app.services.*"]
 disallow_untyped_defs = true
+
+
+[tool.coverage.run]
+source = ["app"]
+omit = [
+    "app/scripts/*",
+    "alembic/*",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

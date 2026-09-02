@@ -6,8 +6,30 @@ from app.models.portfolio import InstrumentPurchasesAndSales
 from app.models.portfolio import ContributionsAndWithdrawals
 from app.models.portfolio import DividendsAndWithholdingTax
 from app.models.portfolio import TransactionExpenses
+from fastapi import HTTPException
+
+from app.schemas.portfolio import ACCOUNT_TYPE_CURRENCY
 
 
+def checkDocumentID(database,document_id, user_id):
+    document = database.query(Document).filter(Document.id == document_id, Document.user_id == user_id).first()
+
+    if document is None:
+        raise HTTPException(
+            status_code=404,
+            detail="The document is not found"
+        )
+
+def delete_portfolio(database,user_id,portfolio_id):
+    portfolio = database.query(Portfolios).filter(Portfolios.id == portfolio_id, Portfolios.user_id == user_id).first()
+
+    if portfolio is None:
+        raise HTTPException(
+            status_code=404,
+            detail="The portfolio is not found"
+        )
+    database.delete(portfolio)
+    database.commit()
 def save_document(database,user_id,data):
 
     saving = Document(
@@ -22,14 +44,16 @@ def save_document(database,user_id,data):
     return saving
 
 def save_portfolios(database,user_id,data):
-
+    checkDocumentID(database, data.document_id, user_id)
     saving = Portfolios(
         user_id = user_id,
         document_id = data.document_id,
         account_number = data.account_number,
         portfolio_name = data.portfolio_name,
-        currency = data.currency,
-
+        currency = ACCOUNT_TYPE_CURRENCY[data.account_type.lower()],
+        statement_start_date = data.statement_start_date,
+        statement_end_date = data.statement_end_date,
+        account_type = data.account_type
     )
 
     database.add(saving)
@@ -56,7 +80,9 @@ def save_holdings(database,user_id,data,ticker,sector):
         quantity = data.quantity,
         total_cost = data.total_cost,
         cost_price = data.cost_price,
-        weight_percentage = data.weight_percentage
+        weight_percentage = data.weight_percentage,
+        statement_price = data.statement_price,
+        statement_value = data.statement_value
 
     )
 
@@ -142,6 +168,7 @@ def save_transaction_expenses(database,user_id,data):
     database.refresh(saving)
 
     return saving
+
 
 
 

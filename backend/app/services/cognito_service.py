@@ -162,3 +162,13 @@ def cognito_logout(access_token: str) -> bool:
     except ClientError:
         pass 
     return True
+
+def cognito_delete_user(access_token: str) -> None:
+    client = _get_client()
+    try:
+        client.delete_user(AccessToken=access_token)
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "UserNotFoundException":
+            #Gone already
+            return
+        raise

@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import {useNavigate} from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import {useNavigate, Link} from 'react-router-dom';
 
 import useIndicators from '../../hooks/useIndicators';
+import { ROUTES } from '../../utils/constants';
 
 const INDICATORS = {
   capm: {
@@ -71,6 +72,39 @@ const INDICATORS = {
   },
 };
 
+const ALL_INDICATORS = Object.keys(INDICATORS);
+
+const presets = [
+  {id: 'popular', label: 'Most Popular', keys: ['capm', 'pe_ratio', 'sharpe', 'beta']},
+  {id: 'value', label: 'Value Investing', keys: ['pe_ratio', 'altman_z', 'capm']},
+  {id: 'risk', label: 'Risk & Volatility', keys: ['beta', 'sharpe', 'sortino', 'altman_z']},
+  {id: 'technical', label: 'Technical / Momentum', keys: ['rsi', 'beta']},
+  {id: 'all', label: 'All Indicators', keys: ALL_INDICATORS},
+];
+
+const STORAGE_KEY = 'analytics_indicator_pref';
+const CUSTOM_PRESETS_KEY = 'analytics_custom_presets';
+
+function loadIndicatorPrefs(){
+  try{
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch{
+    return {};
+  }
+}
+
+function loadCustomPresets(){
+  try{
+    const raw = window.localStorage.getItem(CUSTOM_PRESETS_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch{
+    return [];
+  }
+}
+
 const Tooltip = ({ text, children, align = 'left' }) => {
   const [show, setShow] = useState(false);
   return (
@@ -107,6 +141,13 @@ const InfoIcon = () => (
   <svg width="10" height="10" viewBox="0 0 12 12" fill="none" style={{ color: 'var(--text-ghost)', flexShrink: 0 }}>
     <circle cx="6" cy="6" r="5.5" stroke="currentColor"/>
     <path d="M6 5.5v3M6 4h.01" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+  </svg>
+);
+
+const EditIcon = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 20h9"/>
+    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/>
   </svg>
 );
 
@@ -150,7 +191,7 @@ const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
 
   const sig = meta.signal(result.value);
   return (
-    <button onClick={onSelect} className="flex flex-col gap-0.5 pt-1 text-left w-full cursor-pointer">
+    <button data-testid={`indicator-${indicatorKey}`} onClick={onSelect} className="flex flex-col gap-0.5 pt-1 text-left w-full cursor-pointer">
       <span className="text-sm font-mono font-semibold tabular-nums"
         style={{ color: color(sig), letterSpacing: '-0.02em' }}>
         {formatValue(result.value)}{result.unit}
@@ -162,8 +203,8 @@ const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
   );
 };
 
-const StockRow = ({ stock, loading, results, index, onCellSelect }) => (
-  <div className="terminal-card"
+const StockRow = ({ stock, loading, results, index, onCellSelect, visibleKeys, onEdit, onQuickRemove }) => (
+  <div className="glass-surface rounded-xl"
     style={{ animation: 'fadeSlideIn 0.3s ease both', animationDelay: `${index * 70}ms` }}>
     <div className="flex items-center gap-3 px-4 py-3"
       style={{ borderBottom: '1px solid var(--border-subtle)' }}>
@@ -175,16 +216,30 @@ const StockRow = ({ stock, loading, results, index, onCellSelect }) => (
         <p className="text-xs font-medium" style={{ color: 'var(--text-primary)' }}>{stock.ticker}</p>
         <p className="text-[10px]" style={{ color: 'var(--text-ghost)' }}>{stock.name}</p>
       </div>
+      <button onClick={onEdit} aria-label={`Customize indicators for ${stock.ticker}`}
+      className="flex items-center gap-1 text-[9px] font-mono px-2 py-1.5 rounded flex-shrink-0 cursor-pointer"
+      style={{color: 'var(--text-secondary)', border: '1px solid var(--border-mid)'}}>
+        <EditIcon />
+        Edit
+      </button>
     </div>
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7" style={{ overflow: 'visible' }}>
-      {Object.keys(INDICATORS).map((key, i) => (
-        <div key={key} className="px-3 pb-3" style={{ position: 'relative', overflow: 'visible', borderRight: i < 6 ? '1px solid var(--border-subtle)' : 'none' }}>
-          <Tooltip text={INDICATORS[key].tooltip} align={i >= 4 ? 'right' : 'left'}>
-            <span className="text-[9px] uppercase tracking-widest font-medium flex items-center gap-1 pt-3"
+    <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', overflow: 'visible'}}>
+      {visibleKeys.map((key, i) => (
+        <div key={key} className="px-3 pb-3" style={{ position: 'relative', overflow: 'visible', borderRight: i < visibleKeys.length - 1 ? '1px solid var(--border-subtle)' : 'none' }}>
+          <div className="flex items-start justify-between gap-1 pt-3">
+            <Tooltip text={INDICATORS[key].tooltip} align={i >= visibleKeys.length - 2 ? 'right' : 'left'}>
+            <span className="text-[9px] uppercase tracking-widest font-medium flex items-center gap-1"
               style={{ color: 'var(--text-ghost)' }}>
               {INDICATORS[key].label} <InfoIcon />
             </span>
           </Tooltip>
+          <button onClick={() => onQuickRemove(key)} aria-label={`Remove ${INDICATORS[key].label}`}
+            title={`Remove ${INDICATORS[key].label}`}
+            className="opacity-0 group-hover:opacity-100 text-[11px] leading-none flex-shrink-0 cursor-pointer"
+            style={{color: 'var(--text-ghost)'}}>
+            x
+          </button>
+          </div>
           <IndicatorCell indicatorKey={key} result={results?.[key]} loading={loading} onSelect={() => onCellSelect(key, stock.ticker)}
             />
         </div>
@@ -214,7 +269,7 @@ const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) =
     return (
       <div className="fixed inset-0 flex items-center justify-center p-4" style={{ background: 'rgba(0,0,0,0.6)', zIndex: 10000}} onClick={onClose} role="presentation">
         {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */}
-        <div className="terminal-card w-full max-w-lg max-h-[85vh] overflow-y-auto" style={{ background: 'var(--bg-primary,#0a0a0a)', border: '1px solid var(--border-subtle,#2a2a2a)' }} onClick={(e) => e.stopPropagation()}>
+        <div className="terminal-card w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
           <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid var(--border-subtle,#2a2a2a)' }}>
             <h2 className="text-xs font-medium uppercase tracking-widest" style={{ color: 'var(--text-primary,#e5e5e5)' }}>
               {meta.label}
@@ -228,7 +283,7 @@ const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) =
               <p className="text-[9px] uppercase tracking-widest font-medium mb-1.5" style={{ color: 'var(--text-ghost,#444)' }}>
                 Why it matters
               </p>
-              <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>
+              <p data-testid="indicator-explanation" className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>
                 {meta.why}
               </p>
             </div>
@@ -287,11 +342,243 @@ const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) =
     )
 }
 
+const IndicatorPickerModal = ({ticker, name, selectedKeys, customPresets, onSave, onApplyToAll, onSaveCustomPreset, onDeleteCustomPreset, onClose}) => {
+  const [draft, setDraft] = useState(selectedKeys);
+  const [newPresetName, setNewPresetName] = useState('');
+  const[applyToAll, setApplyToAll] = useState(false);
+
+  const toggle = (key) => {
+    setDraft((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  };
+
+  const canSave = draft.length > 0;
+  const canSavePreset = canSave && newPresetName.trim().length > 0;
+
+  const handleSaveAsPreset = () => {
+    const trimmed = newPresetName.trim();
+    if(!trimmed || draft.length === 0) return;
+    onSaveCustomPreset(trimmed, draft);
+    setNewPresetName('');
+  };
+
+  const handleSave = () => {
+    if(!canSave) return;
+    if(applyToAll) {
+      onApplyToAll(draft);
+    } else{
+      onSave(draft);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 flex items-center justify-center p-4" style={{background: 'rgba(0,0,0,0.6)', zIndex: 10000}} onClick={onClose} role="presentation">
+      <div className="terminal-card w-full max-w-md max-h-[85vh] overflow-y-auto" style={{background: 'var(--bg-primary,#0a0a0a)', border: '1px solid var(--border-subtle,#2a2a2a)'}} onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4" style={{borderBottom: '1px solid var(--border-subtle,#2a2a2a)'}}>
+          <div>
+            <h2 className="text-xs font-medium uppercase tracking-widest" style={{color: 'var(--text-primary,#e5e5e5)'}}>
+              Customize Indicators
+            </h2>
+            <p className="text-[10px] mt-0.5" style={{color: 'var(--text-ghost,#444)'}}>{ticker} - {name}</p>
+          </div>
+          <button onClick={onClose} className="w-5 h-5 flex items-center justify-center rounded text-xs leading-none" style={{color: 'var(--text-ghost,#444)', border: '1px solid var(--border-subtle,#2a2a2a)'}}>
+            x
+          </button>
+        </div>
+        <div className="px-5 py-4 flex flex-col gap-4">
+          <div>
+            <p className="text-[9px] uppercase tracking-widest font-medium mb-2" style={{color: 'var(--text-ghost,#444)'}}>
+              Presets
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {presets.map((preset) => (
+                <button key={preset.id} onClick={() => setDraft(preset.keys)}
+                className="text-[10px] font-mono px-2.5 py-1.5 rounded cursor-pointer"
+                style={{border: '1px solid var(--border-subtle,#2a2a2a)', color: 'var(--text-secondary,#a0a0a0)', background: 'transparent'}}>
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+            <Link to={ROUTES.AI_CHAT} target="_blank" rel="noopener noreferrer"
+            className="text-[9px] mt-2 inline-block underline"
+            style={{color: 'var(--accent-primary)'}}>
+              Not sure which preset to pick? Ask the AI Assistant
+            </Link>
+          </div>
+          {customPresets.length > 0 && (
+            <div>
+              <p className="text-[9px] uppercase tracking-widest font-medium mb-2" style={{color: 'var(--text-ghost,#444)'}}>
+                Your Presets
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {customPresets.map((preset) => (
+                  <span key={preset.id} className="inline-flex items-center rounded overflow-hidden" style={{border: '1px solid var(--border-subtle,#2a2a2a)'}}>
+                    <button onClick={() => setDraft(preset.keys)} className="text-[10px] font-mono pl-2.5 pr-1.5 py-1.5 cursor-pointer" style={{color: 'var(--text-secondary,#a0a0a0)', background: 'transparent', border: 'none'}}>
+                      {preset.label}
+                    </button>
+                    <button onClick={() => onDeleteCustomPreset(preset.id)} aria-label={`Delete preset ${preset.label}`} title={`Delete preset ${preset.label}`} className="text-[10px] pr-2 cursor-pointer" style={{color: 'var(--text-ghost,#444)', background: 'transparent', border: 'none'}}>
+                      x
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[9px] uppercase tracking-widest font-medium" style={{color: 'var(--text-ghost,#444)'}}>
+                Indicators
+              </p>
+              <button onClick={() => setDraft([])} className="text-[9px] cursor-pointer" style={{color: 'var(--text-ghost,#444)'}}>
+                Clear All
+              </button>
+            </div>
+            <div className="flex flex-col gap-1">
+              {ALL_INDICATORS.map((key) => {
+                const meta = INDICATORS[key];
+                const isSelected = draft.includes(key);
+                return(
+                  <button key={key} onClick={() => toggle(key)}
+                  className="flex items-start gap-2.5 px-3 py-2.5 rounded text-left cursor-pointer"
+                  style={{background: isSelected ? 'var(--border-subtle,#2a2a2a)' : 'transparent',
+                    border: isSelected ? '1px solid var(--text-ghost,#444)' : '1px solid transparent',
+                  }}>
+                    <span className="w-3.5 h-3.5 rounded flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style={{border:'1px solid var(--text-ghost,#444)', background: isSelected ? 'var(--text-primary,#e5e5e5)' : 'transparent'}}>
+                      {isSelected && (
+                        <svg width="8" height="8" viewBox="0 0 12 12" fill="none">
+                          <path d="M2 6l3 3 5-6" stroke="var(--bg-primary,#0a0a0a)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </span>
+                    <span className="flex flex-col gap-0.5">
+                      <span className="text-[11px] font-medium" style={{color: 'var(--text-primary,#e5e5e5)'}}>{meta.label}</span>
+                      <span className="text-[9px] leading-tight" style={{color: 'var(--text-ghost,#444)'}}>{meta.tooltip}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div>
+            <p className="text-[9px] uppercase tracking-widest font-medium mb-2" style={{color: 'var(--text-ghost,#444)'}}>
+              Save Current Selection As Preset
+            </p>
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                value={newPresetName}
+                onChange={(e) => setNewPresetName(e.target.value)}
+                placeholder="Preset name"
+                className="flex-1 text-[10px] font-mono px-2.5 py-1.5 rounded"
+                style={{background: 'transparent', border: '1px solid var(--border-subtle,#2a2a2a)', color: 'var(--text-primary,#e5e5e5)'}}
+                />
+                <button onClick={handleSaveAsPreset} disabled={!canSavePreset} className="text-[10px] font-mono px-2.5 py-1.5 rounded" style={{border: '1px solid var(--border-subtle,#2a2a2a)', color: canSavePreset ? 'var(--text-primary,#e5e5e5)' : 'var(--text-ghost,#444)',
+                  cursor: canSavePreset ? 'pointer' : 'not-allowed',
+                  background: 'transparent',
+                }}>
+                  Add
+                </button>
+            </div>
+          </div>
+          {!canSave && (
+            <p className="text-[10px]" style={{color: 'var(--signal-negative,#ef4444)'}}>
+              Select at least one indicator.
+            </p>
+          )}
+          <div className="flex flex-col gap-2 pt-1">
+            <label className="flex items-center gap-3 text-[10px] cursor-pointer" style={{color: 'var(--text-secondary,#a0a0a0)'}}>
+              <input
+                type="checkbox"
+                checked={applyToAll}
+                onChange={(e) => setApplyToAll(e.target.checked)}
+                style={{accentColor: 'var(--text-primary,#e5e5e5)'}}
+                />
+                Apply to all holdings instead of just {ticker}
+            </label>
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button onClick={onClose} className="text-[10px] font-mono px-3.5 py-2 rounded cursor-pointer"
+            style={{color: 'var(--text-ghost,#444)', border: '1px solid var(--border-subtle,#2a2a2a)'}}>
+              Cancel
+            </button>
+            <button onClick={handleSave} disabled={!canSave} className="text-[10px] font-mono px-3.5 py-2 rounded"
+              style={{
+                background: canSave ? 'var(--text-primary,#e5e5e5)' : 'var(--border-subtle,#2a2a2a)',
+                color: canSave ? 'var(--bg-primary,#0a0a0a)' : 'var(--text-ghost,#444)',
+                cursor: canSave ? 'pointer' : 'not-allowed',
+              }}>
+                {applyToAll ? 'Apply to All' : 'Save'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default function Analytics() {
   const { stockData, loading, error } = useIndicators();
   const navigate = useNavigate();
   const stocks = Object.values(stockData).map((s) => s.results).filter(Boolean);
   const [selected, setSelected] = useState(null);
+  const [editingTicker, setEditingTicker] = useState(null);
+  const [indicatorPrefs, setIndicatorPrefs] = useState(loadIndicatorPrefs);
+  const [customPresets, setCustomPresets] = useState(loadCustomPresets);
+
+  useEffect(() => {
+    try{
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(indicatorPrefs));
+    }
+    catch{
+      //Local storage not available
+    }
+  }, [indicatorPrefs]);
+
+  useEffect(() => {
+    try{
+      window.localStorage.setItem(CUSTOM_PRESETS_KEY, JSON.stringify(customPresets));
+    }
+    catch{
+      //Local Storage not available
+    }
+  }, [customPresets]);
+
+  const getVisibleKeys = (ticker) => {
+    const saved = indicatorPrefs[ticker];
+    return saved && saved.length > 0 ? saved : ALL_INDICATORS;
+  }
+
+  const updateVisibleKeys = (ticker, keys) => {
+    setIndicatorPrefs((prev) => ({...prev, [ticker]: keys}));
+  };
+
+  const handleQuickRemove = (ticker, key) => {
+    const current = getVisibleKeys(ticker);
+    const next = current.filter((k) => k !== key);
+    if(next.length === 0) return;
+    updateVisibleKeys(ticker, next);
+  }
+
+  const handleApplyToAllHoldings = (keys) => {
+    setIndicatorPrefs((prev) => {
+      const next = {...prev};
+      stocks.forEach((s) => {
+        next[s.ticker] = keys;
+      });
+      return next;
+    });
+  };
+
+  const handleSaveCustomPreset = (label, keys) => {
+    const id = `custom-${Date.now()}`;
+    setCustomPresets((prev) => [...prev, {id, label, keys}]);
+  };
+
+  const handleDeleteCustomPreset = (id) => {
+    setCustomPresets((prev) => prev.filter((p) => p.id !== id));
+  }
+
+  const editingStock = stocks.find((s) => s.ticker === editingTicker)
 
   return (
     <>
@@ -306,10 +593,15 @@ export default function Analytics() {
           style={{ borderBottom: '1px solid var(--border-subtle)' }}>
           <div>
             <h1 className="text-xs font-medium uppercase tracking-widest"
-              style={{ color: 'var(--text-primary,#e5e5e5)' }}>Analytics</h1>
+              style={{ color: 'var(--text-page,#e5e5e5)' }}>Analytics</h1>
             <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-ghost,#444)' }}>
               How your holdings are doing - hover a label for a quick explanation, click a value to learn more
               </p>
+              <Link to={ROUTES.AI_CHAT} target="_blank" rel="noopener noreferrer"
+              className="text-[10px] mt-1 inline-block underline"
+              style={{ color: 'var(--accent-primary)' }}>
+                Still not understanding the indicators? Ask the AI Assistant
+              </Link>
           </div>
           <span className="text-[10px] px-2 py-1 rounded font-mono"
             style={{ color: 'var(--text-ghost)', border: '1px solid var(--border-subtle)' }}>
@@ -318,7 +610,7 @@ export default function Analytics() {
         </div>
 
         {error && (
-          <div className="terminal-card text-center p-8" role="alert">
+          <div className="glass-surface rounded-xl text-center p-8" role="alert">
             <p className="text-xs font-medium" style={{ color: 'var(--signal-negative)' }}>
               Failed to load indicators
             </p>
@@ -326,7 +618,7 @@ export default function Analytics() {
           </div>
         )}
         {!loading && !error && stocks.length === 0 && (
-          <div className="terminal-card text-center p-8">
+          <div className="glass-surface rounded-xl text-center p-8">
             <p className="text-xs font-medium" style={{color: 'var(--text-primary,#e5e5e5)'}}>
               No Holdings
               </p>
@@ -335,7 +627,7 @@ export default function Analytics() {
               </p>
               <button onClick={() => navigate('/Portfolio')}
                className="mt-4 text-[10px] font-mono px-4 py-2 rounded" 
-               style={{background:'var(--text-primary,#e5e5e5)',color:'var(--bg-primary,#0a0a0a)'}}>
+               style={{background:'var(--accent-primary)',color:'var(--text-on-accent)'}}>
                 Import Holdings
                </button>
           </div>
@@ -345,7 +637,7 @@ export default function Analytics() {
           {loading
             ? Array.from({ length: 2 }).map((_, i) => (
               // eslint-disable-next-line react/no-array-index-key -- static skeleton count, never reordered
-                <div key={i} className="terminal-card overflow-hidden animate-pulse">
+                <div key={i} className="glass-surface rounded-xl overflow-hidden animate-pulse">
                   <div className="h-14 px-4 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
                     <div className="h-3 w-16 rounded mb-2" style={{ background: 'var(--border-subtle)' }}/>
                     <div className="h-2.5 w-24 rounded" style={{ background: 'var(--border-subtle)' }}/>
@@ -365,7 +657,10 @@ export default function Analytics() {
                   index={i}
                   loading={false}
                   results={stock}
+                  visibleKeys={getVisibleKeys(stock.ticker)}
                   onCellSelect={(indicatorKey, ticker) => setSelected({ indicatorKey, ticker })}
+                  onEdit={() => setEditingTicker(stock.ticker)}
+                  onQuickRemove={(key) => handleQuickRemove(stock.ticker, key)}
                 />
               ))
           }
@@ -378,6 +673,19 @@ export default function Analytics() {
         stocks={stocks}
         onClose={() => setSelected(null)}
       />
+      {editingTicker && (
+        <IndicatorPickerModal
+        ticker={editingTicker}
+        name={editingStock?.name}
+        selectedKeys={getVisibleKeys(editingTicker)}
+        customPresets={customPresets}
+        onSave={(keys) => {updateVisibleKeys(editingTicker, keys); setEditingTicker(null);}}
+        onApplyToAll={(keys) => {handleApplyToAllHoldings(keys); setEditingTicker(null);}}
+        onSaveCustomPreset={handleSaveCustomPreset}
+        onDeleteCustomPreset={handleDeleteCustomPreset}
+        onClose={() => setEditingTicker(null)}
+        />
+      )}
     </>
   );
 }

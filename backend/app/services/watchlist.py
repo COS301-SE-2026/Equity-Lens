@@ -1,20 +1,32 @@
 import logging
 
+from fastapi import HTTPException
 import yfinance as yf
 
 from app.repositories.watchlist import add_watchlist,get_watchlist,remove_watchlist
+from app.services.market_data_service import _cents_to_major, WATCHLIST_QUOTE_TYPES
 
 logger = logging.getLogger(__name__)
 
 def add_watchlist_service(database,user_id,data):
     company_name = None
     sector = None
+    stock_info = None
     try:
         stock_info = yf.Ticker(data.ticker).info
-        company_name = stock_info.get("longName")
-        sector = stock_info.get("sector")
     except Exception as exc:
         logger.warning(f"yfinance lookup failed for {data.ticker}: {exc}")
+
+    if stock_info:
+        quote_type = stock_info.get("quoteType")
+        if quote_type and quote_type not in WATCHLIST_QUOTE_TYPES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{data.ticker} is a {quote_type.lower()}, not a stock, ETF, or index, "
+                       "so it can't be priced or displayed here.",
+            )
+        company_name = stock_info.get("longName")
+        sector = stock_info.get("sector")
 
     add_watchlist(database,user_id,data.ticker,company_name,sector)
 
@@ -34,6 +46,8 @@ def get_watchlist_service(database,user_id):
         try:
             getInfo = yf.Ticker(items.ticker).info
             current_price = getInfo.get("currentPrice")
+            if current_price is not None:
+                current_price = current_price / _cents_to_major(items.ticker)
             change_percent = getInfo.get("regularMarketChangePercent")
         except Exception as exc:
             logger.warning(f"yfinance lookup failed for {items.ticker}: {exc}")
