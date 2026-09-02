@@ -66,13 +66,15 @@ const Dashboard = () => {
   const holdings = portfolioData?.holdings ?? [];
   
   const perfSeries = (portfolioData?.performanceHistory ?? []).map(
-    /** @param {{ date?: string, name?: string, value: number, benchmark?: number }} point
+    /** @param {{ date?: string, name?: string, value: number, benchmark?: number,
+     *            twr_index?: number }} point
      *  @param {number} i */
     (point, i) => ({
       date: point.date,
       name: point.name ?? point.date?.slice(5, 7) ?? `M${i + 1}`,
       value: point.value,
       benchmark: point.benchmark,
+      twr_index: point.twr_index,
     }),);
 
   const contributionSeries = portfolioData?.contributionsSeries ?? [];

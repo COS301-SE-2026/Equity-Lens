@@ -76,8 +76,6 @@ def xirr(flows: list[tuple[date, float]], guess: float = 0.1) -> float | None:
         if abs(next_rate - rate) < XIRR_TOL:
             return next_rate * 100
         rate = next_rate
-    else:
-        return rate * 100
 
     fallback = _xirr_bisect(flows, t0)
     if fallback is None:
@@ -86,22 +84,32 @@ def xirr(flows: list[tuple[date, float]], guess: float = 0.1) -> float | None:
     return fallback * 100
 
 
-def time_weighted_return_pct(
+def time_weighted_index(
     snapshots: list[tuple[date, float]], flows: list[tuple[date, float]]
-) -> float | None:
+) -> list[tuple[date, float]]:
     if len(snapshots) < 2:
-        return None
+        return []
 
     snapshots = sorted(snapshots)
     cumulative = 1.0
-    for (prev_date, prev_value), (this_date, this_value) in zip(snapshots, snapshots[1:]):
-        if prev_value <= 0:
-            continue
-        period_flow = sum(amt for d, amt in flows if prev_date < d <= this_date)
-        sub_return = (this_value - period_flow) / prev_value - 1.0
-        cumulative *= 1.0 + sub_return
+    index = [(snapshots[0][0], 100.0)]
 
-    return (cumulative - 1.0) * 100
+    for (prev_date, prev_value), (this_date, this_value) in zip(snapshots, snapshots[1:]):
+        if prev_value > 0:
+            period_flow = sum(amt for d, amt in flows if prev_date < d <= this_date)
+            cumulative *= (this_value - period_flow) / prev_value
+        index.append((this_date, cumulative * 100.0))
+
+    return index
+
+
+def time_weighted_return_pct(
+    snapshots: list[tuple[date, float]], flows: list[tuple[date, float]]
+) -> float | None:
+    index = time_weighted_index(snapshots, flows)
+    if not index:
+        return None
+    return (index[-1][1] / index[0][1] - 1.0) * 100
 
 
 def _walk_average_cost(transactions: list[dict]) -> dict[str, dict]:

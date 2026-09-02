@@ -103,14 +103,23 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
   const gainPct = returnsData.simple_return_pct ?? null;
   const holdingsCount = returnsData.holdings_count ?? 0;
   const pricedLiveCount = returnsData.priced_live_count ?? 0;
-  const allUnpriced = holdingsCount > 0 && pricedLiveCount === 0;
+  const pricedCount = returnsData.priced_count ?? pricedLiveCount;
+  const statementDate = portfolioData?.statementDate ?? null;
+  const asAt = statementDate ? ` as at ${statementDate}` : '';
+  const allUnpriced = holdingsCount > 0 && pricedCount === 0;
   const partiallyUnpriced = holdingsCount > 0 && pricedLiveCount > 0 && pricedLiveCount < holdingsCount;
+  const onStatementPrices = holdingsCount > 0 && pricedLiveCount === 0 && pricedCount > 0;
   const gainKnown = hasHoldings && !allUnpriced;
   const unpricedCount = holdingsCount - pricedLiveCount;
 
-  const gainHelp = allUnpriced
-    ? "None of your holdings are currently priced live, so a gain figure can't be calculated yet."
-    : 'Unrealised gain on your currently-held positions only. Realised gains from past sales and dividends received are shown separately.';
+  let gainHelp;
+  if (allUnpriced) {
+    gainHelp = "None of your holdings could be priced, so a gain figure can't be calculated yet.";
+  } else if (onStatementPrices) {
+    gainHelp = `Measured against your statement's closing prices${asAt}, not live quotes - no live price was available.`;
+  } else {
+    gainHelp = 'Unrealised gain on your currently-held positions only. Realised gains from past sales and dividends received are shown separately.';
+  }
   const rawDailyValue = portfolioData?.summary?.daily_change_value;
   const rawDailyPct = portfolioData?.summary?.daily_change_pct;
   const dailyChangeKnown = rawDailyValue !== null && rawDailyValue !== undefined
@@ -147,7 +156,9 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
           </div>
 
           {hasHoldings ? ( <div className="sm:text-right"> <div className="flex items-center gap-1 font-mono text-[10px] tracking-widest sm:justify-end" style={{ color: 'var(--text-ghost)' }}> <span>Portfolio Value</span>
-                <HelpTooltip text="Live value of your holdings, or cost where a live price isn't available." />
+                <HelpTooltip text={onStatementPrices
+                  ? `Valued at your statement's closing prices${asAt}, not live quotes.`
+                  : "Live value of your holdings, or cost where a live price isn't available."} />
               </div>
               <div className="mt-1 font-mono font-semibold leading-none text-[32px] sm:text-[40px]" style={{ color: 'var(--text-primary)' }}> <Money as="span">{zarFull(portfolioValue)}</Money>
               </div>

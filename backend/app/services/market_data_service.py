@@ -27,14 +27,18 @@ def get_current_price(symbol: str) -> CurrentPriceResponse:
         raise ValueError(f"No data found for symbol: {symbol}")
 
     divisor = _cents_to_major(symbol)
-    latest = history.iloc[-1]
+    priced = history[history["Close"].notna()]
+    if priced.empty:
+        raise ValueError(f"No usable close price for symbol: {symbol}")
+
+    latest = priced.iloc[-1]
     price = float(latest["Close"]) / divisor
     volume = int(latest["Volume"]) if not pd.isna(latest["Volume"]) else 0
     previous_close = latest.get("Prev Close")
 
     if previous_close is None or pd.isna(previous_close):
-        if len(history) >= 2:
-            previous_close = float(history.iloc[-2]["Close"]) / divisor
+        if len(priced) >= 2:
+            previous_close = float(priced.iloc[-2]["Close"]) / divisor
         else:
             previous_close = price
     else:

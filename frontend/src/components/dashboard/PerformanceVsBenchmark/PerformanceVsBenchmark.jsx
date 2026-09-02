@@ -122,7 +122,7 @@ const RangeButton = ({ range, active, onClick }) => {
 
 /**
  * @param {{
- *   series: {date:string, name:string, value:number, benchmark?:number}[],
+ *   series: {date:string, name:string, value:number, benchmark?:number, twr_index?:number}[],
  *   contributionSeries?: {date:string, name:string, portfolio_value:number, cumulative_net_contributions:number, cumulative_market_gain:number}[],
  *   attribution?: { contributors: any[], drags: any[], todayReturn: number },
  *   benchmarkLabel?: string,
@@ -251,7 +251,7 @@ const PerformanceVsBenchmark = ({
       </div>
 
       <div className="grid grid-cols-3 gap-4 px-5 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <Stat label="Portfolio return" value={stats.portAvailable ? stats.portReturn : buildingHistoryLabel(stats.historyDays)} tone={portTone} help="Time-weighted return - removes the effect of when you deposited or withdrew money, so it can be fairly compared to an index."/>
+        <Stat label="Portfolio return" value={stats.portAvailable ? stats.portReturn : buildingHistoryLabel(stats.historyDays)} tone={portTone} help="Time-weighted return - how the money grew while it was invested, with purchases and sales taken back out, so it can be fairly compared to an index."/>
         <Stat label={`${benchmarkLabel} return`} value={stats.benchReturn} tone="neutral" loading={!stats.benchAvailable} />
         <Stat
           label="Vs benchmark"

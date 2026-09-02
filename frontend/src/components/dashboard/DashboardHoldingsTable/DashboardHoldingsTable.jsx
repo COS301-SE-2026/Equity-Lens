@@ -8,6 +8,8 @@ import Money from '../../common/Money/Money';
 import { zar } from '../../../utils/currency';
 import { getConcRisk, buildHoldingsQuestions, buildSectorQuestions } from '../../../utils/dashboardInsights';
 import SectorAllocation from '../SectorAllocation/SectorAllocation';
+const COL = { risk: 'w-[68px]', weight: 'w-[44px]', today: 'w-[60px]', value: 'w-[84px]' };
+const EXPAND_COL = 'w-5';
 
 /** @param {string|null|undefined} iso */
 const formatMonthYear = (iso) => {
@@ -128,16 +130,19 @@ const DashboardHoldingsTable = ({ holdings, sectorData, marketContext, flashHold
               <ExposureStat label="Sectors" value={String(sectorData.length)} />
             </div>
 
-            <div className="mb-1 flex items-center justify-between px-2">
-              <span className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
-                Holding
-              </span>
-              <div className="flex items-center gap-2.5 font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
-                <span className="w-[68px] text-right">Risk</span>
-                <span className="w-[44px] text-right">Weight</span>
-                <span className="w-[60px] text-right">Today</span>
-                <span className="w-[84px] text-right">Value</span>
+            <div className="mb-1 flex w-full items-center gap-1">
+              <div className="flex flex-1 items-center justify-between px-2">
+                <span className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+                  Holding
+                </span>
+                <div className="flex items-center gap-2.5 font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+                  <span className={`${COL.risk} text-right`}>Risk</span>
+                  <span className={`${COL.weight} text-right`}>Weight</span>
+                  <span className={`${COL.today} text-right`}>Today</span>
+                  <span className={`${COL.value} text-right`}>Value</span>
+                </div>
               </div>
+              <span aria-hidden="true" className={`${EXPAND_COL} shrink-0`} />
             </div>
 
             <div className="max-h-[420px] flex-1 space-y-0.5 overflow-y-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
@@ -148,6 +153,7 @@ const DashboardHoldingsTable = ({ holdings, sectorData, marketContext, flashHold
               ) : (
                 sorted.map((h) => {
                   const weight = totalValue ? ((h.value ?? 0) / totalValue) * 100 : 0;
+                  const dailyKnown = h.daily_change_pct !== null && h.daily_change_pct !== undefined;
                   const positive = (h.daily_change_pct ?? 0) >= 0;
                   const holdingSector = h.sector ?? 'Other';
                   const isExpanded = expandedTickers.has(h.ticker);
@@ -169,17 +175,16 @@ const DashboardHoldingsTable = ({ holdings, sectorData, marketContext, flashHold
                           </div>
                           <div className="flex items-center gap-2.5 text-right">
                             <span
-                              className="w-[68px] rounded px-1.5 py-0.5 text-center font-mono text-[9px] font-semibold tracking-widest"
+                              className={`${COL.risk} rounded px-1.5 py-0.5 text-right font-mono text-[9px] font-semibold tracking-widest`}
                               style={{ color: getConcRisk(weight).color, background: 'var(--surface-hover)' }}
                               title={`${getConcRisk(weight).label} concentration - ${weight.toFixed(1)}% of your book`}
                             >
                               {getConcRisk(weight).label}
                             </span>
-                            <span className="w-[44px] font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>{weight.toFixed(1)}%</span>
-                            <span className="w-[60px] font-mono text-[11px]" style={{ color: positive ? 'var(--signal-positive)' : 'var(--signal-negative)' }}>
-                              {positive ? '+' : ''}{(h.daily_change_pct ?? 0).toFixed(2)}%
+                            <span className={`${COL.weight} font-mono text-[11px]`} style={{ color: 'var(--text-ghost)' }}>{weight.toFixed(1)}%</span>
+                            <span className={`${COL.today} font-mono text-[11px]`}title={dailyKnown ? undefined : `No live price for ${h.ticker} today, so there's no daily move to show.`} style={{ color: dailyKnown ? (positive ? 'var(--signal-positive)' : 'var(--signal-negative)') : 'var(--text-ghost)' }}> {dailyKnown ? `${positive ? '+' : ''}${h.daily_change_pct.toFixed(2)}%` : '-'}
                             </span>
-                            <Money as="span" className="w-[84px] font-mono text-[12px] font-semibold">{zar(h.value ?? 0)}</Money>
+                            <Money as="span" className={`${COL.value} font-mono text-[12px] font-semibold`}>{zar(h.value ?? 0)}</Money>
                           </div>
                         </button>
 
@@ -188,7 +193,7 @@ const DashboardHoldingsTable = ({ holdings, sectorData, marketContext, flashHold
                           onClick={() => toggleExpanded(h.ticker)}
                           aria-expanded={isExpanded}
                           aria-label={isExpanded ? 'Hide cost basis and holding period' : 'Show cost basis and holding period'}
-                          className="shrink-0 rounded-md p-1 transition-colors hover:bg-[var(--surface-hover)]"
+                          className={`${EXPAND_COL} shrink-0 rounded-md p-1 transition-colors hover:bg-[var(--surface-hover)]`}
                         >
                           <ChevronDown
                             size={12}

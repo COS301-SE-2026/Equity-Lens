@@ -97,7 +97,7 @@ export function filterByRange(series, range) {
 }
 
 /**
- * @param {{ name: string, value: number, benchmark?: number }[]} series
+ * @param {{ name: string, value: number, benchmark?: number, twr_index?: number }[]} series
  * @param {{ historyDays?: number }} [meta]
  */
 export function buildChartStats(series, meta = {}) {
@@ -107,14 +107,14 @@ export function buildChartStats(series, meta = {}) {
     return { portReturn: '-', portAvailable: false, historyDays, benchReturn: '-', diff: '-', diffPct: 0, bestDay: '-', worstDay: '-', benchAvailable: false };
   }
 
-  /** @param {'value'|'benchmark'} key */
+  /** @param {'twr_index'|'benchmark'} key */
   const cumulativeReturn = (key) => {
   const first = series.find((p) => typeof p[key] === 'number');
   const last = [...series].reverse().find((p) => typeof p[key] === 'number');
   if (!first || !last || first === last || !first[key] || !last[key]) return null;
   return ((last[key] - first[key]) / first[key]) * 100;};
 
-  const portPct = cumulativeReturn('value');
+  const portPct = cumulativeReturn('twr_index');
   const benchPct = cumulativeReturn('benchmark');
   const portAvailable = portPct !== null;
   const benchAvailable = benchPct !== null && portAvailable;
@@ -124,9 +124,10 @@ export function buildChartStats(series, meta = {}) {
   let worst = { pct: Infinity, name: '' };
 
   for (let i = 1; i < series.length; i++) {
-    const prev = series[i - 1].value;
-    if (!prev) continue;
-    const pct = ((series[i].value - prev) / prev) * 100;
+    const prev = series[i - 1].twr_index;
+    const now = series[i].twr_index;
+    if (!prev || !now) continue;
+    const pct = ((now - prev) / prev) * 100;
     if (pct > best.pct) best = { pct, name: series[i].name };
     if (pct < worst.pct) worst = { pct, name: series[i].name };
   }
