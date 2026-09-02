@@ -106,6 +106,8 @@ def _save_price_history(ticker: str, history: pd.DataFrame) -> None:
                 if hasattr(timestamp, "to_pydatetime")
                 else timestamp.date()
             )
+            if pd.isna(row["Close"]):
+                continue
             volume = float(row["Volume"]) if not pd.isna(row["Volume"]) else 0.0
             prev_close = float(row["Prev Close"]) if "Prev Close" in row and not pd.isna(row["Prev Close"]) else float(row["Close"])
             existing = (
@@ -220,6 +222,18 @@ def _refresh_price_history(ticker: str, period: str, force_live: bool = False) -
                 return _load_local_price_history(ticker)
         except Exception as exc:
             print(f"Yahoo refresh failed for {ticker}: {exc}")
+    else:
+        if ticker.upper().endswith(".JO"):
+            skipped = "Alpha Vantage does not cover .JO"
+        elif settings.alpha_vantage_api_key:
+            skipped = "Alpha Vantage failed above"
+        else:
+            skipped = "no ALPHA_VANTAGE_API_KEY"
+        print(
+            f"No price source available for {ticker}: {skipped}, and the Yahoo fallback is "
+            "off (set ALLOW_LIVE_MARKET_FALLBACK=true to enable it). Returning no data - "
+            "holdings will fall back to cost basis."
+        )
     return pd.DataFrame()
 
 def get_cached_price_history(ticker: str, period: str = "1y", force_live: bool = False) -> pd.DataFrame:

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from datetime import date, timedelta
 from uuid import UUID
 
@@ -8,6 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.market_data import MarketData
+from app.repositories.holdings_repository import HoldingsRepository
 from app.repositories.portfolio_repository import PortfolioRepository
 from app.services.instruments import INVALID_TICKER_MARKERS
 from app.services.market_data_service import _cents_to_major
@@ -60,7 +62,11 @@ def _closes_by_day(
 
     observed: dict[str, dict[date, float]] = {}
     for row in rows:
-        observed.setdefault(row.ticker, {})[row.date] = float(row.close)
+        close = float(row.close)
+        if not math.isfinite(close):
+            logger.warning("ignoring unusable close for %s on %s", row.ticker, row.date)
+            continue
+        observed.setdefault(row.ticker, {})[row.date] = close
 
     missing = sorted(ticker for ticker in tickers if ticker not in observed)
     if missing:
@@ -77,22 +83,33 @@ def _closes_by_day(
     return prices
 
 
-def _apply(quantities: dict[str, float], txn: dict) -> None:
+def _closing_quantities(db: Session, portfolio_id: UUID) -> dict[str, float]:
+    quantities: dict[str, float] = {}
+    for holding in HoldingsRepository(db).get_by_portfolio_ids([portfolio_id]):
+        ticker = (holding.ticker or holding.instrument_name or "").strip().upper()
+        if not ticker or ticker in INVALID_TICKER_MARKERS:
+            continue
+        quantities[ticker] = quantities.get(ticker, 0.0) + float(holding.quantity or 0)
+    return quantities
+
+
+def _undo(quantities: dict[str, float], txn: dict) -> None:
     ticker = txn["ticker"]
     held = quantities.get(ticker, 0.0)
 
-    if txn["side"] == "buy":
+    if txn["side"] == "sell":
         quantities[ticker] = held + txn["quantity"]
         return
 
-    sold = txn["quantity"]
-    if sold > held:
+    bought = txn["quantity"]
+    if bought > held:
         logger.warning(
-            "sale exceeds held quantity for %s (selling %s, held %s)",
-            ticker, sold, held,
+            "buy exceeds the position held after it for %s (buying %s, held %s) - the "
+            "transaction ledger and the closing holdings disagree",
+            ticker, bought, held,
         )
-        sold = held
-    quantities[ticker] = held - sold
+        bought = held
+    quantities[ticker] = held - bought
 
 
 def _usable(txn: dict, today: date) -> bool:
@@ -121,17 +138,18 @@ def rebuild_snapshots(db: Session, portfolio_id: UUID, txns: list[dict]) -> int:
     if not days:
         return 0
 
-    prices = _closes_by_day(db, {txn["ticker"] for txn in dated}, first_day, days)
+    closing = _closing_quantities(db, portfolio_id)
+    prices = _closes_by_day(db, {txn["ticker"] for txn in dated} | set(closing), first_day, days)
     if not prices:
         return 0
 
     repo = PortfolioRepository(db)
-    quantities: dict[str, float] = {}
-    next_txn = 0
-    for day in days:
-        while next_txn < len(dated) and dated[next_txn]["date"] <= day:
-            _apply(quantities, dated[next_txn])
-            next_txn += 1
+    quantities = dict(closing)
+    next_txn = len(dated) - 1
+    for day in reversed(days):
+        while next_txn >= 0 and dated[next_txn]["date"] > day:
+            _undo(quantities, dated[next_txn])
+            next_txn -= 1
 
         total = 0.0
         for ticker, held in quantities.items():
@@ -139,5 +157,5 @@ def rebuild_snapshots(db: Session, portfolio_id: UUID, txns: list[dict]) -> int:
                 total += held * prices[ticker][day]
 
         repo.upsert_snapshot(portfolio_id, day, round(total, 2), None)
-    db.flush()
+
     return len(days)
