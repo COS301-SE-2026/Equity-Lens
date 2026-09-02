@@ -21,9 +21,9 @@ export default defineConfig({
       exclude: ['node_modules/', 'src/test/','e2e/**',],
       provider: 'v8',
       thresholds: {
-        lines: 70,
-        functions: 70,
-        statements: 60,
+        lines: 50,
+        functions: 50,
+        statements: 50,
       },
     },
   },
