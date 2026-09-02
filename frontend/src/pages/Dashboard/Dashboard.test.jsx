@@ -71,9 +71,9 @@ vi.mock('../../hooks/usePortfolio', () => ({
         ],
       },
       performanceHistory: [
-        { date: '2026-04-01', value: 790000, benchmark: 775000 },
-        { date: '2026-05-01', value: 805000, benchmark: 782000 },
-        { date: '2026-06-01', value: 847231, benchmark: 800000 },
+        { date: '2026-04-01', value: 790000, benchmark: 775000, twr_index: 100.0 },
+        { date: '2026-05-01', value: 805000, benchmark: 782000, twr_index: 103.16 },
+        { date: '2026-06-01', value: 847231, benchmark: 800000, twr_index: 107.24 },
       ],
     },
     loading: false,
@@ -138,7 +138,7 @@ describe('Dashboard', () => {
   it('shows a takeaway plus a why', () => {
     renderDashboard();
     expect(screen.getByText(/outperformed the jse alsi by 4.0%/i)).toBeInTheDocument();
-    expect(screen.getByText(/today's biggest mover npn is a contributor/i)).toBeInTheDocument();
+    expect(screen.getByText(/npn was today's biggest contributor/i)).toBeInTheDocument();
     expect(screen.getByText('ALL')).toBeInTheDocument();
   });
 
@@ -151,7 +151,8 @@ describe('Dashboard', () => {
 
   it('splits sector allocation and all positions into two independent cards', () => {
     renderDashboard();
-    expect(screen.getByText('Sector Allocation')).toBeInTheDocument();
+    const sectorPanel = document.getElementById('sector-allocation');
+    expect(within(sectorPanel).getAllByText('Sectors').length).toBeGreaterThan(0);
     expect(screen.getByText('All Positions')).toBeInTheDocument();
     expect(screen.getByTitle(/High concentration - \d+\.\d% of your book/i)).toBeInTheDocument();
     expect(screen.queryByText(/^largest$/i)).not.toBeInTheDocument();
