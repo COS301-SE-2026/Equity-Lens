@@ -50,6 +50,9 @@ def test_save_portfolios():
         account_number = "EE154",
         portfolio_name = "SouthAfrica",
         currency = "ZAR",
+        statement_start_date="2024-01-01",
+        statement_end_date="2024-12-31",
+        account_type="TFSA",
     )
 
     result = save_portfolios(
