@@ -37,11 +37,13 @@ def serialize_indicator_value(value, unit, fallback_reason="Data could not be re
 def serialize_indicator_row(row: dict) -> dict:
     normalized = {
         "ticker": row.get("ticker"),
-        "name": row.get("name"),
+        "name": row.get("name"),   
+        "status": row.get("status", "ok"),    
         "live_fetch": row.get("live_fetch", False),
     }
 
     if row.get("error"):
+        normalized["status"] = "error"
         for key in INDICATOR_UNITS:
             normalized[key] = {"status": "error"}
         normalized["error"] = row["error"]
