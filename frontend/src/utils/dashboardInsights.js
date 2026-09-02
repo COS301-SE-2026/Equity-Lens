@@ -107,14 +107,14 @@ export function buildChartStats(series, meta = {}) {
     return { portReturn: '-', portAvailable: false, historyDays, benchReturn: '-', diff: '-', diffPct: 0, bestDay: '-', worstDay: '-', benchAvailable: false };
   }
 
-  /** @param {'twr_index'|'benchmark'} key */
+  /** @param {'twr_index'|'benchmark' |'value'} key */
   const cumulativeReturn = (key) => {
   const first = series.find((p) => typeof p[key] === 'number');
   const last = [...series].reverse().find((p) => typeof p[key] === 'number');
   if (!first || !last || first === last || !first[key] || !last[key]) return null;
   return ((last[key] - first[key]) / first[key]) * 100;};
 
-  const portPct = cumulativeReturn('twr_index');
+  const portPct = cumulativeReturn('twr_index') ?? cumulativeReturn('value');
   const benchPct = cumulativeReturn('benchmark');
   const portAvailable = portPct !== null;
   const benchAvailable = benchPct !== null && portAvailable;
@@ -123,9 +123,11 @@ export function buildChartStats(series, meta = {}) {
   let best = { pct: -Infinity, name: '' };
   let worst = { pct: Infinity, name: '' };
 
-  for (let i = 1; i < series.length; i++) {
-    const prev = series[i - 1].twr_index;
-    const now = series[i].twr_index;
+  const portKey = series.some((p) => typeof p.twr_index === 'number') ? 'twr_index' : 'value';
+
+    for (let i = 1; i < series.length; i++) {
+        const prev = series[i - 1][portKey];
+        const now = series[i][portKey];
     if (!prev || !now) continue;
     const pct = ((now - prev) / prev) * 100;
     if (pct > best.pct) best = { pct, name: series[i].name };
