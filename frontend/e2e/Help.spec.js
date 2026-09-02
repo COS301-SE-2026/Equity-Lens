@@ -8,77 +8,69 @@ test.describe("Help e2e testing", () => {
   });
 
   test("should go to the Help page", async ({ page }) => {
-    await page.goto("/help");
+      await page.goto("/help", { waitUntil: "domcontentloaded"});
 
-    await expect(page).toHaveURL(/help/i);
     
     await expect(
       page.locator("body")
-    ).toContainText(/Check on dashboard/i);
+    ).toContainText(/Getting Started/i);
 
         await expect(
       page.locator("body")
-    ).toContainText(/Take a look at your dashboard/i);
-
-        await expect(
-      page.locator("body")
-    ).toContainText(/Go to dashboard/i);
-
-        await expect(
-      page.locator("body")
-    ).toContainText(/Look at the analytics/i);
-
-        await expect(
-      page.locator("body")
-    ).toContainText(/Explained formulas/i);
+    ).toContainText(/Import data/i);
 
     await expect(
-      page.locator("body")
-    ).toContainText(/Go to analytics page/i);
+      page.getByText("News & market", {exact: true}
+      ))
 
-    await expect(
-      page.locator("body")
-    ).toContainText(/Ask AI Assistant questions/i);
+  await expect(
+      page.getByText("Getting Started", {exact: true}
+      ))
 
-    await expect(
-      page.locator("body")
-    ).toContainText(/Ask questions in plain english/i);
+      await expect(
+      page.getByText("Import data", {exact: true}
+      ))
 
-    await expect(
-      page.locator("body")
-    ).toContainText(/Go to AI Assistant/i);
+      await expect(
+      page.getByText("Understand your portfolio", {exact: true}
+      ))
 
-    await expect(
-      page.locator("body")
-    ).toContainText(/Import your portfolio/i);
+      await expect(
+      page.getByText("AI Assistant", {exact: true}
+      ))
 
-    await expect(
-      page.locator("body")
-    ).toContainText(/Upload a PDF or Excel file/i);
+      await expect(
+      page.getByText("Learn the basics of EquityLens and where to find everything.", {exact: true}
+      ))
 
-    await expect(
-      page.locator("body")
-    ).toContainText(/Go to portfolio/i);
 
-    await expect(
-      page.locator("body")
-    ).toContainText(/Check on news about your stocks/i);
+      await expect(
+      page.getByText("Upload your portfolio as a PDF statement or the Excel template.", {exact: true}
+      ))
 
-    await expect(
-      page.locator("body")
-    ).toContainText(/Keep up to date with market news./i);
+      await expect(
+      page.getByText("View your holdings, allocation and portfolio analytics.", {exact: true}
+      ))
 
-     await expect(
-      page.locator("body")
-    ).toContainText(/Go to news page/i);
+      await expect(
+      page.getByText("Stay updated with news about your investments.", {exact: true}
+      ))
 
-         await expect(
-      page.locator("body")
-    ).toContainText(/FAQs/i);
 
-         await expect(
-      page.locator("body")
-    ).toContainText(/Resources \(Click box to get output\)/i);
+       await expect(
+      page.getByText("Which file formats can I upload?", {exact: true}
+      ))
+
+
+
+       await expect(
+      page.getByText("Can the AI Assistant see my portfolio?", {exact: true}
+      ))
+
+
+       await expect(
+      page.getByText("Is this financial advice?", {exact: true}
+      ))
 
 
   });

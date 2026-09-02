@@ -3,21 +3,11 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import Topbar from './Topbar';
 
 const mockLogoutFake = vi.fn();
-const mockToggleThemeFake = vi.fn();
-const mockToggleBlurMoneyFake = vi.fn();
-let mockBlurMoney = false;
 
 vi.mock('../../../hooks/useAuth', () => ({
   default: () => ({
     user: { full_name: 'Abdul Sabah' },
     logout: mockLogoutFake,
-  }),
-}));
-
-vi.mock('../../../context/ThemeContext.jsx', () => ({
-  useThemeContext: () => ({
-    theme: 'dark',
-    toggleTheme: mockToggleThemeFake,
   }),
 }));
 
