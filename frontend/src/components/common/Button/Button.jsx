@@ -1,3 +1,15 @@
+/**
+ * @param {Object} props
+ * @param {import('react').ReactNode} [props.children]
+ * @param {'button' | 'submit' | 'reset'} [props.type]
+ * @param {'primary' | 'secondary' | 'ghost' | 'danger'} [props.variant]
+ * @param {'sm' | 'md' | 'lg'} [props.size]
+ * @param {boolean} [props.loading]
+ * @param {boolean} [props.disabled]
+ * @param {boolean} [props.fullWidth]
+ * @param {import('react').MouseEventHandler<HTMLButtonElement>} [props.onClick]
+ * @param {string} [props.className]
+ */
 const Button = ({
   children,
   type = 'button',
