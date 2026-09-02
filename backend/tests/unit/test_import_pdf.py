@@ -79,7 +79,9 @@ def test_save_holdings():
         quantity = 15,
         total_cost = 20,
         cost_price = 30,
-        weight_percentage = 24
+        weight_percentage = 24,
+        statement_price = 175.50,
+        statement_value = 2632.50,
     )
 
     result = save_holdings(
@@ -100,6 +102,8 @@ def test_save_holdings():
     assert result.weight_percentage == 24
     assert result.ticker == "testTicker"
     assert result.sector == "testSector"
+    assert result.statement_price == 175.50
+    assert result.statement_value == 2632.50
 
     theDatabase.add.assert_called_once_with(result)
     theDatabase.commit.assert_called_once()

@@ -240,7 +240,7 @@ def test_get_cached_price_history_returns_local_cache_when_fresh(
     mock_db = MagicMock()
     mock_session_local.return_value = mock_db
     mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = MagicMock(
-        fetched_at=datetime.now(timezone.utc)
+        fetched_at=datetime.now(timezone.utc), date=datetime.now(timezone.utc).date(),
     )
  
     with patch("app.utils.stock_cache._refresh_price_history") as mock_refresh:
