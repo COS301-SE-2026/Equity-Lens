@@ -1,5 +1,24 @@
 import pytest
-from app.services.health_score import compute_health_score
+from app.services.health_score import (
+    BUCKET_OTHER,
+    CONFIG_FIELDS,
+    DEFAULT_CONFIG,
+    PRESETS,
+    PRESET_EQUITYLENS,
+    HealthConfig,
+    _clamp10,
+    _health_label,
+    _hhi,
+    _round1,
+    _sector_weights,
+    _top_holding,
+    compute_health_score,
+    config_from_dict,
+    config_to_dict,
+    matching_preset_key,
+    preset_config,
+    presets_payload
+)
 from app.services.instruments import KIND_ETF, KIND_STOCK
 
 
@@ -148,3 +167,127 @@ def test_breadth_detail_reports_effective_positions_not_a_raw_count():
     sub = _sub(compute_health_score(CONCENTRATED), "portfolioBreadth")
     assert "3 positions" in sub["detail"]
     assert "1.9 effective positions" in sub["detail"]
+
+
+@pytest.mark.parametrize(
+    ("score", "expected"),
+    [(10.0, "Excellent"), (8.5, "Excellent"), (7.0, "Healthy"), (5.0, "Mixed"), (4.9, "Needs attention")]
+)
+
+def test_health_label_thresholds(score, expected):
+    assert _health_label(score) == expected
+
+
+@pytest.mark.parametrize(("raw", "expected"), [(-3.0, 0.0), (4.2, 4.2), (99.0, 10.0)])
+def test_clamp10_keeps_scores_in_range(raw, expected):
+    assert _clamp10(raw) == expected
+
+
+def test_round1():
+    assert _round1(7.3949) == 7.4
+    assert _hhi([0.5, 0.5]) == pytest.approx(0.5)
+    assert _hhi([1.0]) == pytest.approx(1.0)
+
+
+def test_sector_weights_normalise_to_one():
+    weights = _sector_weights(SPREAD)
+
+    assert weights == {"Technology": 0.25, "Financials": 0.25, "Healthcare": 0.25, "Energy": 0.25}
+
+
+def test_sector_weights_bucket_missing_and_literal_none_sectors():
+    weights = _sector_weights([_holding("A", None, 50), _holding("B", "none", 50)])
+
+    assert weights == {BUCKET_OTHER: 1.0}
+
+
+def test_sector_weights_of_a_worthless_book_is_empty():
+    assert _sector_weights([_holding("A", "Technology", 0)]) == {}
+
+
+def test_top_holding_picks_the_largest_by_value():
+    assert _top_holding(CONCENTRATED)["ticker"] == "NPN.JO"
+
+
+def test_config_to_dict_round_trips_through_config_from_dict():
+    as_dict = config_to_dict(DEFAULT_CONFIG)
+    assert set(as_dict) == set(CONFIG_FIELDS)
+    assert config_from_dict(as_dict) == DEFAULT_CONFIG
+
+
+def test_config_from_dict_starts_from_the_default_and_overrides_one_field():
+    config = config_from_dict({"breadth_target_n": 12})
+    assert config.breadth_target_n == 12
+    assert config.weight_breadth == DEFAULT_CONFIG.weight_breadth
+
+
+def test_config_from_dict_treats_none_as_not_supplied():
+    assert config_from_dict({"breadth_target_n": None}) == DEFAULT_CONFIG
+
+
+def test_config_from_dict_accepts_an_explicit_base():
+    base = preset_config("growth")
+    assert config_from_dict({}, base=base) == base
+
+
+@pytest.mark.parametrize(
+    ("raw", "message"),
+    [
+        ({"not_a_field": 1}, "unknown config field"),
+        ({"weight_breadth": 0.5}, "must sum to 1.0"),
+        ({"concentration_low": 50, "concentration_high": 45}, "must be below"),
+        ({"breadth_target_n": "eight"}, "must be a number"),
+        ({"hhi_well_spread": float("inf")}, "must be a finite number"),
+        ({"breadth_target_n": 99}, "must be between")
+    ]
+)
+
+def test_config_from_dict_rejects_bad_input(raw, message):
+    with pytest.raises(ValueError, match=message):
+        config_from_dict(raw)
+
+
+def test_preset_config_returns_the_named_preset():
+    assert preset_config("growth") is PRESETS["growth"].config
+
+
+@pytest.mark.parametrize("key", [None, ""])
+def test_preset_config_falls_back_silently_for_no_key(key):
+    assert preset_config(key) is DEFAULT_CONFIG
+
+
+def test_preset_config_warns_and_falls_back_for_an_unknown_key(caplog):
+    assert preset_config("not_a_preset") is DEFAULT_CONFIG
+    assert "unknown health preset" in caplog.text
+
+
+def test_presets_payload_exposes_every_preset_with_its_config():
+    payload = presets_payload()
+    assert [p["key"] for p in payload] == list(PRESETS)
+    for entry in payload:
+        assert entry["name"] and entry["description"]
+        assert set(entry["config"]) == set(CONFIG_FIELDS)
+
+
+def test_matching_preset_key_identifies_a_stock_preset():
+    assert matching_preset_key(DEFAULT_CONFIG) == PRESET_EQUITYLENS
+
+
+def test_matching_preset_key_returns_none_for_a_custom_config():
+    assert matching_preset_key(config_from_dict({"breadth_target_n": 7})) is None
+
+
+def test_health_config_is_frozen():
+    assert isinstance(DEFAULT_CONFIG, HealthConfig)
+    with pytest.raises(AttributeError):
+        DEFAULT_CONFIG.breadth_target_n = 99
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason="compute_health_score raises when every holding is worth 0: _sector_weights "
+    "returns {} and _sector_concentration_subscore then calls max() on it"
+)
+def test_portfolio_where_every_holding_is_worthless():
+    result = compute_health_score([_holding("A", "Technology", 0), _holding("B", "Energy", 0)])
+    assert result["score"] is None
