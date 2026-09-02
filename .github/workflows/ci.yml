@@ -309,26 +309,17 @@ jobs:
           npm run build
           npm run preview -- --host 0.0.0.0 &
           npx wait-on http://localhost:4173
-          npx lhci autorun
-    
-  summary:
-    name: Run Pipelines Summary
-    runs-on: ubuntu-latest
-    if: always()
-    needs: [frontend, backend, trivy, ToRunlighthouse] 
-    timeout-minutes: 3
 
-    steps:
-      - name: A short summary of the pipelines
-        run: |
-          echo "Pipelines Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Frontend | ${{ needs.frontend.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Backend | ${{ needs.backend.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| trivy | ${{ needs.trivy.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| OWSAP ZAP | ${{ needs.ToRunTheZap.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Lighthouse | ${{ needs.ToRunlighthouse.result }} |" >> $GITHUB_STEP_SUMMARY
+      
+      - name: Run NFR-2.2 Lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with: 
+            configPath: ./frontend/lighthouserc-nfr-2-2.json
+
+      - name: Run NFR-2.3 Lighthouse
+        uses: treosh/lighthouse-ci-action@v12
+        with: 
+          configPath: ./frontend/lighthouserc-nfr-2-3.json
+
     
 

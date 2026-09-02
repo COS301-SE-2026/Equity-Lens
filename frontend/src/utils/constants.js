@@ -13,6 +13,7 @@ export const ROUTES = {
   RESET_PASSWORD: '/reset-password',
   HELP: '/help',
   BRAND_GUIDE: '/brand',
+  SETTINGS: '/settings',
 };
 
 export const PASSWORD_MIN_LENGTH = 8;

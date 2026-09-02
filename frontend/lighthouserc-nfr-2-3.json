@@ -1,0 +1,12 @@
+{
+    "ci" : {
+        "collect" :{
+            "url": ["http://localhost:4173/dashboard"]
+        },
+        "assert": {
+            "assertions": {
+                "largest-contentful-paint": ["error", {"maxNumericValue": 6000}]
+            }
+        }
+    }
+}

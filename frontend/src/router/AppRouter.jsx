@@ -18,6 +18,7 @@ import Analytics from '../pages/Analytics/Analytics';
 import ConfirmEmail from '../pages/Auth/ConfirmEmail';
 import Landing from '../pages/Landing/Landing';
 import BrandStyleGuide from '../pages/BrandStyleGuide/BrandStyleGuide';
+import Settings from '../pages/Settings/Settings';
 
 /** @param {{ children: React.ReactNode }} props */
 const AppLayout = ({ children }) => {
@@ -83,6 +84,7 @@ export const AppRoutes = () => (
       <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
       <Route path={ROUTES.HELP} element={<HelpRoute />} />
       {/* <Route path="/help-landing" element={<HelpLandingPage />} /> */}
+      <Route path={ROUTES.SETTINGS} element={<ProtectedRoute><Settings /></ProtectedRoute>} />
 
       <Route path={ROUTES.HOME} element={<Landing />} />  
       <Route path={ROUTES.BRAND_GUIDE} element={<BrandStyleGuide />} />

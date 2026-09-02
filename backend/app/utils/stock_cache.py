@@ -426,16 +426,16 @@ def get_cached_fundamentals(ticker: str) -> dict:
     cached = _load_cached_fundamentals(ticker)
     if cached is not None:
         print(f"Fundamentals cache hit: {ticker}")
-        return cached
+        return {**cached, "live_fetch": False}
     
     if _yfinance_globally_cooling_down():
         print(f"Skipping {ticker} fundamentals fetch - global rate limit")
-        return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
+        return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame(), "live_fetch": False}
     
     cooldown_until = _FUNDAMENTALS_RATE_LIMITED_UNTIL.get(ticker)
     if cooldown_until and datetime.now(timezone.utc) < cooldown_until:
         print(f"Skipping {ticker} fundamentals fetch - cooldown")
-        return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
+        return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame(), "live_fetch": False}
     ticker_candidates = [ticker] if ticker.endswith(".JO") else [f"{ticker}.JO", ticker]
     for candidate in ticker_candidates:
         try:
@@ -451,6 +451,7 @@ def get_cached_fundamentals(ticker: str) -> dict:
                     "info": info,
                     "balance_sheet": balance_sheet,
                     "financials": financials,
+                    "live_fetch": True,
                 }
         except Exception as exc:
             print(f"Yahoo fundamentals fetch failed for {candidate}: {exc}")
@@ -458,4 +459,4 @@ def get_cached_fundamentals(ticker: str) -> dict:
                 _FUNDAMENTALS_RATE_LIMITED_UNTIL[ticker] = datetime.now(timezone.utc) + timedelta(minutes=10)
                 _trip_yfinance_global_cooldown()
                 break
-    return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
+    return {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame(), "live_fetch": True}
