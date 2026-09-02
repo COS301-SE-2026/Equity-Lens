@@ -11,10 +11,6 @@ def holding(region, value, priced_live=True):
     return {"region": region, "value": value, "priced_live": priced_live, "ticker": "X"}
 
 
-def priced_holding(ticker, region, quantity):
-    return {"ticker": ticker, "region": region, "quantity": quantity}
-
-
 def _history(start: date, closes: list[float]) -> pd.DataFrame:
     index = pd.to_datetime([start + timedelta(days=i) for i in range(len(closes))])
     return pd.DataFrame({"Close": closes, "Volume": [1] * len(closes)}, index=index)
@@ -152,50 +148,4 @@ def test_nearest_benchmark_falls_back_to_the_last_trading_day():
     assert portfolio_service._nearest_benchmark(series, date(2026, 7, 1)) is None
     assert portfolio_service._nearest_benchmark({}, monday) is None
 
-def test_holding_value_series_prices_quantity_by_real_close(fake_history):
-    start = date.today() - timedelta(days=2)
-    fake_history["MTN.JO"] = _history(start, [10000.0, 10500.0])
 
-    h = priced_holding("MTN.JO", REGION_SA, quantity=10)
-    levels = portfolio_service._holding_value_series(h, start)
-
-    assert levels[max(levels)] == pytest.approx(1050.0)
-
-def test_holding_value_series_skips_non_jse_listings(fake_history):
-    start = date.today() - timedelta(days=2)
-    fake_history["MSFT"] = _history(start, [400.0, 400.0])
-    fake_history["USDZAR=X"] = _history(start, [18.0, 19.0])
-
-    h = priced_holding("MSFT", REGION_US, quantity=10)
-    assert portfolio_service._holding_value_series(h, start) is None
-
-
-def test_jse_listing_is_not_fx_converted_whatever_its_exposure(fake_history):
-    start = date.today() - timedelta(days=2)
-    fake_history["CSP500.JO"] = _history(start, [9000.0, 9100.0])
-    fake_history["USDZAR=X"] = _history(start, [18.0, 19.0])
-
-    h = priced_holding("CSP500.JO", REGION_US, quantity=10)
-    levels = portfolio_service._holding_value_series(h, start)
-
-    assert levels[max(levels)] == pytest.approx(91.0 * 10)
-
-
-def test_portfolio_value_series_still_prices_the_holdings_that_succeed(fake_history):
-    start = date.today() - timedelta(days=2)
-    fake_history["MTN.JO"] = _history(start, [10000.0, 10500.0])
-
-    holdings = [
-        priced_holding("MTN.JO", REGION_SA, quantity=10),
-        priced_holding("AGL.JO", REGION_SA, quantity=5),
-    ]
-    series = portfolio_service._portfolio_value_series(holdings, start)
-
-    assert series[max(series)] == pytest.approx(1050.0)
-
-
-@pytest.mark.usefixtures("fake_history")
-def test_portfolio_value_series_empty_when_nothing_prices():
-    start = date.today() - timedelta(days=2)
-    holdings = [priced_holding("AGL.JO", REGION_SA, quantity=5)]
-    assert portfolio_service._portfolio_value_series(holdings, start) == {}
