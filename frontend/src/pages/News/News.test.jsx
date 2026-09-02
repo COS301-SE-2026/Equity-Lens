@@ -200,8 +200,8 @@ describe("News page", () => {
         await screen.findByRole("button", { name: "AAPL" });
         mockGet.mockClear();
 
-        const [categoryAll] = screen.getAllByRole("button", { name: "All" });
-        await user.click(categoryAll);
+        const allFilterBtn = screen.getByRole("button", { name: /^\s*All\s*$/i });
+        await user.click(allFilterBtn);
 
         await waitFor(() => {
         expect(mockGet).toHaveBeenCalledWith("/news/test-aapl/AAPL");

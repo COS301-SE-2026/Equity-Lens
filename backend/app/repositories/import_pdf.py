@@ -50,7 +50,7 @@ def save_portfolios(database,user_id,data):
         document_id = data.document_id,
         account_number = data.account_number,
         portfolio_name = data.portfolio_name,
-        currency = ACCOUNT_TYPE_CURRENCY[data.account_type],
+        currency = ACCOUNT_TYPE_CURRENCY[data.account_type.lower()],
         statement_start_date = data.statement_start_date,
         statement_end_date = data.statement_end_date,
         account_type = data.account_type

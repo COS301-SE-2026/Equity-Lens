@@ -316,7 +316,7 @@ const NewsInvestment = () => {
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
 
-                    <button onClick={() => setSentimentFilter("all")} className="px-4 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition"> All </button>
+                    <button onClick={() => ToGetAllPortfolioNews()} className="px-4 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition"> All </button>
                     <button onClick={() => setSentimentFilter("positive")} className="px-4 py-2 rounded-lg border border-green-500/40 bg-green-500/20 text-green-400 hover:bg-green-500/30 transition"> Positive </button>
                     <button onClick={() => setSentimentFilter("negative")} className="px-4 py-2 rounded-lg border border-red-500/40 bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"> Negative </button>
                     <button onClick={() => setSentimentFilter("neutral")} className="px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition"> Neutral </button>
