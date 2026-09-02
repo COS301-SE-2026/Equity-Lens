@@ -99,7 +99,6 @@ def verify_mfa_login(req: MFAChallengeReq):
     summary="Start authenticator app setup",
     operation_id="associateTotp",
     response_model=TotpSecretResponse,
-    responses={**UNAUTHORISED, **BAD_REQUEST},
 )
 def associate_totp(cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     secret = cognito.cognito_associate_totp(cred.credentials)
@@ -110,7 +109,6 @@ def associate_totp(cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     summary="Finish authenticator app setup",
     operation_id="confirmTotpSetup",
     response_model=StatusResponse,
-    responses={**UNAUTHORISED, **BAD_REQUEST},
 )
 def confirm_totp_setup(req: VerifyTOTPReq, cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     cognito.cognito_verify_totp(cred.credentials, req.totp_code)
