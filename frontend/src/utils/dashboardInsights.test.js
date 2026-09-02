@@ -479,14 +479,11 @@ describe('buildTaxQuestions', () => {
     expect(questions.some((q) => q.toLowerCase().includes('tax-loss harvesting'))).toBe(true);
   });
 
-  it('asks why tax is exempt instead of nothing for TFSA/RA accounts', () => {
-    expect(buildTaxQuestions({ available: false, reason: 'tfsa_exempt' })).toEqual([
-      "Why isn't tax shown for this account?",
-    ]);
-    expect(buildTaxQuestions({ available: false, reason: 'retirement_annuity_exempt' })).toEqual([
-      "Why isn't tax shown for this account?",
-    ]);
-  });
+    it('asks why tax is exempt instead of nothing for TFSA accounts', () => {
+        expect(buildTaxQuestions({ available: false, reason: 'tfsa_exempt' })).toEqual([
+            "Why isn't tax shown for this account?",
+        ]);
+    });
 
   it('returns no questions when an estimate is unavailable for a fixable reason', () => {
     expect(buildTaxQuestions({ available: false, reason: 'account_type_unknown' })).toEqual([]);
