@@ -39,7 +39,6 @@ jobs:
       - name: Unit tests
         working-directory: frontend
         run: npm run coverage
-        continue-on-error: true
 
       - name: Install Playwright
         working-directory: frontend
