@@ -120,7 +120,7 @@ const ContributionsChart = ({ series }) => {
           <HelpTooltip text={MARKET_GAIN_CAVEAT} />
         </div>
         <div className="flex items-center gap-4 font-mono text-[10px]">
-          <LegendItem color="var(--chart-primary)" label="Portfolio Value" line />
+          <LegendItem color="var(--accent-primary)" label="Portfolio Value" line />
           <LegendItem color="var(--text-secondary)" label="Contributed" line dashed />
           <LegendItem color="var(--signal-positive)" label="Market gain" />
           <LegendItem color="var(--signal-negative)" label="Market loss" />

@@ -52,3 +52,21 @@ class AuthResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserResponse
+class RegisterResponse(BaseModel):
+    user_sub: str
+    email: EmailStr
+
+
+class StatusResponse(BaseModel):
+
+    status: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    id_token: str
+    refresh_token: str
+
+
+class TotpSecretResponse(BaseModel):
+    secret: str
