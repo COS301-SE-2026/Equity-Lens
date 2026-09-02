@@ -49,9 +49,10 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
     for index, ticker in enumerate(tickers):
         name = ticker_to_name.get(ticker, ticker)
         row = build_live_indicator_row(ticker,name,market_returns, price_history=price_histories.get(ticker))
-        results.append(serialize_indicator_row(row))
+        serialized = serialize_indicator_row(row)
+        results.append(serialized)
         #Small delay between tickers to try and avoid yfinance rate limiting
-        if index < len(tickers) - 1:
+        if serialized.get("live_fetch") and index < len(tickers) - 1:
             time.sleep(secrets.SystemRandom().uniform(1.0, 2.0))
 
     return results
