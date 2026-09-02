@@ -21,16 +21,17 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 | | Link |
 |---|---|
-| Software Requirement Specification (SRS) | [View SRS](./Documentation/Demo_2/SRS.pdf) |
-| Software Architecture Specification (SAS) | [View SAS](./Documentation/Demo_2/SAS.pdf) |
-| Coding Standards | [View](./Documentation/Demo_2/Coding_Standards.pdf) |
-| Testing Policy | [View](./Documentation/Demo_2/Testing_Policy.pdf) |
-| User Manual | [View](./Documentation/Demo_2/User_Manual.pdf) |
+| Software Requirement Specification (SRS) | [View SRS](./Documentation/Demo_3/SRS.pdf) |
+| Software Architecture Specification (SAS) | [View SAS](./Documentation/Demo_3/SAS.pdf) |
+| Coding Standards | [View](./Documentation/Demo_3/Coding_Standards.pdf) |
+| Testing Policy | [View](./Documentation/Demo_3/Testing_Policy.pdf) |
+| User Manual | [View](./Documentation/Demo_3/User_Manual.pdf) |
 | Brand Style Guide | live at `/brand` in the running app ([source](./frontend/src/pages/BrandStyleGuide/BrandStyleGuide.jsx)) |
 | GitHub Project Board | [View Board](https://github.com/orgs/COS301-SE-2026/projects/45) |
 | Design Document (Demo 1) | [View Design Doc](./Documentation/Demo_1/DESIGN_DOCUMENT.pdf) |
 | SRS (Demo 1, superseded) | [View SRS](./Documentation/Demo_1/Software_Requirement_Specification.pdf) |
 | Wireframes (Demo 1) | [View Wireframes](./Documentation/Demo_1/Wireframes.pdf) |
+| API Service Contract | [View API Contract](https://api.equitylens.co.za/docs) |
 
 ---
 
