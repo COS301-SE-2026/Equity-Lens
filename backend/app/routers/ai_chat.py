@@ -14,10 +14,10 @@ from typing import Any
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 
 class NewsResponse(BaseModel):
-    total_articles: int,
-    positive: int,
-    negative: int,
-    result: lis[dict[str, Any]]
+    total_articles: int
+    positive: int
+    negative: int
+    result: list[dict[str, Any]]
 
 class TickerResponse(BaseModel):
     ticker: list[str]
