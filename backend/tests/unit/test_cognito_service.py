@@ -29,3 +29,33 @@ def test_login_mapping(cClient):
 
     assert exc.value.status_code == 401
     assert exc.value.detail == "invalid email or password"    
+
+def test_delete_user_calls_client_with_access_token(cClient):
+    cClient.delete_user.return_value = {}
+
+    result = cognito.cognito_delete_user("some-access-token")
+
+    cClient.delete_user.assert_called_once_with(AccessToken="some-access-token")
+    assert result is None
+
+
+def test_delete_user_treats_user_not_found_as_success(cClient):
+    cClient.delete_user.side_effect = ClientError(
+        {"Error": {"Code": "UserNotFoundException", "Message": "no such user"}}, "DeleteUser"
+    )
+
+    result = cognito.cognito_delete_user("some-access-token")
+
+    cClient.delete_user.assert_called_once_with(AccessToken="some-access-token")
+    assert result is None
+
+
+def test_delete_user_propagates_other_client_errors(cClient):
+    cClient.delete_user.side_effect = ClientError(
+        {"Error": {"Code": "InternalErrorException", "Message": "boom"}}, "DeleteUser"
+    )
+
+    with pytest.raises(ClientError) as exc:
+        cognito.cognito_delete_user("some-access-token")
+
+    assert exc.value.response["Error"]["Code"] == "InternalErrorException"
