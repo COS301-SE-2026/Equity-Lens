@@ -6,7 +6,8 @@ import {
   X, 
   Sparkles,
   BarChart2,
-  HelpCircle
+  HelpCircle,
+  Settings,
 } from 'lucide-react';
 import { ROUTES } from '../../../utils/constants';
 
@@ -17,6 +18,7 @@ const navItems = [
   { label: 'News', icon: Newspaper, to: ROUTES.NEWS },
   { label: 'AI Assistant', icon: Sparkles, to: ROUTES.AI_CHAT},
   { label: 'Help', icon: HelpCircle, to: ROUTES.HELP, pinBottom: true},
+  { label: 'Settings', icon: Settings, to: ROUTES.SETTINGS },
 
 ];
 

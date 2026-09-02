@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 
 const sizes = [
     { width: 375, height: 667 },
+    { width: 1024, height: 768 },
     { width: 1366, height: 768 },
     { width: 1920, height: 1080 },
 ]

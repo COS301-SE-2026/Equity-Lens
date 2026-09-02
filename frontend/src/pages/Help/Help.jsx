@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ROUTES } from '../../utils/constants'
 import { useState } from 'react';
-import { LayoutDashboard, Upload, ChartPie, Newspaper, Bot, ChevronDown, ChevronUp, FileSpreadsheet, Mail, CircleHelp } from "lucide-react";
+import { LayoutDashboard, Upload, PieChart, Newspaper, Bot, ChevronDown, ChevronUp, FileSpreadsheet, Mail, CircleHelp } from "lucide-react";
 
 const REDIRECTS = [
     {
@@ -20,7 +20,7 @@ const REDIRECTS = [
         title: 'Understand your Portfolio',
         body: 'You can view your holdings,allocation, and also portfolio analytics.',
         to: ROUTES.ANALYTICS,
-        icon: <ChartPie size={22} />
+        icon: <PieChart size={22} />
     },
     {
         title: 'News & Market',

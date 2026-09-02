@@ -13,6 +13,8 @@ import {
   confirmResetPassword,
 } from "aws-amplify/auth";
 
+import api from './api'
+
 export async function register(fullName, email, password) {
   const result = await signUp({
     username: email,
@@ -83,4 +85,14 @@ export async function getCurrentUserProfile() {
     email: email,
     full_name: fullName,
   };
+}
+
+export async function deleteAccount(email){
+  try{
+    const response = await api.delete('/auth/me', { data: { email } });
+    return response.data;
+  } catch (err) {
+    const detail = err.response?.data?.detail || 'Account deletion failed';
+    throw new Error(detail);
+  }
 }
