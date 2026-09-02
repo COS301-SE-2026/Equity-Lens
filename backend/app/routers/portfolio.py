@@ -89,6 +89,8 @@ UNAVAILABLE_EXAMPLE = {"available": False, "reason": "No holdings imported yet"}
 
 @router.get(
     "",
+    summary="Get the whole dashboard",
+    operation_id="getDashboard",
     responses=documented("The whole dashboard in one call", DASHBOARD_EXAMPLE),
 )
 def get_portfolio(
@@ -98,7 +100,13 @@ def get_portfolio(
     return drop_non_finite(PortfolioService(db).get_dashboard(current_user.id))
 
 
-@router.get("/summary", response_model=PortfolioSummary, responses=UNAUTHORISED)
+@router.get(
+    "/summary",
+    summary="Get the headline totals",
+    operation_id="getPortfolioSummary",
+    response_model=PortfolioSummary,
+    responses=UNAUTHORISED,
+)
 def get_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -106,7 +114,13 @@ def get_summary(
     return PortfolioService(db).get_summary(current_user.id)
 
 
-@router.get("/sectors", response_model=list[SectorSlice], responses=UNAUTHORISED)
+@router.get(
+    "/sectors",
+    summary="Get the sector allocation",
+    operation_id="getSectorAllocation",
+    response_model=list[SectorSlice],
+    responses=UNAUTHORISED,
+)
 def get_sectors(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -114,7 +128,13 @@ def get_sectors(
     return PortfolioService(db).get_sector_allocation(current_user.id)
 
 
-@router.get("/performance", response_model=list[PerformancePoint], responses=UNAUTHORISED)
+@router.get(
+    "/performance",
+    summary="Get the value history against its benchmark",
+    operation_id="getPerformanceHistory",
+    response_model=list[PerformancePoint],
+    responses=UNAUTHORISED,
+)
 def get_performance(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -122,7 +142,13 @@ def get_performance(
     return PortfolioService(db).get_performance_history(current_user.id)
 
 
-@router.get("/current", response_model=list[PortfolioRow], responses=UNAUTHORISED)
+@router.get(
+    "/current",
+    summary="List the imported portfolios",
+    operation_id="listPortfolios",
+    response_model=list[PortfolioRow],
+    responses=UNAUTHORISED,
+)
 def get_current_information(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -144,21 +170,39 @@ def get_current_information(
         for portfolio in portfolios
     ]
 
-@router.get("/returns", response_model=ReturnsResponse, responses=UNAUTHORISED)
+@router.get(
+    "/returns",
+    summary="Get the three return measures",
+    operation_id="getReturns",
+    response_model=ReturnsResponse,
+    responses=UNAUTHORISED,
+)
 def get_returns(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     return PortfolioService(db).get_returns(current_user.id)
 
-@router.get("/health-score", response_model=HealthScoreResponse, responses=UNAUTHORISED)
+@router.get(
+    "/health-score",
+    summary="Get the portfolio health score",
+    operation_id="getHealthScore",
+    response_model=HealthScoreResponse,
+    responses=UNAUTHORISED,
+)
 def get_health_score(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     return PortfolioService(db).get_health(current_user.id)
 
-@router.get("/health-config", response_model=HealthConfigResponse, responses=UNAUTHORISED)
+@router.get(
+    "/health-config",
+    summary="Get the active health scoring config",
+    operation_id="getHealthConfig",
+    response_model=HealthConfigResponse,
+    responses=UNAUTHORISED,
+)
 def get_health_config(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -166,19 +210,42 @@ def get_health_config(
     return health_config_payload(db, current_user.id)
 
 
-@router.put("/health-config", response_model=HealthConfigResponse, responses=UNAUTHORISED)
+@router.put(
+    "/health-config",
+    summary="Choose or hand-tune the health scoring config",
+    operation_id="updateHealthConfig",
+    response_model=HealthConfigResponse,
+    responses={**UNAUTHORISED, 400: {"description": "Values outside the published bounds"}},
+)
 def put_health_config(
     body: HealthConfigRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    """Change what the health score treats as risky. Send exactly one of the two fields.
+
+    preset_key picks one of the presets listed by GET /health-config. config sets the
+    seven values by hand, and every one of them must be inside bounds from that same
+    response - anything outside is a 400, not a clamp. The three weights must also sum
+    to 1.
+
+    Hand-tuned values that happen to match a preset are stored as that preset, so the
+    response can come back with source preset and a preset_key you did not send. The
+    response is always the full config payload, so there is no need to re-fetch.
+    """
     try:
         return save_health_config(db, current_user.id, preset_key=body.preset_key, config=body.config)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.delete("/health-config", response_model=HealthConfigResponse, responses=UNAUTHORISED)
+@router.delete(
+    "/health-config",
+    summary="Reset the health scoring config",
+    operation_id="resetHealthConfig",
+    response_model=HealthConfigResponse,
+    responses=UNAUTHORISED,
+)
 def delete_health_config(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -186,7 +253,13 @@ def delete_health_config(
     return clear_health_config(db, current_user.id)
 
 
-@router.get("/cgt-estimate", response_model=CgtEstimateResponse, responses=UNAUTHORISED)
+@router.get(
+    "/cgt-estimate",
+    summary="Estimate capital gains tax if everything were sold",
+    operation_id="getCgtEstimate",
+    response_model=CgtEstimateResponse,
+    responses=UNAUTHORISED,
+)
 def get_cgt_estimate(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -194,7 +267,13 @@ def get_cgt_estimate(
     return PortfolioService(db).get_cgt_estimate(current_user.id)
 
 
-@router.get("/account-type", response_model=AccountTypeResponse, responses=UNAUTHORISED)
+@router.get(
+    "/account-type",
+    summary="Get the account type",
+    operation_id="getAccountType",
+    response_model=AccountTypeResponse,
+    responses=UNAUTHORISED,
+)
 def get_account_type(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -202,7 +281,13 @@ def get_account_type(
     return PortfolioService(db).get_account_type(current_user.id)
 
 
-@router.patch("/account-type", response_model=AccountTypeResponse, responses=UNAUTHORISED)
+@router.patch(
+    "/account-type",
+    summary="Set the account type",
+    operation_id="setAccountType",
+    response_model=AccountTypeResponse,
+    responses=UNAUTHORISED,
+)
 def set_account_type(
     body: AccountTypeUpdate,
     db: Session = Depends(get_db),
@@ -213,6 +298,8 @@ def set_account_type(
 
 @router.get(
     "/tax-analysis",
+    summary="Get position-level unrealised tax detail",
+    operation_id="getTaxAnalysis",
     responses=two_states(
         "Unrealised position-level tax detail",
         {"available": True, "reason": None,
@@ -234,6 +321,8 @@ def get_tax_analysis(
 
 @router.get(
     "/tfsa-room",
+    summary="Get remaining TFSA contribution room",
+    operation_id="getTfsaRoom",
     responses=two_states(
         "Annual and lifetime TFSA contribution room",
         {"available": True, "tax_year_label": "2026/27", "annual_limit": 36000.0,
@@ -251,6 +340,8 @@ def get_tfsa_room(
 
 @router.get(
     "/market-context",
+    summary="Get today's move by sector held",
+    operation_id="getMarketContext",
     responses=two_states(
         "How each sector you hold moved today",
         {"available": True, "label": "Today",
@@ -266,7 +357,13 @@ def get_market_context(
     return PortfolioService(db).get_market_context(current_user.id)
 
 
-@router.get("/concentration", response_model=ConcentrationResponse, responses=UNAUTHORISED)
+@router.get(
+    "/concentration",
+    summary="Flag holdings that are too large a share of the book",
+    operation_id="getConcentration",
+    response_model=ConcentrationResponse,
+    responses=UNAUTHORISED,
+)
 def get_concentration(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -276,6 +373,8 @@ def get_concentration(
 
 @router.post(
     "/simulate-sector-investment",
+    summary="Simulate adding to one sector",
+    operation_id="simulateSectorInvestment",
     responses=two_states(
         "What adding to one sector would do to the health score",
         {"available": True, "sector": "Financials", "illustrative_amount": 5000.0,
@@ -295,6 +394,8 @@ def simulate_sector_investment(
 
 @router.post(
     "/simulate-sector-rebalance",
+    summary="Simulate an even sector split",
+    operation_id="simulateSectorRebalance",
     responses=two_states(
         "What an even sector split would do to the health score",
         {"available": True, "health_score_before": 0.3, "health_score_after": 0.62,
