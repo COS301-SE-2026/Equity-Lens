@@ -1,11 +1,13 @@
 import time
 import secrets
+from typing import List
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.portfolio import Portfolios, Holdings
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
+from app.schemas.market_data import IndicatorRowResponse
 from app.services.indicator_service import build_live_indicator_row, serialize_indicator_row
 from app.services.instruments import resolve_known_instrument
 from app.services.portfolio_service import INVALID_TICKER_MARKERS
@@ -14,7 +16,12 @@ from app.utils.stock_cache import get_cached_price_histories
 
 router = APIRouter(prefix="/api/indicators", tags=["indicators"])
 
-@router.get("")
+@router.get(
+    "",
+    response_model=List[IndicatorRowResponse],
+    summary="Get Portfolio Indicators",
+    description="Calculates live technical and fundamental indicators for all valid holdings across user portfolios."
+)
 def get_indicators(current_user: UserResponse = Depends(get_current_user), db: Session = Depends(get_db)):
     portfolios = db.query(Portfolios).filter(Portfolios.user_id == current_user.id).all()
     # NOTE: We are filtering out tickers that are empty strings or null.

@@ -157,7 +157,7 @@ const SHOWCASE = [
       'Positions, quantities, cost basis',
       'Multiple brokers supported',
     ],
-    src: '/screens/portfolio.png',
+    src: '/screens/PORTFOLIOV2.png',
     alt: 'Portfolio import flow with broker statement upload',
   },
   {
@@ -170,7 +170,7 @@ const SHOWCASE = [
       'True underlying weightings',
       'Sector-level concentration risk',
     ],
-    src: '/screens/dashboard2.png',
+    src: '/screens/DASH2V2.png',
     alt: 'Look-through exposure showing flattened ETF holdings',
   },
   {
@@ -179,7 +179,7 @@ const SHOWCASE = [
     heading: 'Track performance. Monitor health. See why it moved.',
     body: "See everything that matters in one place, from performance and portfolio health to the drivers behind today's returns.",
     bullets: ['Live market overview', 'Portfolio health score', 'Interactive portfolio insights'],
-    src: '/screens/dashboard.png',
+    src: '/screens/DASHV2.png',
     alt: 'Portfolio dashboard with net worth, health score, and holdings table',
   },
   {
@@ -192,7 +192,7 @@ const SHOWCASE = [
       'Risk-adjusted return metrics',
       'Per-holding drill-down',
     ],
-    src: '/screens/analytics.png',
+    src: '/screens/ANALYTICSV2.png',
     alt: 'Analytics page with financial indicators',
   },
   {
@@ -205,7 +205,7 @@ const SHOWCASE = [
       'Direct news-to-price correlation',
       'Cross-referenced on the timeline',
     ],
-    src: '/screens/news.png',
+    src: '/screens/NEWSV2.png',
     alt: 'News feed correlated with portfolio anomalies',
   },
   {
@@ -218,7 +218,7 @@ const SHOWCASE = [
       'Explains financial concepts',
       'Your own intelligent assistant',
     ],
-    src: '/screens/ai.png',
+    src: '/screens/AIV2.png',
     alt: 'AI assistant answering a portfolio question',
   },
 ];
@@ -235,65 +235,88 @@ const useRevealVariant = () => {
   };
 };
 
-const Landing = () => (
-  <>
-    <Helmet>
-      <title>Equity-Lens</title>
-      <meta
-        name="description"
-        content="Flatten your ETFs into their true underlying holdings. Built for South African retail investors using investing and trading platforms."
-      />
-      <meta
-        property="og:title"
-        content="Institutional-grade portfolio intelligence for South African retail investors."
-      />
-      <meta
-        property="og:description"
-        content="Flatten your ETFs into their true underlying holdings."
-      />
-      <meta property="og:type" content="website" />
-      <meta name="theme-color" content="#050505" />
-    </Helmet>
+const Landing = () => {
+  useEffect(() => {
+    const root = document.documentElement;
+    const previousTheme = root.getAttribute('data-theme');
+    const previousDarkClass = root.classList.contains('dark');
 
-    <div
-      className="relative min-h-screen overflow-x-hidden bg-[var(--surface-base)] text-white"
-      style={{ fontFamily: 'var(--font-primary)' }}>
-      <Nav />
-      <main id="main">
-        <Hero />
-        <MissionStrip />
-        <Simulator />
-        <FlatteningEngine />
-        <SectionFade direction="toLight" />
-        <LightBand>
-          <WhyEquityLens />
-        </LightBand>
-        <SectionFade direction="toDark" />
-        <Showcase />
-        <SectionDivider />
-        <TrustBar />
-        <SectionDivider />
-        <FinalCTA />
-      </main>
-      <Footer />
-    </div>
+    root.setAttribute('data-theme', 'dark');
+    root.classList.add('dark');
 
-    <style>{`
-      a:focus-visible, button:focus-visible, [role="button"]:focus-visible {
-        outline: 2px solid ${ACCENT};
-        outline-offset: 2px;
-        border-radius: 6px;
+    return () => {
+      if (previousTheme === null) {
+        root.removeAttribute('data-theme');
+      } else {
+        root.setAttribute('data-theme', previousTheme);
       }
-      @media (prefers-reduced-motion: reduce) {
-        *, *::before, *::after {
-          animation-duration: 0.001ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: 0.001ms !important;
+
+      root.classList.toggle('dark', previousDarkClass);
+    };
+  }, []);
+
+  return (
+    <>
+      <Helmet>
+        <title>Equity-Lens</title>
+        <meta
+          name="description"
+          content="Flatten your ETFs into their true underlying holdings. Built for South African retail investors using investing and trading platforms."
+        />
+        <meta
+          property="og:title"
+          content="Institutional-grade portfolio intelligence for South African retail investors."
+        />
+        <meta
+          property="og:description"
+          content="Flatten your ETFs into their true underlying holdings."
+        />
+        <meta property="og:type" content="website" />
+        <meta name="theme-color" content="#050505" />
+        <meta name="color-scheme" content="dark" />
+      </Helmet>
+
+      <div
+        className="dark relative min-h-[100dvh] overflow-x-hidden bg-[#050505] text-white"
+        style={{ backgroundColor: '#050505', colorScheme: 'dark' }}
+      >
+        <Nav />
+        <main id="main">
+          <Hero />
+          <MissionStrip />
+          <Simulator />
+          <FlatteningEngine />
+          <SectionFade direction="toLight" />
+          <LightBand>
+            <WhyEquityLens />
+          </LightBand>
+          <SectionFade direction="toDark" />
+          <Showcase />
+          <SectionDivider />
+          <TrustBar />
+          <SectionDivider />
+          <FinalCTA />
+        </main>
+        <Footer />
+      </div>
+
+      <style>{`
+        a:focus-visible, button:focus-visible, [role="button"]:focus-visible {
+          outline: 2px solid ${ACCENT};
+          outline-offset: 2px;
+          border-radius: 6px;
         }
-      }
-    `}</style>
-  </>
-);
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.001ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.001ms !important;
+          }
+        }
+      `}</style>
+    </>
+  );
+};
 
 const MicroGrid = () => (
   <div
@@ -327,7 +350,7 @@ const SectionFade = ({ direction = 'toLight' }) => (
 
 /** @param {{ children: any }} props */
 const LightBand = ({ children }) => (
-  <div className="relative z-10 bg-[#fafafa]">{children}</div>
+  <div className="relative z-10 bg-[#fafafa] text-zinc-900">{children}</div>
 );
 
 const SectionDivider = () => (
@@ -545,8 +568,8 @@ const WhyEquityLens = () => {
               What you see today
             </p>
           </div>
-          <div className="border-l border-zinc-200 bg-[var(--accent-subtle)] p-4 sm:p-5">
-            <p className="mb-1 font-mono text-[10px] tracking-widest text-[var(--accent-hover)]">
+          <div className="border-l border-zinc-200 bg-orange-50/50 p-4 sm:p-5">
+            <p className="mb-1 font-mono text-[10px] tracking-widest text-[#FF6B00]">
               EQUITY-LENS
             </p>
             <p className="text-[14px] font-semibold text-zinc-900 sm:text-[15px]">
@@ -940,7 +963,8 @@ const ShowcaseFrame = ({ src, alt }) => {
         <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-zinc-900/60">
           
           {hasError ? (
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-zinc-500 bg-zinc-900">
+              <span className="font-mono text-xs text-zinc-400">Preview Unavailable</span>
             </div>
           ) : (
             <>
@@ -972,7 +996,7 @@ const TrustBar = () => {
   return (
     <section
       aria-labelledby="security-heading"
-      className="relative z-10 mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8"
+      className="relative z-10 mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8 text-white"
     >
       <motion.div {...REVEAL} className="max-w-2xl">
         <h2
@@ -1050,11 +1074,11 @@ const FlatteningEngine = () => {
             largest holdings fall at the same time with a loss much larger than the headline
             weighting suggests.
           </p>
-          <div className="mt-8 rounded-xl border border-[var(--signal-negative)]/10 bg-[var(--signal-negative)]/[0.15] p-6">
-            <span className="block font-mono text-xs font-medium uppercase tracking-wider text-zinc-500">
+          <div className="mt-8 rounded-xl border border-rose-500/20 bg-rose-500/10 p-6">
+            <span className="block font-mono text-xs font-medium uppercase tracking-wider text-zinc-400">
               Estimated portfolio loss
             </span>
-            <div className="mt-1 font-mono text-4xl font-bold tracking-tight text-[var(--signal-negative)] sm:text-5xl">
+            <div className="mt-1 font-mono text-4xl font-bold tracking-tight text-rose-500 sm:text-5xl">
               -{TOTAL_DRAWDOWN.toFixed(1)}%
             </div>
             <ul className="mt-4 space-y-2 text-sm leading-relaxed text-zinc-400">
@@ -1241,7 +1265,8 @@ const YellowButton = ({ children, large }) => {
     <motion.span
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
-      className={`inline-flex items-center gap-2 rounded-lg bg-[var(--accent-primary)] font-semibold text-[var(--text-on-accent)] shadow-[0_8px_24px_rgba(255,107,0,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] ${sizeClasses}`}
+      style={{ backgroundColor: ACCENT }}
+      className={`inline-flex items-center gap-2 rounded-lg font-semibold text-white shadow-[0_8px_24px_rgba(255,107,0,0.35),inset_0_1px_0_rgba(255,255,255,0.35)] ${sizeClasses}`}
     >
       {children}
     </motion.span>
