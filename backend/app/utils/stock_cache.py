@@ -39,6 +39,7 @@ PRICE_REFRESH_COOLDOWN_MINUTES = 10
 #and also short enough to where a company can release financials
 #on a random day mid-week and wont be long until the refresh to serve fresh data
 FUNDAMENTALS_TTL_HOURS = 24 * 7
+MARKET_DATA_MAX_AGE_DAYS = 4
 
 def should_refresh_market_data(last_fetched_at, ttl_hours: int | None = None) -> bool:
     if ttl_hours is None:
@@ -56,7 +57,7 @@ def should_refresh_market_data(last_fetched_at, ttl_hours: int | None = None) ->
     now = datetime.now(timezone.utc)
     return (now - last_fetched_at) > timedelta(hours=ttl_hours)
 
-def _get_latest_fetched_at(ticker: str) -> datetime | None:
+def _price_cache_is_stale(ticker: str) -> bool:
     db = SessionLocal()
     try:
         latest_record = (
@@ -65,9 +66,16 @@ def _get_latest_fetched_at(ticker: str) -> datetime | None:
             .order_by(MarketData.date.desc(), MarketData.fetched_at.desc())
             .first()
         )
-        return latest_record.fetched_at if latest_record is not None else None
     finally:
         db.close()
+
+    if latest_record is None:
+        return True
+
+    if should_refresh_market_data(latest_record.fetched_at):
+        return True
+
+    return (datetime.now(timezone.utc).date() - latest_record.date).days > MARKET_DATA_MAX_AGE_DAYS
 
 def _load_local_price_history(ticker:str) -> pd.DataFrame:
     db = SessionLocal()
@@ -240,7 +248,7 @@ def get_cached_price_history(ticker: str, period: str = "1y", force_live: bool =
     ticker = ticker.upper()
     history = _load_local_price_history(ticker)
     if not history.empty:
-            if not should_refresh_market_data(_get_latest_fetched_at(ticker)):
+            if not _price_cache_is_stale(ticker):
                 print(f"Local price hit: {ticker}")
                 return history
     if ticker in _REFRESH_LOCKS:
@@ -273,7 +281,7 @@ def get_cached_price_histories(tickers: list[str], period: str = "1y", force_liv
         history = _load_local_price_history(ticker)
         results[ticker] = history
         if not history.empty:
-            if not should_refresh_market_data(_get_latest_fetched_at(ticker)):
+            if not _price_cache_is_stale(ticker):
                 print(f"Local price hit: {ticker}")
                 continue
 
