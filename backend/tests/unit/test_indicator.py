@@ -52,8 +52,9 @@ def test_returns_empty_list_when_portfolios_have_no_holdings():
 @patch("app.routers.indicators.time.sleep")
 @patch("app.routers.indicators.get_market_returns", return_value=None)
 @patch("app.routers.indicators.serialize_indicator_row", side_effect=lambda r: r)
+@patch("app.routers.indicators.get_cached_price_histories", return_value={}) 
 @patch("app.routers.indicators.build_live_indicator_row")
-def test_serializes_every_built_row_and_returns_them_in_order(mock_build_row, _mock_serialize, _mock_returns, _mock_sleep):
+def test_serializes_every_built_row_and_returns_them_in_order(mock_build_row, _mock_histories, _mock_serialize, _mock_returns, _mock_sleep):
     holdings = [_mock_holding(ticker="NPN"), _mock_holding(ticker="ABG")]
     db = _mock_db(portfolios=[_mock_portfolio()], holdings=holdings)
 

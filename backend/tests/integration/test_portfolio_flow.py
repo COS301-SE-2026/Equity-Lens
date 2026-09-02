@@ -67,7 +67,7 @@ def test_import_to_dashboard(client, auth_headers, importe_portfolio, stub_data)
         "total_gain_loss_pct": 25.00,
         "num_holdings": 1,
         "daily_change_pct": 25.00,
-        "daily_change_value": 1250.0,
+        "daily_change_value": 1250.00,
     }
 
     naspers = body["holdings"][0]
