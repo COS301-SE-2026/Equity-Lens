@@ -1,8 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional
 from datetime import date
 from decimal import Decimal
 from uuid import UUID
+
+from app.schemas.portfolio import normalize_account_type
 
 class ImportPdfRequest(BaseModel):
     file_name: str
@@ -12,9 +14,14 @@ class PortfolioRequest(BaseModel):
     account_number: str
     portfolio_name: str
     currency: str = "ZAR"
-    statement_start_date: date
+    statement_start_date: Optional[date] = None
     statement_end_date: date
     account_type: str
+
+    @field_validator("account_type")
+    @classmethod
+    def check_known_account_type(cls, v):
+        return normalize_account_type(v)
 
 class HoldingsRequest(BaseModel):
     portfolio_id: UUID
@@ -25,6 +32,8 @@ class HoldingsRequest(BaseModel):
     total_cost: Decimal
     cost_price: Decimal
     weight_percentage: Decimal
+    statement_price: Optional[Decimal] = None
+    statement_value: Optional[Decimal] = None
 
 class InstrumentPurchasesAndSalesRequest(BaseModel):
     portfolio_id: UUID

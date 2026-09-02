@@ -9,6 +9,13 @@ from app.database import get_db
 from app.dependencies import get_current_user
 from app.main import app
 from app.models.user import User
+from app.services.portfolio_service import invalidate_priced_holdings
+
+@pytest.fixture(autouse=True)
+def _clear_priced_holdings_cache():
+    invalidate_priced_holdings()
+    yield
+    invalidate_priced_holdings()
 
 @pytest.fixture()
 def db_engine():

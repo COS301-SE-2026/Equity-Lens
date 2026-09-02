@@ -16,6 +16,7 @@ REGION_US = "United States"
 REGION_GLOBAL = "Global"
 REGION_EM = "Emerging Markets"
 REGION_UNKNOWN = "Unclassified"
+INVALID_TICKER_MARKERS = {"MTN_LIMIT_ISSUE", "NONE"}
 EXPOSURE_SA_EQUITY = "SA Equity"
 EXPOSURE_US_EQUITY = "US Equity"
 EXPOSURE_GLOBAL_EQUITY = "Global Equity"
@@ -43,6 +44,8 @@ _ETFS = {
     "Sygnia Itrix Top 40 Exchange Traded Fund": ("SYGT40.JO", EXPOSURE_SA_EQUITY, REGION_SA),
     "Satrix Nasdaq 100 Exchange Traded Fund": ("STXNDQ.JO", EXPOSURE_US_EQUITY, REGION_US),
     "Sygnia Itrix S&P 500 Exchange Traded Fund": ("SYG500.JO", EXPOSURE_US_EQUITY, REGION_US),
+    "Satrix S&P 500 ETF": ("STX500.JO", EXPOSURE_US_EQUITY, REGION_US),
+    "1NVEST S&P 500 Index STANLIB Feeder ETF": ("ETF500.JO", EXPOSURE_US_EQUITY, REGION_US),
     "Satrix MSCI World Exchange Traded Fund": ("STXWDM.JO", EXPOSURE_GLOBAL_EQUITY, REGION_GLOBAL),
     "Satrix MSCI Emerging Markets Exchange Traded Fund": (
         "STXEMG.JO", EXPOSURE_EM_EQUITY, REGION_EM
@@ -60,6 +63,23 @@ REGION_BENCHMARKS = {
     REGION_GLOBAL: ("URTH", "MSCI World", "USD"),
     REGION_EM: ("EEM", "MSCI EM", "USD"),
 }
+
+LOOK_THROUGH_NOTES = {
+    "NPN.JO": (
+        "Naspers' value is dominated by its stake in Prosus, which in turn holds a large "
+        "stake in Tencent. A meaningful share of this holding's real economic exposure is "
+        "Chinese technology, not South African market risk, even though it trades on the JSE."
+    ),
+    "AGL.JO": (
+        "Anglo American is dual-listed (JSE and LSE) with the large majority of its mining "
+        "operations outside South Africa. Its JSE listing captures the share price, not a "
+        "South-Africa-only earnings base."
+    ),
+}
+
+
+def get_look_through_note(ticker: str) -> str | None:
+    return LOOK_THROUGH_NOTES.get((ticker or "").upper())
 
 _FUND_NOISE = sorted(
     [

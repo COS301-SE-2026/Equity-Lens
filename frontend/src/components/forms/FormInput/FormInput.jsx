@@ -8,6 +8,7 @@
  *   value: string,
  *   onChange: (e: any) => void,
  *   onBlur?: (e: any) => void,
+ *   onFocus?: (e: any) => void,
  *   error?: string,
  *   placeholder?: string,
  *   required?: boolean,
@@ -22,6 +23,7 @@ const FormInput = ({
   value,
   onChange,
   onBlur,
+  onFocus,
   error,
   placeholder,
   required = false,
@@ -46,6 +48,7 @@ const FormInput = ({
         value={value}
         onChange={onChange}
         onBlur={onBlur}
+        onFocus={onFocus}
         placeholder={placeholder}
         disabled={disabled}
         required={required}
@@ -54,12 +57,12 @@ const FormInput = ({
         className={`
           w-full px-3.5 py-2.5 rounded-lg text-sm
           bg-[var(--bg-secondary)] text-[var(--text-primary)]
-          border transition-all duration-150
+          border transition-colors duration-150
           placeholder:text-[var(--text-secondary)]
           disabled:opacity-40 disabled:cursor-not-allowed
           ${error
-            ? 'border-[var(--color-danger)] focus:shadow-[0_0_0_3px_rgba(220,38,38,0.15)]'
-            : 'border-[var(--border-default)] focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_rgba(193,98,44,0.15)]'
+            ? 'border-[var(--color-danger)] focus:shadow-[0_0_0_3px_rgba(var(--signal-negative-rgb),0.15)]'
+            : 'border-[var(--border-default)] focus:border-[var(--accent-primary)] focus:shadow-[0_0_0_3px_rgba(var(--accent-primary-rgb),0.15)]'
           }
           focus:outline-none
         `}

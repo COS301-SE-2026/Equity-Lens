@@ -99,7 +99,7 @@ jobs:
         run: |
           docker build \
             -f frontend/Dockerfile.prod \
-            --build-arg VITE_API_URL=http://localhost:8000 \
+            --build-arg VITE_API_URL=http://localhost:8000\api \
             --build-arg VITE_COGNITO_USER_POOL_ID=af-south-1_smoketest \
             --build-arg VITE_COGNITO_CLIENT_ID=smoketestclientid \
             --build-arg VITE_COGNITO_REGION=af-south-1 \
@@ -289,7 +289,7 @@ jobs:
           skip-dirs: frontend/node_modules,node_modules,backend/venv,backend/.venv,frontend/dist,frontend/build
 
   ToRunlighthouse:
-    name: Run Lighthouse
+    name: Run Lighthouse NFR-2.2 & NFR-2.3
     runs-on: ubuntu-latest
     needs: [frontend]
     timeout-minutes: 3

@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import Money from '../../common/Money/Money';
 
 /**
  * @param {{
@@ -42,14 +43,14 @@ const WatchlistItem = ({ ticker, name, price, changePercent, onRemove }) => {
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px' }}>
-          <p style={{
+          <Money as="p" style={{
             fontSize: '12px',
             color: 'var(--text-primary)',
             fontFamily: 'var(--font-mono)',
             fontVariantNumeric: 'tabular-nums',
           }}>
             R{price.toFixed(2)}
-          </p>
+          </Money>
           <span style={{
             fontSize: '10px',
             fontFamily: 'var(--font-mono)',

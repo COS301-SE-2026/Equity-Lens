@@ -44,6 +44,7 @@ class HistoryResponse(BaseModel):
 class SearchResultItem(BaseModel):
     symbol: str = Field(..., json_schema_extra={"example": "AAPL"})
     name: str = Field(..., json_schema_extra={"example": "Apple Inc."})
+    quote_type: Optional[str] = None
 
 class SearchResponse(BaseModel):
     query: str = Field(..., json_schema_extra={"example": "Apple"})

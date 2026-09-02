@@ -6,6 +6,7 @@ from app.config import settings
 from app.models import user
 from app.models import market_data
 from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 import traceback
 from app.routers import news
 from app.routers import import_pdf
@@ -16,6 +17,10 @@ from app.routers import ai_chat
 from app.routers import market_data as market_data_router
 
 app = FastAPI(title="EquityLens API")
+
+
+class HealthResponse(BaseModel):
+    status: str
 
 app.add_middleware(
     CORSMiddleware,
@@ -38,7 +43,7 @@ async def startup():
 app.include_router(auth.router)
 app.include_router(portfolio.router)
 
-@app.get("/health")
+@app.get("/health", response_model=HealthResponse)
 async def health():
     return {"status": "ok"}
 
