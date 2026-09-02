@@ -341,7 +341,6 @@ def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = No
 
     portfolio_context = get_user_portfolio_context(db, logged_in_user_id)
 
-
     system_prompt = f"""You are an AI financial assistant for EquityLens. EquityLens is a web application built to help users navigate and understand their investment portfolios.
 
 NB -> Read this first (You should only help with the following 5 things):

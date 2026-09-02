@@ -8,6 +8,8 @@ from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages
+from pydantic import BaseModel
+from typing import Any
 from app.utils.ai_rate_limit import check_limit
 from app.config import settings
 import logging
