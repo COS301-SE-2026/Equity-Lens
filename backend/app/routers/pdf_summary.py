@@ -19,33 +19,33 @@ router = APIRouter(prefix="/api/import_pdf_summary", tags=["Import PDF"])
 
 class SummaryResponse(BaseModel):
     PortfolioValue: float = Field(example=["APPLE"])
-    TotalHoldings: int= Field(example=["22"])
+    TotalHoldings: int = Field(example=["22"])
     TotalPurchasesAndSales: float= Field(example=["23"])
-    TotalTransactionCosts: int= Field(example=["23"])
+    TotalTransactionCosts: float= Field(example=["23"])
     TotalContributionsAndWithdrawals: int= Field(example=["34"])
     TotalDividendsAndWithholdingTax: float= Field(example=["45"])
-    TotalTransactionInterest: int= Field(example=["56"])
-    TotalTransactionExpenses: int= Field(example=["68"])
+    TotalTransactionInterest: float= Field(example=["56"])
+    TotalTransactionExpenses: float= Field(example=["68"])
 
 class HoldingResponse(BaseModel):
     name: str = Field(example=["APPLE"])
-    value: int =Field(example=["68"])
+    value: float =Field(example=["68"])
 
 class PortfolioResponse(BaseModel):
     name: str = Field(example=["APPLE"])
     weight_percentage: float = Field(example=["56"])
-    with_holding_tax: float = Field(example=["56"])
-    net_dividend: float = Field(example=["56"])
 
 class DividendResponse(BaseModel):
     name: str = Field(example=["APPLE"])
-    gross_dividend: float = Field(example=["56"])
+    gross_dividend: float = Field(example=[2.3])
+    withholding_tax: float = Field(example=[2.3])
+    net_dividend: float = Field(example=[2.3])
 
 @router.get("/summary/{portfolioID}", response_model=SummaryResponse)
 def import_get_summary_import_PDF(portfolioID: str,db : Session = Depends(get_db), CurrentUser: UserResponse = Depends(get_current_user)):
     return get_summary_import_PDF(
         database=db,
-        portfolioID=portfolioID,
+        portfolioID=portfolioID,    
         user_id=CurrentUser.id
 
     )
