@@ -7,7 +7,7 @@ on:
     branches: [main, dev]
 
 jobs:
-    # nfr-1-1-and-1-6:
+    # nfr-1-1-and-1-7:
     #     name: NFR-1.1 & NFR1.7 OWSAP ZAP
     #     runs-on: ubuntu-latest
     #     timeout-minutes: 5
@@ -38,8 +38,8 @@ jobs:
                     https://www.equitylens.co.za
                     echo "PASS All the HTTPs/TLS connection"
 
-    nfr-1-5:
-        name: NFR-1.5 GitLeaks
+    nfr-1-6:
+        name: NFR-1.6 GitLeaks
         runs-on: ubuntu-latest
         timeout-minutes: 2
 
@@ -214,6 +214,6 @@ jobs:
               working-directory: frontend
               run: npx playwright install --with-deps
 
-            - name: Run NFR-5.3
+            - name: Run NFR-5.4
               working-directory: frontend
               run: npx playwright test test/nfr/nfr_5_3.spec.js
