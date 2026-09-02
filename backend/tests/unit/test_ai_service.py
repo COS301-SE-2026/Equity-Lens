@@ -1,5 +1,5 @@
 from app.services.ai_service import get_user_portfolio_context, chat
-from app.models.portfolio import Portfolios, Document
+from app.models.portfolio import Portfolios, Document, Holdings
 from unittest.mock import MagicMock, patch
 from app.models.chat import ChatMessages
 import pytest
@@ -87,3 +87,81 @@ def test_existing_chat(mock_bedrock_client, db_session, test_user):
 def test_empty_message():
     with pytest.raises(ValueError):
         ChatRequest(message = "", conversation_id = None)    
+
+@patch("app.services.ai_service.compute_health_score")
+@patch("app.services.ai_service._price_holdings")
+def test_portfolio_context_includes_health_score(
+    mock_price_holdings, mock_health, db_session, test_user
+):
+    portfolio = Portfolios(
+        user_id=test_user.id,
+        account_number="U23-536",
+        portfolio_name="Test portfolio"
+    )
+    db_session.add(portfolio)
+    db_session.flush()
+
+    db_session.add(Holdings(
+        portfolio_id=portfolio.id,
+        instrument_name="Naspers",
+        ticker="NPN.JO",
+        sector="Technology",
+        quantity=10,
+        cost_price=3000,
+        total_cost=30000,
+        weight_percentage=100
+    ))
+    db_session.commit()
+
+    mock_price_holdings.return_value = [{"ticker": "NPN.JO", "value": 30000.0}]
+    mock_health.return_value = {
+        "score": 7.2,
+        "label": "Well diversified",
+        "subscores": [
+            {
+                "label": "Sector Concentration",
+                "weight": 0.4,
+                "value": 6.5,
+                "detail": "One sector holds 100% of value.",
+            }
+        ],
+    }
+
+    output = get_user_portfolio_context(db_session, test_user.id)
+
+    assert "Portfolio Health: 7.2/10 (Well diversified)" in output
+    assert "Sector Concentration (weight 40%): 6.5/10" in output
+    assert "One sector holds 100% of value." in output
+
+
+@patch("app.services.ai_service.compute_health_score")
+@patch("app.services.ai_service._price_holdings")
+def test_portfolio_context_skips_health_when_unscorable(
+    mock_price_holdings, mock_health, db_session, test_user
+):
+    portfolio = Portfolios(
+        user_id=test_user.id,
+        account_number="U23-537",
+        portfolio_name="Test portfolio",
+    )
+    db_session.add(portfolio)
+    db_session.flush()
+
+    db_session.add(Holdings(
+        portfolio_id=portfolio.id,
+        instrument_name="Naspers",
+        ticker="NPN.JO",
+        quantity=10,
+        cost_price=3000,
+        total_cost=30000,
+        weight_percentage=100
+    ))
+    db_session.commit()
+
+    mock_price_holdings.return_value = []
+    mock_health.return_value = {"score": None, "label": None, "subscores": []}
+
+    output = get_user_portfolio_context(db_session, test_user.id)
+
+    assert "Naspers" in output
+    assert "Portfolio Health" not in output
