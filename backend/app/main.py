@@ -13,7 +13,6 @@ from app.routers import import_pdf
 from app.routers import pdf_summary
 from app.routers import watchlist
 from app.routers import indicators
-from app.routers import goals
 from app.routers import ai_chat
 from app.routers import market_data as market_data_router
 
@@ -56,5 +55,4 @@ app.include_router(news.router)
 app.include_router(ai_chat.router)
 app.include_router(import_pdf.router)
 app.include_router(indicators.router)
-app.include_router(goals.router)
 app.include_router(market_data_router.router)
