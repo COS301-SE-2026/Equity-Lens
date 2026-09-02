@@ -21,6 +21,7 @@ from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
 from pydantic import BaseModel, Field
 from typing import Any
+from uuid import UUID
 
 class ImportPDFResponse(BaseModel):
     Success: bool = Field(examples=[True])
