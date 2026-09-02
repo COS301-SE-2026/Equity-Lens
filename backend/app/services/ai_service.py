@@ -3,7 +3,11 @@ from app.config import settings
 from app.models.portfolio import Portfolios, Document, Holdings
 from app.models.chat import ChatConversation, ChatMessages
 from datetime import datetime, timezone
+from functools import lru_cache
+from app.services.health_score import compute_health_score
+from app.services.portfolio_service import _price_holdings
 
+@lru_cache(maxsize = 1)
 def get_bedrock_client():
     import boto3
     return boto3.client(
@@ -29,6 +33,11 @@ def get_user_portfolio_context(db: Session, user_id):
             knowledge += (f"- {i.instrument_name} ({i.ticker}),  sector: {i.sector},  "
                           f"quantity: {i.quantity}, cost price: R{i.cost_price}, "
                           f"overall cost: R{i.total_cost}, weight: {i.weight_percentage}%\n")
+        health = compute_health_score(_price_holdings(holdings))
+        if health["score"] is not None:
+            knowledge += f"\nPortfolio Health: {health['score']}/10 ({health['label']})\n"
+            for s in health["subscores"]:
+                knowledge += f"- {s['label']} (weight {s['weight'] * 100:.0f}%): {s['value']}/10 - {s['detail']}\n"
 
     #documents
     documents = db.query(Document).filter(Document.user_id == user_id).all()

@@ -9,7 +9,7 @@ export default defineConfig({
     restoreMocks: true,
     globals: true,
     environment: 'jsdom',
-    setupFiles: './src/test/setup.js',
+    setupFiles: './test/setup.js',
     coverage: {
       reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',
