@@ -1,5 +1,7 @@
 from unittest.mock import Mock,patch
 
+import pytest
+
 from app.services.watchlist import add_watchlist_service
 from app.services.watchlist import get_watchlist_service
 from app.services.watchlist import remove_watchlist_service
@@ -47,6 +49,27 @@ def test_get_watchlist_service(mock_ticker, mock_data):
     assert result["watchlist"][0]["current_price"] == 200
     assert result["highest"]["ticker"] == "AAPL"
     assert result["lowest"]["ticker"] == "AAPL"
+
+@patch("app.services.watchlist.get_watchlist")
+@patch("app.services.watchlist.yf.Ticker")
+def test_get_watchlist_service_divides_jse_cents_price_by_100(mock_ticker, mock_data):
+    item = Mock()
+    item.id = 1
+    item.ticker = "NPN.JO"
+    item.company_name = "Naspers"
+    item.sector = "Technology"
+
+    mock_data.return_value = [item]
+
+    mock_ticker.return_value.info = {
+        "currentPrice": 80492,
+        "regularMarketChangePercent": 1.5,
+    }
+
+    result = get_watchlist_service(Mock(), 1)
+
+    assert result["watchlist"][0]["current_price"] == pytest.approx(804.92)
+    assert result["watchlist"][0]["change_percent"] == 1.5
 
 @patch("app.services.watchlist.remove_watchlist")
 def test_remove_watchlist_service(mock_remove):

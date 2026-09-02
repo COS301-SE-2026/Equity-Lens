@@ -2,12 +2,15 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 
+import { ThemeProvider } from '../../context/ThemeContext';
 import BrandStyleGuide from './BrandStyleGuide';
 
 const renderPage = () =>
   render(
     <MemoryRouter>
-      <BrandStyleGuide />
+      <ThemeProvider>
+        <BrandStyleGuide />
+      </ThemeProvider>
     </MemoryRouter>,
   );
 
@@ -35,7 +38,7 @@ describe('BrandStyleGuide', () => {
 
   it('discloses known danger-button contrast failure', () => {
     renderPage();
-    expect(screen.getByText(/button danger text \(white\) on --color-danger bg/i)).toBeInTheDocument();
+    expect(screen.getByText(/white text on --color-danger \/ signal-negative bg/i)).toBeInTheDocument();
     expect(screen.getAllByText('Fails').length).toBeGreaterThan(0);
   });
 
