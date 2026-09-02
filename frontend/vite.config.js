@@ -10,6 +10,11 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './test/setup.js',
+    exclude :[
+      '**/node_modules/**',
+      '**/e2e/**',
+      '**/test/nfr/**'
+    ],
     coverage: {
       reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',
