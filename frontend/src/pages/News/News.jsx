@@ -304,11 +304,6 @@ const NewsInvestment = () => {
               <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Portfolio News</h2>
               <div className="flex items-center justify-between w-full mb-4">
                 <div className="flex flex-wrap gap-2">
-                  <button onClick={ToGetAllPortfolioNews} className={`px-3 py-1 rounded-full ${activeCategory === "all" ?
-                    "bg-blue-500/20 text-blue-400 border-blue-500/40" : "bg-[var(--surface-card)] text-[var(--text-secondary)] border-transparent"
-                  }`}>
-                    All
-                  </button>
                   {portfoliosTickers.map((ticker) => (
                     <button key={ticker} onClick={() => { setActiveCategory(ticker); ToGetTickerNews(ticker); }} className={`px-3 py-1 rounded-full ${activeCategory === ticker ?
                       "bg-blue-500/20 text-blue-400 border-blue-500/40" :
@@ -331,7 +326,13 @@ const NewsInvestment = () => {
                 </div>
               </div>
 
-              {filteredArticles.map((article) => (
+              {filteredArticles.length === 0 ? (
+                <div className="text-center py-10 text-[var(--text-secondary)]"> 
+                <p className="text-lg font-medium">
+                    No News available
+                </p>
+                </div>
+                ) : filteredArticles.map((article) => (
                 <div key={article.article_id} className="flex items-center  border-b border-[var(--border-subtle)] p-5 gap-4">
 
                   <div>

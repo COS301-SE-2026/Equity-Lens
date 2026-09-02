@@ -1,5 +1,4 @@
-import { Menu, Sun, Moon } from 'lucide-react';
-import { useThemeContext } from '../../../context/ThemeContext.jsx';
+import { Menu } from 'lucide-react';
 import useAuth from '../../../hooks/useAuth';
 
 // pulled for demo 2 - was hardcoded mock data, not live. revisit properly for demo 3.
@@ -11,7 +10,6 @@ import useAuth from '../../../hooks/useAuth';
 
 const Topbar = ({ onMenuClick }) => {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useThemeContext();
 
   const initials = user?.full_name
     ? user.full_name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -87,14 +85,7 @@ const Topbar = ({ onMenuClick }) => {
           {user?.full_name?.split(' ')[0] ?? 'there'}
         </span>
 
-        <button
-          onClick={toggleTheme}
-          style={{ color: 'var(--text-secondary)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? <Sun size={13} /> : <Moon size={13} />}
-        </button>
-
+  
         <button
           onClick={logout}
           style={{
