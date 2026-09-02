@@ -16,10 +16,10 @@ load_dotenv()
 router = APIRouter(prefix="/api/news", tags=["importing news"])
 
 class NewsResponse(BaseModel):
-    total_articles: int = Field(example=["23"])
-    positive: int = Field(example=["22"])
-    negative: int = Field(example=["24"])
-    neutral: int = Field(example=["23"])
+    total_articles: int = Field(examples=[23])
+    positive: int = Field(examples=[33])
+    negative: int = Field(examples=[24])
+    neutral: int = Field(examples=[23])
     results: list[dict[str, Any]]
 
 class AAPLNewsResponse(BaseModel):
@@ -28,14 +28,14 @@ class AAPLNewsResponse(BaseModel):
     positive: int = Field(examples=[1])
     negative: int = Field(examples=[0])
     neutral: int = Field(examples=[2])
-    articles: list[dict[str,any]]
+    articles: list[dict[str,Any]]
 
 class TickerResponse(BaseModel):
     tickers: list[str] = Field(examples=[["AAPL", "MFST", "TSLA"]])
 
-@router.get("/all")
+@router.get("/all",response_model=NewsResponse)
 def get_news(current_user: User = Depends(get_current_user)):
-    api_key=os.getenv("NEWSDATA_API_KEY",response_model=NewsResponse)
+    api_key=os.getenv("NEWSDATA_API_KEY")
 
     response = requests.get("https://newsdata.io/api/1/latest",
       params={
