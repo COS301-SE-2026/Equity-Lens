@@ -55,6 +55,14 @@ def test_serialize_indicator_row_preserves_errors():
     assert row["capm"] == {"status": "error"}
     assert row["beta"] == {"status": "error"}
 
+def test_serialize_indicator_row_preserves_live_fetch_flag():
+    row = serialize_indicator_row({"ticker": "AAPL", "name": "Apple Inc.", "live_fetch": True})
+    assert row["live_fetch"] is True
+
+def test_serialize_indicator_row_defaults_live_fetch_to_false():
+    row = serialize_indicator_row({"ticker": "AAPL", "name": "Apple Inc."})
+    assert row["live_fetch"] is False
+
 def _price_history():
     dates = pd.date_range("2025-08-01", periods=252)
     closes = [100.0 + i * 0.1 for i in range(252)]
@@ -175,3 +183,48 @@ def test_no_price_data_produces_whole_row_error():
     assert row["error"] == "No price data"
     assert row["pe_ratio"] is None
     assert row["beta"] is None
+
+def test_live_fetch_true_when_served_live():
+    with patch("app.services.indicator_service.get_cached_price_history", return_value=_price_history()), \
+         patch("app.services.indicator_service.get_cached_fundamentals", return_value={
+             "info": {"trailingEps": 5.0, "quoteType": "EQUITY"},
+             "balance_sheet": pd.DataFrame(),
+             "financials": pd.DataFrame(),
+             "live_fetch": True,
+         }), \
+         patch("app.services.indicator_service.calculate_pe_ratio", return_value=12.0):
+        row = build_live_indicator_row("XYZ", "Widget Co", _market_returns())
+
+    assert row["live_fetch"] is True
+
+def test_live_fetch_false_when_cached():
+    with patch("app.services.indicator_service.get_cached_price_history", return_value=_price_history()), \
+         patch("app.services.indicator_service.get_cached_fundamentals", return_value={
+             "info": {"trailingEps": 5.0, "quoteType": "EQUITY"},
+             "balance_sheet": pd.DataFrame(),
+             "financials": pd.DataFrame(),
+             "live_fetch": False,
+         }), \
+         patch("app.services.indicator_service.calculate_pe_ratio", return_value=12.0):
+        row = build_live_indicator_row("XYZ", "Widget Co", _market_returns())
+
+    assert row["live_fetch"] is False
+
+def test_live_fetch_defaults_false_when_missing():
+    with patch("app.services.indicator_service.get_cached_price_history", return_value=_price_history()), \
+         patch("app.services.indicator_service.get_cached_fundamentals", return_value={
+             "info": {"trailingEps": 5.0, "quoteType": "EQUITY"},
+             "balance_sheet": pd.DataFrame(),
+             "financials": pd.DataFrame(),
+         }), \
+         patch("app.services.indicator_service.calculate_pe_ratio", return_value=12.0):
+        row = build_live_indicator_row("XYZ", "Widget Co", _market_returns())
+
+    assert row["live_fetch"] is False
+
+def test_live_fetch_false_when_no_price_data():
+    with patch("app.services.indicator_service.get_cached_price_history", return_value=pd.DataFrame()):
+        row = build_live_indicator_row("DELISTED", "Delisted Co", _market_returns())
+
+    assert row["live_fetch"] is False
+        
