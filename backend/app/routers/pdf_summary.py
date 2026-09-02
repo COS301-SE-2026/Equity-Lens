@@ -22,7 +22,7 @@ class SummaryResponse(BaseModel):
     TotalHoldings: int = Field(example=["22"])
     TotalPurchasesAndSales: float= Field(example=["23"])
     TotalTransactionCosts: float= Field(example=["23"])
-    TotalContributionsAndWithdrawals: int= Field(example=["34"])
+    TotalContributionsAndWithdrawals: float = Field(example=[34.0])
     TotalDividendsAndWithholdingTax: float= Field(example=["45"])
     TotalTransactionInterest: float= Field(example=["56"])
     TotalTransactionExpenses: float= Field(example=["68"])
