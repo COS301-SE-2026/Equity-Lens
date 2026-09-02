@@ -8,8 +8,19 @@ from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages
+from pydantic import BaseModel
+from typing import Any
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
+
+class NewsResponse(BaseModel):
+    total_articles: int,
+    positive: int,
+    negative: int,
+    result: lis[dict[str, Any]]
+
+class TickerResponse(BaseModel):
+    ticker: list[str]
 
 class ChatRequest(BaseModel):
     message: str

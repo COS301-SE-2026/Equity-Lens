@@ -9,6 +9,8 @@ import {
   setUpTOTP,
   verifyTOTPSetup,
   updateMFAPreference,
+  resetPassword,
+  confirmResetPassword,
 } from "aws-amplify/auth";
 
 export async function register(fullName, email, password) {
@@ -28,6 +30,11 @@ export const login = (email, password) => signIn({ username: email, password });
 export const respondToMFA = (totpCode) => confirmSignIn({ challengeResponse: totpCode });
 export const initTOTPSetup = () => setUpTOTP();
 export const logout = () => signOut();
+
+export const requestPasswordReset = (email) => resetPassword({ username: email });
+
+export const confirmPasswordReset = (email, code, newPassword) =>
+  confirmResetPassword({ username: email, confirmationCode: code, newPassword });
 
 export async function confirmTOTPSetup(totpCode) {
   await verifyTOTPSetup({ code: totpCode });
