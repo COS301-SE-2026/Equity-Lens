@@ -10,6 +10,11 @@ import { ROUTES } from "../../utils/constants"
 ShowPdf.GlobalWorkerOptions.workerPort = new PDFworker();
 
 const DownloadEXCEL = () =>{ window.open("/template/EquityLens_Portfolio_Excel_Template.xlsx") }
+const cardStyle   = {background: 'var(--surface-card)', borderColor: 'var(--border-subtle)'};
+const panelStyle  = {borderColor: 'var(--border-subtle)'};
+const titleStyle  = {color: 'var(--text-primary)'};
+const mutedStyle  = {color: 'var(--text-secondary)'};
+const dimStyle    = {color: 'var(--text-dim)'};
 
 const ACCOUNT_TYPES = [
   { value: "zar", label: "ZAR" },
@@ -798,10 +803,10 @@ const Portfolio = () => {
     if (LoadingPage)
     {
       return(
-        <div className="flex flex-col items-center justify-center mt-30">
+        <div className="flex flex-col items-center justify-center mt-32">
         <LoaderCircle className="w-20 h-16 animate-spin text-orange-500" />     
-        <h2 className="text-2xl text-white font-bold mt-4">Loading Portfolio</h2>
-        <p className="text-gray-400">Please wait until we import your portfolio...</p>
+        <h2 className="text-2xl font-bold mt-4" style = {{color: 'var(--text-primary)'}}>Loading Portfolio</h2>
+        <p style = {{color: 'var(--text-secondary)'}}>Please wait until we import your portfolio...</p>
         </div>
       )
     }
@@ -1060,85 +1065,85 @@ const Portfolio = () => {
 
       { summary && <div className="grid grid-cols-6 gap-8 mt-8">
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+        <div className="p-5 border rounded-2xl" style = {panelStyle}>
 
           <div className="flex items-center gap-3 mb-2">
 
             <Wallet size={20} className="text-yellow-500" />
-            <p className="text-gray-400">Portfolio Value</p>
+            <p style = {mutedStyle}>Portfolio Value</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R {summary?.PortfolioValue || 0}</h2>
+          <h2 className="text-2xl font-bold" style = {titleStyle}>R {summary?.PortfolioValue || 0}</h2>
 
 
         </div>
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+        <div className="p-5 border rounded-2xl" style = {panelStyle}>
 
           <div className="flex items-center gap-3 mb-2">
 
             <Briefcase size={20} className="text-blue-500" />
-            <p className="text-gray-400">Holdings</p>
+            <p style = {mutedStyle}>Holdings</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">{summary?.TotalHoldings || 0}</h2>
+          <h2 className="text-2xl font-bold" style = {titleStyle}>{summary?.TotalHoldings || 0}</h2>
 
         </div>
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+           <div className="p-5 border rounded-2xl" style = {panelStyle}>
 
-          <div className="flex items-center gap-3 mb-2">
-            <ArrowLeftRight size={20} className="text-green-500" />
-            <p className="text-gray-400">Purchase & Sales</p>
+            <div className="flex items-center gap-3 mb-2">
+              <ArrowLeftRight size={20} className="text-green-500" />
+              <p style = {mutedStyle}>Purchase & Sales</p>
+            </div>
+
+            <h2 className="text-2xl font-bold" style = {titleStyle}>R {summary?.TotalPurchasesAndSales || 0}</h2>  
+
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R {summary?.TotalPurchasesAndSales || 0}</h2>
 
-        </div>
+          <div className="p-5 border rounded-2xl" style = {panelStyle}>
 
-
-        <div className="p-5 border border-gray-700 rounded-2xl">
-
-          <div className="flex items-center gap-3 mb-2">
+            <div className="flex items-center gap-3 mb-2">
 
             <Landmark size={20} className="text-purple-500" />
-            <p className="text-gray-400">Contributions</p>
+            <p style = {mutedStyle}>Contributions</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R {summary?.TotalContributionsAndWithdrawals || 0}</h2>
+          <h2 className="text-2xl font-bold" style = {titleStyle}>R {summary?.TotalContributionsAndWithdrawals || 0}</h2>
 
         </div>
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+        <div className="p-5 border rounded-2xl" style = {panelStyle}>
 
           <div className="flex items-center gap-3 mb-2">
 
             <TrendingUp size={20} className="text-green-500" />
-            <p className="text-gray-400">Dividends</p>
+            <p style = {mutedStyle}>Dividends</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R {summary?.TotalDividendsAndWithholdingTax || 0}</h2>
+          <h2 className="text-2xl font-bold" style = {titleStyle}>R {summary?.TotalDividendsAndWithholdingTax || 0}</h2>
 
         </div>
 
-        <div className="p-5 border border-gray-700 rounded-2xl">
+        <div className="p-5 border rounded-2xl" style = {panelStyle}>
 
           <div className="flex items-center gap-3 mb-2">
 
             <CreditCard size={20} className="text-orange-500" />
-            <p className="text-gray-400">Expenses</p>
+            <p style = {mutedStyle}>Expenses</p>
 
           </div>
 
-          <h2 className="text-2xl font-bold text-white">R {summary?.TotalTransactionExpenses || 0}</h2>
+          <h2 className="text-2xl font-bold" style = {titleStyle}>R {summary?.TotalTransactionExpenses || 0}</h2>
 
         </div>
-
       </div>
+
 
       }
 
@@ -1155,9 +1160,9 @@ const Portfolio = () => {
 
 
       { summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 mb-7">
-
-        <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center mb-4">
+          
+        <div className="min-w-0 border rounded-2xl p-4" style = {panelStyle}>
+          <h2 className="text-xl font-bold text-center mb-4" style = {titleStyle}>
             Trading Activity
           </h2>
 
@@ -1167,15 +1172,15 @@ const Portfolio = () => {
             <XAxis dataKey="name"/>
             <YAxis/>
             <Tooltip/>
-            <Bar dataKey="value" fill="blue"/>
+            <Bar dataKey="value" fill={colours[1]} />
           </BarChart>
           </ResponsiveContainer>
           </div>
           
         </div>
 
-        <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center mb-4">
+        <div className="min-w-0 border rounded-2xl p-4" style = {panelStyle}>
+          <h2 className="text-xl font-bold text-center mb-4" style = {titleStyle}>
             Cash flow
           </h2>
 
@@ -1199,8 +1204,8 @@ const Portfolio = () => {
 
         </div>
 
-         <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center mb-4">
+        <div className="min-w-0 border rounded-2xl p-4" style = {panelStyle}>
+          <h2 className="text-xl font-bold text-center mb-4" style = {titleStyle}>
             Dividend Income
           </h2>
 
@@ -1212,9 +1217,9 @@ const Portfolio = () => {
             <Tooltip/>
             <Legend/>
 
-            <Line dataKey="gross_dividend" stroke="blue" />
-            <Line dataKey="withholding_tax" stroke="red" />
-            <Line dataKey="net_dividend" stroke="green" />
+            <Line dataKey="gross_dividend"  stroke={colours[1]} />
+            <Line dataKey="withholding_tax" stroke="#EF4444" />
+            <Line dataKey="net_dividend"    stroke={colours[2]} />
 
           </LineChart>
           </ResponsiveContainer>
@@ -1230,8 +1235,8 @@ const Portfolio = () => {
 
        
 
-        <div className="border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center">
+        <div className="min-w-0 border rounded-2xl p-4" style = {panelStyle}>
+          <h2 className="text-xl font-bold text-center" style = {titleStyle}>
             Assert allocation
           </h2>
 
@@ -1253,34 +1258,31 @@ const Portfolio = () => {
 
           </div>
 
-        <div className="col-span-2 border border-gray-700 rounded-2xl p-4">
-          <h2 className="text-xl font-bold text-white text-center">
+        <div className="col-span-2 min-w-0 border rounded-2xl p-4" style = {panelStyle}>
+          <h2 className="text-xl font-bold text-center" style = {titleStyle}>
             Top Holdings
           </h2>
 
           {GetTheTopHoldingsImportPDF.map((item, index) =>
             <div key={index} className="mb-4">
               <div className="flex justify-between mb-1">
-                <p className="text-gray-300">
-                  {item.name}
-                </p>
-
-                <p className="text-gray-300">
-                  R{item.value}
-                </p>
+                  <p style={mutedStyle}>
+                    {item.name}
+                  </p>
+                  <p style={mutedStyle}>
+                    R{item.value}
+                  </p>
               </div>
 
 
-              <div className="w-full bg-gray-600 rounded-full h-3">
+              <div className="w-full rounded-full h-3" style={{ background: 'var(--surface-inset)' }}>
                 <div className="h-3 rounded-full"
-                     style={{
-                      width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
-                      backgroundColor: colours[index % colours.length]
-                     }}>
-
+                      style={{
+                        width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
+                        backgroundColor: colours[index % colours.length]
+                    }}>
                 </div>
               </div>
-
             </div>
           )}
         </div> 
@@ -1295,40 +1297,37 @@ const Portfolio = () => {
 
           <div className="flex items-center gap-2">
             <TriangleAlert size={24} className="text-red-500"></TriangleAlert>
-            <h2 className="text-xl font-bold text-red">
+            <h2 className="text-xl font-bold" style = {{ color: 'var(--signal-negative)' }}>
               Lowest Holding
             </h2>
           </div>
 
-
-          <p className="text-gray-400 mb-5">
+          <p className="mb-5" style = {mutedStyle}>
             Your smallest holdings by weight in the portfolio
           </p>
+            <div className="flex justify-between border rounded-xl p-4" style = {panelStyle}>
 
-          <div className="flex justify-between border border-gray-700 rounded-xl p-4">
+              <div>
+                <p className="text-xl font-bold" style = {titleStyle}>{GetTheLowest?.name ?? "No holdings"}</p>    
+              </div>
 
-            <div>
-              <p className="text-xl text-white font-bold">{GetTheLowest?.name ?? "No holdings"}</p>
+              <div>
+                <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
+              </div>
+
             </div>
-
-            <div>
-              <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
-            </div>
-
-          </div>
-
         </div>
 
         <div className="p-6 border border-purple-500 rounded-2xl">
 
           <div className="flex items-center gap-2">
             <Bot size={24} className="text-purple-500"></Bot>
-            <h2 className="text-xl font-bold">
+            <h2 className="text-xl font-bold" style = {titleStyle}>
               AI Portfolio Assistant
             </h2>
           </div>
 
-          <p className="text-gray-400 mb-5">
+          <p className="mb-5" style = {mutedStyle}>
             Ask questions about your portfolio and recivce AI-powered insights.
           </p>
 
