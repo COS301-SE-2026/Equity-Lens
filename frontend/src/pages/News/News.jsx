@@ -25,40 +25,39 @@ const NewsInvestment = () => {
     /** @type{any[]}*/
     let AllArticles = [];
 
-    for(const ticker of portfoliosTickers)
-    {
-    const response = await api.get(`/news/test-aapl/${ticker}`);
+    for (const ticker of portfoliosTickers) {
+      const response = await api.get(`/news/test-aapl/${ticker}`);
 
-    /** @type {Array<any>} */
-    const tickerArticles = response.data.articles || [];
+      /** @type {Array<any>} */
+      const tickerArticles = response.data.articles || [];
 
-    const formattedArticles = tickerArticles.map((article) => {
-      const entity = article.entities?.find( /** @param {any} entity*/(entity) => entity.symbol === ticker);
+      const formattedArticles = tickerArticles.map((article) => {
+        const entity = article.entities?.find( /** @param {any} entity*/(entity) => entity.symbol === ticker);
 
-      const score = entity?.sentiment_score;
+        const score = entity?.sentiment_score;
 
-      let sentiment = "neutral";
+        let sentiment = "neutral";
 
-      if (score > 0) {
-        sentiment = "positive"
-      }
-      else if (score < 0) {
-        sentiment = "negative"
-      }
-      return {
-        article_id: article.uuid,
-        title: article.title,
-        description: article.description,
-        image_url: article.image_url,
-        pubDate: article.published_at,
-        source_name: article.source,
-        category: [ticker],
-        sentiment: sentiment,
-        sentiment_score: score ?? 0,
-      };
-    });
+        if (score > 0) {
+          sentiment = "positive"
+        }
+        else if (score < 0) {
+          sentiment = "negative"
+        }
+        return {
+          article_id: article.uuid,
+          title: article.title,
+          description: article.description,
+          image_url: article.image_url,
+          pubDate: article.published_at,
+          source_name: article.source,
+          category: [ticker],
+          sentiment: sentiment,
+          sentiment_score: score ?? 0,
+        };
+      });
       AllArticles = [...AllArticles, ...formattedArticles];
-  }
+    }
     setArticles(AllArticles);
     setActiveCategory("all");
     setSentimentFilter("all");
@@ -158,7 +157,7 @@ const NewsInvestment = () => {
 
   }
 
-   /** @param {string} WatchlistID*/
+  /** @param {string} WatchlistID*/
   const ToDeleteWishlist = async (WatchlistID) => {
     await api.delete(`/watchlist/${WatchlistID}`);
     ToGetWishlist();
@@ -316,7 +315,6 @@ const NewsInvestment = () => {
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
 
-                    <button onClick={() => ToGetAllPortfolioNews()} className="px-4 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition"> All </button>
                     <button onClick={() => setSentimentFilter("positive")} className="px-4 py-2 rounded-lg border border-green-500/40 bg-green-500/20 text-green-400 hover:bg-green-500/30 transition"> Positive </button>
                     <button onClick={() => setSentimentFilter("negative")} className="px-4 py-2 rounded-lg border border-red-500/40 bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"> Negative </button>
                     <button onClick={() => setSentimentFilter("neutral")} className="px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition"> Neutral </button>
@@ -327,12 +325,12 @@ const NewsInvestment = () => {
               </div>
 
               {filteredArticles.length === 0 ? (
-                <div className="text-center py-10 text-[var(--text-secondary)]"> 
-                <p className="text-lg font-medium">
+                <div className="text-center py-10 text-[var(--text-secondary)]">
+                  <p className="text-lg font-medium">
                     No News available
-                </p>
+                  </p>
                 </div>
-                ) : filteredArticles.map((article) => (
+              ) : filteredArticles.map((article) => (
                 <div key={article.article_id} className="flex items-center  border-b border-[var(--border-subtle)] p-5 gap-4">
 
                   <div>
@@ -350,7 +348,7 @@ const NewsInvestment = () => {
                     <p className="text-sm text-[var(--text-secondary)] mt-1">{article.source_name}</p>
                   </div>
 
-                  
+
                   {article.category.map(/** @param {string} article*/(article) => (
                     <p key={article} className="px-3 py-1 text-sm rounded-full bg-blue-500/20 text-blue-400">
                       {article}
@@ -359,16 +357,16 @@ const NewsInvestment = () => {
                   <p className={`px-3 py-1 text-sm rounded-full capitalize flex items-center gap-1 
                   ${article.sentiment === "positive" ? "bg-green-500/20 text-green-400" : article.sentiment === "negative" ? "bg-red-500/20 text-red-400" : "bg-purple-500/20 text-purple-400"}`} >
 
-                  {article.sentiment === "positive" && (
-                    <TrendingUp className="w-4 h-4" />)}
+                    {article.sentiment === "positive" && (
+                      <TrendingUp className="w-4 h-4" />)}
 
-                  {article.sentiment === "negative" && (
-                    <TrendingDown className="w-4 h-4" />)}
+                    {article.sentiment === "negative" && (
+                      <TrendingDown className="w-4 h-4" />)}
 
-                  {article.sentiment === "neutral" && (
-                    <span>-</span>)}
+                    {article.sentiment === "neutral" && (
+                      <span>-</span>)}
 
-                  {article.sentiment}
+                    {article.sentiment}
                   </p>
                 </div>
 
@@ -494,16 +492,6 @@ const NewsInvestment = () => {
                   }} className={`px-3 py-1 rounded-full ${activeCategory == "Crime" ? "bg-blue-500/20 text-blue border border-blue-500/40 " : "bg-[var(--surface-card)] text-[var(--text-secondary)]"}`}> Crime </button>
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-
-                    <button className="px-4 py-2 rounded-lg border border-blue-500/40 bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 transition"> All </button>
-                    <button className="px-4 py-2 rounded-lg border border-green-500/40 bg-green-500/20 text-green-400 hover:bg-green-500/30 transition"> Positive </button>
-                    <button className="px-4 py-2 rounded-lg border border-red-500/40 bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"> Negative </button>
-                    <button className="px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition"> Neutral </button>
-
-                  </div>
-                </div>
               </div>
 
 
@@ -531,22 +519,6 @@ const NewsInvestment = () => {
                       {article}
                     </p>
                   ))}
-                  <p className={`px-3 py-1 text-sm rounded-full capitalize flex items-center gap-1 
-                  ${article.sentiment === "positive" ? "bg-green-500/20 text-green-400" : article.sentiment === "negative" ? "bg-red-500/20 text-red-400" : "bg-purple-500/20 text-purple-400"}`} >
-
-
-                  {article.sentiment === "positive" && (
-                    <TrendingUp className="w-4 h-4" />)}
-
-                  {article.sentiment === "negative" && (
-                    <TrendingDown className="w-4 h-4" />)}
-
-                  {article.sentiment === "neutral" && (
-                    <span>-</span>)}
-
-                  {article.sentiment}
-
-                  </p>
 
                 </div>
               ))}
