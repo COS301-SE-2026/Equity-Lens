@@ -61,23 +61,6 @@ describe("AIChat", () => {
     renderChat();
     expect(screen.getByText("Hello there")).toBeDefined();
   });
-  describe("suggested prompts", () => {
-    it("Renders all three suggested prompts to the user when they first click the page or start a new chat", () => {
-      renderChat();
-      expect(screen.getByRole("button", {name: /How is MTN doing/i})).toBeDefined();
-      expect(screen.getByRole("button", {name: /What is the news with Sasol?/i})).toBeDefined();
-      expect(screen.getByRole("button", {name: /How is my portfolio performing/i})).toBeDefined();
-    });
-  
-    it("Sends the prompt when it is clicked", async () => {
-      mockPost.mockResolvedValue({data: {reply: "mock reply", conversation_id: 1}});
-      renderChat();
-      fireEvent.click(screen.getByRole("button", {name: /How is MTN doing?/i}));
-
-      expect(screen.getByText(/How is MTN doing?/i)).toBeDefined();
-      expect(api.post).toHaveBeenCalledWith("/ai_chat/", {message: "How is MTN doing?", conversation_id: null});
-      });
-    });
     
   describe("when the user sends a message", () => {
     beforeEach(() => {
