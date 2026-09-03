@@ -33,6 +33,7 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 | SRS (Demo 1, superseded) | [View SRS](./Documentation/Demo_3/Software_Requirement_Specification.pdf) |
 | Wireframes (Demo 1) | [View Wireframes](./Documentation/Demo_3/Wireframes.pdf) |
 | API Service Contract | [View API Contract](https://api.equitylens.co.za/docs) |
+| OpenAPI Specification | [View OpenAPI](./docs/api/openapi.json) |
 
 ---
 
