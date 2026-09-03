@@ -66,14 +66,14 @@ def get_watchlist_service(database,user_id):
             "success": True,
             "Message": "All the users watchlist",
             "watchlist": [],
-            "highest": {},
-            "lowest": {}
+            "highest": None,
+            "lowest": None
         }
 
     Priced = [items for items in AllResults if items["change_percent"] is not None]
 
-    TheHighest = Priced[0] if Priced else {}
-    Thelowest = Priced[0] if Priced else {}
+    TheHighest = Priced[0] if Priced else None
+    Thelowest = Priced[0] if Priced else None
 
     for items in Priced:
         if items["change_percent"] > TheHighest["change_percent"]:
