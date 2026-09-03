@@ -1,0 +1,5849 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "EquityLens API",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register a new user",
+        "operationId": "registerUser",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email is already registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "EMAIL_ALREADY_REGISTERED",
+                  "detail": "email already registered"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Password rejected by Cognito, or the request body failed validation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "WEAK_PASSWORD",
+                  "detail": "Password did not conform with policy"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Rejected by the identity provider, whose own message is passed through as detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "BAD_REQUEST",
+                  "detail": "Invalid parameter value for email"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/confirm": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Confirm a registration code",
+        "operationId": "confirmRegistration",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Rejected by the identity provider, whose own message is passed through as detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "BAD_REQUEST",
+                  "detail": "Invalid parameter value for email"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Log in with email and password",
+        "operationId": "login",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Either an MFA challenge to answer, or the tokens themselves. Tell them apart by challenge - a string when MFA is required, null once the login is complete. A null is stripped from a generated example, so it is not visible in the second one below.",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": {
+                  "MFA required": {
+                    "value": {
+                      "challenge": "SOFTWARE_TOKEN_MFA",
+                      "session": "AYABeF...",
+                      "email": "you@example.com"
+                    }
+                  },
+                  "authenticated": {
+                    "value": {
+                      "access_token": "eyJraWQ...",
+                      "id_token": "eyJraWQ...",
+                      "refresh_token": "eyJjdHk..."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid email or password",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "INVALID_CREDENTIALS",
+                  "detail": "invalid email or password"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Rejected by the identity provider, whose own message is passed through as detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "BAD_REQUEST",
+                  "detail": "Invalid parameter value for email"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/mfa/verify-login": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Answer an MFA challenge",
+        "operationId": "verifyMfaLogin",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MFAChallengeReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "The authenticator code was wrong, or the challenge session expired",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "INVALID_MFA_CODE",
+                  "detail": "invalid mfa code"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/mfa/associate": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Start authenticator app setup",
+        "operationId": "associateTotp",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TotpSecretResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/mfa/confirm-setup": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Finish authenticator app setup",
+        "operationId": "confirmTotpSetup",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyTOTPReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Get the signed-in user",
+        "operationId": "getCurrentUser",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Delete the signed-in account",
+        "operationId": "deleteAccount",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteAccountReq"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The email given does not match the signed-in account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "EMAIL_MISMATCH",
+                  "detail": "email does not match your account"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Cognito deletion failed after the database row was removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "ACCOUNT_DELETION_FAILED",
+                  "detail": "Account deletion failed, contact support"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Sign out of every device",
+        "operationId": "logout",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StatusResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get the whole dashboard",
+        "operationId": "getDashboard",
+        "responses": {
+          "200": {
+            "description": "The whole dashboard in one call",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "example": {
+                  "summary": {
+                    "total_value": 9420.0,
+                    "total_cost": 9000.0,
+                    "total_gain_loss": 420.0,
+                    "total_gain_loss_pct": 4.67,
+                    "num_holdings": 1,
+                    "daily_change_pct": 0.31,
+                    "daily_change_value": 29.1
+                  },
+                  "holdings": [
+                    {
+                      "ticker": "SYG500.JO",
+                      "txn_key": "SYG500.JO",
+                      "name": "Satrix S&P 500",
+                      "sector": "Global Equity",
+                      "kind": "etf",
+                      "region": "us",
+                      "priced_live": true,
+                      "price_source": "live",
+                      "quantity": 100.0,
+                      "avg_cost": 90.0,
+                      "total_cost": 9000.0,
+                      "current_price": 94.2,
+                      "value": 9420.0,
+                      "gain_loss": 420.0,
+                      "gain_loss_pct": 4.67,
+                      "daily_change_pct": 0.31,
+                      "first_purchase_date": "2026-08-06"
+                    }
+                  ],
+                  "sectorAllocation": [
+                    {
+                      "sector": "Global Equity",
+                      "value": 9420.0,
+                      "percentage": 100.0
+                    }
+                  ],
+                  "performanceHistory": [
+                    {
+                      "date": "2026-08-05",
+                      "name": "Aug 05",
+                      "value": 9020.0,
+                      "benchmark": 9020.0,
+                      "twr_index": 100.0
+                    }
+                  ],
+                  "benchmarkLabel": "JSE Top 40",
+                  "returns": {
+                    "portfolio_value": 9420.0,
+                    "invested_capital": 9000.0,
+                    "net_contributions": 10000.0,
+                    "unrealised_gain": 420.0,
+                    "realised_gain": 0.0,
+                    "total_costs": 0.0,
+                    "simple_return_pct": 4.67,
+                    "money_weighted_return_pct": 12.4,
+                    "snapshot_count": 22,
+                    "history_days": 30,
+                    "holdings_count": 1,
+                    "priced_live_count": 1,
+                    "priced_count": 1
+                  },
+                  "health": {
+                    "score": 0.3,
+                    "label": "Needs attention",
+                    "subscores": [
+                      {
+                        "key": "breadth",
+                        "label": "Breadth",
+                        "weight": 0.3,
+                        "value": 0.1,
+                        "detail": "1 position",
+                        "target": "8+ positions",
+                        "improvement": "Add more positions"
+                      }
+                    ]
+                  },
+                  "contributionsSeries": [
+                    {
+                      "date": "2026-08-05",
+                      "name": "Aug 05",
+                      "portfolio_value": 9020.0,
+                      "cumulative_net_contributions": 10000.0,
+                      "cumulative_market_gain": -980.0
+                    }
+                  ],
+                  "accountType": "tfsa",
+                  "statementDate": "2026-09-02",
+                  "cgt": {
+                    "available": false,
+                    "reason": "TFSA growth is not taxed",
+                    "assumptions": {
+                      "tax_year": "2026/27",
+                      "annual_exclusion": 40000.0,
+                      "inclusion_rate": 0.4,
+                      "cost_basis_method": "average"
+                    },
+                    "holdings_from_statement_only": []
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/summary": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get the headline totals",
+        "operationId": "getPortfolioSummary",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioSummary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/sectors": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get the sector allocation",
+        "operationId": "getSectorAllocation",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SectorSlice"
+                  },
+                  "type": "array",
+                  "title": "Response Getsectorallocation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/performance": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get the value history against its benchmark",
+        "operationId": "getPerformanceHistory",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PerformancePoint"
+                  },
+                  "type": "array",
+                  "title": "Response Getperformancehistory"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/current": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "List the imported portfolios",
+        "operationId": "listPortfolios",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/PortfolioRow"
+                  },
+                  "type": "array",
+                  "title": "Response Listportfolios"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/returns": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get the three return measures",
+        "operationId": "getReturns",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReturnsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/health-score": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get the portfolio health score",
+        "operationId": "getHealthScore",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthScoreResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/health-config": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get the active health scoring config",
+        "operationId": "getHealthConfig",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthConfigResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Choose or hand-tune the health scoring config",
+        "description": "Change what the health score treats as risky. Send exactly one of the two fields.\n\npreset_key picks one of the presets listed by GET /health-config. config sets the\nseven values by hand, and every one of them must be inside bounds from that same\nresponse - anything outside is a 400, not a clamp. The three weights must also sum\nto 1.\n\nHand-tuned values that happen to match a preset are stored as that preset, so the\nresponse can come back with source preset and a preset_key you did not send. The\nresponse is always the full config payload, so there is no need to re-fetch.",
+        "operationId": "updateHealthConfig",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HealthConfigRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthConfigResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Values outside the published bounds"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Reset the health scoring config",
+        "operationId": "resetHealthConfig",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthConfigResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/cgt-estimate": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Estimate capital gains tax if everything were sold",
+        "operationId": "getCgtEstimate",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CgtEstimateResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/account-type": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get the account type",
+        "operationId": "getAccountType",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountTypeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "patch": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Set the account type",
+        "operationId": "setAccountType",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountTypeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountTypeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/tax-analysis": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get position-level unrealised tax detail",
+        "operationId": "getTaxAnalysis",
+        "responses": {
+          "200": {
+            "description": "Unrealised position-level tax detail",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": {
+                  "available": {
+                    "value": {
+                      "available": true,
+                      "assumptions": {
+                        "tax_year": "2026/27",
+                        "annual_exclusion": 40000.0,
+                        "inclusion_rate": 0.4,
+                        "cost_basis_method": "average"
+                      },
+                      "net_unrealised_gain": 420.0,
+                      "taxable_capital_gain": 0.0,
+                      "holdings_from_statement_only": [],
+                      "holdings": [
+                        {
+                          "ticker": "SYG500.JO",
+                          "name": "Satrix S&P 500",
+                          "unrealised_gain_loss": 420.0,
+                          "unrealised_gain_loss_pct": 4.67
+                        }
+                      ],
+                      "potential_realised_loss": 0.0,
+                      "note": "Estimate only"
+                    }
+                  },
+                  "unavailable": {
+                    "value": {
+                      "available": false,
+                      "reason": "No holdings imported yet"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/tfsa-room": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get remaining TFSA contribution room",
+        "operationId": "getTfsaRoom",
+        "responses": {
+          "200": {
+            "description": "Annual and lifetime TFSA contribution room",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": {
+                  "available": {
+                    "value": {
+                      "available": true,
+                      "tax_year_label": "2026/27",
+                      "annual_limit": 36000.0,
+                      "annual_contributed": 10000.0,
+                      "annual_remaining": 26000.0,
+                      "lifetime_limit": 500000.0,
+                      "lifetime_contributed": 10000.0,
+                      "lifetime_remaining": 490000.0,
+                      "note": "Counted from imported statements only"
+                    }
+                  },
+                  "unavailable": {
+                    "value": {
+                      "available": false,
+                      "reason": "This portfolio is not a TFSA"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/market-context": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Get today's move by sector held",
+        "operationId": "getMarketContext",
+        "responses": {
+          "200": {
+            "description": "How each sector you hold moved today",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": {
+                  "available": {
+                    "value": {
+                      "available": true,
+                      "label": "Today",
+                      "sectors": [
+                        {
+                          "sector": "Global Equity",
+                          "weight_pct": 100.0,
+                          "daily_change_pct": 0.31,
+                          "tickers": [
+                            "SYG500.JO"
+                          ],
+                          "summary": "Global Equity is up today"
+                        }
+                      ]
+                    }
+                  },
+                  "unavailable": {
+                    "value": {
+                      "available": false,
+                      "sectors": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/concentration": {
+      "get": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Flag holdings that are too large a share of the book",
+        "operationId": "getConcentration",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConcentrationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/simulate-sector-investment": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Simulate adding to one sector",
+        "operationId": "simulateSectorInvestment",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SectorInvestmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "What adding to one sector would do to the health score",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": {
+                  "available": {
+                    "value": {
+                      "available": true,
+                      "sector": "Financials",
+                      "illustrative_amount": 5000.0,
+                      "current_weight_pct": 0.0,
+                      "projected_weight_pct": 34.7,
+                      "health_score_before": 0.3,
+                      "health_score_after": 0.45,
+                      "is_smallest_sector": true,
+                      "explanation": "Adding here spreads the book",
+                      "disclaimer": "Illustrative only, not advice"
+                    }
+                  },
+                  "unavailable": {
+                    "value": {
+                      "available": false,
+                      "reason": "No holdings imported yet"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/portfolio/simulate-sector-rebalance": {
+      "post": {
+        "tags": [
+          "Portfolio"
+        ],
+        "summary": "Simulate an even sector split",
+        "operationId": "simulateSectorRebalance",
+        "responses": {
+          "200": {
+            "description": "What an even sector split would do to the health score",
+            "content": {
+              "application/json": {
+                "schema": {},
+                "examples": {
+                  "available": {
+                    "value": {
+                      "available": true,
+                      "health_score_before": 0.3,
+                      "health_score_after": 0.62,
+                      "moves": [],
+                      "disclaimer": "Illustrative only, not advice"
+                    }
+                  },
+                  "unavailable": {
+                    "value": {
+                      "available": false,
+                      "reason": "Needs at least two sectors"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Bearer token missing (UNAUTHORISED) or rejected by Cognito (TOKEN_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error_code": "TOKEN_EXPIRED",
+                  "detail": "invalid or expired token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import_pdf_summary/summary/{portfolioID}": {
+      "get": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Import Get Summary Import Pdf",
+        "operationId": "import_get_summary_import_PDF_api_import_pdf_summary_summary__portfolioID__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "portfolioID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Portfolioid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SummaryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import_pdf_summary/top_holdings/{portfolioID}": {
+      "get": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Import Get The Top Holdings Import Pdf",
+        "operationId": "import_get_the_top_holdings_import_PDF_api_import_pdf_summary_top_holdings__portfolioID__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "portfolioID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Portfolioid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HoldingResponse"
+                  },
+                  "title": "Response Import Get The Top Holdings Import Pdf Api Import Pdf Summary Top Holdings  Portfolioid  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import_pdf_summary/lowest_holdings/{portfolioID}": {
+      "get": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Import Get The Lowest Holdings Import Pdf",
+        "operationId": "import_get_the_lowest_holdings_import_PDF_api_import_pdf_summary_lowest_holdings__portfolioID__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "portfolioID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Portfolioid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldingResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import_pdf_summary/portfolio_allocation/{portfolioID}": {
+      "get": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Import Get The Top Allocation Import Pdf",
+        "operationId": "import_get_the_top_allocation_import_PDF_api_import_pdf_summary_portfolio_allocation__portfolioID__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "portfolioID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Portfolioid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PortfolioResponse"
+                  },
+                  "title": "Response Import Get The Top Allocation Import Pdf Api Import Pdf Summary Portfolio Allocation  Portfolioid  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import_pdf_summary/trading_activity/{portfolioID}": {
+      "get": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Import Get Trading Activity Import Pdf",
+        "operationId": "import_get_trading_activity_import_PDF_api_import_pdf_summary_trading_activity__portfolioID__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "portfolioID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Portfolioid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HoldingResponse"
+                  },
+                  "title": "Response Import Get Trading Activity Import Pdf Api Import Pdf Summary Trading Activity  Portfolioid  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import_pdf_summary/cash_flow/{portfolioID}": {
+      "get": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Import Get Cash Flow Import Pdf",
+        "operationId": "import_get_cash_flow_import_PDF_api_import_pdf_summary_cash_flow__portfolioID__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "portfolioID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Portfolioid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HoldingResponse"
+                  },
+                  "title": "Response Import Get Cash Flow Import Pdf Api Import Pdf Summary Cash Flow  Portfolioid  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import_pdf_summary/dividend_income/{portfolioID}": {
+      "get": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Import Get Dividend Income Import Pdf",
+        "operationId": "import_get_dividend_income_import_PDF_api_import_pdf_summary_dividend_income__portfolioID__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "portfolioID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Portfolioid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DividendResponse"
+                  },
+                  "title": "Response Import Get Dividend Income Import Pdf Api Import Pdf Summary Dividend Income  Portfolioid  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import_pdf_summary/expenses/{portfolioID}": {
+      "get": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Import Get Expenses Import Pdf",
+        "operationId": "import_get_expenses_import_PDF_api_import_pdf_summary_expenses__portfolioID__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "portfolioID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Portfolioid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HoldingResponse"
+                  },
+                  "title": "Response Import Get Expenses Import Pdf Api Import Pdf Summary Expenses  Portfolioid  Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/watchlist/": {
+      "get": {
+        "tags": [
+          "watchlist"
+        ],
+        "summary": "Get Watchlist",
+        "operationId": "get_watchlist_api_watchlist__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistItemResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "watchlist"
+        ],
+        "summary": "Add Watchlist",
+        "operationId": "add_watchlist_api_watchlist__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchListRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlisResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/watchlist/{watchlistID}": {
+      "delete": {
+        "tags": [
+          "watchlist"
+        ],
+        "summary": "Remove Watchlist",
+        "operationId": "remove_watchlist_api_watchlist__watchlistID__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "watchlistID",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Watchlistid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WatchlistActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/news/all": {
+      "get": {
+        "tags": [
+          "importing news"
+        ],
+        "summary": "Get News",
+        "operationId": "get_news_api_news_all_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/news/": {
+      "get": {
+        "tags": [
+          "importing news"
+        ],
+        "summary": "Get News",
+        "operationId": "get_news_api_news__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "business",
+              "title": "Category"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NewsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/news/portfolio-tickers": {
+      "get": {
+        "tags": [
+          "importing news"
+        ],
+        "summary": "Get Portfolio Tickers",
+        "operationId": "get_portfolio_tickers_api_news_portfolio_tickers_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TickerResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/news/test-aapl/{ticker}": {
+      "get": {
+        "tags": [
+          "importing news"
+        ],
+        "summary": "Test Aapl News",
+        "operationId": "test_aapl_news_api_news_test_aapl__ticker__get",
+        "parameters": [
+          {
+            "name": "ticker",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Ticker"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AAPLNewsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai_chat/": {
+      "post": {
+        "tags": [
+          "ai_chat"
+        ],
+        "summary": "Ai Chat",
+        "operationId": "ai_chat_api_ai_chat__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/ai_chat/conversations/": {
+      "get": {
+        "tags": [
+          "ai_chat"
+        ],
+        "summary": "Get Conversations",
+        "operationId": "get_conversations_api_ai_chat_conversations__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/ai_chat/conversations/{conversation_id}/messages/": {
+      "get": {
+        "tags": [
+          "ai_chat"
+        ],
+        "summary": "Get Messages",
+        "operationId": "get_messages_api_ai_chat_conversations__conversation_id__messages__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai_chat/conversations/{conversation_id}/": {
+      "put": {
+        "tags": [
+          "ai_chat"
+        ],
+        "summary": "Update Conversation",
+        "operationId": "update_conversation_api_ai_chat_conversations__conversation_id___put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeConversationName"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ai_chat"
+        ],
+        "summary": "Delete Conversation",
+        "operationId": "delete_conversation_api_ai_chat_conversations__conversation_id___delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Conversation Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/import_pdf/": {
+      "post": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Import Pdf Data Db",
+        "operationId": "import_Pdf_data_DB_api_import_pdf__post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportPdfRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPDFResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/import_pdf/my_portfolio": {
+      "get": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Get My Portfolio Db",
+        "operationId": "get_my_portfolio_DB_api_import_pdf_my_portfolio_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MyPortfolioResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/import_pdf/save_portfolios": {
+      "post": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Save Portfolios Import Db",
+        "operationId": "save_portfolios_import_DB_api_import_pdf_save_portfolios_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PortfolioRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavePortfolioResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/import_pdf/save_holdings": {
+      "post": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Save Holdings Import Db",
+        "operationId": "save_holdings_import_DB_api_import_pdf_save_holdings_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HoldingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/import_pdf/save_instrument_purchases_and_sales": {
+      "post": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Save Instrument Purchases And Sales Import Db",
+        "operationId": "save_instrument_purchases_and_sales_import_DB_api_import_pdf_save_instrument_purchases_and_sales_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InstrumentPurchasesAndSalesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/import_pdf/save_contributions_and_withdrawals": {
+      "post": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Save Contributions And Withdrawals Import Db",
+        "operationId": "save_contributions_and_withdrawals_import_DB_api_import_pdf_save_contributions_and_withdrawals_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContributionsAndWithdrawalsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/import_pdf/save_dividends_and_withholding_tax": {
+      "post": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Save Dividends And Withholding Tax Import Db",
+        "operationId": "save_dividends_and_withholding_tax_import_DB_api_import_pdf_save_dividends_and_withholding_tax_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DividendsAndWithholdingTaxRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/import_pdf/save_transaction_expenses": {
+      "post": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Save Transaction Expenses Import Db",
+        "operationId": "save_transaction_expenses_import_DB_api_import_pdf_save_transaction_expenses_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransactionExpensesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SaveActionResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/import_pdf/portfolios/{portfolio_id}": {
+      "delete": {
+        "tags": [
+          "Import PDF"
+        ],
+        "summary": "Delete Portfolio Import Db",
+        "operationId": "delete_portfolio_import_DB_api_import_pdf_portfolios__portfolio_id__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "portfolio_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Portfolio Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/indicators": {
+      "get": {
+        "tags": [
+          "indicators"
+        ],
+        "summary": "Get Portfolio Indicators",
+        "description": "Calculates live technical and fundamental indicators for all valid holdings across user portfolios.",
+        "operationId": "get_indicators_api_indicators_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/IndicatorRowResponse"
+                  },
+                  "type": "array",
+                  "title": "Response Get Indicators Api Indicators Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/stocks/details": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Stock Details",
+        "description": "Fetch current price, volume, and percentage change for a given stock symbol.",
+        "operationId": "stock_details_api_stocks_details_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CurrentPriceResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stocks/history": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Get Stock Historical Data",
+        "description": "Fetch historical OHLCV data for a specific symbol over a defined time range.",
+        "operationId": "stock_history_api_stocks_history_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "period",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "enum": [
+                "1d",
+                "5d",
+                "1mo",
+                "3mo",
+                "6mo",
+                "1y",
+                "2y",
+                "5y",
+                "10y",
+                "ytd",
+                "max"
+              ],
+              "type": "string",
+              "default": "1mo",
+              "title": "Period"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Failed to retrieve historical data for the requested symbol/period"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/stocks/search": {
+      "get": {
+        "tags": [
+          "stocks"
+        ],
+        "summary": "Search Stocks",
+        "description": "Search for available stocks by symbol or company name.",
+        "operationId": "search_stocks_endpoint_api_stocks_search_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "title": "Query"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AAPLNewsResponse": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker",
+            "examples": [
+              "NPN"
+            ]
+          },
+          "total_articles": {
+            "type": "integer",
+            "title": "Total Articles",
+            "examples": [
+              3
+            ]
+          },
+          "positive": {
+            "type": "integer",
+            "title": "Positive",
+            "examples": [
+              1
+            ]
+          },
+          "negative": {
+            "type": "integer",
+            "title": "Negative",
+            "examples": [
+              0
+            ]
+          },
+          "neutral": {
+            "type": "integer",
+            "title": "Neutral",
+            "examples": [
+              2
+            ]
+          },
+          "articles": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Articles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "total_articles",
+          "positive",
+          "negative",
+          "neutral",
+          "articles"
+        ],
+        "title": "AAPLNewsResponse"
+      },
+      "AccountTypeResponse": {
+        "properties": {
+          "portfolio_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Id",
+            "description": "null when nothing has been imported yet",
+            "examples": [
+              "6f9619ff-8b86-d011-b42d-00cf4fc964ff"
+            ]
+          },
+          "account_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Type",
+            "description": "zar, tfsa or usd. Null until the user sets it",
+            "examples": [
+              "tfsa"
+            ]
+          }
+        },
+        "type": "object",
+        "title": "AccountTypeResponse"
+      },
+      "AccountTypeUpdate": {
+        "properties": {
+          "account_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Type",
+            "description": "zar, tfsa or usd, case-insensitive. Null clears the setting and the TFSA-only figures stop being calculated",
+            "examples": [
+              "tfsa"
+            ]
+          }
+        },
+        "type": "object",
+        "title": "AccountTypeUpdate"
+      },
+      "CgtAssumptions": {
+        "properties": {
+          "tax_year": {
+            "type": "string",
+            "title": "Tax Year",
+            "description": "SARS tax year the figures below come from",
+            "examples": [
+              "2026/27"
+            ]
+          },
+          "annual_exclusion": {
+            "type": "number",
+            "title": "Annual Exclusion",
+            "description": "rands of capital gain excluded before the inclusion rate applies",
+            "examples": [
+              40000.0
+            ]
+          },
+          "inclusion_rate": {
+            "type": "number",
+            "title": "Inclusion Rate",
+            "description": "fraction of the remaining gain added to taxable income, not percentage points",
+            "examples": [
+              0.4
+            ]
+          },
+          "cost_basis_method": {
+            "type": "string",
+            "title": "Cost Basis Method",
+            "examples": [
+              "average"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "tax_year",
+          "annual_exclusion",
+          "inclusion_rate",
+          "cost_basis_method"
+        ],
+        "title": "CgtAssumptions"
+      },
+      "CgtEstimateResponse": {
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "title": "Available",
+            "description": "false when the estimate cannot be made; read reason for why",
+            "examples": [
+              true
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason",
+            "description": "why the estimate is unavailable. Null when it is available",
+            "examples": [
+              "TFSA growth is not taxed"
+            ]
+          },
+          "assumptions": {
+            "$ref": "#/components/schemas/CgtAssumptions"
+          },
+          "net_unrealised_gain": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Net Unrealised Gain",
+            "description": "rands of gain that would be realised if everything were sold today",
+            "examples": [
+              420.0
+            ]
+          },
+          "taxable_capital_gain": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxable Capital Gain",
+            "description": "rands left after the annual exclusion and the inclusion rate",
+            "examples": [
+              0.0
+            ]
+          },
+          "assessed_capital_loss": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Assessed Capital Loss",
+            "description": "rands of loss carried forward instead of a gain. Null when the position is a gain",
+            "examples": [
+              0.0
+            ]
+          },
+          "holdings_from_statement_only": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Holdings From Statement Only",
+            "description": "tickers priced off the statement rather than live, so their share of the estimate is as stale as the statement",
+            "examples": [
+              [
+                "STX40.JO"
+              ]
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "available",
+          "assumptions",
+          "holdings_from_statement_only"
+        ],
+        "title": "CgtEstimateResponse"
+      },
+      "ChangeConversationName": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Title"
+          }
+        },
+        "type": "object",
+        "required": [
+          "title"
+        ],
+        "title": "ChangeConversationName"
+      },
+      "ChatRequest": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message"
+          },
+          "conversation_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Conversation Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "ChatRequest"
+      },
+      "ChatResponse": {
+        "properties": {
+          "reply": {
+            "type": "string",
+            "title": "Reply"
+          },
+          "conversation_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Conversation Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "reply",
+          "conversation_id"
+        ],
+        "title": "ChatResponse"
+      },
+      "ConcentrationFlag": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker",
+            "examples": [
+              "SYG500.JO"
+            ]
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name",
+            "examples": [
+              "Sygnia Itrix S&P 500 ETF"
+            ]
+          },
+          "current_allocation_pct": {
+            "type": "number",
+            "title": "Current Allocation Pct",
+            "description": "percentage points of the book in this holding",
+            "examples": [
+              34.7
+            ]
+          },
+          "target_allocation_pct": {
+            "type": "number",
+            "title": "Target Allocation Pct",
+            "description": "percentage points the active health config treats as the ceiling",
+            "examples": [
+              25.0
+            ]
+          },
+          "value_to_reduce": {
+            "type": "number",
+            "title": "Value To Reduce",
+            "description": "rands to sell to reach the target",
+            "examples": [
+              1830.0
+            ]
+          },
+          "shares_to_sell": {
+            "type": "number",
+            "title": "Shares To Sell",
+            "description": "the same move in units, at the price used to value the holding",
+            "examples": [
+              19.4
+            ]
+          },
+          "risk_band": {
+            "type": "string",
+            "title": "Risk Band",
+            "examples": [
+              "High"
+            ]
+          },
+          "look_through_note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Look Through Note",
+            "description": "warns when an ETF's own top holding is something also held directly. Null when there is no overlap to report",
+            "examples": [
+              "This ETF is itself 7% Naspers, which you also hold directly."
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker",
+          "current_allocation_pct",
+          "target_allocation_pct",
+          "value_to_reduce",
+          "shares_to_sell",
+          "risk_band"
+        ],
+        "title": "ConcentrationFlag"
+      },
+      "ConcentrationResponse": {
+        "properties": {
+          "flagged": {
+            "items": {
+              "$ref": "#/components/schemas/ConcentrationFlag"
+            },
+            "type": "array",
+            "title": "Flagged"
+          },
+          "health_score": {
+            "$ref": "#/components/schemas/HealthScoreResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "flagged",
+          "health_score"
+        ],
+        "title": "ConcentrationResponse"
+      },
+      "ConfirmReq": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "code"
+        ],
+        "title": "ConfirmReq"
+      },
+      "ContributionsAndWithdrawalsRequest": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Portfolio Id"
+          },
+          "transaction_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Transaction Date"
+          },
+          "settlement_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Settlement Date"
+          },
+          "transaction_name": {
+            "type": "string",
+            "title": "Transaction Name"
+          },
+          "value_zar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Value Zar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id",
+          "transaction_date",
+          "settlement_date",
+          "transaction_name",
+          "value_zar"
+        ],
+        "title": "ContributionsAndWithdrawalsRequest"
+      },
+      "CurrentPriceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "Unique record identifier"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker",
+            "description": "Stock ticker",
+            "example": "AAPL"
+          },
+          "price": {
+            "type": "number",
+            "title": "Price",
+            "description": "Current price",
+            "example": 182.5
+          },
+          "volume": {
+            "type": "integer",
+            "title": "Volume",
+            "description": "Trading volume",
+            "example": 52300100
+          },
+          "change_percent": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Change Percent",
+            "description": "Price change percentage",
+            "example": 1.25
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At",
+            "description": "Fetch timestamp"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "ticker",
+          "price",
+          "volume",
+          "fetched_at"
+        ],
+        "title": "CurrentPriceResponse"
+      },
+      "DeleteAccountReq": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          }
+        },
+        "type": "object",
+        "required": [
+          "email"
+        ],
+        "title": "DeleteAccountReq"
+      },
+      "DividendResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "example": [
+              "APPLE"
+            ]
+          },
+          "gross_dividend": {
+            "type": "number",
+            "title": "Gross Dividend",
+            "example": [
+              2.3
+            ]
+          },
+          "withholding_tax": {
+            "type": "number",
+            "title": "Withholding Tax",
+            "example": [
+              2.3
+            ]
+          },
+          "net_dividend": {
+            "type": "number",
+            "title": "Net Dividend",
+            "example": [
+              2.3
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "gross_dividend",
+          "withholding_tax",
+          "net_dividend"
+        ],
+        "title": "DividendResponse"
+      },
+      "DividendsAndWithholdingTaxRequest": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Portfolio Id"
+          },
+          "transaction_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Transaction Date"
+          },
+          "instrument_name": {
+            "type": "string",
+            "title": "Instrument Name"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "sector": {
+            "type": "string",
+            "title": "Sector"
+          },
+          "gross_dividend": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Gross Dividend"
+          },
+          "withholding_tax": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Withholding Tax"
+          },
+          "net_dividend": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Net Dividend"
+          },
+          "tax_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Tax Rate"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id",
+          "transaction_date",
+          "instrument_name",
+          "ticker",
+          "sector",
+          "gross_dividend",
+          "withholding_tax",
+          "net_dividend",
+          "tax_rate"
+        ],
+        "title": "DividendsAndWithholdingTaxRequest"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error_code": {
+            "type": "string",
+            "title": "Error Code",
+            "description": "stable code to branch on - the wording of detail may change, this will not",
+            "examples": [
+              "INVALID_CREDENTIALS"
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "human-readable message, safe to show the user",
+            "examples": [
+              "invalid email or password"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "error_code",
+          "detail"
+        ],
+        "title": "ErrorResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthConfigBounds": {
+        "properties": {
+          "weight_min": {
+            "type": "number",
+            "title": "Weight Min",
+            "examples": [
+              0.05
+            ]
+          },
+          "weight_max": {
+            "type": "number",
+            "title": "Weight Max",
+            "examples": [
+              0.7
+            ]
+          },
+          "concentration_pct_min": {
+            "type": "number",
+            "title": "Concentration Pct Min",
+            "description": "percentage points, the floor for both concentration thresholds",
+            "examples": [
+              10.0
+            ]
+          },
+          "concentration_pct_max": {
+            "type": "number",
+            "title": "Concentration Pct Max",
+            "description": "percentage points, the ceiling for both concentration thresholds",
+            "examples": [
+              70.0
+            ]
+          },
+          "hhi_target_min": {
+            "type": "number",
+            "title": "Hhi Target Min",
+            "examples": [
+              0.05
+            ]
+          },
+          "hhi_target_max": {
+            "type": "number",
+            "title": "Hhi Target Max",
+            "examples": [
+              0.5
+            ]
+          },
+          "breadth_target_min": {
+            "type": "number",
+            "title": "Breadth Target Min",
+            "examples": [
+              3.0
+            ]
+          },
+          "breadth_target_max": {
+            "type": "number",
+            "title": "Breadth Target Max",
+            "examples": [
+              20.0
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "weight_min",
+          "weight_max",
+          "concentration_pct_min",
+          "concentration_pct_max",
+          "hhi_target_min",
+          "hhi_target_max",
+          "breadth_target_min",
+          "breadth_target_max"
+        ],
+        "title": "HealthConfigBounds"
+      },
+      "HealthConfigPreset": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "examples": [
+              "capital_preservation"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "examples": [
+              "Capital preservation"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "description": "who the preset is for and what it treats as risky",
+            "examples": [
+              "For a book whose job is not to lose money."
+            ]
+          },
+          "config": {
+            "$ref": "#/components/schemas/HealthConfigValues"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "name",
+          "description",
+          "config"
+        ],
+        "title": "HealthConfigPreset"
+      },
+      "HealthConfigRequest": {
+        "properties": {
+          "preset_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset Key",
+            "description": "one of the keys from GET /health-config presets",
+            "examples": [
+              "capital_preservation"
+            ]
+          },
+          "config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Config",
+            "description": "all seven HealthConfigValues fields, each inside the published bounds, with the three weights summing to 1"
+          }
+        },
+        "type": "object",
+        "title": "HealthConfigRequest",
+        "examples": [
+          {
+            "preset_key": "capital_preservation"
+          },
+          {
+            "config": {
+              "breadth_target_n": 8,
+              "concentration_high": 45,
+              "concentration_low": 25,
+              "hhi_well_spread": 0.15,
+              "weight_breadth": 0.25,
+              "weight_sector_concentration": 0.4,
+              "weight_single_position": 0.35
+            }
+          }
+        ]
+      },
+      "HealthConfigResponse": {
+        "properties": {
+          "active": {
+            "$ref": "#/components/schemas/HealthConfigValues"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source",
+            "description": "where the active config came from: the built-in default, a preset the user chose, one derived from their goal, or hand-tuned values",
+            "examples": [
+              "preset"
+            ]
+          },
+          "preset_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preset Key",
+            "description": "the preset the user chose. Null when the values are hand-tuned or still the default",
+            "examples": [
+              "capital_preservation"
+            ]
+          },
+          "derived_preset_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Derived Preset Key",
+            "description": "the preset their goal implies, offered as a suggestion. Null when there is no goal to derive one from",
+            "examples": [
+              "growth"
+            ]
+          },
+          "default_preset_key": {
+            "type": "string",
+            "title": "Default Preset Key",
+            "description": "what a reset falls back to",
+            "examples": [
+              "equitylens"
+            ]
+          },
+          "presets": {
+            "items": {
+              "$ref": "#/components/schemas/HealthConfigPreset"
+            },
+            "type": "array",
+            "title": "Presets"
+          },
+          "bounds": {
+            "$ref": "#/components/schemas/HealthConfigBounds"
+          }
+        },
+        "type": "object",
+        "required": [
+          "active",
+          "source",
+          "default_preset_key",
+          "presets",
+          "bounds"
+        ],
+        "title": "HealthConfigResponse"
+      },
+      "HealthConfigValues": {
+        "properties": {
+          "weight_sector_concentration": {
+            "type": "number",
+            "title": "Weight Sector Concentration",
+            "description": "fraction of the score from sector spread; the three weights sum to 1",
+            "examples": [
+              0.4
+            ]
+          },
+          "weight_single_position": {
+            "type": "number",
+            "title": "Weight Single Position",
+            "description": "fraction of the score from the largest single holding",
+            "examples": [
+              0.35
+            ]
+          },
+          "weight_breadth": {
+            "type": "number",
+            "title": "Weight Breadth",
+            "description": "fraction of the score from the effective number of positions",
+            "examples": [
+              0.25
+            ]
+          },
+          "concentration_low": {
+            "type": "number",
+            "title": "Concentration Low",
+            "description": "percentage points in one holding where concentration starts counting against the score",
+            "examples": [
+              25.0
+            ]
+          },
+          "concentration_high": {
+            "type": "number",
+            "title": "Concentration High",
+            "description": "percentage points in one holding that scores zero on that factor",
+            "examples": [
+              45.0
+            ]
+          },
+          "hhi_well_spread": {
+            "type": "number",
+            "title": "Hhi Well Spread",
+            "description": "sector Herfindahl index that earns full marks; 0.15 is roughly seven evenly-weighted sectors, and lower means more spread",
+            "examples": [
+              0.15
+            ]
+          },
+          "breadth_target_n": {
+            "type": "integer",
+            "title": "Breadth Target N",
+            "description": "effective positions that earn full marks on breadth",
+            "examples": [
+              8
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "weight_sector_concentration",
+          "weight_single_position",
+          "weight_breadth",
+          "concentration_low",
+          "concentration_high",
+          "hhi_well_spread",
+          "breadth_target_n"
+        ],
+        "title": "HealthConfigValues"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "HealthResponse"
+      },
+      "HealthScoreResponse": {
+        "properties": {
+          "score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score",
+            "description": "structural risk out of 10, weighted from the subscores. Null for an empty portfolio, where there is nothing to score",
+            "examples": [
+              6.8
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label",
+            "description": "Excellent, Healthy, Mixed or Needs attention. Null whenever score is",
+            "examples": [
+              "Healthy"
+            ]
+          },
+          "subscores": {
+            "items": {
+              "$ref": "#/components/schemas/HealthSubscore"
+            },
+            "type": "array",
+            "title": "Subscores"
+          }
+        },
+        "type": "object",
+        "required": [
+          "subscores"
+        ],
+        "title": "HealthScoreResponse"
+      },
+      "HealthSubscore": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key",
+            "examples": [
+              "sectorConcentration"
+            ]
+          },
+          "label": {
+            "type": "string",
+            "title": "Label",
+            "examples": [
+              "Sector Concentration"
+            ]
+          },
+          "weight": {
+            "type": "number",
+            "title": "Weight",
+            "description": "fraction of the overall score, not percentage points; the three weights sum to 1",
+            "examples": [
+              0.4
+            ]
+          },
+          "value": {
+            "type": "number",
+            "title": "Value",
+            "description": "this factor scored out of 10",
+            "examples": [
+              6.2
+            ]
+          },
+          "detail": {
+            "type": "string",
+            "title": "Detail",
+            "description": "what the number says about this book right now",
+            "examples": [
+              "Financials is 34% of the book, and the sector HHI is 0.28."
+            ]
+          },
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "what full marks would take, in the user's own terms",
+            "examples": [
+              "HHI at or below 0.15 (roughly 7+ evenly-weighted sectors)"
+            ]
+          },
+          "improvement": {
+            "type": "string",
+            "title": "Improvement",
+            "description": "the one move that would raise this factor",
+            "examples": [
+              "Adding exposure outside Financials would bring this HHI down."
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "weight",
+          "value",
+          "detail",
+          "target",
+          "improvement"
+        ],
+        "title": "HealthSubscore"
+      },
+      "HistoryDataPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Date"
+          },
+          "open": {
+            "type": "number",
+            "title": "Open"
+          },
+          "high": {
+            "type": "number",
+            "title": "High"
+          },
+          "low": {
+            "type": "number",
+            "title": "Low"
+          },
+          "close": {
+            "type": "number",
+            "title": "Close"
+          },
+          "prev_close": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Close"
+          },
+          "volume": {
+            "type": "integer",
+            "title": "Volume"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "open",
+          "high",
+          "low",
+          "close",
+          "volume"
+        ],
+        "title": "HistoryDataPoint"
+      },
+      "HistoryResponse": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "example": "AAPL"
+          },
+          "period": {
+            "type": "string",
+            "title": "Period",
+            "example": "1mo"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryDataPoint"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "period",
+          "data"
+        ],
+        "title": "HistoryResponse"
+      },
+      "HoldingResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "example": [
+              "APPLE"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "title": "Value",
+            "example": [
+              "68"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "value"
+        ],
+        "title": "HoldingResponse"
+      },
+      "HoldingsRequest": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Portfolio Id"
+          },
+          "instrument_name": {
+            "type": "string",
+            "title": "Instrument Name"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "sector": {
+            "type": "string",
+            "title": "Sector"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "total_cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Total Cost"
+          },
+          "cost_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Cost Price"
+          },
+          "weight_percentage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Weight Percentage"
+          },
+          "statement_price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statement Price"
+          },
+          "statement_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statement Value"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id",
+          "instrument_name",
+          "ticker",
+          "sector",
+          "quantity",
+          "total_cost",
+          "cost_price",
+          "weight_percentage"
+        ],
+        "title": "HoldingsRequest"
+      },
+      "ImportPDFResponse": {
+        "properties": {
+          "Success": {
+            "type": "boolean",
+            "title": "Success",
+            "examples": [
+              true
+            ]
+          },
+          "Message": {
+            "type": "string",
+            "title": "Message",
+            "examples": [
+              "PDF has been saved successfully"
+            ]
+          },
+          "document_id": {
+            "type": "string",
+            "title": "Document Id",
+            "examples": [
+              "123"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "Success",
+          "Message",
+          "document_id"
+        ],
+        "title": "ImportPDFResponse"
+      },
+      "ImportPdfRequest": {
+        "properties": {
+          "file_name": {
+            "type": "string",
+            "title": "File Name"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file_name"
+        ],
+        "title": "ImportPdfRequest"
+      },
+      "IndicatorRowResponse": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker",
+            "description": "Stock ticker",
+            "example": "AAPL"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "Instrument name",
+            "example": "Apple Inc."
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Data status, e.g., 'ok' or 'insufficient_data'",
+            "example": "ok"
+          },
+          "live_fetch": {
+            "type": "boolean",
+            "title": "Live Fetch",
+            "description": "Whether live fetch was executed"
+          }
+        },
+        "additionalProperties": true,
+        "type": "object",
+        "required": [
+          "ticker",
+          "name",
+          "status",
+          "live_fetch"
+        ],
+        "title": "IndicatorRowResponse"
+      },
+      "InstrumentPurchasesAndSalesRequest": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Portfolio Id"
+          },
+          "transaction_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Transaction Date"
+          },
+          "transaction_name": {
+            "type": "string",
+            "title": "Transaction Name"
+          },
+          "instrument_name": {
+            "type": "string",
+            "title": "Instrument Name"
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          },
+          "sector": {
+            "type": "string",
+            "title": "Sector"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Price"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Quantity"
+          },
+          "value_zar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Value Zar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id",
+          "transaction_date",
+          "transaction_name",
+          "instrument_name",
+          "ticker",
+          "sector",
+          "price",
+          "quantity",
+          "value_zar"
+        ],
+        "title": "InstrumentPurchasesAndSalesRequest"
+      },
+      "LoginRequest": {
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "examples": [
+              "thabo.mokoena@example.co.za"
+            ]
+          },
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "examples": [
+              "Sandton2026!"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "title": "LoginRequest"
+      },
+      "MFAChallengeReq": {
+        "properties": {
+          "session": {
+            "type": "string",
+            "title": "Session"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "totp_code": {
+            "type": "string",
+            "title": "Totp Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session",
+          "email",
+          "totp_code"
+        ],
+        "title": "MFAChallengeReq"
+      },
+      "MyPortfolioResponse": {
+        "properties": {
+          "Found": {
+            "type": "boolean",
+            "title": "Found",
+            "examples": [
+              true
+            ]
+          },
+          "portfolio_id": {
+            "type": "string",
+            "title": "Portfolio Id",
+            "examples": [
+              "123"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "Found",
+          "portfolio_id"
+        ],
+        "title": "MyPortfolioResponse"
+      },
+      "NewsResponse": {
+        "properties": {
+          "total_articles": {
+            "type": "integer",
+            "title": "Total Articles",
+            "examples": [
+              23
+            ]
+          },
+          "positive": {
+            "type": "integer",
+            "title": "Positive",
+            "examples": [
+              33
+            ]
+          },
+          "negative": {
+            "type": "integer",
+            "title": "Negative",
+            "examples": [
+              24
+            ]
+          },
+          "neutral": {
+            "type": "integer",
+            "title": "Neutral",
+            "examples": [
+              23
+            ]
+          },
+          "results": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_articles",
+          "positive",
+          "negative",
+          "neutral",
+          "results"
+        ],
+        "title": "NewsResponse"
+      },
+      "PerformancePoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "title": "Date",
+            "description": "ISO date of the snapshot",
+            "examples": [
+              "2026-08-05"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "short label for the chart axis",
+            "examples": [
+              "Aug 05"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "title": "Value",
+            "description": "rand value of the book that day",
+            "examples": [
+              9020.0
+            ]
+          },
+          "benchmark": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Benchmark",
+            "description": "the blended benchmark rebased to the same starting rand value. Null on days the benchmark could not be fetched",
+            "examples": [
+              9020.0
+            ]
+          },
+          "twr_index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Twr Index",
+            "description": "time-weighted index starting at 100, so deposits do not read as growth. Null when there are fewer than two snapshots to link",
+            "examples": [
+              100.0
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "name",
+          "value"
+        ],
+        "title": "PerformancePoint"
+      },
+      "PortfolioRequest": {
+        "properties": {
+          "document_id": {
+            "type": "string",
+            "title": "Document Id"
+          },
+          "account_number": {
+            "type": "string",
+            "title": "Account Number"
+          },
+          "portfolio_name": {
+            "type": "string",
+            "title": "Portfolio Name"
+          },
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "ZAR"
+          },
+          "statement_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statement Start Date"
+          },
+          "statement_end_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Statement End Date"
+          },
+          "account_type": {
+            "type": "string",
+            "title": "Account Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "document_id",
+          "account_number",
+          "portfolio_name",
+          "statement_end_date",
+          "account_type"
+        ],
+        "title": "PortfolioRequest"
+      },
+      "PortfolioResponse": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "example": [
+              "APPLE"
+            ]
+          },
+          "weight_percentage": {
+            "type": "number",
+            "title": "Weight Percentage",
+            "example": [
+              "56"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "weight_percentage"
+        ],
+        "title": "PortfolioResponse"
+      },
+      "PortfolioRow": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "examples": [
+              "6f9619ff-8b86-d011-b42d-00cf4fc964ff"
+            ]
+          },
+          "document_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Id",
+            "description": "the imported statement this portfolio came from. Null if it was not created by an import",
+            "examples": [
+              "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            ]
+          },
+          "portfolio_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Portfolio Name",
+            "examples": [
+              "EasyEquities TFSA"
+            ]
+          },
+          "account_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Number",
+            "examples": [
+              "EE-1234567"
+            ]
+          },
+          "statement_end_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statement End Date",
+            "examples": [
+              "2026-07-31"
+            ]
+          },
+          "statement_start_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Statement Start Date",
+            "examples": [
+              "2026-07-01"
+            ]
+          },
+          "account_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Account Type",
+            "description": "zar, tfsa or usd. Null until the user sets it",
+            "examples": [
+              "tfsa"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "title": "PortfolioRow"
+      },
+      "PortfolioSummary": {
+        "properties": {
+          "total_value": {
+            "type": "number",
+            "title": "Total Value",
+            "description": "rand value of every priced holding at the price the dashboard used",
+            "examples": [
+              9420.0
+            ]
+          },
+          "total_cost": {
+            "type": "number",
+            "title": "Total Cost",
+            "description": "what was paid for those holdings, including brokerage",
+            "examples": [
+              9000.0
+            ]
+          },
+          "total_gain_loss": {
+            "type": "number",
+            "title": "Total Gain Loss",
+            "description": "total_value minus total_cost, unrealised only",
+            "examples": [
+              420.0
+            ]
+          },
+          "total_gain_loss_pct": {
+            "type": "number",
+            "title": "Total Gain Loss Pct",
+            "description": "percentage points, so 4.67 means up 4.67%",
+            "examples": [
+              4.67
+            ]
+          },
+          "num_holdings": {
+            "type": "integer",
+            "title": "Num Holdings",
+            "examples": [
+              7
+            ]
+          },
+          "daily_change_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Change Pct",
+            "description": "percentage points moved since the previous close. Null when no holding has a live price to compare",
+            "examples": [
+              0.31
+            ]
+          },
+          "daily_change_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Daily Change Value",
+            "description": "the same move in rands. Null on the same condition",
+            "examples": [
+              29.1
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "total_value",
+          "total_cost",
+          "total_gain_loss",
+          "total_gain_loss_pct",
+          "num_holdings"
+        ],
+        "title": "PortfolioSummary"
+      },
+      "RegisterRequest": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "examples": [
+              "Thabo Mokoena"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "description": "doubles as the Cognito username, so it cannot be changed later",
+            "examples": [
+              "thabo.mokoena@example.co.za"
+            ]
+          },
+          "password": {
+            "type": "string",
+            "title": "Password",
+            "description": "at least 8 characters with an uppercase letter, a lowercase letter, a digit and a special character. Cognito applies its own policy on top of this one",
+            "examples": [
+              "Sandton2026!"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "email",
+          "password"
+        ],
+        "title": "RegisterRequest"
+      },
+      "RegisterResponse": {
+        "properties": {
+          "user_sub": {
+            "type": "string",
+            "title": "User Sub",
+            "description": "Cognito's id for the new account. The EquityLens user id only exists after the first authenticated request",
+            "examples": [
+              "a1b2c3d4-5e6f-7081-9abc-def012345678"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email",
+            "examples": [
+              "thabo.mokoena@example.co.za"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_sub",
+          "email"
+        ],
+        "title": "RegisterResponse"
+      },
+      "ReturnsResponse": {
+        "properties": {
+          "portfolio_value": {
+            "type": "number",
+            "title": "Portfolio Value",
+            "description": "rand value of every holding, priced or not",
+            "examples": [
+              9420.0
+            ]
+          },
+          "invested_capital": {
+            "type": "number",
+            "title": "Invested Capital",
+            "description": "cost basis of the holdings still held, so it falls when you sell",
+            "examples": [
+              9000.0
+            ]
+          },
+          "net_contributions": {
+            "type": "number",
+            "title": "Net Contributions",
+            "description": "deposits less withdrawals from the statement, which can exceed invested_capital when cash is sitting uninvested",
+            "examples": [
+              10000.0
+            ]
+          },
+          "unrealised_gain": {
+            "type": "number",
+            "title": "Unrealised Gain",
+            "description": "paper gain on holdings that have a real price; cost-priced holdings are left out so they cannot fake a zero move",
+            "examples": [
+              420.0
+            ]
+          },
+          "realised_gain": {
+            "type": "number",
+            "title": "Realised Gain",
+            "description": "locked in by sales, on an average-cost basis",
+            "examples": [
+              0.0
+            ]
+          },
+          "total_costs": {
+            "type": "number",
+            "title": "Total Costs",
+            "description": "brokerage and fees charged over the statement period",
+            "examples": [
+              57.5
+            ]
+          },
+          "simple_return_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Simple Return Pct",
+            "description": "percentage points: unrealised gain over cost, ignoring when the money went in. Null when nothing is priced above its cost basis",
+            "examples": [
+              4.67
+            ]
+          },
+          "money_weighted_return_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Money Weighted Return Pct",
+            "description": "percentage points, annualised XIRR over the cash flows, so it also reflects the timing of deposits. Null when XIRR does not converge",
+            "examples": [
+              12.4
+            ]
+          },
+          "time_weighted_return_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Weighted Return Pct",
+            "description": "percentage points, chain-linked between snapshots with deposits and purchases taken out, so it measures the holdings rather than the deposits. This is the one to compare against an index. Null with fewer than two snapshots",
+            "examples": [
+              3.1
+            ]
+          },
+          "snapshot_count": {
+            "type": "integer",
+            "title": "Snapshot Count",
+            "description": "daily valuations on record; two is the minimum for a time-weighted figure",
+            "examples": [
+              22
+            ]
+          },
+          "history_days": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "History Days",
+            "description": "days since the earliest snapshot. Null when there are none",
+            "examples": [
+              30
+            ]
+          },
+          "holdings_count": {
+            "type": "integer",
+            "title": "Holdings Count",
+            "examples": [
+              7
+            ]
+          },
+          "priced_live_count": {
+            "type": "integer",
+            "title": "Priced Live Count",
+            "description": "holdings priced from a live quote today",
+            "examples": [
+              6
+            ]
+          },
+          "priced_count": {
+            "type": "integer",
+            "title": "Priced Count",
+            "description": "holdings priced from anything other than cost, so live plus statement prices",
+            "examples": [
+              7
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_value",
+          "invested_capital",
+          "net_contributions",
+          "unrealised_gain",
+          "realised_gain",
+          "total_costs",
+          "snapshot_count",
+          "holdings_count",
+          "priced_live_count",
+          "priced_count"
+        ],
+        "title": "ReturnsResponse"
+      },
+      "SaveActionResponse": {
+        "properties": {
+          "Success": {
+            "type": "boolean",
+            "title": "Success",
+            "examples": [
+              true
+            ]
+          },
+          "Message": {
+            "type": "string",
+            "title": "Message",
+            "examples": [
+              "Saved successfully"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "Success",
+          "Message"
+        ],
+        "title": "SaveActionResponse"
+      },
+      "SavePortfolioResponse": {
+        "properties": {
+          "Success": {
+            "type": "boolean",
+            "title": "Success",
+            "examples": [
+              true
+            ]
+          },
+          "Message": {
+            "type": "string",
+            "title": "Message",
+            "examples": [
+              "PDF has been saved successfully"
+            ]
+          },
+          "portfolio_id": {
+            "type": "string",
+            "title": "Portfolio Id",
+            "examples": [
+              "123"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "Success",
+          "Message",
+          "portfolio_id"
+        ],
+        "title": "SavePortfolioResponse"
+      },
+      "SearchResponse": {
+        "properties": {
+          "query": {
+            "type": "string",
+            "title": "Query",
+            "example": "Apple"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SearchResultItem"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "query",
+          "results"
+        ],
+        "title": "SearchResponse"
+      },
+      "SearchResultItem": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "example": "AAPL"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "example": "Apple Inc."
+          },
+          "quote_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quote Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "name"
+        ],
+        "title": "SearchResultItem"
+      },
+      "SectorInvestmentRequest": {
+        "properties": {
+          "sector": {
+            "type": "string",
+            "title": "Sector",
+            "examples": [
+              "Healthcare"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "sector"
+        ],
+        "title": "SectorInvestmentRequest"
+      },
+      "SectorSlice": {
+        "properties": {
+          "sector": {
+            "type": "string",
+            "title": "Sector",
+            "examples": [
+              "Financials"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "title": "Value",
+            "description": "rand value held in this sector",
+            "examples": [
+              3180.0
+            ]
+          },
+          "percentage": {
+            "type": "number",
+            "title": "Percentage",
+            "description": "percentage points of the book, so the slices sum to 100",
+            "examples": [
+              33.8
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "sector",
+          "value",
+          "percentage"
+        ],
+        "title": "SectorSlice"
+      },
+      "StatusResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "what completed, one word per route",
+            "examples": [
+              "confirmed",
+              "mfa_configured",
+              "logged_out",
+              "deleted"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "title": "StatusResponse",
+        "description": "confirm, mfa/confirm-setup, logout and DELETE /me all answer with just a status."
+      },
+      "SummaryResponse": {
+        "properties": {
+          "PortfolioValue": {
+            "type": "number",
+            "title": "Portfoliovalue",
+            "example": [
+              "APPLE"
+            ]
+          },
+          "TotalHoldings": {
+            "type": "integer",
+            "title": "Totalholdings",
+            "example": [
+              "22"
+            ]
+          },
+          "TotalPurchasesAndSales": {
+            "type": "number",
+            "title": "Totalpurchasesandsales",
+            "example": [
+              "23"
+            ]
+          },
+          "TotalTransactionCosts": {
+            "type": "number",
+            "title": "Totaltransactioncosts",
+            "example": [
+              "23"
+            ]
+          },
+          "TotalContributionsAndWithdrawals": {
+            "type": "number",
+            "title": "Totalcontributionsandwithdrawals",
+            "example": [
+              34.0
+            ]
+          },
+          "TotalDividendsAndWithholdingTax": {
+            "type": "number",
+            "title": "Totaldividendsandwithholdingtax",
+            "example": [
+              "45"
+            ]
+          },
+          "TotalTransactionInterest": {
+            "type": "number",
+            "title": "Totaltransactioninterest",
+            "example": [
+              "56"
+            ]
+          },
+          "TotalTransactionExpenses": {
+            "type": "number",
+            "title": "Totaltransactionexpenses",
+            "example": [
+              "68"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "PortfolioValue",
+          "TotalHoldings",
+          "TotalPurchasesAndSales",
+          "TotalTransactionCosts",
+          "TotalContributionsAndWithdrawals",
+          "TotalDividendsAndWithholdingTax",
+          "TotalTransactionInterest",
+          "TotalTransactionExpenses"
+        ],
+        "title": "SummaryResponse"
+      },
+      "TickerResponse": {
+        "properties": {
+          "tickers": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Tickers",
+            "examples": [
+              [
+                "AAPL",
+                "MFST",
+                "TSLA"
+              ]
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "tickers"
+        ],
+        "title": "TickerResponse"
+      },
+      "TokenResponse": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token",
+            "description": "send as the bearer token on every other route",
+            "examples": [
+              "eyJraWQiOiJIS0..."
+            ]
+          },
+          "id_token": {
+            "type": "string",
+            "title": "Id Token",
+            "description": "carries the profile claims; not accepted as a bearer token",
+            "examples": [
+              "eyJraWQiOiJ4WjRw..."
+            ]
+          },
+          "refresh_token": {
+            "type": "string",
+            "title": "Refresh Token",
+            "description": "outlives the other two and buys a new access_token",
+            "examples": [
+              "eyJjdHkiOiJKV1Qi..."
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "id_token",
+          "refresh_token"
+        ],
+        "title": "TokenResponse"
+      },
+      "TotpSecretResponse": {
+        "properties": {
+          "secret": {
+            "type": "string",
+            "title": "Secret",
+            "description": "base32 seed to put in the authenticator app, by QR code or by hand. It is shown once and is not retrievable afterwards",
+            "examples": [
+              "JBSWY3DPEHPK3PXP"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "secret"
+        ],
+        "title": "TotpSecretResponse"
+      },
+      "TransactionExpensesRequest": {
+        "properties": {
+          "portfolio_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Portfolio Id"
+          },
+          "transaction_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Transaction Date"
+          },
+          "settlement_date": {
+            "type": "string",
+            "format": "date",
+            "title": "Settlement Date"
+          },
+          "narrative_name": {
+            "type": "string",
+            "title": "Narrative Name"
+          },
+          "value_zar": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$"
+              }
+            ],
+            "title": "Value Zar"
+          }
+        },
+        "type": "object",
+        "required": [
+          "portfolio_id",
+          "transaction_date",
+          "settlement_date",
+          "narrative_name",
+          "value_zar"
+        ],
+        "title": "TransactionExpensesRequest"
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "description": "the EquityLens user id, not the Cognito sub",
+            "examples": [
+              "6f9619ff-8b86-d011-b42d-00cf4fc964ff"
+            ]
+          },
+          "email": {
+            "type": "string",
+            "title": "Email",
+            "examples": [
+              "thabo.mokoena@example.co.za"
+            ]
+          },
+          "full_name": {
+            "type": "string",
+            "title": "Full Name",
+            "examples": [
+              "Thabo Mokoena"
+            ]
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active",
+            "description": "false once the account has been deactivated; it can no longer sign in",
+            "examples": [
+              true
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At",
+            "description": "when the EquityLens row was created, which is the first sign-in, not when the Cognito account was registered",
+            "examples": [
+              "2026-07-14T08:32:11Z"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "email",
+          "full_name",
+          "is_active",
+          "created_at"
+        ],
+        "title": "UserResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerifyTOTPReq": {
+        "properties": {
+          "totp_code": {
+            "type": "string",
+            "title": "Totp Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "totp_code"
+        ],
+        "title": "VerifyTOTPReq"
+      },
+      "WatchListRequest": {
+        "properties": {
+          "ticker": {
+            "type": "string",
+            "title": "Ticker"
+          }
+        },
+        "type": "object",
+        "required": [
+          "ticker"
+        ],
+        "title": "WatchListRequest"
+      },
+      "WatchlisResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "example": [
+              true
+            ]
+          },
+          "Message": {
+            "type": "string",
+            "title": "Message",
+            "example": [
+              "Add watchlist successfully"
+            ]
+          },
+          "watchlist": {
+            "items": {
+              "$ref": "#/components/schemas/WatchlistItemResponse"
+            },
+            "type": "array",
+            "title": "Watchlist"
+          },
+          "highest": {
+            "$ref": "#/components/schemas/WatchlistItemResponse"
+          },
+          "lowest": {
+            "$ref": "#/components/schemas/WatchlistItemResponse"
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "Message",
+          "watchlist",
+          "highest",
+          "lowest"
+        ],
+        "title": "WatchlisResponse"
+      },
+      "WatchlistActionResponse": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "example": [
+              true
+            ]
+          },
+          "Message": {
+            "type": "string",
+            "title": "Message",
+            "example": [
+              "Deleted watchlist successfully"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "success",
+          "Message"
+        ],
+        "title": "WatchlistActionResponse"
+      },
+      "WatchlistItemResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id",
+            "examples": [
+              1
+            ]
+          },
+          "ticker": {
+            "type": "string",
+            "title": "Ticker",
+            "examples": [
+              "AAPL"
+            ]
+          },
+          "company_name": {
+            "type": "string",
+            "title": "Company Name",
+            "examples": [
+              "AAPL Inc."
+            ]
+          },
+          "sector": {
+            "type": "string",
+            "title": "Sector",
+            "examples": [
+              "Business"
+            ]
+          },
+          "current_price": {
+            "type": "integer",
+            "title": "Current Price",
+            "examples": [
+              24.5
+            ]
+          },
+          "change_percent": {
+            "type": "integer",
+            "title": "Change Percent",
+            "examples": [
+              23.5
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "ticker",
+          "company_name",
+          "sector",
+          "current_price",
+          "change_percent"
+        ],
+        "title": "WatchlistItemResponse"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
