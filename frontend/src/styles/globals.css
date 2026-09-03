@@ -110,7 +110,39 @@
 }
 
 [data-theme="light"] {
-  --surface-base: #FFFFFF;
+  --surface-base: #FAFAF8;
+  --surface-raised: #FFFFFF;
+  --surface-card: #FFFFFF;
+  --surface-elevated: #FFFFFF;
+  --surface-inset: #F3F2EE;
+  --surface-hover: rgba(20, 16, 10, 0.025);
+
+  --border-subtle: #E9E6E0;
+  --border-mid: #D9D5CC;
+  --border-strong: rgba(20, 16, 10, 0.22);
+  --border-divider: rgba(20, 16, 10, 0.06);
+
+  --text-primary: #2B2118;
+  --text-secondary: #6B7280;
+  --text-dim: #9AA0AB;
+  --text-disabled: #C3C7CF;
+  --text-ghost: #B8BCC5;
+
+  --accent-subtle: rgba(255, 106, 0, 0.10);
+  --signal-negative-bg: rgba(229, 72, 77, 0.08);
+  --signal-negative-border: rgba(229, 72, 77, 0.14);
+
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(20, 16, 10, 0.06);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.90);
+  --glass-border-elevated: rgba(20, 16, 10, 0.10);
+  --glass-highlight: rgba(255, 255, 255, 0.60);
+  --glass-hover: rgba(20, 16, 10, 0.04);
+  --scrim: rgba(20, 16, 10, 0.35);
+
+  --chart-grid: #EAE7E1;
+  --chart-axis-text: #9AA0AB;
+  --chart-tooltip-bg: #FFFFFF;
 
   --text-page: rgba(0, 0, 0, 0.88);
   --text-page-secondary: rgba(0, 0, 0, 0.60);

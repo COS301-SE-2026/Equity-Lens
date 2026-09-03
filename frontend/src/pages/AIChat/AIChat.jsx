@@ -20,7 +20,8 @@ const SUGGESTED_PROMPTS = [
   'How is my portfolio performing compared to the JSE benchmark?'
 ];
 
-const PANEL_WIDTH = 'max-w-[860px]';
+const CONTENT_MAX = 'max-w-[860px]';
+const PANEL_WIDTH = 'w-[280px] min-w-[240px] max-w-[860px]';
 const HOVER = 'transition-colors duration-150 hover:bg-[var(--surface-hover)]';
 const COMPOSER_MAX_ROWS = 1500;
 const COPIED_LABEL_MS = 3200;
@@ -408,8 +409,8 @@ const AIChat = () => {
         </button>
       </div>
       
-      <div className = "pNumber-3">
-        <Button type="button" variant="primary" fullWidth onClick={createNewChat}>
+      <div className = "flex justify-center px-3 py-3">
+        <Button type="button" variant="primary" size = "sm" fullWidth onClick={createNewChat} className = "mx-auto max-w-[180px]">
           <Plus size={16} aria-hidden="true"></Plus>
           New Chat
         </Button>
@@ -417,8 +418,8 @@ const AIChat = () => {
 
       <div className = "convo">
         {conversations.length === 0 ? (
-          <p className="errMessg">
-            No saved chats yet - your conversations will appear here.
+          <p className="flex justify-center errMessg">
+            No saved chats yet 
           </p>) 
           : (
           conversations.map((convo) => {
@@ -475,9 +476,8 @@ const AIChat = () => {
     return (
       <div className="-m-4 flex h-[calc(100%+2rem)] overflow-hidden" style={{background: 'var(--surface-base)', fontFamily: 'var(--font-primary)'}}>
         {panelOpen && (
-          <aside className="hidden shrink-0 flex-col sm:flex"
+          <aside className={`hidden shrink-0 flex-col sm:flex ${PANEL_WIDTH}`}
             style={{
-              width: PANEL_WIDTH,
               background: palette.panelBg,
               borderRight: `1px solid ${palette.border}`,
             }}>
@@ -557,7 +557,7 @@ const AIChat = () => {
           <div className="min-h-0 flex-1 overflow-y-auto">
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center px-4 text-center">
-                <div className="[CONTENT_MAX]">
+                <div className={CONTENT_MAX}>
                   <p className="text-3xl font-semibold" style={{ color: 'var(--text-primary)' }}>
                     Hello {firstName}
                   </p>
@@ -580,7 +580,7 @@ const AIChat = () => {
                 </div>
               </div>
             ) : (
-              <div className="mx-auto [CONTENT_MAX] flex-col gap-6 px-4 py-6">
+              <div className={`mx-auto ${CONTENT_MAX} flex-col gap-6 px-4 py-6`}>
                 {messages.map((message) => {
                   const day = dayLabel(message.at);
                   const showDay = day !== lastDay;
@@ -643,8 +643,8 @@ const AIChat = () => {
               </div>)}
           </div>
 
-          <div className="shrink-0 px-4 pb-4 pt-3" style={{ borderTop: `1px solid ${palette.border}` }}>
-            <form className="mx-auto [CONTENT_MAX]" onSubmit={handleSubmit}>
+          <div className="shrink-0 px-6 pb-4 pt-3" style={{ borderTop: `1px solid ${palette.border}` }}>
+            <form className={`mx-auto ${CONTENT_MAX}`} onSubmit={handleSubmit}>
               <div style={{display: 'flex', alignItems: 'flex-end', gap: 8, background: 'var(--surface-card)',
                     border: `1px solid ${composerFocused ? 'var(--accent-primary)' : palette.border}`,
                     boxShadow: composerFocused ? '0 0 0 1px var(--accent-primary)' : 'none',
@@ -666,7 +666,7 @@ const AIChat = () => {
                 </Button>
               </div>
             </form>
-            <p className="mx-auto mt-2 [CONTENT_MAX] text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <p className={`mx-auto mt-2 ${CONTENT_MAX} text-xs`} style={{ color: 'var(--text-secondary)' }}>
               AI responses are informational only and not financial advice.
             </p>
         </div>
