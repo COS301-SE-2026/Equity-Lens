@@ -16,7 +16,7 @@ import { useThemeContext } from '../../context/ThemeContext';
 
 const SUGGESTED_PROMPTS = [
   'How is MTN doing?',
-  "What is the news with Sasol?",
+  "Please show me some of the financial news",
   'How is my portfolio performing compared to the JSE benchmark?'
 ];
 

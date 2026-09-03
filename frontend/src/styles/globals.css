@@ -156,6 +156,19 @@
   --accent-subtle: rgba(255, 106, 0, 0.08);
 }
 
+.recharts-cartesian-axis-tick-value {fill: var(--chart-axis-text);}
+.recharts-cartesian-axis-line,
+.recharts-cartesian-axis-tick-line {stroke: var(--border-mid);}
+.recharts-cartesian-grid line {stroke: var(--chart-grid);}
+.recharts-legend-item-text {color: var(--text-secondary) !important;}
+.recharts-default-tooltip {
+  background: var(--chart-tooltip-bg) !important;
+  border: 1px solid var(--border-mid)  !important;
+  border-radius: 8px;  
+   color: var(--text-primary) !important;
+}
+.recharts-tooltip-item {color: var(--text-primary) !important;}
+
 body {
   font-family: var(--font-primary);
   background-color: var(--surface-base);

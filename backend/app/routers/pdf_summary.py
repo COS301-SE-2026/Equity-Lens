@@ -28,8 +28,8 @@ class SummaryResponse(BaseModel):
     TotalTransactionExpenses: float= Field(example=["68"])
 
 class HoldingResponse(BaseModel):
-    name: str = Field(example=["APPLE"])
-    value: float =Field(example=["68"])
+    name: str | None = Field(default = None, example=["APPLE"])
+    value: float = Field(example=["68"])
 
 class PortfolioResponse(BaseModel):
     name: str = Field(example=["APPLE"])
