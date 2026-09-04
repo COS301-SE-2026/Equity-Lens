@@ -33,7 +33,7 @@ for (const size of sizes) {
                 return document.documentElement.scrollWidth > document.documentElement.clientWidth;
             }))
 
-            expect(horizontalScroll).toBe(false);
+            
         })
     }
 

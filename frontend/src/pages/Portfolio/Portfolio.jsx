@@ -5,7 +5,8 @@ import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, Tr
 import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
 import api from "../../services/api"
 import * as XLSX from "xlsx"
-
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "../../utils/constants"
 ShowPdf.GlobalWorkerOptions.workerPort = new PDFworker();
 
 const DownloadEXCEL = () =>{ window.open("/template/EquityLens_Portfolio_Excel_Template.xlsx") }
@@ -477,6 +478,8 @@ const ReadingPDFFile = async(file,password) =>
 }
 
 const Portfolio = () => {
+  
+  const navigate = useNavigate();
   /**
    * @type {[any, function]}
    */
@@ -1328,7 +1331,7 @@ const Portfolio = () => {
             Ask questions about your portfolio and recivce AI-powered insights.
           </p>
 
-          <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold">
+          <button onClick={()=> navigate(ROUTES.AI_CHAT) }className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold">
             Go To Assistant
           </button>
 
