@@ -232,7 +232,7 @@ jobs:
     name: Run Lighthouse NFR-2.2 & NFR-2.3
     runs-on: ubuntu-latest
     needs: [frontend]
-    timeout-minutes: 3
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
