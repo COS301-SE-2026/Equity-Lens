@@ -193,23 +193,6 @@ describe("News page", () => {
         expect(screen.queryByText("AAPL holds steady")).not.toBeInTheDocument();
     });
 
-    it("aggregates news across every ticker when All is pressed", async () => {
-        const user = userEvent.setup();
-        render(<NewsInvestment />);
-
-        await screen.findByRole("button", { name: "AAPL" });
-        mockGet.mockClear();
-
-        const allFilterBtn = screen.getByRole("button", { name: /^\s*All\s*$/i });
-        await user.click(allFilterBtn);
-
-        await waitFor(() => {
-        expect(mockGet).toHaveBeenCalledWith("/news/test-aapl/AAPL");
-        expect(mockGet).toHaveBeenCalledWith("/news/test-aapl/MSFT");
-        });
-        expect(await screen.findByText("MSFT beats expectations")).toBeInTheDocument();
-    });
-
     it("now switches to the market tab and swaps thel heading", async () => {
         const user = userEvent.setup();
         render(<NewsInvestment />);

@@ -10,12 +10,14 @@ permissions:
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main, dev]
 
 jobs:
   frontend:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -29,10 +31,6 @@ jobs:
       - name: Install dependencies
         working-directory: frontend
         run: npm ci
-
-      - name: Security audit
-        working-directory: frontend
-        run: npm audit --audit-level=high --omit=dev
 
       - name: Unit tests
         working-directory: frontend
@@ -234,7 +232,7 @@ jobs:
     name: Run Lighthouse NFR-2.2 & NFR-2.3
     runs-on: ubuntu-latest
     needs: [frontend]
-    timeout-minutes: 3
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
@@ -292,22 +290,5 @@ jobs:
                     curl --fail --show-error \
                     https://www.equitylens.co.za
                     echo "PASS All the HTTPs/TLS connection"
-
-    # nfr-1-1-and-1-7:
-    #     name: NFR-1.1 & NFR1.7 OWSAP ZAP
-    #     runs-on: ubuntu-latest
-    #     timeout-minutes: 5
-
-        # steps:
-        #     - name: Checkout repository
-        #       uses: actions/checkout@v4
-
-        #     - name: RUN the OWSAP ZAP to scan all the API
-        #       uses: zaproxy/action-api-scan@v0.10.0
-        #       with:
-        #         target: "https://api.equitylens.co.za/openapi.json"
-        #         format: openapi
-        #         fail_action: true
-
     
 

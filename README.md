@@ -13,6 +13,7 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 - [Demo 1 Video](https://drive.google.com/file/d/1zTsXVxXO-8XaZbjOjm34sZqkUZCKs1rV/view?usp=sharing)
 - [Demo 2 Video](./Documentation/Demo_2/Demo_2_video/2026-07-30%2023-18-48.mp4)
+- [Demo 3 Video](https://drive.google.com/file/d/1x89mauJbrfO37-Z5hops6Qw0v2t45XQB/view?usp=sharing)
 
 ---
 
@@ -29,9 +30,9 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 | Brand Style Guide | live at `/brand` in the running app ([source](./frontend/src/pages/BrandStyleGuide/BrandStyleGuide.jsx)) |
 | GitHub Project Board | [View Board](https://github.com/orgs/COS301-SE-2026/projects/45) |
 | Design Document (Demo 1) | [View Design Doc](./Documentation/Demo_1/DESIGN_DOCUMENT.pdf) |
-| SRS (Demo 1, superseded) | [View SRS](./Documentation/Demo_1/Software_Requirement_Specification.pdf) |
 | Wireframes (Demo 1) | [View Wireframes](./Documentation/Demo_1/Wireframes.pdf) |
 | API Service Contract | [View API Contract](https://api.equitylens.co.za/docs) |
+| OpenAPI Specification | [View OpenAPI](./docs/api/openapi.json) |
 
 ---
 
