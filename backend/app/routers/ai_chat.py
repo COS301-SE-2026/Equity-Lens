@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, field_validator, Field
 from sqlalchemy.orm import Session
-from app.services.ai_service import chat
+from app.services.ai_service import ConversationNotFound, chat
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
@@ -76,6 +76,8 @@ async def ai_chat(
     try:
         reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id)
         return ChatResponse(reply = reply, conversation_id = conversation_id)
+    except ConversationNotFound:
+        raise HTTPException(status_code = 404, detail = "Conversation not found")
     except Exception as e:
         logger.exception(
             "AI chat failed for user %s (conversation %s): %s",

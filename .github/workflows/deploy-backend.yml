@@ -115,6 +115,12 @@ jobs:
                   "  docker logs equity-lens-backend --tail 50 >&2"
                   "  exit 1"
                   "fi"
+                  "AUTH=\$(curl -sf http://localhost:8000/health/auth || true)"
+                  "echo \"auth health: \$AUTH\""
+                  "if [ -z \"\$AUTH\" ] || echo \"\$AUTH\" | grep -q false; then"
+                  "  echo 'auth is not fully configured - every authenticated request would fall back to a Cognito call. leaving previous image on disk, not pruning' >&2"
+                  "  exit 1"
+                  "fi"
                   "docker system prune -af"
                 )
                 PARAMS_JSON=$(printf '%s\n' "${COMMANDS[@]}" | jq -R . | jq -s '{commands: .}')

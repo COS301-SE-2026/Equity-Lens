@@ -6,6 +6,7 @@ pydantic[email]==2.13.4
 sqlalchemy==2.0.30
 alembic==1.13.1
 psycopg2-binary==2.9.9
+PyJWT[crypto]==2.10.1
 passlib==1.7.4
 bcrypt==4.0.1
 python-multipart==0.0.31
