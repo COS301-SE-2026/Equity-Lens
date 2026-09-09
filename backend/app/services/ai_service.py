@@ -2,8 +2,11 @@ from functools import lru_cache
 
 from sqlalchemy.orm import Session
 from app.config import settings
-from app.models.portfolio import Portfolios, Document, Holdings
+from app.models.portfolio import Document
 from app.models.chat import ChatConversation, ChatMessages
+from app.repositories.holdings_repository import HoldingsRepository
+from app.repositories.portfolio_repository import PortfolioRepository
+from app.services.health_config_service import resolve_health_config
 from app.utils.stock_cache import get_cached_price_history
 from app.services.market_data_service import _cents_to_major
 from app.services.health_score import compute_health_score
@@ -20,6 +23,10 @@ from app.utils.market_cache import get_market_returns
 
 
 MAX_TOOL_ITERATIONS = 3
+
+
+class ConversationNotFound(Exception):
+    """"""
 
 TOOL_CONFIG = { "tools": [
                     { "toolSpec": {
@@ -100,14 +107,13 @@ def get_bedrock_client():
     )
 
 def get_user_portfolio_context(db: Session, user_id):
-    portfolios = db.query(Portfolios).filter(Portfolios.user_id == user_id).all()
+    portfolio = PortfolioRepository(db).get_latest_portfolio(user_id)
     knowledge = ""
+    holdings = []
 
-    if portfolios:
-        for info in portfolios:
-            knowledge += f"Portfolio: {info.portfolio_name}, Account: {info.account_number}\n"
-
-    holdings = db.query(Holdings).join(Portfolios, Holdings.portfolio_id == Portfolios.id).filter(Portfolios.user_id == user_id).all()
+    if portfolio:
+        knowledge += f"Portfolio: {portfolio.portfolio_name}, Account: {portfolio.account_number}\n"
+        holdings = HoldingsRepository(db).get_by_portfolio_ids([portfolio.id])
 
     if holdings:
         knowledge += "\nHoldings\n"
@@ -116,7 +122,8 @@ def get_user_portfolio_context(db: Session, user_id):
                           f"quantity: {i.quantity}, cost price: R{i.cost_price}, "
                           f"overall cost: R{i.total_cost}, weight: {i.weight_percentage}%\n")
 
-        health = compute_health_score(_price_holdings(holdings))
+        config = resolve_health_config(db, user_id).config
+        health = compute_health_score(_price_holdings(holdings), config)
         if health["score"] is not None:
             knowledge += f"\nPortfolio Health: {health['score']}/10 ({health['label']})\n"
             for s in health["subscores"]:
@@ -342,6 +349,16 @@ def run_tool(name: str, tool_input: dict) -> str:
 #now for chat functionality 
 #Working on saving the user and ai assistant reply messages to the database
 def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = None):
+    chat_conversation = None
+    if conversation_id:
+        chat_conversation = db.query(ChatConversation).filter(
+            ChatConversation.id == conversation_id,
+            ChatConversation.user_id == logged_in_user_id
+        ).first()
+
+        if chat_conversation is None:
+            raise ConversationNotFound
+
     client = get_bedrock_client()
 
     portfolio_context = get_user_portfolio_context(db, logged_in_user_id)
@@ -475,13 +492,7 @@ Below is the user's portfolio data. Treat everything inside
 
     
     #Saving to the DB
-    if conversation_id:
-        chat_conversation = db.query(ChatConversation).filter(
-            ChatConversation.id == conversation_id,
-            ChatConversation.user_id == logged_in_user_id
-        ).first()
-    # else create a new one
-    else:
+    if chat_conversation is None:
         title = title_creation(client, user_message)
         chat_conversation = ChatConversation(user_id = logged_in_user_id, title = title) 
         db.add(chat_conversation)

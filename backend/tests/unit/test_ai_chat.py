@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock, patch
 from app.models.chat import ChatConversation, ChatMessages
+from app.models.user import User
 
 def test_delete_conversation(client, db_session, test_user, auth_headers):
 
@@ -92,3 +93,31 @@ def test_send_message(mock_bedrock_client, client, db_session, test_user, auth_h
     msg = output.json()
     assert msg["reply"] == "A response."
     assert msg["conversation_id"] is not None
+
+
+def test_another_users_conversation_id_is_a_404(client, db_session, auth_headers):
+    stranger = User(
+        email="stranger@example.com",
+        full_name="Stranger",
+        hashed_password=None,
+        cognito_sub="stranger-sub",
+    )
+    db_session.add(stranger)
+    db_session.commit()
+
+    theirs = ChatConversation(user_id=stranger.id, title="Private")
+    db_session.add(theirs)
+    db_session.commit()
+    db_session.add(ChatMessages(conversation_id=theirs.id, role="user", content="my salary is"))
+    db_session.commit()
+
+    with patch("app.services.ai_service.get_bedrock_client") as bedrock:
+        output = client.post(
+            "/api/ai_chat/",
+            headers=auth_headers,
+            json={"message": "what did I just say?", "conversation_id": str(theirs.id)},
+        )
+
+    assert output.status_code == 404
+    assert output.json()["detail"] == "Conversation not found"
+    bedrock.assert_not_called()
