@@ -9,9 +9,18 @@ const ThemeContext = createContext(null);
  * @param {*} object.children
 */
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem(THEME_KEY) || 'light'
-  );
+  const [theme, setTheme] = useState(() => {
+    const painted = document.documentElement.getAttribute('data-theme');
+    if (painted === 'light' || painted === 'dark') return painted;
+
+    try {
+      const stored = localStorage.getItem(THEME_KEY);
+      if (stored === 'light' || stored === 'dark') return stored;
+    } catch {//
+    }
+
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  });
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
