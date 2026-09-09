@@ -53,16 +53,16 @@ describe('api response interceptor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete window.location;
-    window.location = { ...originalLocation, href: '' };
+    window.location = { ...originalLocation, href: '', pathname: '/dashboard' };
   });
  
   afterEach(() => {
     window.location = originalLocation;
   });
  
-  it('signs out and redirects to /login on a 401', async () => {
+  it('signs out and redirects to /login on a rejected token', async () => {
     signOut.mockResolvedValue(undefined);
-    const error = { response: { status: 401 } };
+    const error = { response: { status: 401, data: { error_code: 'TOKEN_EXPIRED' } } };
  
     await expect(responseRejected(error)).rejects.toBe(error);
  
@@ -72,7 +72,7 @@ describe('api response interceptor', () => {
  
   it('still redirects to /login even if signOut itself fails', async () => {
     signOut.mockRejectedValue(new Error('signOut failed'));
-    const error = { response: { status: 401 } };
+    const error = { response: { status: 401, data: { error_code: 'TOKEN_EXPIRED' } } };
  
     await expect(responseRejected(error)).rejects.toBe(error);
  
@@ -88,6 +88,24 @@ describe('api response interceptor', () => {
     expect(window.location.href).toBe('');
   });
  
+  it('does not sign out on a 503 - our auth check being down is not an expired session', async () => {
+    const error = { response: { status: 503, data: { error_code: 'AUTH_UNAVAILABLE' } } };
+
+    await expect(responseRejected(error)).rejects.toBe(error);
+
+    expect(signOut).not.toHaveBeenCalled();
+    expect(window.location.href).toBe('');
+  });
+
+  it('does not sign out on a 403, which means the header was missing, not expired', async () => {
+    const error = { response: { status: 403, data: { detail: 'Not authenticated' } } };
+
+    await expect(responseRejected(error)).rejects.toBe(error);
+
+    expect(signOut).not.toHaveBeenCalled();
+    expect(window.location.href).toBe('');
+  });
+
   it('does not sign out or redirect when there is no response at all (e.g. network error)', async () => {
     const error = { message: 'Network Error' };
  

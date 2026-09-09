@@ -17,7 +17,7 @@ jobs:
   frontend:
     name: Frontend Build & Test
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -36,9 +36,27 @@ jobs:
         working-directory: frontend
         run: npm run coverage
 
-      - name: Install Playwright
+      - name: Read the installed Playwright version
+        id: pw
         working-directory: frontend
-        run: npx playwright install --with-deps
+        run: echo "version=$(node -p "require('@playwright/test/package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache the Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+
+      - name: Install Playwright chromium and its system libraries
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Install the Playwright system libraries
+        if: steps.pw-cache.outputs.cache-hit == 'true'
+        working-directory: frontend
+        run: npx playwright install-deps chromium
 
       - name: E2E tests
         working-directory: frontend
@@ -64,15 +82,30 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+      - name: Upload the build for the Lighthouse job
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build production frontend image
-        run: |
-          docker build \
-            -f frontend/Dockerfile.prod \
-            --build-arg VITE_API_URL=http://localhost:8000\api \
-            --build-arg VITE_COGNITO_USER_POOL_ID=af-south-1_smoketest \
-            --build-arg VITE_COGNITO_CLIENT_ID=smoketestclientid \
-            --build-arg VITE_COGNITO_REGION=af-south-1 \
-            -t equity-lens-frontend-smoketest ./frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: frontend/Dockerfile.prod
+          tags: equity-lens-frontend-smoketest
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            VITE_API_URL=http://localhost:8000\api
+            VITE_COGNITO_USER_POOL_ID=af-south-1_smoketest
+            VITE_COGNITO_CLIENT_ID=smoketestclientid
+            VITE_COGNITO_REGION=af-south-1
 
       - name: Run frontend smoke-test container
         run: docker run -d --name frontend-smoketest -p 8080:8080 equity-lens-frontend-smoketest
@@ -186,8 +219,17 @@ jobs:
           BEDROCK_MODEL=anthropic.claude-sonnet-4-5-20250929-v1:0
           EOF
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Build production backend image
-        run: docker build -t equity-lens-backend-smoketest ./backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          tags: equity-lens-backend-smoketest
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Run backend smoke-test container
         run: |
@@ -243,10 +285,18 @@ jobs:
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
+      # npm ci stays - vite preview needs the binary, it is the build we skip
+      - working-directory: frontend
+        run: npm ci
+
+      - name: Download the build from the frontend job
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
       - working-directory: frontend
         run: |
-          npm ci
-          npm run build
           npm run preview -- --host 0.0.0.0 &
           npx wait-on http://localhost:4173
 

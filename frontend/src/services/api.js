@@ -26,7 +26,12 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
-    if (err.response?.status === 401) {
+    const status = err.response?.status;
+    const code = err.response?.data?.error_code;
+    const sessionExpired =
+      status === 401 && (code === 'TOKEN_EXPIRED' || code === 'UNAUTHORISED');
+
+    if (sessionExpired && !window.location.pathname.startsWith('/login')) {
       try {
         await signOut();
       } catch (e) {

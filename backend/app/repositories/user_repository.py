@@ -1,4 +1,5 @@
 from uuid import UUID, uuid4
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.models.user import User
 from app.models.portfolio import (
@@ -39,16 +40,27 @@ class UserRepository:
         if user:
             return user
         
-        # user = self.get_by_email(email)
-        # if user:
-        #     user.cognito_sub = cognito_sub
-        #     self.db.commit()
-        #     self.db.refresh(user)
-        #     return user
+        user = self.get_by_email(email)
+        if user:
+            user.cognito_sub = cognito_sub
+            if not user.full_name:
+                user.full_name = full_name
+            self.db.commit()
+            self.db.refresh(user)
+            return user
 
         user = User(id=uuid4(), email=email, hashed_password=None, full_name=full_name, cognito_sub=cognito_sub)
         self.db.add(user)
-        self.db.commit()
+        try:
+            self.db.commit()
+        except IntegrityError:
+            # two first requests from the same new identity raced us to the insert
+            self.db.rollback()
+            existing = self.get_by_cognito_sub(cognito_sub) or self.get_by_email(email)
+            if existing is None:
+                raise
+            return existing
+
         self.db.refresh(user)
         return user
 
