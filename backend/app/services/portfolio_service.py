@@ -48,7 +48,7 @@ def _to_float(value) -> float:
     return float(value) if value is not None else 0.0
 
 
-def _price_holding(h) -> dict:
+def _price_holding(h, db: Session | None = None) -> dict:
     quantity = _to_float(h.quantity)
     total_cost = _to_float(h.total_cost)
     cost_price = _to_float(h.cost_price)
@@ -75,7 +75,7 @@ def _price_holding(h) -> dict:
     current_price = cost_price
     if ticker and ticker.upper() not in INVALID_TICKER_MARKERS and is_zar_listed(ticker):
         try:
-            live = get_current_price(ticker)
+            live = get_current_price(ticker, db)
             raw_price = live.price
             if raw_price is not None and not math.isnan(raw_price):
                 current_price = raw_price
@@ -134,8 +134,8 @@ def _price_holding(h) -> dict:
         "daily_change_pct": round(daily_change_pct, 2) if daily_change_pct is not None else None,
     }
 
-def _price_holdings(holdings: list) -> list[dict]:
-    priced = [_price_holding(h) for h in holdings]
+def _price_holdings(holdings: list, db: Session | None = None) -> list[dict]:
+    priced = [_price_holding(h, db) for h in holdings]
     priced.sort(key=lambda h: h["value"], reverse=True)
     return priced
 
@@ -673,24 +673,49 @@ def _build_tfsa_room(account_type: str | None, contributions: list) -> dict:
     }
 
 
-PRICED_HOLDINGS_CACHE_TTL_SECONDS = 5
+#was 5, which is shorter than a single page load, so the three dashboard endpoints each
+#re-priced the same holdings from scratch
+PRICED_HOLDINGS_CACHE_TTL_SECONDS = 90
 
 _priced_holdings_cache: dict[str, tuple[float, list[dict], list[UUID]]] = {}
 _priced_holdings_locks: dict[str, threading.Lock] = {}
 _priced_holdings_guard = threading.Lock()
+
+#(portfolio_id, date) pairs whose snapshot maintenance has already run today
+_snapshot_maintenance_done: set[tuple[UUID, date]] = set()
+
+
+def _remember_snapshot_maintenance(marker: tuple[UUID, date]) -> None:
+    #drop yesterday's entries first so this holds at most one marker per portfolio
+    with _priced_holdings_guard:
+        for stale in [m for m in _snapshot_maintenance_done if m[1] != marker[1]]:
+            _snapshot_maintenance_done.discard(stale)
+        _snapshot_maintenance_done.add(marker)
 
 
 def _copy_priced(priced: list[dict]) -> list[dict]:
     return [dict(h) for h in priced]
 
 
+def _evict_expired(now: float) -> None:
+    stale = [
+        key for key, (cached_at, _, _) in _priced_holdings_cache.items()
+        if now - cached_at >= PRICED_HOLDINGS_CACHE_TTL_SECONDS
+    ]
+    for key in stale:
+        _priced_holdings_cache.pop(key, None)
+        _priced_holdings_locks.pop(key, None)
+
+
 def _read_priced_cache(key: str) -> tuple[list[dict], list[UUID]] | None:
     with _priced_holdings_guard:
+        now = time.monotonic()
+        _evict_expired(now)
         entry = _priced_holdings_cache.get(key)
         if entry is None:
             return None
         cached_at, priced, portfolio_ids = entry
-        if time.monotonic() - cached_at >= PRICED_HOLDINGS_CACHE_TTL_SECONDS:
+        if now - cached_at >= PRICED_HOLDINGS_CACHE_TTL_SECONDS:
             return None
         return _copy_priced(priced), list(portfolio_ids)
 
@@ -704,8 +729,10 @@ def invalidate_priced_holdings(user_id: UUID | str | None = None) -> None:
     with _priced_holdings_guard:
         if user_id is None:
             _priced_holdings_cache.clear()
+            _priced_holdings_locks.clear()
         else:
             _priced_holdings_cache.pop(str(user_id), None)
+            _evict_expired(time.monotonic())
 
 
 class PortfolioService:
@@ -731,7 +758,7 @@ class PortfolioService:
                 return cached
 
             holdings, portfolio_ids = self._get_holdings(user_id)
-            priced = _price_holdings(holdings)
+            priced = _price_holdings(holdings, self.db)
             with _priced_holdings_guard:
                 _priced_holdings_cache[key] = (time.monotonic(), priced, portfolio_ids)
             return _copy_priced(priced), list(portfolio_ids)
@@ -915,13 +942,25 @@ class PortfolioService:
         instrument_txns = self.portfolio_repo.get_instrument_transactions(portfolio_ids)
         classified_txns = classify_instrument_txns(instrument_txns)
 
+        #this used to rebuild snapshots and upsert today's row on EVERY GET, so two open
+        #tabs raced the same (portfolio_id, today) row and a write failure broke a
+        #read-only page. now it runs once per portfolio per day, and never fatally
         if portfolio_ids:
-            if len(self.portfolio_repo.get_snapshot_history(portfolio_ids)) < 2:
-                rebuild_snapshots(self.db, portfolio_ids[0], classified_txns)
-            self.portfolio_repo.upsert_snapshot(
-                portfolio_ids[0], date.today(), summary["total_value"], None
-            )
-            self.db.commit()
+            today = date.today()
+            marker = (portfolio_ids[0], today)
+            if marker not in _snapshot_maintenance_done:
+                try:
+                    if len(self.portfolio_repo.get_snapshot_history(portfolio_ids)) < 2:
+                        rebuild_snapshots(self.db, portfolio_ids[0], classified_txns)
+                    self.portfolio_repo.upsert_snapshot(
+                        portfolio_ids[0], today, summary["total_value"], None
+                    )
+                    self.db.commit()
+                except Exception as exc:
+                    self.db.rollback()
+                    logger.warning(f"snapshot maintenance failed for {portfolio_ids[0]}: {exc}")
+                else:
+                    _remember_snapshot_maintenance(marker)
 
         snapshot_history = self.portfolio_repo.get_snapshot_history(portfolio_ids)
         performance_history, components = self._performance_and_benchmark(

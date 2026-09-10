@@ -1,5 +1,9 @@
 import pandas as pd
-from app.utils.stock_cache import get_cached_price_history
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+from app.database import SessionLocal
+from app.models.market_data import MarketData
+from app.utils.stock_cache import get_cached_price_history, get_latest_close, is_stale
 from datetime import datetime, timezone
 from uuid import uuid4
 import time
@@ -20,27 +24,42 @@ def _cents_to_major(symbol: str) -> float:
 
 WATCHLIST_QUOTE_TYPES = {"EQUITY", "ETF", "INDEX"}
 
-def get_current_price(symbol: str) -> CurrentPriceResponse:
-    history = get_cached_price_history(symbol, period="1y")
+def _second_last_close(symbol: str, db: Session | None) -> float | None:
+    stmt = (
+        select(MarketData.close)
+        .where(MarketData.ticker == symbol.upper(), MarketData.close.isnot(None))
+        .order_by(MarketData.date.desc())
+        .limit(2)
+    )
+    if db is not None:
+        rows = db.execute(stmt).all()
+    else:
+        own = SessionLocal()
+        try:
+            rows = own.execute(stmt).all()
+        finally:
+            own.close()
 
-    if history.empty:
+    return float(rows[1][0]) if len(rows) >= 2 else None
+
+
+def get_current_price(symbol: str, db: Session | None = None) -> CurrentPriceResponse:
+    latest = get_latest_close(symbol, db)
+    if is_stale(latest):
+        get_cached_price_history(symbol, period="1y")
+        latest = get_latest_close(symbol, db)
+
+    if latest is None:
         raise ValueError(f"No data found for symbol: {symbol}")
 
     divisor = _cents_to_major(symbol)
-    priced = history[history["Close"].notna()]
-    if priced.empty:
-        raise ValueError(f"No usable close price for symbol: {symbol}")
-
-    latest = priced.iloc[-1]
-    price = float(latest["Close"]) / divisor
-    volume = int(latest["Volume"]) if not pd.isna(latest["Volume"]) else 0
-    previous_close = latest.get("Prev Close")
+    price = float(latest.close) / divisor
+    volume = int(latest.volume) if latest.volume is not None else 0
+    previous_close = latest.prev_close
 
     if previous_close is None or pd.isna(previous_close):
-        if len(priced) >= 2:
-            previous_close = float(priced.iloc[-2]["Close"]) / divisor
-        else:
-            previous_close = price
+        second_last = _second_last_close(symbol, db)
+        previous_close = second_last / divisor if second_last is not None else price
     else:
         previous_close = float(previous_close) / divisor
 

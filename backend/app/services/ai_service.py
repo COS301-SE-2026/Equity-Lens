@@ -12,9 +12,6 @@ from app.services.market_data_service import _cents_to_major
 from app.services.health_score import compute_health_score
 from app.services.portfolio_service import _price_holdings
 from datetime import datetime, timezone
-from functools import lru_cache
-from app.services.health_score import compute_health_score
-from app.services.portfolio_service import _price_holdings
 import pandas as pd
 import requests
 import time
@@ -123,7 +120,7 @@ def get_user_portfolio_context(db: Session, user_id):
                           f"overall cost: R{i.total_cost}, weight: {i.weight_percentage}%\n")
 
         config = resolve_health_config(db, user_id).config
-        health = compute_health_score(_price_holdings(holdings), config)
+        health = compute_health_score(_price_holdings(holdings, db), config)
         if health["score"] is not None:
             knowledge += f"\nPortfolio Health: {health['score']}/10 ({health['label']})\n"
             for s in health["subscores"]:
@@ -153,7 +150,9 @@ def title_creation(client, user_message):
 
     try:
         response = client.converse(
-            modelId = settings.bedrock_model,
+            #a five word title does not need a frontier model. unset means bedrock_model,
+            #so leaving BEDROCK_TITLE_MODEL out behaves exactly as it does today
+            modelId = settings.bedrock_title_model or settings.bedrock_model,
             messages = [
                 {
                     "role": "user",

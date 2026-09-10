@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
+from anyio import to_thread
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -33,6 +34,7 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_tables()
+    to_thread.current_default_thread_limiter().total_tokens = 16
     app.state.jwks_reachable = token_verifier.prefetch_jwks()
     yield
 

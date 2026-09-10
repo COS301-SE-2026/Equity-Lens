@@ -230,18 +230,23 @@ def test_refresh_price_history_returns_empty_when_all_sources_fail():
  
     assert result.empty
  
+def _latest(fetched_at=None, days_old=0):
+    return stock_cache.LatestClose(
+        date=datetime.now(timezone.utc).date() - timedelta(days=days_old),
+        close=1.0,
+        prev_close=1.0,
+        volume=1,
+        fetched_at=fetched_at or datetime.now(timezone.utc),
+    )
+
 @patch("app.utils.stock_cache.should_refresh_market_data", return_value=False)
-@patch("app.utils.stock_cache.SessionLocal")
+@patch("app.utils.stock_cache.get_latest_close")
 @patch("app.utils.stock_cache._load_local_price_history")
 def test_get_cached_price_history_returns_local_cache_when_fresh(
-    mock_load_local, mock_session_local, _mock_should_refresh
+    mock_load_local, mock_latest, _mock_should_refresh
 ):
     mock_load_local.return_value = _good_history()
-    mock_db = MagicMock()
-    mock_session_local.return_value = mock_db
-    mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = MagicMock(
-        fetched_at=datetime.now(timezone.utc), date=datetime.now(timezone.utc).date(),
-    )
+    mock_latest.return_value = _latest()
  
     with patch("app.utils.stock_cache._refresh_price_history") as mock_refresh:
         result = stock_cache.get_cached_price_history(MOCK_TICKER)
@@ -250,19 +255,15 @@ def test_get_cached_price_history_returns_local_cache_when_fresh(
     assert not result.empty
  
 @patch("app.utils.stock_cache.should_refresh_market_data", return_value=True)
-@patch("app.utils.stock_cache.SessionLocal")
+@patch("app.utils.stock_cache.get_latest_close")
 @patch("app.utils.stock_cache._load_local_price_history")
 @patch("app.utils.stock_cache._refresh_price_history")
 def test_get_cached_price_history_refreshes_when_stale(
-    mock_refresh, mock_load_local, mock_session_local, _mock_should_refresh
+    mock_refresh, mock_load_local, mock_latest, _mock_should_refresh
 ):
     mock_load_local.return_value = _good_history()
     mock_refresh.return_value = _good_history()
-    mock_db = MagicMock()
-    mock_session_local.return_value = mock_db
-    mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = MagicMock(
-        fetched_at=datetime.now(timezone.utc) - timedelta(days=2)
-    )
+    mock_latest.return_value = _latest(fetched_at=datetime.now(timezone.utc) - timedelta(days=2))
     stock_cache.get_cached_price_history(MOCK_TICKER)
  
     mock_refresh.assert_called_once()

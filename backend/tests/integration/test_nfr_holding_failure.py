@@ -37,7 +37,7 @@ def test_one_holding_market_failure_does_not_stop_others(mocker):
         return_value=True
     )
 
-    def fake_price(ticker):
+    def fake_price(ticker, db=None):
 
         if ticker == "MSFT":
             raise Exception("Market data unavailable")

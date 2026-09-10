@@ -57,41 +57,38 @@ const watchlistResponse = {
 
 /**
  * @param {string} ticker
+ * @param {number} n
+ * @param {string} sentiment
  */
-const tickerNews = (ticker) => ({
-  data: {
-    articles: [
-      {
-        uuid: `${ticker}-1`,
-        title: `${ticker} beats expectations`,
-        description: "Quarterly earnings came in ahead of forecast.",
-        image_url: "https://example.com/up.jpg",
-        published_at: "2026-07-14",
-        source: "Reuters",
-        entities: [{ symbol: ticker, sentiment_score: 0.62 }]
-      },
-      {
-        uuid: `${ticker}-2`,
-        title: `${ticker} faces supply issues`,
-        description: "Component shortages continue into the next quarter.",
-        image_url: "https://example.com/down.jpg",
-        published_at: "2026-07-13",
-        source: "Bloomberg",
-        entities: [{symbol: ticker, sentiment_score: -0.41}]
-      },
-      {
-        uuid: `${ticker}-3`,
-        title: `${ticker} holds steady`,
-        description: "No material change to guidance.",
-        image_url: "https://example.com/flat.jpg",
-        published_at: "2026-07-12",
-        source: "Moneyweb",
-        entities: [{symbol: ticker, sentiment_score: 0}]
-      }
-    ],
-    positive: 1, negative: 1, neutral: 1, total_articles: 3
-  }
+const portfolioArticle = (ticker, n, sentiment) => ({
+  article_id: `${ticker}-${n}`,
+  title: {
+    1: `${ticker} beats expectations`,
+    2: `${ticker} faces supply issues`,
+    3: `${ticker} holds steady`,
+  }[n],
+  description: "Quarterly earnings came in ahead of forecast.",
+  image_url: "https://example.com/up.jpg",
+  pubDate: "2026-07-14",
+  source_name: "Reuters",
+  category: [ticker],
+  sentiment,
+  sentiment_score: 0.62,
 });
+
+// the server does the entity/sentiment mapping now, so this is the mapped shape the page
+// renders straight out of /news/portfolio
+const portfolioNews = {
+  data: {
+    results: [
+      portfolioArticle("AAPL", 1, "positive"),
+      portfolioArticle("AAPL", 2, "negative"),
+      portfolioArticle("AAPL", 3, "neutral"),
+      portfolioArticle("MSFT", 1, "positive"),
+    ],
+    positive: 2, negative: 1, neutral: 1, total_articles: 4
+  }
+};
 
 /**
  * @param {string} label
@@ -108,8 +105,8 @@ describe("News page", () => {
         if (url === "/watchlist/") {
           return Promise.resolve(watchlistResponse);
         }
-        if (url.startsWith("/news/test-aapl/")) {
-          return Promise.resolve(tickerNews(String(url.split("/").pop())));
+        if (url === "/news/portfolio") {
+          return Promise.resolve(portfolioNews);
         }
         if (url.startsWith("/news/?category=")) {
           return Promise.resolve(newsResponse);
@@ -125,27 +122,31 @@ describe("News page", () => {
         expect(screen.getByRole("heading", {level: 1, name: "Investment News"})).toBeInTheDocument();
         expect(screen.getByText("Stay updated with the latest market news and insights")).toBeInTheDocument();
 
-        await screen.findByText("Markets rally on rate cut hopes");
+        await screen.findByText("AAPL beats expectations");
     });
 
-    it("loads portfolio tickers, business news and the watchlist on mount", async () => {
+    it("loads the portfolio feed, its tickers and the watchlist on mount", async () => {
         render(<NewsInvestment />);
 
         await waitFor(() => {
             expect(mockGet).toHaveBeenCalledWith("/news/portfolio-tickers");
-            expect(mockGet).toHaveBeenCalledWith("/news/?category=business");
+            expect(mockGet).toHaveBeenCalledWith("/news/portfolio");
             expect(mockGet).toHaveBeenCalledWith("/watchlist/");
         });
+
+        // market news is the other tab's feed and shares the articles state - loading it
+        // here too meant two writers racing over what the portfolio tab displayed
+        expect(mockGet).not.toHaveBeenCalledWith("/news/?category=business");
     });
 
     it("shows summary cards from the news response", async () => {
         render(<NewsInvestment />);
 
-        await screen.findByText("Markets rally on rate cut hopes");
+        await screen.findByText("AAPL beats expectations");
 
-        expect(within(statCard("Relevant Articles")).getByText("7")).toBeInTheDocument();
-        expect(within(statCard("Positive Impact")).getByText("4")).toBeInTheDocument();
-        expect(within(statCard("Negative Impact")).getByText("2")).toBeInTheDocument();
+        expect(within(statCard("Relevant Articles")).getByText("4")).toBeInTheDocument();
+        expect(within(statCard("Positive Impact")).getByText("2")).toBeInTheDocument();
+        expect(within(statCard("Negative Impact")).getByText("1")).toBeInTheDocument();
         expect(within(statCard("Neutral Impact")).getByText("1")).toBeInTheDocument();
     });
 
@@ -159,24 +160,41 @@ describe("News page", () => {
     it("renders article title, description, date and source in the feed", async () => {
         render(<NewsInvestment />);
 
-    expect(await screen.findByText("Markets rally on rate cut hopes")).toBeInTheDocument();
-    expect(screen.getByText("Local equities closed higher across the board.")).toBeInTheDocument();
-    expect(screen.getByText("2026-07-15 09:00:00")).toBeInTheDocument();
-    expect(screen.getByText("Business Day")).toBeInTheDocument();
+    expect(await screen.findByText("AAPL beats expectations")).toBeInTheDocument();
+    expect(screen.getAllByText("Quarterly earnings came in ahead of forecast.").length).toBe(4);
+    expect(screen.getAllByText("2026-07-14").length).toBe(4);
+    expect(screen.getAllByText("Reuters").length).toBe(4);
 });
 
-    it("fetches ticker news and maps each sentiment score to a label", async () => {
+    it("filters to one ticker without going back to the server", async () => {
         const user = userEvent.setup();
         render(<NewsInvestment />);
 
-        await user.click(await screen.findByRole("button", {name: "AAPL" }));
+        await screen.findByText("MSFT beats expectations");
+        const callsBefore = mockGet.mock.calls.length;
 
-        expect(mockGet).toHaveBeenCalledWith("/news/test-aapl/AAPL");
-        expect(await screen.findByText("AAPL beats expectations")).toBeInTheDocument();
+        await user.click(screen.getByRole("button", {name: "AAPL"}));
+
+        // the chips used to fire a marketaux call each - once per click, per user
+        expect(mockGet.mock.calls.length).toBe(callsBefore);
+        expect(screen.getByText("AAPL beats expectations")).toBeInTheDocument();
+        expect(screen.queryByText("MSFT beats expectations")).not.toBeInTheDocument();
 
         expect(screen.getByText("positive")).toBeInTheDocument();
         expect(screen.getByText("negative")).toBeInTheDocument();
         expect(screen.getByText("neutral")).toBeInTheDocument();
+    });
+
+    it("the All chip puts every ticker back in the feed", async () => {
+        const user = userEvent.setup();
+        render(<NewsInvestment />);
+
+        await user.click(await screen.findByRole("button", {name: "AAPL"}));
+        expect(screen.queryByText("MSFT beats expectations")).not.toBeInTheDocument();
+
+        await user.click(screen.getByRole("button", {name: "All"}));
+
+        expect(screen.getByText("MSFT beats expectations")).toBeInTheDocument();
     });
 
     it("filters the feed down to negative articles", async () => {
@@ -184,7 +202,6 @@ describe("News page", () => {
         render(<NewsInvestment />);
 
         await user.click(await screen.findByRole("button", {name: "AAPL"}));
-        await screen.findByText("AAPL beats expectations");
 
         await user.click(screen.getByRole("button", {name: "Negative"}));
 
@@ -211,6 +228,7 @@ describe("News page", () => {
 
         await user.click(screen.getByRole("button", { name: /All Market/ }));
         await screen.findByText("Market News");
+        expect(mockGet).toHaveBeenCalledWith("/news/?category=business");
 
         await user.click(screen.getByRole("button", { name: "Top" }));
         expect(mockGet).toHaveBeenCalledWith("/news/?category=Top");

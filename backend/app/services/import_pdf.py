@@ -11,7 +11,7 @@ import yfinance as yf
 import re
 from yfinance.exceptions import YFRateLimitError
 import time
-from app.repositories.import_pdf import get_latest_portfolio, save_portfolios
+from app.repositories.import_pdf import get_latest_portfolio
 from app.services.instruments import resolve_known_instrument
 from app.services.portfolio_service import invalidate_priced_holdings
 from requests.exceptions import ReadTimeout

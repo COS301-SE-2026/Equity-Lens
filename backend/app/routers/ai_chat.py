@@ -8,15 +8,12 @@ from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages
-from pydantic import BaseModel
 from typing import Any
 from app.utils.ai_rate_limit import check_limit
 from app.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
-from pydantic import BaseModel
-from typing import Any
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 

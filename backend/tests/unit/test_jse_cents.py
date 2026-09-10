@@ -1,7 +1,10 @@
+from datetime import datetime, timezone
+
 import pandas as pd
 import pytest
 
 from app.services import market_data_service
+from app.utils import stock_cache
 
 
 def _history(closes: list[float]) -> pd.DataFrame:
@@ -25,9 +28,31 @@ def fake_history(monkeypatch):
     def fake_get_cached_price_history(symbol, period="1y"):
         return series.get(symbol, pd.DataFrame())
 
+    def fake_get_latest_close(symbol, db=None):
+        history = series.get(symbol)
+        if history is None or history.empty:
+            return None
+        row = history.iloc[-1]
+        return stock_cache.LatestClose(
+            date=history.index[-1].date(),
+            close=float(row["Close"]),
+            prev_close=row.get("Prev Close"),
+            volume=int(row["Volume"]),
+            fetched_at=datetime.now(timezone.utc),
+        )
+
+    def fake_second_last_close(symbol, db=None):
+        history = series.get(symbol)
+        if history is None or len(history) < 2:
+            return None
+        return float(history.iloc[-2]["Close"])
+
     monkeypatch.setattr(
         market_data_service, "get_cached_price_history", fake_get_cached_price_history
     )
+    monkeypatch.setattr(market_data_service, "get_latest_close", fake_get_latest_close)
+    monkeypatch.setattr(market_data_service, "is_stale", lambda row: False)
+    monkeypatch.setattr(market_data_service, "_second_last_close", fake_second_last_close)
     return series
 
 
