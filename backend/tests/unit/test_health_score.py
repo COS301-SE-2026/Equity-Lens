@@ -182,6 +182,49 @@ def test_threshold_config_changes_narrative_output(make_holding):
     assert "32% of your book" in strict_detail
     assert "32% of your book" in loose_detail
 
+@pytest.mark.parametrize(
+    ("top_pct", "expected"),
+    [
+        (0, 10.0),
+        (12.5, 8.5), 
+        (25, 7.0),
+        (35, 5.5),
+        (45, 4.0),
+        (72.5, 2.0),
+        (100, 0.0),
+    ],
+)
+def test_top_weight_curve_on_the_default_thresholds(top_pct, expected):
+    score = health_score._top_weight_score(top_pct, health_score.DEFAULT_CONFIG)
+    assert score == pytest.approx(expected)
+
+
+@pytest.mark.parametrize(
+    ("top_pct", "expected"),
+    [
+        (5, 8.5),
+        (15, 5.5), 
+    ],
+)
+def test_top_weight_curve_compresses_under_a_tighter_yardstick(top_pct, expected):
+    assert health_score._top_weight_score(top_pct, config) == pytest.approx(expected)
+
+
+def test_single_position_subscore_moves_when_only_the_thresholds_move(make_holding):
+    holdings = [
+        make_holding("NPN.JO", 5000, "Technology"),
+        make_holding("SBK.JO", 2500, "Financials"),
+        make_holding("SOL.JO", 2500, "Energy"),
+    ]
+    tighter = health_score.config_from_dict({"concentration_low": 10, "concentration_high": 20})
+
+    def single_position(config):
+        res = health_score.compute_health_score(holdings, config)
+        return next(s for s in res["subscores"] if s["key"] == "singleStockRisk")["value"]
+
+    assert single_position(health_score.DEFAULT_CONFIG) == pytest.approx(3.6)
+    assert single_position(tighter) == pytest.approx(2.5)
+
 
 def test_subscore_weights_match_active_config(sample_portfolio):
     growth_cfg = health_score.PRESETS["growth"].config
