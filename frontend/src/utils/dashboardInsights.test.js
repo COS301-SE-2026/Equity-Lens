@@ -1,21 +1,17 @@
 import { describe, it, expect } from 'vitest';
 import {
+  askAiWhy,
   buildSummary,
   buildSectors,
   buildInsights,
   buildAttrib,
-  buildDriver,
-  concWording,
   filterByRange,
-  isFund,
   buildChartStats,
+  buildExplanation,
   buildSectorQuestions,
   buildHealthQuestions,
   buildPerformanceQuestions,
   buildHoldingsQuestions,
-  buildGoalQuestions,
-  buildTaxQuestions,
-  buildContributionMessage,
 } from './dashboardInsights';
 
 /** @param {number} daysAgo */
@@ -96,7 +92,7 @@ describe('buildSummary', () => {
 
     const askWhyChips = summary.suggestedActions.filter((a) => a.label === 'Ask AI Why');
     expect(askWhyChips).toHaveLength(1);
-    expect(askWhyChips[0].prefill).toBe('Why is my NPN concentration considered a risk?');
+    expect(askWhyChips[0].question).toBe('Why is my NPN concentration considered a risk?');
     expect(summary.suggestedActions.length).toBeLessThanOrEqual(3);
   });
 
@@ -116,7 +112,11 @@ describe('buildSummary', () => {
     expect(summary.severity).toBe('neutral');
     expect(summary.badge).toBe('Overview');
     expect(summary.suggestedActions).toEqual([
-      { label: 'Ask AI Why', to: '/ai', prefill: 'What should I be watching in my portfolio right now?' },
+      {
+        label: 'Ask AI Why',
+        question: 'What should I be watching in my portfolio right now?',
+        to: '/ai?q=What%20should%20I%20be%20watching%20in%20my%20portfolio%20right%20now%3F',
+      },
     ]);
   });
 
@@ -132,6 +132,75 @@ describe('buildSummary', () => {
     expect(summary.headline).toBe('Import a portfolio to see your executive summary.');
     expect(summary.suggestedActions).toEqual([{ label: 'Import Portfolio', to: '/portfolio' }]);
     expect(summary.signals).toEqual([]);
+  });
+
+  it('keeps the benchmark gap out of the headline but still reports it for the hero', () => {
+    const holdings = ['Financials', 'Technology', 'Healthcare', 'Consumer', 'Industrials', 'Telecommunications'].map(
+      (sector, i) => ({ ticker: `T${i}`, value: 15000, sector, daily_change_pct: 0.1 }),
+    );
+    const { sectors: sectorData } = buildSectors(holdings);
+    const attribution = { contributors: [{ ticker: 'T0', contribution: 15 }], drags: [] };
+    const chartStats = { diff: '-33.0%', diffPct: -33, benchAvailable: true };
+
+    const summary = buildSummary({
+      holdings,
+      sectorData,
+      attribution,
+      chartStats,
+      dailyChangePct: 0.1,
+      benchmarkLabel: 'Satrix 40',
+    });
+    expect(summary.signals.map((s) => s.badge)).toEqual(['Performance']);
+    expect(summary.headline).toBe(
+      'Your holdings are well diversified, no company is more than 17% of your book.',
+    );
+    expect(summary.badge).toBe('Overview');
+    expect(summary.supportingText).toEqual([]);
+    expect(summary.suggestedActions.map((a) => a.label)).not.toContain('Compare Against Benchmark');
+    expect(summary.benchmark).toEqual({ available: true, diffPct: -33, label: 'Satrix 40' });
+  });
+
+  it('gives every signal its own id, so the panel dedupe cannot suppress the wrong one', () => {
+    const holdings = [
+      { ticker: 'NPN.JO', value: 90000, sector: 'Technology', daily_change_pct: -2.1 },
+      { ticker: 'SBK.JO', value: 10000, sector: 'Financials', daily_change_pct: -0.4 },
+    ];
+    const { sectors: sectorData } = buildSectors(holdings);
+
+    const summary = buildSummary({
+      holdings,
+      sectorData,
+      attribution: buildAttrib(holdings),
+      chartStats: { diff: '-8.0%', diffPct: -8, benchAvailable: true },
+      dailyChangePct: -1.9,
+      benchmarkLabel: 'Satrix 40',
+    });
+
+    const ids = summary.signals.map((sig) => sig.id);
+    expect(ids.length).toBeGreaterThan(3);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toContain('perf.behind-benchmark');
+  });
+
+  it('reports no benchmark at all when there is nothing to compare against', () => {
+    const empty = buildSummary({
+      holdings: [],
+      sectorData: [],
+      attribution: { contributors: [], drags: [] },
+      chartStats: { diff: '-', diffPct: 0, benchAvailable: false },
+      dailyChangePct: 0,
+    });
+    expect(empty.benchmark).toBeNull();
+
+    const holdings = [{ ticker: 'NPN', value: 45000, sector: 'Technology', daily_change_pct: 0 }];
+    const unpriced = buildSummary({
+      holdings,
+      sectorData: buildSectors(holdings).sectors,
+      attribution: { contributors: [], drags: [] },
+      chartStats: { diff: '-', diffPct: 0, benchAvailable: false },
+      dailyChangePct: 0,
+    });
+    expect(unpriced.benchmark?.available).toBe(false);
   });
 
   it('exposes the full ranked signal list, not just the collapsed headline', () => {
@@ -166,27 +235,6 @@ const ETF_BOOK = [fund('CTOP50.JO', 5100, 'SA Equity'), fund('EASYAI.JO', 4900, 
 
 const FLAT_STATS = { diff: '-', diffPct: 0, benchAvailable: false };
 const NO_ATTRIBUTION = { contributors: [], drags: [], todayReturn: 0 };
-
-describe('isFund', () => {
-  it('treats a missing kind as a stock so older payloads read unchanged', () => {
-    expect(isFund({ ticker: 'NPN.JO' })).toBe(false);
-    expect(isFund(undefined)).toBe(false);
-    expect(isFund({ kind: 'etf' })).toBe(true);
-  });
-});
-
-describe('concWording', () => {
-  it('does not describe a fund as having single-stock or earnings risk', () => {
-    const wording = concWording({ kind: 'etf' });
-    expect(wording.label).toBe('Fund Concentration');
-    expect(wording.risk).not.toMatch(/single-stock/i);
-    expect(wording.risk).not.toMatch(/earnings/i);
-  });
-
-  it('keeps the single-stock framing for an actual share', () => {
-    expect(concWording({ kind: 'stock' }).label).toBe('Single-Stock Risk');
-  });
-});
 
 describe('buildSummary with funds', () => {
   it('describes a dominant fund as a fund rather than a source of stock risk', () => {
@@ -284,18 +332,24 @@ describe('buildSectors with exposure buckets', () => {
 });
 
 describe('buildChartStats', () => {
+  // value climbs 20%, but R10,000 of that R20,000 was bought during the window. the
+  // backend's twr_index has the purchase taken back out, so the return is 10%
   const SERIES_WITH_BENCH = [
-    { date: '2026-07-01', name: 'Jul 01', value: 100000, benchmark: 100000 },
-    { date: '2026-08-01', name: 'Aug 01', value: 120000, benchmark: 104000 },
+    { date: '2026-07-01', name: 'Jul 01', value: 100000, benchmark: 100000, twr_index: 100 },
+    { date: '2026-08-01', name: 'Aug 01', value: 120000, benchmark: 104000, twr_index: 110 },
   ];
 
-  it('derives both portfolio and benchmark return from the same series - no backend TWR needed', () => {
+  it('reads the portfolio return off the backend index, not off the change in value', () => {
     const stats = buildChartStats(SERIES_WITH_BENCH);
     expect(stats.portAvailable).toBe(true);
-    expect(stats.portReturn).toBe('+20.0%');
+    expect(stats.portReturn).toBe('+10.0%');
+  });
+
+  it('compares the two over the same window, so the difference means something', () => {
+    const stats = buildChartStats(SERIES_WITH_BENCH);
     expect(stats.benchAvailable).toBe(true);
     expect(stats.benchReturn).toBe('+4.0%');
-    expect(stats.diffPct).toBeCloseTo(16, 5);
+    expect(stats.diffPct).toBeCloseTo(6, 5);
   });
 
   it('is unavailable with fewer than two data points', () => {
@@ -305,9 +359,16 @@ describe('buildChartStats', () => {
     expect(stats.diff).toBe('-');
   });
 
-  it('still derives bestDay/worstDay from the visible series', () => {
-    const stats = buildChartStats(SERIES_WITH_BENCH);
-    expect(stats.bestDay).toContain('Aug 01');
+  it('does not call the day a purchase landed the best day', () => {
+    const withPurchase = [
+      { date: '2026-07-01', name: 'Jul 01', value: 1600, twr_index: 100 },
+      { date: '2026-07-07', name: 'Jul 07', value: 2180, twr_index: 100.2 },
+      { date: '2026-07-31', name: 'Jul 31', value: 2194, twr_index: 100.64 },
+    ];
+
+    const stats = buildChartStats(withPurchase);
+
+    expect(stats.bestDay).toContain('Jul 31');
   });
 });
 
@@ -430,123 +491,248 @@ describe('buildHoldingsQuestions', () => {
   });
 });
 
-describe('buildGoalQuestions', () => {
-  it('asks about the real target date and probability', () => {
-    const questions = buildGoalQuestions({
-      progress: { target_date: '2040-06-01' },
-      simulation: { probability_pct: 72 },
-    });
-    expect(questions[0]).toBe('Am I on track to hit my target by Jun 2040?');
-    expect(questions[1]).toBe('How can I improve my 72% probability of reaching my goal?');
+describe('buildExplanation', () => {
+  const ahead = { diffPct: 4.2, benchAvailable: true, diff: '+R 1 000' };
+  const behind = { diffPct: -4.2, benchAvailable: true, diff: '-R 1 000' };
+  const attribution = {
+    contributors: [{ ticker: 'NPN.JO', contribution: 4844 }],
+    drags: [{ ticker: 'SBK.JO', contribution: -185 }],
+    todayReturn: 4659,
+  };
+
+  it('names the contributor and calls it one when the portfolio is up today', () => {
+    const { explanation } = buildExplanation({ stats: ahead, attribution });
+    expect(explanation).toBe("NPN.JO was today's biggest contributor.");
   });
 
-  it('asks a more direct question when the probability is genuinely off track', () => {
-    const questions = buildGoalQuestions({
-      progress: { target_date: '2040-06-01' },
-      simulation: { probability_pct: 22 },
-    });
-    expect(questions[1]).toMatch(/only 22%.*what should I change/i);
+  // the path that shipped wrong: it picked drags[0] and then called it a contributor
+  it('names the drag and calls it a drag when the portfolio is down today', () => {
+    const down = { ...attribution, todayReturn: -900 };
+    const { explanation } = buildExplanation({ stats: behind, attribution: down });
+    expect(explanation).toBe("SBK.JO was today's biggest drag.");
+    expect(explanation).not.toMatch(/contributor/);
   });
 
-  it('skips the probability question when the simulation has none', () => {
-    const questions = buildGoalQuestions({ progress: { target_date: '2040-06-01' }, simulation: null });
-    expect(questions).toHaveLength(1);
+  it("reads today's direction, not the chart range's, when the two disagree", () => {
+    const downToday = { ...attribution, todayReturn: -900 };
+    const { explanation } = buildExplanation({ stats: ahead, attribution: downToday });
+    expect(explanation).toBe("SBK.JO was today's biggest drag.");
   });
 
-  it('returns no questions when there is no goal yet', () => {
-    expect(buildGoalQuestions({ progress: null, simulation: null })).toEqual([]);
-  });
-});
-
-describe('buildTaxQuestions', () => {
-  it('asks about the real taxable gain when there is one', () => {
-    const questions = buildTaxQuestions({ available: true, taxable_capital_gain: 15000, assessed_capital_loss: null });
-    expect(questions[0]).toMatch(/15\s?000.*taxable capital gain/i);
+  it('says nothing when the gap is too small to be worth explaining', () => {
+    const flat = { diffPct: 0.4, benchAvailable: true, diff: '+R 10' };
+    expect(buildExplanation({ stats: flat, attribution }).explanation).toBeNull();
   });
 
-  it('asks about the assessed loss instead when the position is a loss', () => {
-    const questions = buildTaxQuestions({ available: true, taxable_capital_gain: null, assessed_capital_loss: 4000 });
-    expect(questions[0]).toMatch(/assessed capital loss of.*4\s?000/i);
-  });
-
-  it('adds a tax-loss harvesting question when a potential realised loss exists', () => {
-    const questions = buildTaxQuestions({
-      available: true,
-      taxable_capital_gain: 15000,
-      assessed_capital_loss: null,
-      potential_realised_loss: 2000,
-    });
-    expect(questions.some((q) => q.toLowerCase().includes('tax-loss harvesting'))).toBe(true);
-  });
-
-    it('asks why tax is exempt instead of nothing for TFSA accounts', () => {
-        expect(buildTaxQuestions({ available: false, reason: 'tfsa_exempt' })).toEqual([
-            "Why isn't tax shown for this account?",
-        ]);
-    });
-
-  it('returns no questions when an estimate is unavailable for a fixable reason', () => {
-    expect(buildTaxQuestions({ available: false, reason: 'account_type_unknown' })).toEqual([]);
-    expect(buildTaxQuestions({ available: false })).toEqual([]);
+  it('says nothing when there is no benchmark or no mover to name', () => {
+    expect(buildExplanation({ stats: { ...ahead, benchAvailable: false }, attribution }).explanation).toBeNull();
+    const empty = { contributors: [], drags: [], todayReturn: 12 };
+    expect(buildExplanation({ stats: ahead, attribution: empty }).explanation).toBeNull();
   });
 });
 
-describe('buildContributionMessage', () => {
-  it('asks the user to set a contribution when unset and one is still required', () => {
-    const msg = buildContributionMessage({ requiredMonthly: 2500, monthlyContribution: null });
-    expect(msg).toMatch(/set a monthly contribution/i);
-  });
+describe("today's driver (dashboard data-integrity review, finding #1)", () => {
+  // buildDriver is internal to the module now, so these go through buildInsights, which is
+  // the only thing that ever called it. the insight is the same sentence either way
+  /** @param {any[]} holdings */
+  const driverInsight = (holdings) => {
+    const { insights, more } = buildInsights({ holdings, attribution: buildAttrib(holdings) });
+    return [...insights, ...more].find((r) => r.id === 'daily.driver');
+  };
 
-  it('does not ask the user to set a contribution when unset but required is already ~0 (backlog 5)', () => {
-    const msg = buildContributionMessage({ requiredMonthly: 0, monthlyContribution: undefined });
-    expect(msg).not.toMatch(/set a monthly contribution/i);
-    expect(msg).toMatch(/on track/i);
-  });
-
-  it('treats a required amount rounding to 0 the same as an exact 0 in the unset case', () => {
-    const msg = buildContributionMessage({ requiredMonthly: 0.4, monthlyContribution: null });
-    expect(msg).not.toMatch(/set a monthly contribution/i);
-  });
-
-  it('tells the user to invest more when contributing below the required amount', () => {
-    const msg = buildContributionMessage({ requiredMonthly: 3000, monthlyContribution: 1000 });
-    expect(msg).toMatch(/invest about/i);
-  });
-
-  it('says on track when already contributing at least the required amount', () => {
-    const msg = buildContributionMessage({ requiredMonthly: 1000, monthlyContribution: 1000 });
-    expect(msg).toMatch(/on track/i);
-  });
-});
-
-describe('buildDriver (dashboard data-integrity review, finding #1)', () => {
   it("shows the driver's share of the same-direction total, not gain+decline combined", () => {
-    const holdings = [
+    const driver = driverInsight([
       { ticker: 'NPN.JO', value: 103773, daily_change_pct: -0.43 },
       { ticker: 'SBK.JO', value: 25839, daily_change_pct: -0.61 },
       { ticker: 'STX40.JO', value: 16053, daily_change_pct: -1.0 },
       { ticker: 'AGL.JO', value: 13153, daily_change_pct: 0.96 },
       { ticker: 'MTN.JO', value: 8678, daily_change_pct: 2.65 },
-    ];
-    const attribution = buildAttrib(holdings);
-    const { driver } = buildDriver({ holdings, attribution });
+    ]);
 
-    if (!driver) throw new Error('expected a driver');
+    if (!driver) throw new Error('expected a driver insight');
     expect(driver.text).toBe("79% of today's decline came from NPN.JO and STX40.JO.");
     expect(driver.text).not.toMatch(/54%/);
-    expect(driver.tickers).toEqual(['NPN.JO', 'STX40.JO']);
   });
 
   it('still gates on the combined-total share before naming individual tickers', () => {
-    const holdings = [
+    const driver = driverInsight([
       { ticker: 'AGL.JO', value: 50000, daily_change_pct: -3 },
       { ticker: 'MTN.JO', value: 10000, daily_change_pct: 0.5 },
-    ];
-    const attribution = buildAttrib(holdings);
-    const { driver } = buildDriver({ holdings, attribution });
+    ]);
 
-    if (!driver) throw new Error('expected a driver');
-    expect(driver.tickers).toEqual(['AGL.JO']);
+    if (!driver) throw new Error('expected a driver insight');
     expect(driver.text).toMatch(/^100% of today's decline came from AGL\.JO\.$/);
   });
 });
+/** @param {number} days */
+const daysAgo = (days) => new Date(Date.now() - days * 86400000).toISOString().slice(0, 10);
+
+const SERIES_90 = Array.from({ length: 90 }, (_, i) => {
+  const rise = 100 + i * 0.5;
+  const index = i < 70 ? rise : rise - (i - 69) * 0.9;
+  return {
+    date: daysAgo(90 - i),
+    name: `d${i}`,
+    twr_index: Number(index.toFixed(4)),
+    value: Number((index * 1000).toFixed(2)),
+    benchmark: Number((100 + i * 0.3).toFixed(4)),
+  };
+});
+
+const CONTRIB_SERIES = [
+  { date: daysAgo(90), portfolio_value: 70000, cumulative_net_contributions: 70000, cumulative_market_gain: 0 },
+  { date: daysAgo(0), portfolio_value: 120000, cumulative_net_contributions: 78000, cumulative_market_gain: 42000 },
+];
+
+const HEALTH = {
+  score: 4.8,
+  label: 'Mixed',
+  subscores: [
+    { key: 'sectorConcentration', label: 'Sector Concentration', weight: 0.4, value: 2.9 },
+    { key: 'singleStockRisk', label: 'Single-Stock Risk', weight: 0.35, value: 4.4 },
+    { key: 'portfolioBreadth', label: 'Portfolio Breadth', weight: 0.25, value: 7.1 },
+  ],
+};
+
+/** @param {any} over */
+const richCtx = (over = {}) => ({
+  thresholds: { low: 25, high: 45 },
+  perfSeries: SERIES_90,
+  contributionSeries: CONTRIB_SERIES,
+  health: HEALTH,
+  returns: {
+    holdings_count: 4, priced_live_count: 3, priced_count: 4, history_days: 90,
+    net_contributions: 78000, invested_capital: 78000,
+  },
+  cgt: {
+    available: true, taxable_capital_gain: 21000, net_unrealised_gain: 19000,
+    assumptions: { tax_year: '2026/27', cost_basis_method: 'average_cost' },
+  },
+  statementDate: daysAgo(80),
+  accountType: 'taxable',
+  benchmarkLabel: 'JSE ALSI',
+  ...over,
+});
+
+// no daily_change_pct anywhere - the realistic production shape
+const NO_LIVE_PRICES = [
+  { ticker: 'NPN.JO', sector: 'Technology', value: 62000, gain_loss: 17000, gain_loss_pct: 37.8, daily_change_pct: null, first_purchase_date: daysAgo(500) },
+  { ticker: 'PRX.JO', sector: 'Technology', value: 24000, gain_loss: 2100, gain_loss_pct: 9.6, daily_change_pct: null, first_purchase_date: daysAgo(300) },
+  { ticker: 'SBK.JO', sector: 'Financials', value: 22000, gain_loss: -6200, gain_loss_pct: -22.0, daily_change_pct: null, first_purchase_date: daysAgo(200) },
+  { ticker: 'CPI.JO', sector: 'Financials', value: 12000, gain_loss: 8400, gain_loss_pct: 233.3, daily_change_pct: null, first_purchase_date: daysAgo(700) },
+];
+
+const DIVERSIFIED = ['Financials', 'Technology', 'Healthcare', 'Consumer', 'Industrials', 'Telecommunications'].map(
+  (sector, i) => ({
+    ticker: `T${i}`, sector, value: 20000, gain_loss: 1000 + i * 100,
+    gain_loss_pct: 5 + i, daily_change_pct: null, first_purchase_date: daysAgo(300 + i),
+  }),
+);
+
+/** @param {any[]} holdings @param {any} [over] */
+const runInsights = (holdings, over = {}) => {
+  const attribution = buildAttrib(holdings);
+  const { sectors: sectorData } = buildSectors(holdings);
+  return buildInsights({ holdings, attribution, sectorData, ...richCtx(over) });
+};
+
+describe('buildInsights with no live prices at all', () => {
+  // written first, and it is the whole reason the registry exists
+  it('still finds at least six things to say', () => {
+    const { insights, more } = runInsights(NO_LIVE_PRICES);
+    expect(insights).toHaveLength(8);
+    expect(insights.length + more.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it('hands every insight to the dock, not just the handful of templates that thought of it', () => {
+    const { insights, more } = runInsights(NO_LIVE_PRICES);
+
+    for (const record of [...insights, ...more]) {
+      const ask = record.actions.find((/** @type {any} */ a) => a.question);
+      expect(ask, record.id).toBeDefined();
+      expect(ask.label).toBe('Ask AI Why');
+    }
+  });
+
+  it('keeps a template\'s own navigation alongside the Ask AI action', () => {
+    const { insights, more } = runInsights(NO_LIVE_PRICES);
+    const concentration = [...insights, ...more].find((r) => r.id === 'conc.top-holding');
+    if (!concentration) throw new Error('expected the top-holding insight');
+
+    expect(concentration.actions.map((/** @type {any} */ a) => a.label)).toEqual([
+      'View Holdings',
+      'Ask AI Why',
+    ]);
+    expect(concentration.actions[1]).toEqual(
+      askAiWhy(`${concentration.text} Why does this matter for my portfolio?`),
+    );
+  });
+
+  it('says none of them about a price move, because there is no price move to report', () => {
+    const { insights, more } = runInsights(NO_LIVE_PRICES);
+    const ids = [...insights, ...more].map((i) => i.id);
+
+    expect(ids).not.toContain('daily.gainer');
+    expect(ids).not.toContain('daily.drag');
+    expect(ids).toContain('dq.no-live-prices');
+  });
+
+  it('quotes a figure on every card and backs each one with evidence', () => {
+    const { insights, more } = runInsights(NO_LIVE_PRICES);
+    for (const insight of [...insights, ...more]) {
+      expect(insight.evidence.length, insight.id).toBeGreaterThanOrEqual(1);
+      if (insight.id === 'sector.missing' || insight.id === 'dq.no-live-prices') continue;
+      expect(insight.text, insight.id).toMatch(/\d/);
+    }
+  });
+
+  it('reaches past concentration into performance, contributions and tax', () => {
+    const { insights, more } = runInsights(NO_LIVE_PRICES);
+    const categories = new Set([...insights, ...more].map((i) => i.category));
+
+    expect(categories).toContain('concentration');
+    expect(categories).toContain('contributions');
+    expect(categories).toContain('winners_losers');
+    expect(categories.size).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe('buildInsights across portfolio shapes', () => {
+  it('leads with a risk on a concentrated book and still reports the concentration', () => {
+    const { insights, more } = runInsights(NO_LIVE_PRICES);
+    expect(insights[0].severity).toBe('risk');
+    expect([...insights, ...more].map((i) => i.id)).toContain('conc.top-holding');
+  });
+
+  it('does not invent a concentration problem on a diversified book', () => {
+    const { insights, more } = runInsights(DIVERSIFIED);
+    const ids = [...insights, ...more].map((i) => i.id);
+
+    expect(ids).not.toContain('conc.top-holding');
+    expect(ids).not.toContain('sector.largest');
+    expect(ids).not.toContain('sector.too-few');
+    expect(insights.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('stays quiet about series maths on a two-day history', () => {
+    const { insights, more } = runInsights(NO_LIVE_PRICES, {
+      perfSeries: SERIES_90.slice(0, 2),
+      contributionSeries: CONTRIB_SERIES.slice(0, 1),
+      returns: { holdings_count: 4, priced_live_count: 4, priced_count: 4, history_days: 2 },
+    });
+    const ids = [...insights, ...more].map((i) => i.id);
+
+    expect(ids).toContain('dq.short-history');
+    for (const id of ['perf.moving-average', 'perf.streak', 'vol.vs-benchmark', 'vol.recent-shift', 'contrib.deposits-vs-growth']) {
+      expect(ids, id).not.toContain(id);
+    }
+  });
+
+  it('returns both lists empty for an empty portfolio', () => {
+    expect(buildInsights({ holdings: [], attribution: NO_ATTRIBUTION })).toEqual({
+      insights: [],
+      more: [],
+    });
+  });
+});
+

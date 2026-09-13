@@ -2,6 +2,10 @@ import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
 import Dashboard from './Dashboard';
+vi.mock('../../context/ChatContext', () => ({
+  useChatContext: () => ({ openDock: vi.fn() }),
+}));
+
 vi.mock('../../services/api', () => ({
   default: { get: vi.fn().mockResolvedValue({ data: [] }), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
 }));
@@ -109,14 +113,14 @@ describe('Dashboard', () => {
 
   it('surfaces the missing-sector opportunity in Today\'s Insights', async () => {
     renderDashboard();
-    expect(await screen.findByText('Today\'s Insights')).toBeInTheDocument();
+    expect(await screen.findByText('Portfolio Insights')).toBeInTheDocument();
     expect(await screen.findByText(/you have no healthcare exposure/i)).toBeInTheDocument();
     expect(screen.queryByText('Rebalancing Insights')).not.toBeInTheDocument();
   });
 
   it('no longer carries Goal Progress or Tax Analysis - both moved to the Plan page', async () => {
     renderDashboard();
-    expect(await screen.findByText('Today\'s Insights')).toBeInTheDocument();
+    expect(await screen.findByText('Portfolio Insights')).toBeInTheDocument();
     expect(screen.queryByText('Goal Progress')).not.toBeInTheDocument();
     expect(screen.queryByText('Set Your Goal')).not.toBeInTheDocument();
     expect(screen.queryByText('Tax Analysis')).not.toBeInTheDocument();
@@ -152,6 +156,7 @@ describe('Dashboard', () => {
   it('splits sector allocation and all positions into two independent cards', () => {
     renderDashboard();
     const sectorPanel = document.getElementById('sector-allocation');
+    if (!sectorPanel) throw new Error('expected the sector-allocation panel to render');
     expect(within(sectorPanel).getAllByText('Sectors').length).toBeGreaterThan(0);
     expect(screen.getByText('All Positions')).toBeInTheDocument();
     expect(screen.getByTitle(/High concentration - \d+\.\d% of your book/i)).toBeInTheDocument();
@@ -179,14 +184,16 @@ describe('Dashboard', () => {
   it("renders Today's Insights with today's move, not since-purchase/since-inception content", () => {
     renderDashboard();
     expect(screen.getByText(/npn is today's biggest gainer, up 1\.2%/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Show \d+ more/));
     expect(screen.getByText(/77% of today's gain came from npn/i)).toBeInTheDocument();
     expect(screen.queryByText(/today's biggest drag/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/since you started investing/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/since purchase/i)).not.toBeInTheDocument();
 
-    const whyButtons = screen.getAllByText('Why?');
-    fireEvent.click(whyButtons[0]);
-    expect(screen.getByText(/within typical movement/i)).toBeInTheDocument();
+    const gainerCard = screen.getByText(/npn is today's biggest gainer, up 1\.2%/i).closest('div');
+    if (!gainerCard) throw new Error('expected the gainer card to render');
+    fireEvent.click(within(gainerCard).getByText('Why?'));
+    expect(within(gainerCard).getByText(/within typical movement/i)).toBeInTheDocument();
   });
 
   it('renders the watchlist as a floating toggle, not an always-visible card', async () => {
