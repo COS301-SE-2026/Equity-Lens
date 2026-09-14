@@ -32,6 +32,30 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Run lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Security audit
+        working-directory: frontend
+        run: npm audit --audit-level=high --omit=dev
+      
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Format check
+        working-directory: frontend
+        run: npm run format:check
+
+      - name: Type check
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Dead code scan (knip)
+        working-directory: frontend
+        run: npx knip
+
       - name: Unit tests
         working-directory: frontend
         run: npm run coverage
@@ -134,6 +158,16 @@ jobs:
           python -m pip install --upgrade pip setuptools
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
+
+      - name: Lint (ruff)
+        working-directory: backend
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Type check (mypy)
+        working-directory: backend
+        run: mypy app
 
       - name: Run pip-audit to check the packages
         working-directory: backend
