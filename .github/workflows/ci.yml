@@ -225,6 +225,27 @@ jobs:
           files: backend/coverage.xml
           flags: backend
 
+  trivy:
+    name: Trivy Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run Trivy Scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          exit-code: 1
+          scanners: vuln,secret,misconfig
+          skip-dirs: frontend/node_modules,node_modules,backend/venv,backend/.venv,frontend/dist,frontend/build
+  
+    
+
+
     
 
 
@@ -291,23 +312,4 @@ jobs:
                     https://www.equitylens.co.za
                     echo "PASS All the HTTPs/TLS connection"
 
-    trivy:
-    name: Trivy Security Scan
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Trivy Scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: HIGH,CRITICAL
-          exit-code: 1
-          scanners: vuln,secret,misconfig
-          skip-dirs: frontend/node_modules,node_modules,backend/venv,backend/.venv,frontend/dist,frontend/build
-  
-    
 
