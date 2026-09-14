@@ -359,6 +359,34 @@ describe('buildChartStats', () => {
     expect(stats.diff).toBe('-');
   });
 
+  it('measures both legs from the first day that has both, so the three numbers subtract', () => {
+     const benchStartsLate = [
+      { date: '2026-07-01', name: 'Jul 01', value: 90000, twr_index: 100 },
+      { date: '2026-08-01', name: 'Aug 01', value: 100000, benchmark: 100000, twr_index: 110 },
+      { date: '2026-09-01', name: 'Sep 01', value: 110000, benchmark: 104000, twr_index: 121 },
+    ];
+
+    const stats = buildChartStats(benchStartsLate);
+
+    expect(stats.portReturn).toBe('+10.0%');
+    expect(stats.benchReturn).toBe('+4.0%');
+    expect(stats.diffPct).toBeCloseTo(6, 10);
+    expect(stats.diffPct).toBeCloseTo(10 - 4, 10);
+  });
+
+  it('still reports the portfolio on its own range when no day carries a benchmark', () => {
+    const noBench = [
+      { date: '2026-07-01', name: 'Jul 01', value: 90000, twr_index: 100 },
+      { date: '2026-08-01', name: 'Aug 01', value: 100000, twr_index: 110 },
+    ];
+
+    const stats = buildChartStats(noBench);
+
+    expect(stats.portReturn).toBe('+10.0%');
+    expect(stats.benchAvailable).toBe(false);
+    expect(stats.diff).toBe('-');
+  });
+
   it('does not call the day a purchase landed the best day', () => {
     const withPurchase = [
       { date: '2026-07-01', name: 'Jul 01', value: 1600, twr_index: 100 },
@@ -635,6 +663,32 @@ const runInsights = (holdings, over = {}) => {
   const { sectors: sectorData } = buildSectors(holdings);
   return buildInsights({ holdings, attribution, sectorData, ...richCtx(over) });
 };
+
+describe('buildInsights when only some holdings have a live price', () => {
+  const PARTIALLY_PRICED = [
+    { ticker: 'NPN.JO', value: 5000, sector: 'Technology', daily_change_pct: 2 },
+    { ticker: 'SBK.JO', value: 3000, sector: 'Financials', daily_change_pct: -1.5 },
+    { ticker: 'AGL.JO', value: 2000, sector: 'Materials', daily_change_pct: null },
+  ];
+
+  it('leaves the unpriced holding out of attribution instead of calling it flat', () => {
+    const attribution = buildAttrib(PARTIALLY_PRICED);
+    const tickers = [...attribution.contributors, ...attribution.drags].map((r) => r.ticker);
+
+    expect(tickers).not.toContain('AGL.JO');
+    expect(attribution.excluded).toBe(1);
+    expect(attribution.todayReturn).toBeCloseTo(55, 10);
+  });
+
+  it('never describes a holding it could not price as having moved 0%', () => {
+    const { insights, more } = runInsights(PARTIALLY_PRICED);
+    const text = JSON.stringify([...insights, ...more]);
+
+    expect(text).not.toMatch(/0\.0% is within typical movement/);
+    const daily = [...insights, ...more].filter((r) => r.category === 'daily');
+    expect(JSON.stringify(daily)).not.toContain('AGL.JO');
+  });
+});
 
 describe('buildInsights with no live prices at all', () => {
   // written first, and it is the whole reason the registry exists
