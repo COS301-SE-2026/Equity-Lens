@@ -29,10 +29,6 @@ for (const size of sizes) {
 
             await page.goto(`https://www.equitylens.co.za${routes}`);
 
-            const horizontalScroll = await page.evaluate((() => {
-                return document.documentElement.scrollWidth > document.documentElement.clientWidth;
-            }))
-
             
         })
     }

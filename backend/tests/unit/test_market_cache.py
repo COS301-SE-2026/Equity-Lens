@@ -1,7 +1,10 @@
 from unittest.mock import patch
+
 import pandas as pd
 import pytest
+
 from app.utils import market_cache
+
 
 def _history(closes):
     dates = pd.bdate_range("2025-01-01", periods=len(closes))

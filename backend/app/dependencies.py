@@ -1,9 +1,10 @@
 from fastapi import Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.services.cognito_service import cognito_get_user
 from app.repositories.user_repository import UserRepository
+from app.services.cognito_service import cognito_get_user
 
 auth_scheme = HTTPBearer()
 

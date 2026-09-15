@@ -1,7 +1,9 @@
 from datetime import date
 from unittest.mock import patch
-import pytest
+
 import pandas as pd
+import pytest
+
 from app.models.portfolio import Holdings, Portfolios
 
 NASPERS = "Naspers Limited"
@@ -22,7 +24,7 @@ def frame_data_builder(close):
     return data
 
 
-@pytest.fixture()
+@pytest.fixture
 def stub_data():
     history = {}
     for ticker, closed_values in TICKER_VALUES.items():

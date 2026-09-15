@@ -1,6 +1,12 @@
 from unittest.mock import patch
-from app.services.indicator_service import serialize_indicator_row, serialize_indicator_value, build_live_indicator_row
+
 import pandas as pd
+
+from app.services.indicator_service import (
+    build_live_indicator_row,
+    serialize_indicator_row,
+    serialize_indicator_value,
+)
 
 FUND_REASON = "N/A - financial instrument doesn't report company-level financials."
 SECTOR_REASON= "N/A - Altman Z Score not meaningful for banks and financial institutions."

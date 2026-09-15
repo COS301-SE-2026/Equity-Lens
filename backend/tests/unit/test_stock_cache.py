@@ -1,7 +1,9 @@
-from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock, patch, PropertyMock
+from datetime import UTC, datetime, timedelta
+from unittest.mock import MagicMock, PropertyMock, patch
+
 import pandas as pd
 import pytest
+
 from app.utils import stock_cache
 
 MOCK_TICKER = "NPN"
@@ -34,23 +36,23 @@ def test_should_refresh_market_data_none_always_refreshes():
     assert stock_cache.should_refresh_market_data(None, ttl_hours=24) is True
  
 def test_should_refresh_market_data_within_ttl_hours_does_not_refresh():
-    recent = datetime.now(timezone.utc) - timedelta(hours=1)
+    recent = datetime.now(UTC) - timedelta(hours=1)
  
     assert stock_cache.should_refresh_market_data(recent, ttl_hours=24) is False
  
 def test_should_refresh_market_data_past_ttl_refreshes():
-    stale = datetime.now(timezone.utc) - timedelta(hours=25)
+    stale = datetime.now(UTC) - timedelta(hours=25)
  
     assert stock_cache.should_refresh_market_data(stale, ttl_hours=24) is True
  
 def test_should_refresh_market_data_string_timestamp_is_parsed():
-    recent_iso = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat().replace("+00:00", "Z")
+    recent_iso = (datetime.now(UTC) - timedelta(hours=1)).isoformat().replace("+00:00", "Z")
  
     assert stock_cache.should_refresh_market_data(recent_iso, ttl_hours=24) is False
  
 def test_should_refresh_market_data_fundamentals_weekly_ttl_boundary():
-    just_under = datetime.now(timezone.utc) - timedelta(hours=(24 * 7) - 1)
-    just_over = datetime.now(timezone.utc) - timedelta(hours=(24 * 7) + 1)
+    just_under = datetime.now(UTC) - timedelta(hours=(24 * 7) - 1)
+    just_over = datetime.now(UTC) - timedelta(hours=(24 * 7) + 1)
  
     assert stock_cache.should_refresh_market_data(just_under, ttl_hours=stock_cache.FUNDAMENTALS_TTL_HOURS) is False
     assert stock_cache.should_refresh_market_data(just_over, ttl_hours=stock_cache.FUNDAMENTALS_TTL_HOURS) is True
@@ -119,7 +121,7 @@ def test_fetch_from_yfinance_both_candidates_failing_returns_empty(mock_ticker_c
 @patch("app.utils.stock_cache._load_cached_fundamentals", return_value=None)
 @patch("app.utils.stock_cache.yf.Ticker")
 def test_get_cached_fundamentals_skips_fetch_during_cooldown(mock_ticker_cls, _mock_cache):
-    stock_cache._FUNDAMENTALS_RATE_LIMITED_UNTIL[MOCK_TICKER] = datetime.now(timezone.utc) + timedelta(minutes=5)
+    stock_cache._FUNDAMENTALS_RATE_LIMITED_UNTIL[MOCK_TICKER] = datetime.now(UTC) + timedelta(minutes=5)
  
     with patch.object(stock_cache.settings, "allow_live_market_fallback", True):
         result = stock_cache.get_cached_fundamentals(MOCK_TICKER)
@@ -240,7 +242,7 @@ def test_get_cached_price_history_returns_local_cache_when_fresh(
     mock_db = MagicMock()
     mock_session_local.return_value = mock_db
     mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = MagicMock(
-        fetched_at=datetime.now(timezone.utc), date=datetime.now(timezone.utc).date(),
+        fetched_at=datetime.now(UTC), date=datetime.now(UTC).date(),
     )
  
     with patch("app.utils.stock_cache._refresh_price_history") as mock_refresh:
@@ -261,7 +263,7 @@ def test_get_cached_price_history_refreshes_when_stale(
     mock_db = MagicMock()
     mock_session_local.return_value = mock_db
     mock_db.query.return_value.filter.return_value.order_by.return_value.first.return_value = MagicMock(
-        fetched_at=datetime.now(timezone.utc) - timedelta(days=2)
+        fetched_at=datetime.now(UTC) - timedelta(days=2)
     )
     stock_cache.get_cached_price_history(MOCK_TICKER)
  
@@ -279,7 +281,7 @@ def test_load_cached_fundamentals_returns_none_when_no_row(mock_session_local):
 def test_load_cached_fundamentals_returns_none_when_stale(mock_session_local):
     mock_db = MagicMock()
     mock_session_local.return_value = mock_db
-    stale_row = MagicMock(fetched_at=datetime.now(timezone.utc) - timedelta(days=30))
+    stale_row = MagicMock(fetched_at=datetime.now(UTC) - timedelta(days=30))
     mock_db.query.return_value.filter.return_value.first.return_value = stale_row
  
     assert stock_cache._load_cached_fundamentals(MOCK_TICKER) is None
@@ -289,7 +291,7 @@ def test_load_cached_fundamentals_rebuilds_dataframes_from_json(mock_session_loc
     mock_db = MagicMock()
     mock_session_local.return_value = mock_db
     fresh_row = MagicMock(
-        fetched_at=datetime.now(timezone.utc),
+        fetched_at=datetime.now(UTC),
         info={"sector": "Technology"},
         balance_sheet={"2026-03-31": {"Total Assets": 500.0}},
         financials={"2026-03-31": {"EBIT": 60.0}},

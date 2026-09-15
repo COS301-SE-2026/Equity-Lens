@@ -1,4 +1,5 @@
 import numpy as np
+
 "Evaluates a risk-adjusted performance using downside risk"
 "Assumed 252 trading days"
 

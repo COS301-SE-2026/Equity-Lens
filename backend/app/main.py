@@ -1,24 +1,26 @@
+import traceback
+
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from app.routers import auth, portfolio
-from app.database import create_tables
-from app.config import settings
-from app.models import user
-from app.models import market_data
-from app.schemas.responses import STATUS_ERROR_CODES
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-import traceback
-from app.routers import news
-from app.routers import import_pdf
-from app.routers import pdf_summary
-from app.routers import watchlist
-from app.routers import indicators
-from app.routers import ai_chat
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.database import create_tables
+from app.routers import (
+    ai_chat,
+    auth,
+    import_pdf,
+    indicators,
+    news,
+    pdf_summary,
+    portfolio,
+    watchlist,
+)
 from app.routers import market_data as market_data_router
+from app.schemas.responses import STATUS_ERROR_CODES
 
 app = FastAPI(title="EquityLens API")
 

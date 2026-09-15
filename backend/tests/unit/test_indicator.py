@@ -1,5 +1,7 @@
 from unittest.mock import MagicMock, patch
+
 from app.routers.indicators import get_indicators
+
 
 def _mock_user(user_id=1):
     user = MagicMock()

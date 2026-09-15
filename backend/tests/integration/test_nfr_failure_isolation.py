@@ -1,9 +1,11 @@
 from types import SimpleNamespace
+
 from fastapi.testclient import TestClient
 
-from app.main import app
-from app.dependencies import get_current_user
 from app.database import get_db
+from app.dependencies import get_current_user
+from app.main import app
+
 
 def fake_user():
     return SimpleNamespace(id=1)

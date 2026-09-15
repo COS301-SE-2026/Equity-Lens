@@ -1,10 +1,13 @@
 from unittest.mock import MagicMock, patch
+
 import pytest
 from botocore.exceptions import ClientError
 from fastapi import HTTPException
+
 from app.services import cognito_service as cognito
 
-@pytest.fixture()
+
+@pytest.fixture
 def cClient():
     client = MagicMock()
     with patch("app.services.cognito_service._get_client", return_value = client):

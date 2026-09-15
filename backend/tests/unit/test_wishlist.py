@@ -1,11 +1,13 @@
-from unittest.mock import Mock,patch
+from unittest.mock import Mock, patch
 
 import pytest
 
-from app.services.watchlist import add_watchlist_service
-from app.services.watchlist import get_watchlist_service
-from app.services.watchlist import remove_watchlist_service
 from app.repositories.watchlist import add_watchlist, get_watchlist, remove_watchlist
+from app.services.watchlist import (
+    add_watchlist_service,
+    get_watchlist_service,
+    remove_watchlist_service,
+)
 
 
 @patch("app.services.watchlist.add_watchlist")

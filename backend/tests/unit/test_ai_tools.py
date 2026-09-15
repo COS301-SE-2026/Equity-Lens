@@ -1,9 +1,12 @@
+from unittest.mock import MagicMock, patch
+
 import pandas as pd
 import pytest
-from unittest.mock import MagicMock, patch
+
+from app.models.chat import ChatMessages
 from app.services import ai_service
 from app.services.ai_service import chat, get_market_news_tool, get_stock_data_tool
-from app.models.chat import ChatMessages
+
 
 @pytest.fixture(autouse = True)
 def clear_news_cache():

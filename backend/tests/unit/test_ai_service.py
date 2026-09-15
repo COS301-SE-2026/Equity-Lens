@@ -1,9 +1,12 @@
-from app.services.ai_service import get_user_portfolio_context, chat
-from app.models.portfolio import Portfolios, Document, Holdings
 from unittest.mock import MagicMock, patch
-from app.models.chat import ChatMessages
+
 import pytest
+
+from app.models.chat import ChatMessages
+from app.models.portfolio import Document, Holdings, Portfolios
 from app.routers.ai_chat import ChatRequest
+from app.services.ai_service import chat, get_user_portfolio_context
+
 
 def test_portfolio_linked_no_data(db_session, test_user):
     ai_reply = get_user_portfolio_context(db_session, test_user.id)

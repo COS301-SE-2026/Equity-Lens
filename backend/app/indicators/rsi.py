@@ -1,4 +1,5 @@
 import pandas as pd
+
 "Relative Strength Index (RSI)"
 "Scores price movement from 0-100 to warn when something is overbought or oversold."
 def calculate_rsi(price_series, periods = 14):

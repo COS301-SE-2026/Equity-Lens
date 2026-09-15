@@ -1,4 +1,5 @@
 import pytest
+
 from app.services import health_score
 from app.services.instruments import KIND_ETF, KIND_STOCK
 

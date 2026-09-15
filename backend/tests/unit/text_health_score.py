@@ -1,10 +1,11 @@
 import pytest
+
 from app.services.health_score import (
     BUCKET_OTHER,
     CONFIG_FIELDS,
     DEFAULT_CONFIG,
-    PRESETS,
     PRESET_EQUITYLENS,
+    PRESETS,
     HealthConfig,
     _clamp10,
     _health_label,
@@ -17,7 +18,7 @@ from app.services.health_score import (
     config_to_dict,
     matching_preset_key,
     preset_config,
-    presets_payload
+    presets_payload,
 )
 from app.services.instruments import KIND_ETF, KIND_STOCK
 

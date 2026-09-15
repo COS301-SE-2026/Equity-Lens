@@ -3,23 +3,24 @@ from datetime import date
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from app.models.portfolio import Document
-from app.models.portfolio import Portfolios
-from app.models.portfolio import Holdings
-from app.models.portfolio import InstrumentPurchasesAndSales
-from app.models.portfolio import ContributionsAndWithdrawals
-from app.models.portfolio import DividendsAndWithholdingTax
-from app.models.portfolio import TransactionExpenses
-
-from app.repositories.import_pdf import save_document
-from app.repositories.import_pdf import save_portfolios
-from app.repositories.import_pdf import save_holdings
-from app.repositories.import_pdf import get_latest_portfolio
-from app.repositories.import_pdf import save_instrument_purchases_and_sales
-from app.repositories.import_pdf import save_contributions_and_withdrawals
-from app.repositories.import_pdf import save_dividends_and_withholding_tax
-from app.repositories.import_pdf import save_transaction_expenses
-
+from app.models.portfolio import (
+    ContributionsAndWithdrawals,
+    DividendsAndWithholdingTax,
+    Document,
+    Holdings,
+    InstrumentPurchasesAndSales,
+    Portfolios,
+    TransactionExpenses,
+)
+from app.repositories.import_pdf import (
+    save_contributions_and_withdrawals,
+    save_dividends_and_withholding_tax,
+    save_document,
+    save_holdings,
+    save_instrument_purchases_and_sales,
+    save_portfolios,
+    save_transaction_expenses,
+)
 
 
 def test_save_document():

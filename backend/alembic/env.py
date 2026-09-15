@@ -1,16 +1,18 @@
 import sys
 from logging.config import fileConfig
 from pathlib import Path
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+
+from sqlalchemy import engine_from_config, pool
+
 from alembic import context
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from app.config import settings
 from app.database import Base
-from app.models import user  # noqa: F401
-from app.models import portfolio
-from app.models import chat
-from app.models import market_data
+from app.models import (
+    user,  # noqa: F401
+)
+
 config = context.config
 
 #Overrides with app's real settings
