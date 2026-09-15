@@ -1,13 +1,14 @@
-import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
-import AnimatedReveal from '../shared/AnimatedReveal';
-import { GlassPanel, PanelHead } from '../shared/GlassPanel';
+import { useState } from 'react';
+
+import { zar } from '../../../utils/currency';
+import { getConcRisk, buildHoldingsQuestions, buildSectorQuestions } from '../../../utils/dashboardInsights';
 import CardMascotTrigger from '../../chat/CardMascotTrigger/CardMascotTrigger';
 import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
 import Money from '../../common/Money/Money';
-import { zar } from '../../../utils/currency';
-import { getConcRisk, buildHoldingsQuestions, buildSectorQuestions } from '../../../utils/dashboardInsights';
 import SectorAllocation from '../SectorAllocation/SectorAllocation';
+import AnimatedReveal from '../shared/AnimatedReveal';
+import { GlassPanel, PanelHead } from '../shared/GlassPanel';
 const COL = { risk: 'w-[68px]', weight: 'w-[44px]', today: 'w-[60px]', value: 'w-[84px]' };
 const EXPAND_COL = 'w-5';
 

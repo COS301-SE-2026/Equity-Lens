@@ -1,7 +1,7 @@
-import { useRef, useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { HelpCircle } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 export default function HelpTooltip({ text }) {
   const [visible, setVisible] = useState(false);

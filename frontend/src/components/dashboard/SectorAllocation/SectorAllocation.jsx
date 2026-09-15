@@ -1,7 +1,8 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+
+import { getConcRisk } from '../../../utils/dashboardInsights';
 import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
 import SecondaryButton from '../shared/SecondaryButton';
-import { getConcRisk } from '../../../utils/dashboardInsights';
 
 /**
  * @param {{

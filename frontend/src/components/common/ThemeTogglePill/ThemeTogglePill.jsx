@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { Sun, Moon } from 'lucide-react';
+
 import { useThemeContext } from '../../../context/ThemeContext.jsx';
 
 const ThemeTogglePill = () => {

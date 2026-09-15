@@ -1,7 +1,9 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
+
 import { zar, zarFull } from '../../../utils/currency';
+
 import DashboardHero from './DashboardHero';
 
 const NBSP = String.fromCharCode(160);

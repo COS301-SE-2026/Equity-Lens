@@ -1,6 +1,7 @@
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+
 import { ROUTES } from '../../../utils/constants';
 
 const navItems = [

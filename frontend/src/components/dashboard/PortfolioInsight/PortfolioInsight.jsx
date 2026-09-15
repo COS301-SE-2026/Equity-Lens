@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
+
 import { zar, zarFull } from '../../../utils/currency';
 
 /**

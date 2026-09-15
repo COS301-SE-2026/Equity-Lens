@@ -1,12 +1,15 @@
-import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+
+import { buildHealthQuestions } from '../../../utils/dashboardInsights';
+import CardMascotTrigger from '../../chat/CardMascotTrigger/CardMascotTrigger';
 import AnimatedReveal from '../shared/AnimatedReveal';
 import { GlassPanel, PanelHead } from '../shared/GlassPanel';
-import SecondaryButton from '../shared/SecondaryButton';
-import CardMascotTrigger from '../../chat/CardMascotTrigger/CardMascotTrigger';
-import HealthYardstick from './HealthYardstick';
-import { buildHealthQuestions } from '../../../utils/dashboardInsights';
 import { SCROLL_LIST_FLEX_CLASS, SCROLL_LIST_STYLE } from '../shared/scrollList';
+import SecondaryButton from '../shared/SecondaryButton';
+
+import HealthYardstick from './HealthYardstick';
+
 
 const toneColor = (x = 0) => {
   if (x >= 7) return 'var(--signal-positive)';

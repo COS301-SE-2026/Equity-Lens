@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+
 import ThemeTogglePill from './ThemeTogglePill';
 
 const mockToggleTheme = vi.fn();

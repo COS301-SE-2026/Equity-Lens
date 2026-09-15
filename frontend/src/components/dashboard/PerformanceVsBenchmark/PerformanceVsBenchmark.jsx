@@ -9,15 +9,15 @@ import {
   CartesianGrid,
 } from 'recharts';
 
-import { GlassPanel } from '../shared/GlassPanel';
-import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
-import Money from '../../common/Money/Money';
-import MoneyAxisTick from '../shared/MoneyAxisTick';
 import { zar } from '../../../utils/currency';
 import { buildChartStats, filterByRange, buildExplanation, buildingHistoryLabel, buildPerformanceQuestions,
 } from '../../../utils/dashboardInsights';
-import ContributionsChart from '../ContributionsChart/ContributionsChart';
 import CardMascotTrigger from '../../chat/CardMascotTrigger/CardMascotTrigger';
+import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
+import Money from '../../common/Money/Money';
+import ContributionsChart from '../ContributionsChart/ContributionsChart';
+import { GlassPanel } from '../shared/GlassPanel';
+import MoneyAxisTick from '../shared/MoneyAxisTick';
 
 /** @typedef {'1D'|'1W'|'1M'|'3M'|'1Y'|'ALL'} RangeKey */
 /** @type {RangeKey[]} */

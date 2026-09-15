@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+
 import { formatShortCurrency as formatCurrency } from '../../../utils/formatters';
 
 const FILTERS = ['Monthly', 'Quarterly', 'Annually'];

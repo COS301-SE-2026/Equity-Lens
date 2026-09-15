@@ -1,12 +1,12 @@
 import js from '@eslint/js';
+import prettier from 'eslint-config-prettier';
+import importX from 'eslint-plugin-import-x';
+import jsxA11y from 'eslint-plugin-jsx-a11y';
+import promise from 'eslint-plugin-promise';
 import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
-import jsxA11y from 'eslint-plugin-jsx-a11y';
-import importX from 'eslint-plugin-import-x';
-import unusedImports from 'eslint-plugin-unused-imports';
-import promise from 'eslint-plugin-promise';
 import sonarjs from 'eslint-plugin-sonarjs';
-import prettier from 'eslint-config-prettier';
+import unusedImports from 'eslint-plugin-unused-imports';
 import globals from 'globals';
 
 export default [

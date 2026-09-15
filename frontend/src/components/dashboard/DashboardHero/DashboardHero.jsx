@@ -1,10 +1,11 @@
 import { motion, useReducedMotion  } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
-import Money from '../../common/Money/Money';
+
 import { zar, zarFull } from '../../../utils/currency';
 import { buildHeroSummary } from '../../../utils/dashboardInsights';
+import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
+import Money from '../../common/Money/Money';
 
 /** @param {number | null} score */
 const healthTone = (score) => {

@@ -1,6 +1,7 @@
 import { Menu, X, Eye, EyeOff } from 'lucide-react';
-import useBlur from '../../../hooks/useBlur';
+
 import useAuth from '../../../hooks/useAuth';
+import useBlur from '../../../hooks/useBlur';
 /**
  * @param {Object} props
  * @param {() => void} props.onMenuClick
