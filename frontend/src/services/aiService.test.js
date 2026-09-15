@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { normalize, getMockResponse } from './aiService';
 
 describe('normalize', () => {

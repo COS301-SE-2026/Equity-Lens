@@ -1,10 +1,12 @@
 import { render, screen, fireEvent} from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import AIChat from "./AIChat.jsx";
+
+import { ChatProvider } from "../../context/ChatContext.jsx";
 import useAuth from "../../hooks/useAuth.js";
 import api from "../../services/api.js";
-import { ChatProvider } from "../../context/ChatContext.jsx";
-import { MemoryRouter } from "react-router-dom";
+
+import AIChat from "./AIChat.jsx";
 
 
 vi.mock("../../context/ThemeContext.jsx", () => ({

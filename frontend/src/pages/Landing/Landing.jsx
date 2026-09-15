@@ -1,5 +1,3 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   Menu,
@@ -12,7 +10,9 @@ import {
   Layers,
   KeyRound,
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { Link } from 'react-router-dom';
 import {
   PieChart,
   Pie,
@@ -20,6 +20,7 @@ import {
   ResponsiveContainer,
   Tooltip,
 } from 'recharts';
+
 import { ROUTES } from '../../utils/constants';
 
 const CONTACT_EMAIL = 'thebigfivetb5@gmail.com';

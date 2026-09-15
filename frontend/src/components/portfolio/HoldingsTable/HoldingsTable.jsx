@@ -1,4 +1,3 @@
-import React from 'react';
 
 const COLS = ['Ticker', 'Name', 'Sector', 'Qty', 'Avg Cost', 'Current', 'Value', 'P&L', 'P&L %'];
 /**

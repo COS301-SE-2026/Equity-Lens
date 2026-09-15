@@ -1,5 +1,5 @@
-import { GlassPanel, PanelHead } from '../shared/GlassPanel';
 import { zar } from '../../../utils/currency';
+import { GlassPanel, PanelHead } from '../shared/GlassPanel';
 
 /** @param {{ label: string, items: {ticker:string, contribution:number}[], tone: 'good'|'bad' }} props */
 const MoverColumn = ({ label, items, tone }) => (

@@ -2,7 +2,9 @@ import {render, screen, waitFor, within} from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import userEvent from "@testing-library/user-event";
 import {describe, it, expect, vi, beforeEach} from "vitest";
+
 import api from "../../services/api";
+
 import NewsInvestment from "./News";
 
 

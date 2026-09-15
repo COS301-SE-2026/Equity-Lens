@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+
 import { getHistorialData, searchStocks, getStockDetails, } from '../services/marketDataService';
 
 const useMarketData = () => {

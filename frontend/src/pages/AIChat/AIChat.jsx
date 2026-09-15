@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
 import {Sparkles, Plus, Pencil, Trash2, MessageSquare, Search, Copy, Check, PanelLeftClose, X, Send, RefreshCw, PanelLeftOpen} from 'lucide-react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { useSearchParams } from 'react-router-dom';
 
 import Button from '../../components/common/Button/Button';
+import { useThemeContext } from '../../context/ThemeContext';
 import useAuth from '../../hooks/useAuth';
 import useChat from '../../hooks/useChat';
-import { useThemeContext } from '../../context/ThemeContext';
 
 /**
  * @typedef {{id: number | string, role: 'user' | 'assistant', text: string, at: Date, failed?: boolean}} ChatMessage
@@ -411,7 +411,7 @@ const AIChat = () => {
       
       <div className = "flex justify-center px-3 py-3">
         <Button type="button" variant="primary" size = "sm" fullWidth onClick={createNewChat} className = "mx-auto max-w-[180px]">
-          <Plus size={16} aria-hidden="true"></Plus>
+          <Plus size={16} aria-hidden="true" />
           New Chat
         </Button>
       </div>

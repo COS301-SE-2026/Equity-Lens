@@ -1,5 +1,6 @@
-import axios from 'axios';
 import { fetchAuthSession, signOut } from 'aws-amplify/auth';
+import axios from 'axios';
+
 import { API_BASE_URL } from '../utils/constants';
 
 const api = axios.create({

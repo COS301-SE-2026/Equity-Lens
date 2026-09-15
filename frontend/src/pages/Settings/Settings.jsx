@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { deleteAccount } from "../../services/authService";
-import { useAuthContext } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ROUTES } from "../../utils/constants";
+
 import ThemeToggle from "../../components/common/ThemeToggle/ThemeToggle";
+import { useAuthContext } from "../../context/AuthContext";
+import { deleteAccount } from "../../services/authService";
+import { ROUTES } from "../../utils/constants";
 
 
 const DeleteAccountModal = ({ userEmail, onClose, onConfirmed }) => {

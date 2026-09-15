@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+
 import { getIndicatorData } from '../services/indicatorService';
 
 const useIndicators = () => {

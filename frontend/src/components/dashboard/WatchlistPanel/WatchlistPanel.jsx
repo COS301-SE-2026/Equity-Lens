@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
-import WatchlistItem from '../WatchlistItem/WatchlistItem';
 import useWatchlist from '../../../hooks/useWatchlist';
 import { searchStocks } from '../../../services/marketDataService';
+import WatchlistItem from '../WatchlistItem/WatchlistItem';
 
 const VISIBLE_LIMIT = 3;
 const SEARCH_MIN_CHARS = 2;

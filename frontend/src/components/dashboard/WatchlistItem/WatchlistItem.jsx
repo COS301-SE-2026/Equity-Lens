@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+
 import Money from '../../common/Money/Money';
 
 /**

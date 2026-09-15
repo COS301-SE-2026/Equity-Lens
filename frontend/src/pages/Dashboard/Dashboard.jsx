@@ -1,18 +1,19 @@
-import { useCallback, useState, useRef, useEffect } from 'react';
 import { Star } from 'lucide-react';
-import useAuth from '../../hooks/useAuth';
-import usePortfolio from '../../hooks/usePortfolio';
-import useDashboardAnalytics from '../../hooks/useDashboardAnalytics';
+import { useCallback, useState, useRef, useEffect } from 'react';
+
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
-import { GlassPanel } from '../../components/dashboard/shared/GlassPanel';
-import FloatingToggle from '../../components/dashboard/shared/FloatingToggle';
-import DashboardHero from '../../components/dashboard/DashboardHero/DashboardHero';
-import PortfolioHealth from '../../components/dashboard/PortfolioHealth/PortfolioHealth';
-import PerformanceVsBenchmark from '../../components/dashboard/PerformanceVsBenchmark/PerformanceVsBenchmark';
-import DashboardHoldingsTable from '../../components/dashboard/DashboardHoldingsTable/DashboardHoldingsTable';
 import ConcentrationRisk from '../../components/dashboard/ConcentrationRisk/ConcentrationRisk';
+import DashboardHero from '../../components/dashboard/DashboardHero/DashboardHero';
+import DashboardHoldingsTable from '../../components/dashboard/DashboardHoldingsTable/DashboardHoldingsTable';
+import PerformanceVsBenchmark from '../../components/dashboard/PerformanceVsBenchmark/PerformanceVsBenchmark';
+import PortfolioHealth from '../../components/dashboard/PortfolioHealth/PortfolioHealth';
+import FloatingToggle from '../../components/dashboard/shared/FloatingToggle';
+import { GlassPanel } from '../../components/dashboard/shared/GlassPanel';
 import TodayInsights from '../../components/dashboard/TodayInsights/TodayInsights';
 import WatchlistPanel from '../../components/dashboard/WatchlistPanel/WatchlistPanel';
+import useAuth from '../../hooks/useAuth';
+import useDashboardAnalytics from '../../hooks/useDashboardAnalytics';
+import usePortfolio from '../../hooks/usePortfolio';
 import {
   buildSectors,
   buildAttrib,

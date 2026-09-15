@@ -18,12 +18,12 @@ import api from './api'
 export async function register(fullName, email, password) {
   const result = await signUp({
     username: email,
-    password: password,
+    password,
     options: {
-      userAttributes: { email: email, name: fullName, },
+      userAttributes: { email, name: fullName, },
     },
   });
-  return { userId: result.userId, email: email };
+  return { userId: result.userId, email };
 }
 
 
@@ -82,7 +82,7 @@ export async function getCurrentUserProfile() {
 
   return {
     sub: user.userId,
-    email: email,
+    email,
     full_name: fullName,
   };
 }

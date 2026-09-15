@@ -1,6 +1,6 @@
 import { fetchAuthSession, signOut } from "aws-amplify/auth";
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { API_BASE_URL } from "../utils/constants";
+
 
 vi.mock('aws-amplify/auth', () => ({
     fetchAuthSession: vi.fn(),

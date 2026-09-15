@@ -1,10 +1,12 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { useNavigate } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import Settings from "./Settings";
+
 import { useAuthContext } from "../../context/AuthContext";
 import { deleteAccount } from "../../services/authService";
-import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/constants";
+
+import Settings from "./Settings";
 
 
 vi.mock("../../context/AuthContext");
