@@ -14,7 +14,7 @@ import SecondaryButton from '../shared/SecondaryButton';
 const SOURCE_LABEL = {
   custom: 'your own settings',
   preset: 'your choice',
-  derived: 'matched to your goal',
+  derived: 'matched to your portfolio',
   default: 'the EquityLens default',
 };
 
@@ -81,7 +81,7 @@ const HealthYardstick = ({ onChanged }) => {
   return (
     <div className="mt-3 border-t pt-3" style={{ borderColor: 'var(--border-subtle)' }}>
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[10px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+        <span className="text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
           Measured against{' '}
           <span style={{ color: 'var(--text-secondary)' }}>
             {active ? active.name : 'custom settings'}
@@ -107,7 +107,7 @@ const HealthYardstick = ({ onChanged }) => {
         <div className="mt-2 space-y-2">
           <label
             htmlFor="health-preset-picker"
-            className="block text-[10px] font-semibold"
+            className="block text-[11px] font-semibold"
             style={{ color: 'var(--text-primary)' }}>
             Score my portfolio as
           </label>
@@ -121,11 +121,11 @@ const HealthYardstick = ({ onChanged }) => {
             options={presets.map((p) => ({ value: p.key, label: p.name }))}/>
 
           {active && (
-            <p className="text-[10px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+            <p className="text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
               {active.description}
             </p>)}
 
-          <p className="text-[10px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+          <p className="text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
             Presets change what your portfolio is compared to, not how much risk it carries. The
             underlying percentages above stay the same whichever you pick.
           </p>
@@ -136,7 +136,7 @@ const HealthYardstick = ({ onChanged }) => {
                 size="sm"
                 disabled={saving}
                 onClick={() => apply(() => clearHealthConfig())}>
-                Use the one matched to my goal{derived ? ` (${derived.name})` : ''}
+                Use the one matched to my portfolio{derived ? ` (${derived.name})` : ''}
               </SecondaryButton>
             )}
             {activeKey !== data.default_preset_key && (
@@ -150,11 +150,11 @@ const HealthYardstick = ({ onChanged }) => {
               </SecondaryButton>
             )}</div>
 
-          {state.error && (
-            <p className="text-[10px]" style={{ color: 'var(--signal-negative)' }}>
+          <AnimatedReveal show={Boolean(state.error)}>
+            <p className="text-[11px]" style={{ color: 'var(--signal-negative)' }}>
               {state.error}
             </p>
-          )}
+          </AnimatedReveal>
         </div>
       </AnimatedReveal>
     </div>

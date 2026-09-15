@@ -60,7 +60,7 @@ describe('HealthYardstick', () => {
   it('distinguishes a guess from a choice', async () => {
     getHealthConfig.mockResolvedValue(payload({ source: 'derived', preset_key: 'growth' }));
     render(<HealthYardstick />);
-    expect(await screen.findByText(/matched to your goal/)).toBeInTheDocument();
+    expect(await screen.findByText(/matched to your portfolio/)).toBeInTheDocument();
     expect(screen.queryByText(/your choice/)).not.toBeInTheDocument();
   });
 
@@ -91,24 +91,24 @@ describe('HealthYardstick', () => {
     ).toBeInTheDocument();
   });
 
-  it('offers the goal-matched preset by name once the user has overridden it', async () => {
+  it('offers the portfolio-matched preset by name once the user has overridden it', async () => {
     getHealthConfig.mockResolvedValue(
       payload({ source: 'preset', preset_key: 'income', derived_preset_key: 'growth' }),
     );
     clearHealthConfig.mockResolvedValue(payload({ source: 'derived', preset_key: 'growth' }));
     await open();
 
-    const revert = screen.getByText('Use the one matched to my goal (Growth)');
+    const revert = screen.getByText('Use the one matched to my portfolio (Growth)');
     fireEvent.click(revert);
     await waitFor(() => expect(clearHealthConfig).toHaveBeenCalled());
   });
 
-  it('does not offer to revert to a goal-matched preset that is already applied', async () => {
+  it('does not offer to revert to a portfolio-matched preset that is already applied', async () => {
     getHealthConfig.mockResolvedValue(
       payload({ source: 'derived', preset_key: 'growth', derived_preset_key: 'growth' }),
     );
     await open();
-    expect(screen.queryByText(/Use the one matched to my goal/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Use the one matched to my portfolio/)).not.toBeInTheDocument();
   });
 
   it('hides Reset to EquityLens when EquityLens is already what applies', async () => {
