@@ -1,5 +1,6 @@
 from app.models.portfolio import Watchlist
 
+
 def add_watchlist(database,user_id,ticker,company_name,sector):
 
     saving = Watchlist(

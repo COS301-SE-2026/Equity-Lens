@@ -1,12 +1,13 @@
 import logging
+
+from botocore.exceptions import ClientError
 from fastapi import APIRouter, Depends
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
-from botocore.exceptions import ClientError
-from app.services import cognito_service as cognito
-from app.dependencies import get_current_user
+
 from app.database import get_db
+from app.dependencies import get_current_user
 from app.models.user import User
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import (
@@ -29,6 +30,7 @@ from app.schemas.responses import (
     error,
     two_states,
 )
+from app.services import cognito_service as cognito
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 auth_scheme = HTTPBearer()

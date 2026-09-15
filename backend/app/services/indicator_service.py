@@ -1,13 +1,14 @@
 import pandas as pd
-from app.utils.stock_cache import get_cached_fundamentals, get_cached_price_history
-from app.services.market_data_service import _cents_to_major
-from app.indicators.capm import calculate_capm
+
 from app.indicators.altman_z_score import calculate_altman_zscore
 from app.indicators.beta import calculate_beta
+from app.indicators.capm import calculate_capm
 from app.indicators.pe_ratio import calculate_pe_ratio
 from app.indicators.rsi import calculate_rsi
 from app.indicators.sharpe_ratio import calculate_sharpe_ratio
 from app.indicators.sortino_ratio import calculate_sortino_ratio
+from app.services.market_data_service import _cents_to_major
+from app.utils.stock_cache import get_cached_fundamentals, get_cached_price_history
 
 INDICATOR_UNITS = {
     "capm": "%",

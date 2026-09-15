@@ -1,10 +1,10 @@
 import logging
 
-from fastapi import HTTPException
 import yfinance as yf
+from fastapi import HTTPException
 
-from app.repositories.watchlist import add_watchlist,get_watchlist,remove_watchlist
-from app.services.market_data_service import _cents_to_major, WATCHLIST_QUOTE_TYPES
+from app.repositories.watchlist import add_watchlist, get_watchlist, remove_watchlist
+from app.services.market_data_service import WATCHLIST_QUOTE_TYPES, _cents_to_major
 
 logger = logging.getLogger(__name__)
 

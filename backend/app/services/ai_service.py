@@ -1,23 +1,20 @@
+import time
+from datetime import UTC, datetime
 from functools import lru_cache
 
-from sqlalchemy.orm import Session
-from app.config import settings
-from app.models.portfolio import Portfolios, Document, Holdings
-from app.models.chat import ChatConversation, ChatMessages
-from app.utils.stock_cache import get_cached_price_history
-from app.services.market_data_service import _cents_to_major
-from app.services.health_score import compute_health_score
-from app.services.portfolio_service import _price_holdings
-from datetime import datetime, timezone
-from functools import lru_cache
-from app.services.health_score import compute_health_score
-from app.services.portfolio_service import _price_holdings
 import pandas as pd
 import requests
-import time
-from app.services.indicator_service import build_live_indicator_row, serialize_indicator_row
-from app.utils.market_cache import get_market_returns
+from sqlalchemy.orm import Session
 
+from app.config import settings
+from app.models.chat import ChatConversation, ChatMessages
+from app.models.portfolio import Document, Holdings, Portfolios
+from app.services.health_score import compute_health_score
+from app.services.indicator_service import build_live_indicator_row, serialize_indicator_row
+from app.services.market_data_service import _cents_to_major
+from app.services.portfolio_service import _price_holdings
+from app.utils.market_cache import get_market_returns
+from app.utils.stock_cache import get_cached_price_history
 
 MAX_TOOL_ITERATIONS = 3
 
@@ -493,7 +490,7 @@ Below is the user's portfolio data. Treat everything inside
     #reply message
     db.add(ChatMessages(conversation_id = chat_conversation.id, role = "assistant", content = reply))
 
-    chat_conversation.updated_at = datetime.now(timezone.utc)
+    chat_conversation.updated_at = datetime.now(UTC)
 
     #make it permanent 
     db.commit()

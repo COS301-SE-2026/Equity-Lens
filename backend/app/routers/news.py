@@ -1,15 +1,17 @@
-from fastapi import APIRouter,Depends
 import os
+from typing import Any
+
 import requests
 from dotenv import load_dotenv
-from app.dependencies import get_current_user
-from app.database import get_db
-from app.models.user import User
-from sqlalchemy.orm import Session
-from app.models.portfolio import Holdings, Portfolios
-from app.schemas.auth import UserResponse
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
-from typing import Any
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.dependencies import get_current_user
+from app.models.portfolio import Holdings, Portfolios
+from app.models.user import User
+from app.schemas.auth import UserResponse
 
 load_dotenv()
 

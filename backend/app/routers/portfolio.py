@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
+from app.repositories.portfolio_repository import PortfolioRepository
 from app.schemas.health_config import HealthConfigRequest
 from app.schemas.portfolio import (
     AccountTypeResponse,
@@ -29,7 +30,6 @@ from app.services.health_config_service import (
     save_health_config,
 )
 from app.services.portfolio_service import PortfolioService
-from app.repositories.portfolio_repository import PortfolioRepository
 
 router = APIRouter(prefix="/api/portfolio", tags=["Portfolio"])
 

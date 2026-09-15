@@ -1,18 +1,17 @@
-from typing import List, Optional
 
 from pydantic import BaseModel
 
 
 class IndicatorValue(BaseModel):
     status: str
-    value: Optional[float] = None
-    unit: Optional[str] = None
-    reason: Optional[str] = None
+    value: float | None = None
+    unit: str | None = None
+    reason: str | None = None
 
 
 class IndicatorRow(BaseModel):
-    ticker: Optional[str] = None
-    name: Optional[str] = None
+    ticker: str | None = None
+    name: str | None = None
     live_fetch: bool
     capm: IndicatorValue
     pe_ratio: IndicatorValue
@@ -21,7 +20,7 @@ class IndicatorRow(BaseModel):
     rsi: IndicatorValue
     sharpe: IndicatorValue
     sortino: IndicatorValue
-    error: Optional[str] = None
+    error: str | None = None
 
 
-IndicatorRows = List[IndicatorRow]
+IndicatorRows = list[IndicatorRow]

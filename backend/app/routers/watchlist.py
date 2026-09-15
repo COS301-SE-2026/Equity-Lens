@@ -1,16 +1,19 @@
-from fastapi import APIRouter,Depends
-import os
-import requests
-from dotenv import load_dotenv
-from app.dependencies import get_current_user
-from app.database import get_db
-from app.schemas.auth import UserResponse
-from sqlalchemy.orm import Session
-from app.schemas.watchlist import WatchListRequest
-from app.services.watchlist import add_watchlist_service,get_watchlist_service,remove_watchlist_service
-from pydantic import BaseModel, Field
-from typing import Any
 from uuid import UUID
+
+from dotenv import load_dotenv
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.database import get_db
+from app.dependencies import get_current_user
+from app.schemas.auth import UserResponse
+from app.schemas.watchlist import WatchListRequest
+from app.services.watchlist import (
+    add_watchlist_service,
+    get_watchlist_service,
+    remove_watchlist_service,
+)
 
 load_dotenv()
 

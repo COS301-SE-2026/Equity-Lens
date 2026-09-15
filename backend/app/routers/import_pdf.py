@@ -1,27 +1,33 @@
+from uuid import UUID
+
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.schemas.import_pdf import ImportPdfRequest
-from app.schemas.import_pdf import PortfolioRequest
-from app.schemas.import_pdf import HoldingsRequest
-from app.schemas.import_pdf import InstrumentPurchasesAndSalesRequest
-from app.schemas.import_pdf import ContributionsAndWithdrawalsRequest
-from app.schemas.import_pdf import DividendsAndWithholdingTaxRequest
-from app.schemas.import_pdf import TransactionExpensesRequest
-from app.services.import_pdf import import_Pdf_data
-from app.services.import_pdf import save_portfolios_import
-from app.services.import_pdf import get_my_portfolio
-from app.services.import_pdf import save_holdings_import
-from app.services.import_pdf import save_instrument_purchases_and_sales_import
-from app.services.import_pdf import save_contributions_and_withdrawals_import
-from app.services.import_pdf import save_dividends_and_withholding_tax_import
-from app.services.import_pdf import save_transaction_expenses_import
-from app.services.import_pdf import delete_portfolio_import
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
-from pydantic import BaseModel, Field
-from typing import Any
-from uuid import UUID
+from app.schemas.import_pdf import (
+    ContributionsAndWithdrawalsRequest,
+    DividendsAndWithholdingTaxRequest,
+    HoldingsRequest,
+    ImportPdfRequest,
+    InstrumentPurchasesAndSalesRequest,
+    PortfolioRequest,
+    TransactionExpensesRequest,
+)
+from app.services.import_pdf import (
+    delete_portfolio_import,
+    get_my_portfolio,
+    import_Pdf_data,
+    save_contributions_and_withdrawals_import,
+    save_dividends_and_withholding_tax_import,
+    save_holdings_import,
+    save_instrument_purchases_and_sales_import,
+    save_portfolios_import,
+    save_transaction_expenses_import,
+)
+
 
 class ImportPDFResponse(BaseModel):
     Success: bool = Field(examples=[True])

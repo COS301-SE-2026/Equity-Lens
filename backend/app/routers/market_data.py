@@ -1,8 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
+from app.schemas.market_data import (
+    CurrentPriceParams,
+    CurrentPriceResponse,
+    HistoryParams,
+    HistoryResponse,
+    SearchParams,
+    SearchResponse,
+)
 from app.services.market_data_service import get_current_price, get_historical_data, search_stocks
-from app.schemas.market_data import CurrentPriceResponse, HistoryResponse, SearchResponse, CurrentPriceParams, SearchParams, HistoryParams
 
 router = APIRouter(prefix="/api/stocks", tags=["stocks"])
 
@@ -30,7 +38,7 @@ def stock_history(
     try:
         return get_historical_data(params.symbol,params.period)
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unable to fetch history for symbol '{params.symbol}': {str(e)}",)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Unable to fetch history for symbol '{params.symbol}': {e!s}",)
 
 @router.get("/search", response_model=SearchResponse,
             summary="Search Stocks",

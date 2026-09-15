@@ -1,18 +1,22 @@
 from datetime import date
 from uuid import UUID
+
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
+
 from app.models.portfolio import (
     ContributionsAndWithdrawals,
     DividendsAndWithholdingTax,
     InstrumentPurchasesAndSales,
-    PortfolioSnapshot,
     Portfolios,
+    PortfolioSnapshot,
     TransactionExpenses,
 )
 from app.schemas.portfolio import ACCOUNT_TYPE_CURRENCY
+
+
 class PortfolioRepository:
     def __init__(self, db: Session):
         self.db = db

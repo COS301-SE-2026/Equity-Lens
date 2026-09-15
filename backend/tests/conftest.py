@@ -1,9 +1,11 @@
-import pytest
 from unittest.mock import patch
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
+
 import app.database as db_module
 from app.database import get_db
 from app.dependencies import get_current_user
@@ -11,13 +13,14 @@ from app.main import app
 from app.models.user import User
 from app.services.portfolio_service import invalidate_priced_holdings
 
+
 @pytest.fixture(autouse=True)
 def _clear_priced_holdings_cache():
     invalidate_priced_holdings()
     yield
     invalidate_priced_holdings()
 
-@pytest.fixture()
+@pytest.fixture
 def db_engine():
     engine = create_engine(
         "sqlite://",
@@ -29,7 +32,7 @@ def db_engine():
     db_module.Base.metadata.drop_all(bind=engine)
     engine.dispose()
 
-@pytest.fixture()
+@pytest.fixture
 def db_session(db_engine):
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
     session = SessionLocal()
@@ -38,7 +41,7 @@ def db_session(db_engine):
     finally:
         session.close()
 
-@pytest.fixture()
+@pytest.fixture
 def client(db_engine):
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
 
@@ -55,7 +58,7 @@ def client(db_engine):
     finally:
         app.dependency_overrides.clear()
 
-@pytest.fixture()
+@pytest.fixture
 def sample_user_data():
     return {
         "full_name": "Test User",
@@ -63,7 +66,7 @@ def sample_user_data():
         "password": "Password1!",
     }
 
-@pytest.fixture()
+@pytest.fixture
 def test_user(db_session, sample_user_data):
     user = User(
         email=sample_user_data["email"],
@@ -77,7 +80,7 @@ def test_user(db_session, sample_user_data):
     db_session.refresh(user)
     return user
 
-@pytest.fixture()
+@pytest.fixture
 def registered_user(client, sample_user_data):
     with patch("app.routers.auth.cognito.cognito_register") as mock_register:
         mock_register.return_value = {
@@ -87,7 +90,7 @@ def registered_user(client, sample_user_data):
         client.post("/api/auth/register", json=sample_user_data)
     return sample_user_data
 
-@pytest.fixture()
+@pytest.fixture
 def auth_headers(test_user):
     def override_get_current_user():
         return test_user

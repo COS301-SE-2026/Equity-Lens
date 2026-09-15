@@ -1,27 +1,14 @@
-import math
 import logging
+import math
 import threading
 import time
-from datetime import date, timedelta
+from datetime import date
 from uuid import UUID
 
 from sqlalchemy.orm import Session
 
 from app.repositories.holdings_repository import HoldingsRepository
 from app.repositories.portfolio_repository import PortfolioRepository
-from app.services.instruments import (
-    INVALID_TICKER_MARKERS,
-    KIND_ETF,
-    KIND_STOCK,
-    REGION_BENCHMARKS,
-    REGION_SA,
-    REGION_UNKNOWN,
-    get_look_through_note,
-    is_zar_listed,
-    looks_like_fund,
-    normalize_sector,
-    resolve_known_instrument,
-)
 from app.services.cgt_estimator import estimate_cgt
 from app.services.health_config_service import resolve_health_config
 from app.services.health_score import (
@@ -29,6 +16,18 @@ from app.services.health_score import (
     CONCENTRATION_LOW,
     HealthConfig,
     compute_health_score,
+)
+from app.services.instruments import (
+    INVALID_TICKER_MARKERS,
+    KIND_ETF,
+    KIND_STOCK,
+    REGION_BENCHMARKS,
+    REGION_UNKNOWN,
+    get_look_through_note,
+    is_zar_listed,
+    looks_like_fund,
+    normalize_sector,
+    resolve_known_instrument,
 )
 from app.services.market_data_service import get_current_price
 from app.services.returns import (

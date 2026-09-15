@@ -1,11 +1,12 @@
-import time
 import secrets
-from typing import List
+import time
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
 from app.database import get_db
-from app.models.portfolio import Portfolios, Holdings
 from app.dependencies import get_current_user
+from app.models.portfolio import Holdings, Portfolios
 from app.schemas.auth import UserResponse
 from app.schemas.market_data import IndicatorRowResponse
 from app.services.indicator_service import build_live_indicator_row, serialize_indicator_row
@@ -18,7 +19,7 @@ router = APIRouter(prefix="/api/indicators", tags=["indicators"])
 
 @router.get(
     "",
-    response_model=List[IndicatorRowResponse],
+    response_model=list[IndicatorRowResponse],
     summary="Get Portfolio Indicators",
     description="Calculates live technical and fundamental indicators for all valid holdings across user portfolios."
 )

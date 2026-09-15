@@ -1,22 +1,20 @@
+import logging
+from typing import Any
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, field_validator, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
-from app.services.ai_service import chat
+
+from app.config import settings
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.schemas.auth import UserResponse
-from uuid import UUID
-from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages
-from pydantic import BaseModel
-from typing import Any
+from app.schemas.auth import UserResponse
+from app.services.ai_service import chat
 from app.utils.ai_rate_limit import check_limit
-from app.config import settings
-import logging
 
 logger = logging.getLogger(__name__)
-from pydantic import BaseModel
-from typing import Any
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 
@@ -31,7 +29,7 @@ class TickerResponse(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-    conversation_id: Optional[UUID] = None
+    conversation_id: UUID | None = None
 
     @field_validator("message")
     @classmethod

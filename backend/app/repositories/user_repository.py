@@ -1,18 +1,21 @@
 from uuid import UUID, uuid4
+
 from sqlalchemy.orm import Session
-from app.models.user import User
+
+from app.models.chat import ChatConversation, ChatMessages
 from app.models.portfolio import (
-    Document,
-    Portfolios,
-    PortfolioSnapshot,
-    Holdings,
-    InstrumentPurchasesAndSales,
     ContributionsAndWithdrawals,
     DividendsAndWithholdingTax,
+    Document,
+    Holdings,
+    InstrumentPurchasesAndSales,
+    Portfolios,
+    PortfolioSnapshot,
     TransactionExpenses,
     Watchlist,
 )
-from app.models.chat import ChatConversation, ChatMessages
+from app.models.user import User
+
 
 class UserRepository:
     def __init__(self, db: Session):

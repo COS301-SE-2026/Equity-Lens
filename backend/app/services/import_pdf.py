@@ -1,20 +1,24 @@
-from app.repositories.import_pdf import save_document
-from app.repositories.import_pdf import save_portfolios
-from app.repositories.import_pdf import save_holdings
-from app.repositories.import_pdf import save_instrument_purchases_and_sales
-from app.repositories.import_pdf import save_contributions_and_withdrawals
-from app.repositories.import_pdf import save_dividends_and_withholding_tax
-from app.repositories.import_pdf import save_transaction_expenses
-from app.repositories.import_pdf import delete_portfolio
 import logging
-import yfinance as yf
 import re
-from yfinance.exceptions import YFRateLimitError
 import time
-from app.repositories.import_pdf import get_latest_portfolio, save_portfolios
+
+import yfinance as yf
+from requests.exceptions import ReadTimeout
+from yfinance.exceptions import YFRateLimitError
+
+from app.repositories.import_pdf import (
+    delete_portfolio,
+    get_latest_portfolio,
+    save_contributions_and_withdrawals,
+    save_dividends_and_withholding_tax,
+    save_document,
+    save_holdings,
+    save_instrument_purchases_and_sales,
+    save_portfolios,
+    save_transaction_expenses,
+)
 from app.services.instruments import resolve_known_instrument
 from app.services.portfolio_service import invalidate_priced_holdings
-from requests.exceptions import ReadTimeout
 
 logger = logging.getLogger(__name__)
 
@@ -84,10 +88,10 @@ def _search_ticker_number_uncached(instrument_name: str):
 
         }
     
-    except YFRateLimitError as exc:
+    except YFRateLimitError:
         return _not_found(transient=True)
 
-    except ReadTimeout as exc:
+    except ReadTimeout:
         return _not_found(transient=True)
 
 def search_queries(instrumentName):

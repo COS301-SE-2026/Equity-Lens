@@ -1,9 +1,8 @@
-import pandas as pd
-from app.utils.stock_cache import get_cached_price_history
-from datetime import datetime, timezone
-from uuid import uuid4
 import time
+from datetime import UTC, datetime
+from uuid import uuid4
 
+import pandas as pd
 import yfinance as yf
 
 from app.schemas.market_data import (
@@ -13,6 +12,9 @@ from app.schemas.market_data import (
     SearchResponse,
     SearchResultItem,
 )
+from app.utils.stock_cache import get_cached_price_history
+
+
 def _cents_to_major(symbol: str) -> float:
     if symbol.startswith("^"):
         return 1.0
@@ -54,7 +56,7 @@ def get_current_price(symbol: str) -> CurrentPriceResponse:
         price=round(price, 4),
         volume=volume,
         change_percent=round(change_percent, 4) if change_percent is not None else None,
-        fetched_at=datetime.now(timezone.utc),
+        fetched_at=datetime.now(UTC),
     )
 
 

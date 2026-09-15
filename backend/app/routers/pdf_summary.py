@@ -1,19 +1,21 @@
+
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
-from app.services.pdf_summary_service import get_summary_import_PDF
-from app.services.pdf_summary_service import get_the_top_holdings_import_PDF
-from app.services.pdf_summary_service import get_the_top_allocation_import_PDF
-from app.services.pdf_summary_service import get_the_lowest_holdings_import_PDF
-from app.services.pdf_summary_service import get_trading_activity_import_PDF
-from app.services.pdf_summary_service import get_cash_flow_import_PDF
-from app.services.pdf_summary_service import get_dividend_income_import_PDF
-from app.services.pdf_summary_service import get_expenses_import_PDF
-from pydantic import BaseModel, Field
-from typing import Any
-
+from app.services.pdf_summary_service import (
+    get_cash_flow_import_PDF,
+    get_dividend_income_import_PDF,
+    get_expenses_import_PDF,
+    get_summary_import_PDF,
+    get_the_lowest_holdings_import_PDF,
+    get_the_top_allocation_import_PDF,
+    get_the_top_holdings_import_PDF,
+    get_trading_activity_import_PDF,
+)
 
 router = APIRouter(prefix="/api/import_pdf_summary", tags=["Import PDF"])
 
