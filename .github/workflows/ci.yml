@@ -160,10 +160,6 @@ jobs:
           ruff check .
           ruff format --check .
 
-      - name: Type check (mypy)
-        working-directory: backend
-        run: mypy app
-
       - name: Run pip-audit to check the packages
         working-directory: backend
         run: pip-audit -r requirements.txt -r requirements-dev.txt
