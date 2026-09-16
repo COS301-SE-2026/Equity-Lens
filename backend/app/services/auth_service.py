@@ -25,9 +25,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(user_id: str) -> str:
-    expire = datetime.now(UTC) + timedelta(
-        minutes=settings.access_token_expire_minutes
-    )
+    expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {"sub": str(user_id), "exp": expire}
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
@@ -70,8 +68,10 @@ class AuthService:
 
     def get_user_by_id(self, user_id: str) -> UserResponse:
         import uuid
+
         user = self.repo.get_by_id(uuid.UUID(user_id))
         if not user:
             from app.utils.exceptions import UserNotFoundException
+
             raise UserNotFoundException()
         return UserResponse.model_validate(user)

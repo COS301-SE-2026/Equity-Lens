@@ -37,7 +37,9 @@ class PortfolioRepository:
         )
         return self.db.scalars(stmt).first()
 
-    def get_current_portfolios(self, user_id: UUID, account_type: str | None = None) -> list[Portfolios]:
+    def get_current_portfolios(
+        self, user_id: UUID, account_type: str | None = None
+    ) -> list[Portfolios]:
         latest = self.get_latest_portfolio(user_id)
         if latest is None:
             return []
@@ -101,12 +103,16 @@ class PortfolioRepository:
             {
                 "snapshot_date": row.snapshot_date,
                 "total_value": float(row.total_value or 0.0),
-                "benchmark_value": float(row.benchmark_value) if row.benchmark_value is not None else None,
+                "benchmark_value": float(row.benchmark_value)
+                if row.benchmark_value is not None
+                else None,
             }
             for row in rows
         ]
 
-    def get_instrument_transactions(self, portfolio_ids: list[UUID]) -> list[InstrumentPurchasesAndSales]:
+    def get_instrument_transactions(
+        self, portfolio_ids: list[UUID]
+    ) -> list[InstrumentPurchasesAndSales]:
         if not portfolio_ids:
             return []
         stmt = (
@@ -116,7 +122,9 @@ class PortfolioRepository:
         )
         return list(self.db.scalars(stmt).all())
 
-    def get_contributions_and_withdrawals(self, portfolio_ids: list[UUID]) -> list[ContributionsAndWithdrawals]:
+    def get_contributions_and_withdrawals(
+        self, portfolio_ids: list[UUID]
+    ) -> list[ContributionsAndWithdrawals]:
         if not portfolio_ids:
             return []
         stmt = (

@@ -10,6 +10,7 @@ from app.schemas.portfolio import normalize_account_type
 class ImportPdfRequest(BaseModel):
     file_name: str
 
+
 class PortfolioRequest(BaseModel):
     document_id: str
     account_number: str
@@ -24,6 +25,7 @@ class PortfolioRequest(BaseModel):
     def check_known_account_type(cls, v):
         return normalize_account_type(v)
 
+
 class HoldingsRequest(BaseModel):
     portfolio_id: UUID
     instrument_name: str
@@ -36,6 +38,7 @@ class HoldingsRequest(BaseModel):
     statement_price: Decimal | None = None
     statement_value: Decimal | None = None
 
+
 class InstrumentPurchasesAndSalesRequest(BaseModel):
     portfolio_id: UUID
     transaction_date: date
@@ -47,12 +50,14 @@ class InstrumentPurchasesAndSalesRequest(BaseModel):
     quantity: Decimal
     value_zar: Decimal
 
+
 class ContributionsAndWithdrawalsRequest(BaseModel):
     portfolio_id: UUID
     transaction_date: date
     settlement_date: date
     transaction_name: str
     value_zar: Decimal
+
 
 class DividendsAndWithholdingTaxRequest(BaseModel):
     portfolio_id: UUID
@@ -65,11 +70,10 @@ class DividendsAndWithholdingTaxRequest(BaseModel):
     net_dividend: Decimal
     tax_rate: Decimal
 
+
 class TransactionExpensesRequest(BaseModel):
     portfolio_id: UUID
     transaction_date: date
     settlement_date: date
     narrative_name: str
     value_zar: Decimal
-
-

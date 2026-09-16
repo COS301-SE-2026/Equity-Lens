@@ -19,7 +19,7 @@ class AccountTypeUpdate(BaseModel):
     account_type: str | None = Field(
         default=None,
         description="zar, tfsa or usd, case-insensitive. Null clears the setting and the "
-                    "TFSA-only figures stop being calculated",
+        "TFSA-only figures stop being calculated",
         examples=["tfsa"],
     )
 
@@ -33,6 +33,8 @@ class AccountTypeUpdate(BaseModel):
 
 class SectorInvestmentRequest(BaseModel):
     sector: str = Field(..., examples=["Healthcare"])
+
+
 class PortfolioSummary(BaseModel):
     total_value: float = Field(
         description="rand value of every priced holding at the price the dashboard used",
@@ -54,7 +56,7 @@ class PortfolioSummary(BaseModel):
     daily_change_pct: float | None = Field(
         default=None,
         description="percentage points moved since the previous close. Null when no "
-                    "holding has a live price to compare",
+        "holding has a live price to compare",
         examples=[0.31],
     )
     daily_change_value: float | None = Field(
@@ -80,13 +82,13 @@ class PerformancePoint(BaseModel):
     benchmark: float | None = Field(
         default=None,
         description="the blended benchmark rebased to the same starting rand value. Null "
-                    "on days the benchmark could not be fetched",
+        "on days the benchmark could not be fetched",
         examples=[9020.0],
     )
     twr_index: float | None = Field(
         default=None,
         description="time-weighted index starting at 100, so deposits do not read as "
-                    "growth. Null when there are fewer than two snapshots to link",
+        "growth. Null when there are fewer than two snapshots to link",
         examples=[100.0],
     )
 
@@ -96,7 +98,7 @@ class PortfolioRow(BaseModel):
     document_id: UUID | None = Field(
         default=None,
         description="the imported statement this portfolio came from. Null if it was not "
-                    "created by an import",
+        "created by an import",
         examples=["3fa85f64-5717-4562-b3fc-2c963f66afa6"],
     )
     portfolio_name: str | None = Field(default=None, examples=["EasyEquities TFSA"])
@@ -121,12 +123,12 @@ class ReturnsResponse(BaseModel):
     )
     net_contributions: float = Field(
         description="deposits less withdrawals from the statement, which can exceed "
-                    "invested_capital when cash is sitting uninvested",
+        "invested_capital when cash is sitting uninvested",
         examples=[10000.0],
     )
     unrealised_gain: float = Field(
         description="paper gain on holdings that have a real price; cost-priced holdings "
-                    "are left out so they cannot fake a zero move",
+        "are left out so they cannot fake a zero move",
         examples=[420.0],
     )
     realised_gain: float = Field(
@@ -140,26 +142,25 @@ class ReturnsResponse(BaseModel):
     simple_return_pct: float | None = Field(
         default=None,
         description="percentage points: unrealised gain over cost, ignoring when the money "
-                    "went in. Null when nothing is priced above its cost basis",
+        "went in. Null when nothing is priced above its cost basis",
         examples=[4.67],
     )
     money_weighted_return_pct: float | None = Field(
         default=None,
         description="percentage points, annualised XIRR over the cash flows, so it also "
-                    "reflects the timing of deposits. Null when XIRR does not converge",
+        "reflects the timing of deposits. Null when XIRR does not converge",
         examples=[12.4],
     )
     time_weighted_return_pct: float | None = Field(
         default=None,
         description="percentage points, chain-linked between snapshots with deposits and "
-                    "purchases taken out, so it measures the holdings rather than the "
-                    "deposits. This is the one to compare against an index. Null with "
-                    "fewer than two snapshots",
+        "purchases taken out, so it measures the holdings rather than the "
+        "deposits. This is the one to compare against an index. Null with "
+        "fewer than two snapshots",
         examples=[3.1],
     )
     snapshot_count: int = Field(
-        description="daily valuations on record; two is the minimum for a time-weighted "
-                    "figure",
+        description="daily valuations on record; two is the minimum for a time-weighted figure",
         examples=[22],
     )
     history_days: int | None = Field(
@@ -173,8 +174,7 @@ class ReturnsResponse(BaseModel):
         examples=[6],
     )
     priced_count: int = Field(
-        description="holdings priced from anything other than cost, so live plus statement "
-                    "prices",
+        description="holdings priced from anything other than cost, so live plus statement prices",
         examples=[7],
     )
 
@@ -184,7 +184,7 @@ class HealthSubscore(BaseModel):
     label: str = Field(examples=["Sector Concentration"])
     weight: float = Field(
         description="fraction of the overall score, not percentage points; the three "
-                    "weights sum to 1",
+        "weights sum to 1",
         examples=[0.4],
     )
     value: float = Field(description="this factor scored out of 10", examples=[6.2])
@@ -206,7 +206,7 @@ class HealthScoreResponse(BaseModel):
     score: float | None = Field(
         default=None,
         description="structural risk out of 10, weighted from the subscores. Null for an "
-                    "empty portfolio, where there is nothing to score",
+        "empty portfolio, where there is nothing to score",
         examples=[6.8],
     )
     label: str | None = Field(
@@ -227,8 +227,7 @@ class CgtAssumptions(BaseModel):
         examples=[40000.0],
     )
     inclusion_rate: float = Field(
-        description="fraction of the remaining gain added to taxable income, not "
-                    "percentage points",
+        description="fraction of the remaining gain added to taxable income, not percentage points",
         examples=[0.4],
     )
     cost_basis_method: str = Field(examples=["average"])
@@ -258,12 +257,12 @@ class CgtEstimateResponse(BaseModel):
     assessed_capital_loss: float | None = Field(
         default=None,
         description="rands of loss carried forward instead of a gain. Null when the "
-                    "position is a gain",
+        "position is a gain",
         examples=[0.0],
     )
     holdings_from_statement_only: list[str] = Field(
         description="tickers priced off the statement rather than live, so their share of "
-                    "the estimate is as stale as the statement",
+        "the estimate is as stale as the statement",
         examples=[["STX40.JO"]],
     )
 
@@ -304,7 +303,7 @@ class ConcentrationFlag(BaseModel):
     look_through_note: str | None = Field(
         default=None,
         description="warns when an ETF's own top holding is something also held directly. "
-                    "Null when there is no overlap to report",
+        "Null when there is no overlap to report",
         examples=["This ETF is itself 7% Naspers, which you also hold directly."],
     )
 
@@ -329,7 +328,7 @@ class HealthConfigValues(BaseModel):
     )
     concentration_low: float = Field(
         description="percentage points in one holding where concentration starts counting "
-                    "against the score",
+        "against the score",
         examples=[25.0],
     )
     concentration_high: float = Field(
@@ -338,7 +337,7 @@ class HealthConfigValues(BaseModel):
     )
     hhi_well_spread: float = Field(
         description="sector Herfindahl index that earns full marks; 0.15 is roughly seven "
-                    "evenly-weighted sectors, and lower means more spread",
+        "evenly-weighted sectors, and lower means more spread",
         examples=[0.15],
     )
     breadth_target_n: int = Field(
@@ -378,19 +377,19 @@ class HealthConfigResponse(BaseModel):
     active: HealthConfigValues
     source: str = Field(
         description="where the active config came from: the built-in default, a preset the "
-                    "user chose, one derived from their goal, or hand-tuned values",
+        "user chose, one derived from their goal, or hand-tuned values",
         examples=["preset"],
     )
     preset_key: str | None = Field(
         default=None,
         description="the preset the user chose. Null when the values are hand-tuned or "
-                    "still the default",
+        "still the default",
         examples=["capital_preservation"],
     )
     derived_preset_key: str | None = Field(
         default=None,
         description="the preset their goal implies, offered as a suggestion. Null when "
-                    "there is no goal to derive one from",
+        "there is no goal to derive one from",
         examples=["growth"],
     )
     default_preset_key: str = Field(

@@ -17,13 +17,16 @@ from app.utils.stock_cache import get_cached_price_histories
 
 router = APIRouter(prefix="/api/indicators", tags=["indicators"])
 
+
 @router.get(
     "",
     response_model=list[IndicatorRowResponse],
     summary="Get Portfolio Indicators",
-    description="Calculates live technical and fundamental indicators for all valid holdings across user portfolios."
+    description="Calculates live technical and fundamental indicators for all valid holdings across user portfolios.",
 )
-def get_indicators(current_user: UserResponse = Depends(get_current_user), db: Session = Depends(get_db)):
+def get_indicators(
+    current_user: UserResponse = Depends(get_current_user), db: Session = Depends(get_db)
+):
     portfolios = db.query(Portfolios).filter(Portfolios.user_id == current_user.id).all()
     # NOTE: We are filtering out tickers that are empty strings or null.
     # However, we decided NOT to filter out tickers with less than 1 year of history
@@ -39,7 +42,7 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
     market_returns = get_market_returns()
     holdings = db.query(Holdings).filter(Holdings.portfolio_id.in_(portfolio_ids)).all()
 
-    for h in holdings: 
+    for h in holdings:
         ticker = (h.ticker or "").strip()
         if not ticker or ticker.upper() in INVALID_TICKER_MARKERS:
             known = resolve_known_instrument(h.instrument_name or "")
@@ -56,10 +59,12 @@ def get_indicators(current_user: UserResponse = Depends(get_current_user), db: S
     results = []
     for index, ticker in enumerate(tickers):
         name = ticker_to_name.get(ticker, ticker)
-        row = build_live_indicator_row(ticker,name,market_returns, price_history=price_histories.get(ticker))
+        row = build_live_indicator_row(
+            ticker, name, market_returns, price_history=price_histories.get(ticker)
+        )
         serialized = serialize_indicator_row(row)
         results.append(serialized)
-        #Small delay between tickers to try and avoid yfinance rate limiting
+        # Small delay between tickers to try and avoid yfinance rate limiting
         if serialized.get("live_fetch") and index < len(tickers) - 1:
             time.sleep(secrets.SystemRandom().uniform(1.0, 2.0))
 

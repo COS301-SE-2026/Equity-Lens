@@ -30,12 +30,12 @@ def cognito_register(full_name: str, email: str, password: str) -> dict:
     except ClientError as e:
         code = e.response["Error"]["Code"]
         msg = e.response["Error"]["Message"]
-        
+
         if code == "UsernameExistsException":
             raise HTTPException(status_code=409, detail="email already registered")
         if code == "InvalidPasswordException":
             raise HTTPException(status_code=422, detail=msg)
-            
+
         raise HTTPException(status_code=400, detail=msg)
 
 
@@ -156,12 +156,14 @@ def cognito_get_user(access_token: str) -> dict:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+
 def cognito_logout(access_token: str) -> bool:
     try:
         _get_client().global_sign_out(AccessToken=access_token)
     except ClientError:
-        pass 
+        pass
     return True
+
 
 def cognito_delete_user(access_token: str) -> None:
     client = _get_client()
@@ -169,6 +171,6 @@ def cognito_delete_user(access_token: str) -> None:
         client.delete_user(AccessToken=access_token)
     except ClientError as e:
         if e.response["Error"]["Code"] == "UserNotFoundException":
-            #Gone already
+            # Gone already
             return
         raise

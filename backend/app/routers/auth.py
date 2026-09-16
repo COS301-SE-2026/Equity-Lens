@@ -36,20 +36,25 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 auth_scheme = HTTPBearer()
 logger = logging.getLogger(__name__)
 
+
 class ConfirmReq(BaseModel):
     email: EmailStr
     code: str
+
 
 class MFAChallengeReq(BaseModel):
     session: str
     email: EmailStr
     totp_code: str
 
+
 class VerifyTOTPReq(BaseModel):
     totp_code: str
 
+
 class DeleteAccountReq(BaseModel):
     email: EmailStr
+
 
 @router.post(
     "/register",
@@ -62,6 +67,7 @@ class DeleteAccountReq(BaseModel):
 def register(req: RegisterRequest):
     return cognito.cognito_register(req.full_name, req.email, req.password)
 
+
 @router.post(
     "/confirm",
     summary="Confirm a registration code",
@@ -73,6 +79,7 @@ def confirm(req: ConfirmReq):
     cognito.cognito_confirm_registration(req.email, req.code)
     return {"status": "confirmed"}
 
+
 @router.post(
     "/login",
     summary="Log in with email and password",
@@ -82,8 +89,12 @@ def confirm(req: ConfirmReq):
         "challenge - a string when MFA is required, null once the login is complete. A null "
         "is stripped from a generated example, so it is not visible in the second one below.",
         {"challenge": "SOFTWARE_TOKEN_MFA", "session": "AYABeF...", "email": "you@example.com"},
-        {"challenge": None, "access_token": "eyJraWQ...", "id_token": "eyJraWQ...",
-         "refresh_token": "eyJjdHk..."},
+        {
+            "challenge": None,
+            "access_token": "eyJraWQ...",
+            "id_token": "eyJraWQ...",
+            "refresh_token": "eyJjdHk...",
+        },
         labels=("MFA required", "authenticated"),
         errors={**INVALID_CREDENTIALS, **BAD_REQUEST},
     ),
@@ -91,10 +102,17 @@ def confirm(req: ConfirmReq):
 def login(req: LoginRequest):
     return cognito.cognito_login(req.email, req.password)
 
-@router.post("/mfa/verify-login", summary="Answer an MFA challenge", operation_id="verifyMfaLogin", response_model=TokenResponse, responses=INVALID_MFA_CODE,
+
+@router.post(
+    "/mfa/verify-login",
+    summary="Answer an MFA challenge",
+    operation_id="verifyMfaLogin",
+    response_model=TokenResponse,
+    responses=INVALID_MFA_CODE,
 )
 def verify_mfa_login(req: MFAChallengeReq):
     return cognito.cognito_respond_to_mfa(req.session, req.email, req.totp_code)
+
 
 @router.post(
     "/mfa/associate",
@@ -106,15 +124,19 @@ def associate_totp(cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     secret = cognito.cognito_associate_totp(cred.credentials)
     return {"secret": secret}
 
+
 @router.post(
     "/mfa/confirm-setup",
     summary="Finish authenticator app setup",
     operation_id="confirmTotpSetup",
     response_model=StatusResponse,
 )
-def confirm_totp_setup(req: VerifyTOTPReq, cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):
+def confirm_totp_setup(
+    req: VerifyTOTPReq, cred: HTTPAuthorizationCredentials = Depends(auth_scheme)
+):
     cognito.cognito_verify_totp(cred.credentials, req.totp_code)
     return {"status": "mfa_configured"}
+
 
 @router.get(
     "/me",
@@ -125,6 +147,7 @@ def confirm_totp_setup(req: VerifyTOTPReq, cred: HTTPAuthorizationCredentials = 
 )
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
+
 
 @router.post(
     "/logout",
@@ -137,6 +160,7 @@ def logout(cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     cognito.cognito_logout(cred.credentials)
     return {"status": "logged_out"}
 
+
 @router.delete(
     "/me",
     summary="Delete the signed-in account",
@@ -144,10 +168,18 @@ def logout(cred: HTTPAuthorizationCredentials = Depends(auth_scheme)):
     response_model=StatusResponse,
     responses={
         **UNAUTHORISED,
-        **error(400, "EMAIL_MISMATCH", "email does not match your account",
-                "The email given does not match the signed-in account"),
-        **error(500, "ACCOUNT_DELETION_FAILED", "Account deletion failed, contact support",
-                "Cognito deletion failed after the database row was removed"),
+        **error(
+            400,
+            "EMAIL_MISMATCH",
+            "email does not match your account",
+            "The email given does not match the signed-in account",
+        ),
+        **error(
+            500,
+            "ACCOUNT_DELETION_FAILED",
+            "Account deletion failed, contact support",
+            "Cognito deletion failed after the database row was removed",
+        ),
     },
 )
 def delete_account(
