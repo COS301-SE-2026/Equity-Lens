@@ -22,9 +22,9 @@ const PortfolioInsight = ({ portfolioData, attribution, topHolding }) => {
   const dir = pos ? 'up' : 'down';
   const reason = pos ? 'led by' : 'weighed down by';
 
-
   let headline;
-  if (!holdings.length) { headline = 'Import a portfolio to see your performance.';
+  if (!holdings.length) {
+    headline = 'Import a portfolio to see your performance.';
   } else {
     const mover = pos ? attribution.contributors[0] : attribution.drags[0];
     if (!mover) {
@@ -36,7 +36,8 @@ const PortfolioInsight = ({ portfolioData, attribution, topHolding }) => {
         `Your holdings are ${dir} ${Math.abs(dailyChangePct).toFixed(1)}% today, ` +
         `${reason} ${mover.ticker}` +
         `${holding?.sector ? ` in ${holding.sector}` : ''}.`;
-    }}
+    }
+  }
 
   return (
     <motion.div
@@ -44,16 +45,24 @@ const PortfolioInsight = ({ portfolioData, attribution, topHolding }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.05 }}
       className="overflow-hidden rounded-2xl backdrop-blur-xl"
-      style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}>
+      style={{ background: 'var(--glass-bg)', border: '1px solid var(--glass-border)' }}
+    >
       <div className="p-6 sm:p-8">
-        <p className="max-w-2xl text-[19px] leading-snug sm:text-[22px]" style={{ color: 'var(--text-primary)' }}>
+        <p
+          className="max-w-2xl text-[19px] leading-snug sm:text-[22px]"
+          style={{ color: 'var(--text-primary)' }}
+        >
           {headline}
         </p>
         <div
           className="mt-6 grid grid-cols-1 gap-6 pt-6 sm:grid-cols-3"
-          style={{ borderTop: '1px solid var(--border-subtle)' }}>
+          style={{ borderTop: '1px solid var(--border-subtle)' }}
+        >
           <div>
-            <div className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+            <div
+              className="font-mono text-[10px] tracking-widest"
+              style={{ color: 'var(--text-ghost)' }}
+            >
               Net Worth
             </div>
             <div className="mt-1 font-mono text-[30px] font-semibold leading-none tracking-tight sm:text-[34px]">
@@ -61,35 +70,47 @@ const PortfolioInsight = ({ portfolioData, attribution, topHolding }) => {
             </div>
           </div>
           <div>
-            <div className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+            <div
+              className="font-mono text-[10px] tracking-widest"
+              style={{ color: 'var(--text-ghost)' }}
+            >
               Today
             </div>
             <div
               className="mt-1 flex items-center gap-1.5 font-mono text-[20px] font-semibold"
-              style={{ color: todayPos ? 'var(--signal-positive)':'var(--signal-negative)' }}>
+              style={{ color: todayPos ? 'var(--signal-positive)' : 'var(--signal-negative)' }}
+            >
               {todayPos ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
-              {todayPos ? '+':''}
+              {todayPos ? '+' : ''}
               {zar(Math.abs(attribution.todayReturn))}
               <span className="text-[13px] font-normal" style={{ color: 'var(--text-ghost)' }}>
-                ({todayPos ? '+':''}
+                ({todayPos ? '+' : ''}
                 {dailyChangePct.toFixed(2)}%)
               </span>
             </div>
           </div>
           <div>
-            <div className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+            <div
+              className="font-mono text-[10px] tracking-widest"
+              style={{ color: 'var(--text-ghost)' }}
+            >
               Top Holding Concentration
             </div>
             <div className="mt-1 font-mono text-[20px] font-semibold">
               {topHolding ? `${topHolding.weight.toFixed(1)}%` : '—'}
               {topHolding && (
-                <span className="ml-1.5 text-[13px] font-normal" style={{ color: 'var(--text-ghost)' }}>
+                <span
+                  className="ml-1.5 text-[13px] font-normal"
+                  style={{ color: 'var(--text-ghost)' }}
+                >
                   {topHolding.ticker}
-                </span>)}
+                </span>
+              )}
             </div>
           </div>
         </div>
       </div>
     </motion.div>
-  );};
+  );
+};
 export default PortfolioInsight;

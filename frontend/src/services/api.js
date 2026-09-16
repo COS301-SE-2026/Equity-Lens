@@ -12,7 +12,7 @@ api.interceptors.request.use(
     try {
       const session = await fetchAuthSession();
       const token = session.tokens?.accessToken?.toString();
-      
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -21,7 +21,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (err) => Promise.reject(err)
+  (err) => Promise.reject(err),
 );
 
 api.interceptors.response.use(
@@ -36,7 +36,7 @@ api.interceptors.response.use(
       window.location.href = '/login';
     }
     return Promise.reject(err);
-  }
+  },
 );
 
 export default api;

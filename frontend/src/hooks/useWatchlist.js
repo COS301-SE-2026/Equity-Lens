@@ -25,7 +25,8 @@ const useWatchlist = () => {
       setWatchlist(data.watchlist || data || []);
     } catch (err) {
       console.warn('Watchlist fetch failed:', err);
-      const detail = err instanceof Error ? err.message : /** @type {any} */ (err)?.response?.data?.detail;
+      const detail =
+        err instanceof Error ? err.message : /** @type {any} */ (err)?.response?.data?.detail;
       setError(detail || 'Failed to load watchlist');
     } finally {
       setLoading(false);
@@ -36,24 +37,34 @@ const useWatchlist = () => {
     fetchWatchlist();
   }, []);
 
-    /** @param {string} ticker */
+  /** @param {string} ticker */
   const addTicker = async (ticker) => {
     const cleaned = ticker.trim().toUpperCase();
-    if (!cleaned) { return; }
+    if (!cleaned) {
+      return;
+    }
 
     try {
       await addToWatchlist(cleaned);
       await fetchWatchlist();
-    } catch (err) { console.error('Failed to add ticker:', err); throw err; }};
+    } catch (err) {
+      console.error('Failed to add ticker:', err);
+      throw err;
+    }
+  };
 
   /** @param {string} watchlistId */
   const removeTicker = async (watchlistId) => {
     try {
       await removeFromWatchlist(watchlistId);
       await fetchWatchlist();
-    } catch (err) { console.error('Failed to remove ticker:', err); throw err; }};
+    } catch (err) {
+      console.error('Failed to remove ticker:', err);
+      throw err;
+    }
+  };
 
-  return { watchlist, loading, error, refresh: fetchWatchlist, addTicker, removeTicker, };
+  return { watchlist, loading, error, refresh: fetchWatchlist, addTicker, removeTicker };
 };
 
 export default useWatchlist;

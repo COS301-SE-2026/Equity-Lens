@@ -4,7 +4,10 @@ import { GlassPanel, PanelHead } from '../shared/GlassPanel';
 /** @param {{ label: string, items: {ticker:string, contribution:number}[], tone: 'good'|'bad' }} props */
 const MoverColumn = ({ label, items, tone }) => (
   <div>
-    <div className="mb-2 font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+    <div
+      className="mb-2 font-mono text-[9px] tracking-widest"
+      style={{ color: 'var(--text-ghost)' }}
+    >
       {label}
     </div>
     {items.length === 0 ? (
@@ -16,7 +19,11 @@ const MoverColumn = ({ label, items, tone }) => (
         {items.slice(0, 3).map((it) => (
           <div key={it.ticker} className="flex items-center justify-between font-mono text-[13px]">
             <span className="font-bold">{it.ticker}</span>
-            <span style={{ color: tone === 'good' ? 'var(--signal-positive)' : 'var(--signal-negative)' }}>
+            <span
+              style={{
+                color: tone === 'good' ? 'var(--signal-positive)' : 'var(--signal-negative)',
+              }}
+            >
               {it.contribution >= 0 ? '+' : ''}
               {zar(it.contribution)}
             </span>

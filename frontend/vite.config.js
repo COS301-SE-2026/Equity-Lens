@@ -10,15 +10,11 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './test/setup.js',
-    exclude :[
-      '**/node_modules/**',
-      '**/e2e/**',
-      '**/test/nfr/**'
-    ],
+    exclude: ['**/node_modules/**', '**/e2e/**', '**/test/nfr/**'],
     coverage: {
       reporter: ['text', 'lcov'],
       reportsDirectory: './coverage',
-      exclude: ['node_modules/', 'src/test/','e2e/**',],
+      exclude: ['node_modules/', 'src/test/', 'e2e/**'],
       provider: 'v8',
       thresholds: {
         lines: 50,

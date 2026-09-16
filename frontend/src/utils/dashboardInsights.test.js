@@ -71,7 +71,13 @@ describe('buildSummary', () => {
     const attribution = { contributors: [{ ticker: 'NPN', contribution: 540 }], drags: [] };
     const chartStats = { diff: '+4.0%', diffPct: 4.02, benchAvailable: true };
 
-    const summary = buildSummary({ holdings, sectorData, attribution, chartStats, dailyChangePct: 0 });
+    const summary = buildSummary({
+      holdings,
+      sectorData,
+      attribution,
+      chartStats,
+      dailyChangePct: 0,
+    });
 
     expect(summary.headline).toBe(
       '58% of your portfolio is in NPN, making it your biggest source of risk.',
@@ -93,7 +99,13 @@ describe('buildSummary', () => {
     const attribution = { contributors: [{ ticker: 'NPN', contribution: 540 }], drags: [] };
     const chartStats = { diff: '+4.0%', diffPct: 4.02, benchAvailable: true };
 
-    const summary = buildSummary({ holdings, sectorData, attribution, chartStats, dailyChangePct: 0 });
+    const summary = buildSummary({
+      holdings,
+      sectorData,
+      attribution,
+      chartStats,
+      dailyChangePct: 0,
+    });
 
     const askWhyChips = summary.suggestedActions.filter((a) => a.label === 'Ask AI Why');
     expect(askWhyChips).toHaveLength(1);
@@ -102,14 +114,25 @@ describe('buildSummary', () => {
   });
 
   it('falls back to a balanced overview', () => {
-    const holdings = ['Financials', 'Technology', 'Healthcare', 'Consumer', 'Industrials', 'Telecommunications'].map(
-      (sector, i) => ({ ticker: `T${i}`, value: 15000, sector, daily_change_pct: 0.1 }),
-    );
+    const holdings = [
+      'Financials',
+      'Technology',
+      'Healthcare',
+      'Consumer',
+      'Industrials',
+      'Telecommunications',
+    ].map((sector, i) => ({ ticker: `T${i}`, value: 15000, sector, daily_change_pct: 0.1 }));
     const { sectors: sectorData } = buildSectors(holdings);
     const attribution = { contributors: [{ ticker: 'T0', contribution: 15 }], drags: [] };
     const chartStats = { diff: '+0.5%', diffPct: 0.5, benchAvailable: true };
 
-    const summary = buildSummary({ holdings, sectorData, attribution, chartStats, dailyChangePct: 0.1 });
+    const summary = buildSummary({
+      holdings,
+      sectorData,
+      attribution,
+      chartStats,
+      dailyChangePct: 0.1,
+    });
 
     expect(summary.headline).toBe(
       'Your holdings are well diversified, no company is more than 17% of your book.',
@@ -117,7 +140,11 @@ describe('buildSummary', () => {
     expect(summary.severity).toBe('neutral');
     expect(summary.badge).toBe('Overview');
     expect(summary.suggestedActions).toEqual([
-      { label: 'Ask AI Why', to: '/ai', prefill: 'What should I be watching in my portfolio right now?' },
+      {
+        label: 'Ask AI Why',
+        to: '/ai',
+        prefill: 'What should I be watching in my portfolio right now?',
+      },
     ]);
   });
 
@@ -144,7 +171,13 @@ describe('buildSummary', () => {
     const attribution = { contributors: [{ ticker: 'NPN', contribution: 540 }], drags: [] };
     const chartStats = { diff: '+4.0%', diffPct: 4.02, benchAvailable: true };
 
-    const summary = buildSummary({ holdings, sectorData, attribution, chartStats, dailyChangePct: 0 });
+    const summary = buildSummary({
+      holdings,
+      sectorData,
+      attribution,
+      chartStats,
+      dailyChangePct: 0,
+    });
 
     expect(summary.signals.length).toBeGreaterThan(1);
     expect(summary.signals.map((s) => s.badge)).toContain('Concentration');
@@ -193,7 +226,13 @@ describe('buildSummary with funds', () => {
   it('describes a dominant fund as a fund rather than a source of stock risk', () => {
     const holdings = [
       { ticker: 'CTOP50.JO', value: 9000, sector: 'SA Equity', kind: 'etf', daily_change_pct: 0 },
-      { ticker: 'EASYAI.JO', value: 1000, sector: 'Global Equity', kind: 'etf', daily_change_pct: 0 },
+      {
+        ticker: 'EASYAI.JO',
+        value: 1000,
+        sector: 'Global Equity',
+        kind: 'etf',
+        daily_change_pct: 0,
+      },
     ];
     const summary = buildSummary({
       holdings,
@@ -234,7 +273,13 @@ describe('buildInsights (today-focused)', () => {
   });
 
   it('flags a missing sector as an opportunity - Rebalancing Insights used to own this signal', () => {
-    const holdings = ['Financials', 'Technology', 'Consumer', 'Industrials', 'Telecommunications'].map((sector, i) => ({
+    const holdings = [
+      'Financials',
+      'Technology',
+      'Consumer',
+      'Industrials',
+      'Telecommunications',
+    ].map((sector, i) => ({
       ticker: `T${i}`,
       value: 20000,
       sector,
@@ -246,12 +291,19 @@ describe('buildInsights (today-focused)', () => {
 
     const opportunity = insights.find((i) => i.type === 'opportunity');
     if (!opportunity) throw new Error('expected an opportunity insight');
-    expect(opportunity.text).toBe('You have no Healthcare exposure - a common gap in balanced JSE portfolios.');
-    expect(opportunity.action).toEqual({ label: 'Explore Sector Allocation', target: 'sector-allocation' });
+    expect(opportunity.text).toBe(
+      'You have no Healthcare exposure - a common gap in balanced JSE portfolios.',
+    );
+    expect(opportunity.action).toEqual({
+      label: 'Explore Sector Allocation',
+      target: 'sector-allocation',
+    });
   });
 
   it('degrades to just the driver insight on a flat day, no broken gain/loss cards', () => {
-    const holdings = [{ ticker: 'NPN.JO', value: 45000, sector: 'Technology', daily_change_pct: 0 }];
+    const holdings = [
+      { ticker: 'NPN.JO', value: 45000, sector: 'Technology', daily_change_pct: 0 },
+    ];
     const attribution = buildAttrib(holdings);
     const { insights } = buildInsights({ holdings, attribution });
 
@@ -314,7 +366,10 @@ describe('buildChartStats', () => {
 
 describe('buildSectorQuestions', () => {
   it('names the actual top sector and its real percentage, not a placeholder', () => {
-    const questions = buildSectorQuestions([{ name: 'Technology', value: 26.4 }, { name: 'Financials', value: 20 }]);
+    const questions = buildSectorQuestions([
+      { name: 'Technology', value: 26.4 },
+      { name: 'Financials', value: 20 },
+    ]);
     expect(questions[0]).toBe('Why is Technology 26% of my portfolio?');
     expect(questions.some((q) => q.includes('Technology'))).toBe(true);
   });
@@ -382,22 +437,38 @@ describe('buildHealthQuestions', () => {
 
 describe('buildPerformanceQuestions', () => {
   it('asks about outperformance with the real gap and benchmark name', () => {
-    const questions = buildPerformanceQuestions({ diffPct: 3.2, benchAvailable: true, benchmarkLabel: 'JSE ALSI' });
+    const questions = buildPerformanceQuestions({
+      diffPct: 3.2,
+      benchAvailable: true,
+      benchmarkLabel: 'JSE ALSI',
+    });
     expect(questions[0]).toBe('Why am I outperforming the JSE ALSI by 3.2%?');
   });
 
   it('asks about underperformance when the gap is negative, using the real figure', () => {
-    const questions = buildPerformanceQuestions({ diffPct: -5.7, benchAvailable: true, benchmarkLabel: 'JSE ALSI' });
+    const questions = buildPerformanceQuestions({
+      diffPct: -5.7,
+      benchAvailable: true,
+      benchmarkLabel: 'JSE ALSI',
+    });
     expect(questions[0]).toBe('Why am I underperforming the JSE ALSI by 5.7%?');
   });
 
   it('asks about close tracking instead of outperformance when the gap is negligible', () => {
-    const questions = buildPerformanceQuestions({ diffPct: 0.3, benchAvailable: true, benchmarkLabel: 'JSE ALSI' });
+    const questions = buildPerformanceQuestions({
+      diffPct: 0.3,
+      benchAvailable: true,
+      benchmarkLabel: 'JSE ALSI',
+    });
     expect(questions[0]).toMatch(/tracking the JSE ALSI so closely/i);
   });
 
   it('still offers generic questions when there is nothing to compare against', () => {
-    const questions = buildPerformanceQuestions({ diffPct: 0, benchAvailable: false, benchmarkLabel: 'JSE ALSI' });
+    const questions = buildPerformanceQuestions({
+      diffPct: 0,
+      benchAvailable: false,
+      benchmarkLabel: 'JSE ALSI',
+    });
     expect(questions.length).toBeGreaterThan(0);
     expect(questions.some((q) => q.toLowerCase().includes('benchmark'))).toBe(false);
   });
@@ -450,7 +521,10 @@ describe('buildGoalQuestions', () => {
   });
 
   it('skips the probability question when the simulation has none', () => {
-    const questions = buildGoalQuestions({ progress: { target_date: '2040-06-01' }, simulation: null });
+    const questions = buildGoalQuestions({
+      progress: { target_date: '2040-06-01' },
+      simulation: null,
+    });
     expect(questions).toHaveLength(1);
   });
 
@@ -461,12 +535,20 @@ describe('buildGoalQuestions', () => {
 
 describe('buildTaxQuestions', () => {
   it('asks about the real taxable gain when there is one', () => {
-    const questions = buildTaxQuestions({ available: true, taxable_capital_gain: 15000, assessed_capital_loss: null });
+    const questions = buildTaxQuestions({
+      available: true,
+      taxable_capital_gain: 15000,
+      assessed_capital_loss: null,
+    });
     expect(questions[0]).toMatch(/15\s?000.*taxable capital gain/i);
   });
 
   it('asks about the assessed loss instead when the position is a loss', () => {
-    const questions = buildTaxQuestions({ available: true, taxable_capital_gain: null, assessed_capital_loss: 4000 });
+    const questions = buildTaxQuestions({
+      available: true,
+      taxable_capital_gain: null,
+      assessed_capital_loss: 4000,
+    });
     expect(questions[0]).toMatch(/assessed capital loss of.*4\s?000/i);
   });
 
@@ -480,11 +562,11 @@ describe('buildTaxQuestions', () => {
     expect(questions.some((q) => q.toLowerCase().includes('tax-loss harvesting'))).toBe(true);
   });
 
-    it('asks why tax is exempt instead of nothing for TFSA accounts', () => {
-        expect(buildTaxQuestions({ available: false, reason: 'tfsa_exempt' })).toEqual([
-            "Why isn't tax shown for this account?",
-        ]);
-    });
+  it('asks why tax is exempt instead of nothing for TFSA accounts', () => {
+    expect(buildTaxQuestions({ available: false, reason: 'tfsa_exempt' })).toEqual([
+      "Why isn't tax shown for this account?",
+    ]);
+  });
 
   it('returns no questions when an estimate is unavailable for a fixable reason', () => {
     expect(buildTaxQuestions({ available: false, reason: 'account_type_unknown' })).toEqual([]);

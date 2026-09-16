@@ -25,4 +25,3 @@ describe('SectorPieChart', () => {
     expect(screen.getByText(/no sector data available/i)).toBeInTheDocument();
   });
 });
-

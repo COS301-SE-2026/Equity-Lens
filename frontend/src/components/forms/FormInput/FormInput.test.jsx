@@ -11,13 +11,7 @@ describe('FormInput', () => {
 
   it('renders error message when error is provided', () => {
     render(
-      <FormInput
-        label="Email"
-        name="email"
-        value=""
-        onChange={() => {}}
-        error="Invalid email"
-      />
+      <FormInput label="Email" name="email" value="" onChange={() => {}} error="Invalid email" />,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('Invalid email');
   });

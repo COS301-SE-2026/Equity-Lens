@@ -25,9 +25,5 @@ describe('HoldingsTable', () => {
     expect(screen.getByText('TestName')).toBeInTheDocument();
     expect(screen.getByText('TestSector')).toBeInTheDocument();
     expect(screen.getByText('10')).toBeInTheDocument();
-
   });
-
-
-
 });

@@ -19,7 +19,4 @@ describe('PortfolioSummary', () => {
     expect(screen.getByText('+1.25%')).toBeInTheDocument();
     expect(screen.getByText('8')).toBeInTheDocument();
   });
-
-
-
 });

@@ -19,9 +19,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(/** @type {any} */ (null));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(/** @type {string|null} */ (null));
-  const [mfaState, setMfaState] = useState(/** @type {{ type: string, email: string }|null} */ (null));
+  const [mfaState, setMfaState] = useState(
+    /** @type {{ type: string, email: string }|null} */ (null),
+  );
 
-useEffect(() => {
+  useEffect(() => {
     const initAuth = async () => {
       const win = /** @type {any} */ (window);
       if (typeof window !== 'undefined' && win.__E2E_AUTH_BYPASS__) {

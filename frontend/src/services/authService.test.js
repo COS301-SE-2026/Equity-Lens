@@ -24,10 +24,16 @@ describe('authService', () => {
 
   it('delegates pass-through actions to amplify SDK', () => {
     confirmRegistration('jane@example.com', '123456');
-    expect(auth.confirmSignUp).toHaveBeenCalledWith({ username: 'jane@example.com', confirmationCode: '123456' });
+    expect(auth.confirmSignUp).toHaveBeenCalledWith({
+      username: 'jane@example.com',
+      confirmationCode: '123456',
+    });
 
     login('jane@example.com', 'pw123456');
-    expect(auth.signIn).toHaveBeenCalledWith({ username: 'jane@example.com', password: 'pw123456' });
+    expect(auth.signIn).toHaveBeenCalledWith({
+      username: 'jane@example.com',
+      password: 'pw123456',
+    });
 
     respondToMFA('654321');
     expect(auth.confirmSignIn).toHaveBeenCalledWith({ challengeResponse: '654321' });
@@ -55,7 +61,9 @@ describe('authService', () => {
 
     it('propagates errors on failure', async () => {
       vi.mocked(auth.signUp).mockRejectedValueOnce(new Error('email already registered'));
-      await expect(register('Jane', 'jane@example.com', 'pw')).rejects.toThrow('email already registered');
+      await expect(register('Jane', 'jane@example.com', 'pw')).rejects.toThrow(
+        'email already registered',
+      );
     });
   });
 
@@ -121,7 +129,6 @@ describe('authService', () => {
         full_name: 'Jane Doe',
       });
 
-      
       vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce({ tokens: {} });
       await expect(getCurrentUserProfile()).resolves.toEqual({
         sub: 'user-1',

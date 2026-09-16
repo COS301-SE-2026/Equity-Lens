@@ -26,23 +26,31 @@ describe('PortfolioInsight', () => {
         portfolioData={DATA}
         attribution={ATTRIBUTION}
         topHolding={{ ticker: 'NPN', weight: 66.7 }}
-      />,);
+      />,
+    );
 
-    expect(screen.getByText(/up 1.2% today, led by npn in technology/i)).toBeInTheDocument();});
+    expect(screen.getByText(/up 1.2% today, led by npn in technology/i)).toBeInTheDocument();
+  });
 
   it('shows net worth', () => {
     render(
       <PortfolioInsight
         portfolioData={DATA}
         attribution={ATTRIBUTION}
-        topHolding={{ ticker: 'NPN', weight: 66.7 }}/>,);
+        topHolding={{ ticker: 'NPN', weight: 66.7 }}
+      />,
+    );
     expect(screen.getByText('R 15 000,00')).toBeInTheDocument();
-    expect(screen.getByText('66.7%')).toBeInTheDocument();});
+    expect(screen.getByText('66.7%')).toBeInTheDocument();
+  });
 
   it('falls back to prompt when no holdings', () => {
     render(
       <PortfolioInsight
         portfolioData={{ holdings: [], summary: {} }}
-        attribution={{ contributors: [], drags: [], todayReturn: 0 }}/>,
+        attribution={{ contributors: [], drags: [], todayReturn: 0 }}
+      />,
     );
-    expect(screen.getByText(/import a portfolio/i)).toBeInTheDocument();});});
+    expect(screen.getByText(/import a portfolio/i)).toBeInTheDocument();
+  });
+});

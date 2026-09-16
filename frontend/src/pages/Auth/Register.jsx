@@ -36,17 +36,9 @@ const Register = () => {
   const [success, setSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
 
-  const {
-    values,
-    errors,
-    touched,
-    isSubmitting,
-    handleChange,
-    handleBlur,
-    handleSubmit,
-  } = useForm(
+  const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm(
     { fullName: '', email: '', password: '', confirmPassword: '' },
-    validate
+    validate,
   );
 
   const onSubmit = async (formValues) => {
@@ -55,10 +47,17 @@ const Register = () => {
       await register(formValues.fullName, formValues.email, formValues.password);
       setRegisteredEmail(formValues.email);
       setSuccess(true);
-      setTimeout(() => navigate(ROUTES.CONFIRM_EMAIL, { state: { email: formValues.email }}), 1500);
+      setTimeout(
+        () => navigate(ROUTES.CONFIRM_EMAIL, { state: { email: formValues.email } }),
+        1500,
+      );
     } catch (err) {
       const msg = err.message?.toLowerCase() || '';
-      if (msg.includes('already exists') || msg.includes('already registered') || msg.includes('usernameexists')) {
+      if (
+        msg.includes('already exists') ||
+        msg.includes('already registered') ||
+        msg.includes('usernameexists')
+      ) {
         setServerError('An account with this email already exists. Sign in instead.');
       } else {
         setServerError(err.message || 'Registration failed.');
@@ -82,11 +81,7 @@ const Register = () => {
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-        aria-label="Registration form"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} noValidate aria-label="Registration form">
         <div className="flex flex-col gap-5">
           <FormInput
             label="Full Name"

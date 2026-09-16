@@ -5,8 +5,22 @@ import { describe, it, expect } from 'vitest';
 import DashboardHoldingsTable from './DashboardHoldingsTable';
 
 const HOLDINGS = [
-  { ticker: 'NPN', name: 'Naspers', sector: 'Technology', value: 6767, current_price: 67, daily_change_pct: 6.7 },
-  { ticker: 'SBK', name: 'Standard Bank', sector: 'Financials', value: 4200, current_price: 420, daily_change_pct: 4.2 },
+  {
+    ticker: 'NPN',
+    name: 'Naspers',
+    sector: 'Technology',
+    value: 6767,
+    current_price: 67,
+    daily_change_pct: 6.7,
+  },
+  {
+    ticker: 'SBK',
+    name: 'Standard Bank',
+    sector: 'Financials',
+    value: 4200,
+    current_price: 420,
+    daily_change_pct: 4.2,
+  },
 ];
 
 const SECTOR_DATA = [

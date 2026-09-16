@@ -39,7 +39,9 @@ describe('BrandStyleGuide', () => {
 
   it('discloses known danger-button contrast failure', () => {
     renderPage();
-    expect(screen.getByText(/white text on --color-danger \/ signal-negative bg/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/white text on --color-danger \/ signal-negative bg/i),
+    ).toBeInTheDocument();
     expect(screen.getAllByText('Fails').length).toBeGreaterThan(0);
   });
 

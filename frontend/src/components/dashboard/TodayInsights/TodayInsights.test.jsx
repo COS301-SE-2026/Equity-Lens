@@ -8,8 +8,18 @@ describe('TodayInsights', () => {
     render(
       <TodayInsights
         insights={[
-          { type: 'gain', text: 'NPN is today\'s biggest gainer, up 2.5% (+R 1 125).', why: '2.5% is within typical movement.', action: null },
-          { type: 'driver', text: "77% of today's gain came from NPN.", why: "Ranked by each holding's Rand contribution.", action: null },
+          {
+            type: 'gain',
+            text: "NPN is today's biggest gainer, up 2.5% (+R 1 125).",
+            why: '2.5% is within typical movement.',
+            action: null,
+          },
+          {
+            type: 'driver',
+            text: "77% of today's gain came from NPN.",
+            why: "Ranked by each holding's Rand contribution.",
+            action: null,
+          },
         ]}
       />,
     );

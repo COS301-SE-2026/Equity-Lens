@@ -35,12 +35,10 @@ export const getTfsaRoom = async () => {
   return response.data;
 };
 
-
 export const getMarketContext = async () => {
   const response = await api.get('/portfolio/market-context');
   return response.data;
 };
-
 
 export const simulateSectorInvestment = async (sector) => {
   const response = await api.post('/portfolio/simulate-sector-investment', { sector });

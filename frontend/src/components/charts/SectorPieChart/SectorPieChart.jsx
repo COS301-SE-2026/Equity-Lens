@@ -1,10 +1,4 @@
-import { 
-  PieChart, 
-  Pie, 
-  Cell, 
-  Tooltip, 
-  ResponsiveContainer 
-} from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 /**
  * @typedef {{sector: string, percentage: number, value: number}} SectorDatum
@@ -33,19 +27,45 @@ const CustomTooltip = ({ active, payload }) => {
   if (!active || !payload?.length) return null;
   const { sector, percentage, value } = payload[0].payload;
   return (
-    <div style={{
-      background: 'var(--chart-tooltip-bg)',
-      border: '1px solid var(--border-mid)',
-      borderRadius: '6px',
-      padding: '10px 14px',
-    }}>
-      <p style={{ fontSize: '11px', fontWeight: 500, color: 'var(--text-primary)', marginBottom: '6px', fontFamily: 'var(--font-primary)' }}>
+    <div
+      style={{
+        background: 'var(--chart-tooltip-bg)',
+        border: '1px solid var(--border-mid)',
+        borderRadius: '6px',
+        padding: '10px 14px',
+      }}
+    >
+      <p
+        style={{
+          fontSize: '11px',
+          fontWeight: 500,
+          color: 'var(--text-primary)',
+          marginBottom: '6px',
+          fontFamily: 'var(--font-primary)',
+        }}
+      >
         {sector}
       </p>
-      <p style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '3px', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+      <p
+        style={{
+          fontSize: '10px',
+          color: 'var(--text-secondary)',
+          marginBottom: '3px',
+          fontFamily: 'var(--font-mono)',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
         {percentage.toFixed(1)}% of portfolio
       </p>
-      <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+      <p
+        style={{
+          fontSize: '12px',
+          fontWeight: 600,
+          color: 'var(--accent-primary)',
+          fontFamily: 'var(--font-mono)',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
         R {value.toLocaleString('en-ZA')}
       </p>
     </div>
@@ -55,7 +75,17 @@ const CustomTooltip = ({ active, payload }) => {
 const SectorPieChart = ({ data = mockSectorData }) => {
   if (!data || data.length === 0) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '256px', color: 'var(--text-secondary)', fontSize: '12px', fontFamily: 'var(--font-primary)' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '256px',
+          color: 'var(--text-secondary)',
+          fontSize: '12px',
+          fontFamily: 'var(--font-primary)',
+        }}
+      >
         No sector data available
       </div>
     );
@@ -85,16 +115,48 @@ const SectorPieChart = ({ data = mockSectorData }) => {
       </ResponsiveContainer>
 
       {/* Custom legend */}
-      <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '12px' }}>
+      <ul
+        style={{
+          listStyle: 'none',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+          marginTop: '12px',
+        }}
+      >
         {data.map((entry, index) => (
-          <li key={index} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <li
+            key={index}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+          >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: CHART_COLORS[index % CHART_COLORS.length], flexShrink: 0 }} />
-              <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontFamily: 'var(--font-primary)' }}>
+              <div
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '2px',
+                  background: CHART_COLORS[index % CHART_COLORS.length],
+                  flexShrink: 0,
+                }}
+              />
+              <span
+                style={{
+                  fontSize: '10px',
+                  color: 'var(--text-secondary)',
+                  fontFamily: 'var(--font-primary)',
+                }}
+              >
                 {entry.sector}
               </span>
             </div>
-            <span style={{ fontSize: '10px', color: 'var(--text-primary)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+            <span
+              style={{
+                fontSize: '10px',
+                color: 'var(--text-primary)',
+                fontFamily: 'var(--font-mono)',
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
               {entry.percentage.toFixed(1)}%
             </span>
           </li>

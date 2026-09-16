@@ -33,24 +33,23 @@ const AppLayout = ({ children }) => {
       <div data-testid="app-layout" className="flex flex-col h-screen overflow-hidden">
         <Topbar onMenuClick={() => setSidebarOpen((open) => !open)} sidebarOpen={sidebarOpen} />
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-        <main className="flex-1 overflow-auto p-4">
-          {children}
-        </main>
+        <main className="flex-1 overflow-auto p-4">{children}</main>
       </div>
     </ChatProvider>
   );
 };
 
 /**
-* @param {{ children: React.ReactNode, publicFallback?: React.ReactNode }} props
+ * @param {{ children: React.ReactNode, publicFallback?: React.ReactNode }} props
  */
 const ProtectedRoute = ({ children, publicFallback }) => {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <LoadingSpinner size="lg" />
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
   if (isAuthenticated) return <AppLayout>{children}</AppLayout>;
   return publicFallback ?? <Navigate to={ROUTES.LOGIN} replace />;
 };
@@ -64,30 +63,119 @@ const PublicRoute = ({ children }) => {
 
 export const AppRoutes = () => (
   <Routes>
-    <Route path={ROUTES.LOGIN} element={<PublicRoute><AuthLayout><Login /></AuthLayout></PublicRoute>} />
-    <Route path={ROUTES.REGISTER} element={<PublicRoute><AuthLayout><Register /></AuthLayout></PublicRoute>} />
+    <Route
+      path={ROUTES.LOGIN}
+      element={
+        <PublicRoute>
+          <AuthLayout>
+            <Login />
+          </AuthLayout>
+        </PublicRoute>
+      }
+    />
+    <Route
+      path={ROUTES.REGISTER}
+      element={
+        <PublicRoute>
+          <AuthLayout>
+            <Register />
+          </AuthLayout>
+        </PublicRoute>
+      }
+    />
 
-      <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path={ROUTES.PORTFOLIO} element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
-      <Route path={ROUTES.NEWS} element={<ProtectedRoute><News /></ProtectedRoute>} />
-      <Route path={ROUTES.AI_CHAT} element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
-      <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-      <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
-      <Route path={ROUTES.FORGOT_PASSWORD} element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-      <Route path={ROUTES.RESET_PASSWORD} element={<PublicRoute><ResetPassword /></PublicRoute>} />
-      <Route
-        path={ROUTES.HELP}
-        element={
-          <ProtectedRoute publicFallback={<div className="min-h-screen bg-bg-primary p-6"><Help /></div>}>
-            <Help />
-          </ProtectedRoute>}/>
-      {/* <Route path="/help-landing" element={<HelpLandingPage />} /> */}
-      <Route path={ROUTES.SETTINGS} element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+    <Route
+      path={ROUTES.DASHBOARD}
+      element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.PORTFOLIO}
+      element={
+        <ProtectedRoute>
+          <Portfolio />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.NEWS}
+      element={
+        <ProtectedRoute>
+          <News />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.AI_CHAT}
+      element={
+        <ProtectedRoute>
+          <AIChat />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.ANALYTICS}
+      element={
+        <ProtectedRoute>
+          <Analytics />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.CONFIRM_EMAIL}
+      element={
+        <PublicRoute>
+          <ConfirmEmail />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path={ROUTES.FORGOT_PASSWORD}
+      element={
+        <PublicRoute>
+          <ForgotPassword />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path={ROUTES.RESET_PASSWORD}
+      element={
+        <PublicRoute>
+          <ResetPassword />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path={ROUTES.HELP}
+      element={
+        <ProtectedRoute
+          publicFallback={
+            <div className="min-h-screen bg-bg-primary p-6">
+              <Help />
+            </div>
+          }
+        >
+          <Help />
+        </ProtectedRoute>
+      }
+    />
+    {/* <Route path="/help-landing" element={<HelpLandingPage />} /> */}
+    <Route
+      path={ROUTES.SETTINGS}
+      element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      }
+    />
 
-      <Route path={ROUTES.HOME} element={<Landing />} />  
-      <Route path={ROUTES.BRAND_GUIDE} element={<BrandStyleGuide />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <Route path={ROUTES.HOME} element={<Landing />} />
+    <Route path={ROUTES.BRAND_GUIDE} element={<BrandStyleGuide />} />
+    <Route path="*" element={<NotFound />} />
+  </Routes>
 );
 
 const AppRouter = () => (

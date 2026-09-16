@@ -17,8 +17,12 @@ vi.mock('../pages/AIChat/AIChat', () => ({ default: () => <div>AIChat Page</div>
 vi.mock('../pages/Analytics/Analytics', () => ({ default: () => <div>Analytics Page</div> }));
 vi.mock('../pages/NotFound/NotFound', () => ({ default: () => <div>NotFound Page</div> }));
 
-vi.mock('../components/common/Sidebar/Sidebar', () => ({ default: () => <div data-testid="sidebar">Sidebar</div> }));
-vi.mock('../components/common/Topbar/Topbar', () => ({ default: () => <div data-testid="topbar">Topbar</div> }));
+vi.mock('../components/common/Sidebar/Sidebar', () => ({
+  default: () => <div data-testid="sidebar">Sidebar</div>,
+}));
+vi.mock('../components/common/Topbar/Topbar', () => ({
+  default: () => <div data-testid="topbar">Topbar</div>,
+}));
 vi.mock('../components/common/LoadingSpinner/LoadingSpinner', () => ({
   default: () => <div data-testid="loading-spinner">Loading...</div>,
 }));

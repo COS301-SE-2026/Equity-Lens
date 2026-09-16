@@ -1,11 +1,4 @@
-export const CHART_COLORS = [
-  '#6366f1',
-  '#22d3ee',
-  '#f59e0b',
-  '#10b981',
-  '#f43f5e',
-  '#a78bfa',
-];
+export const CHART_COLORS = ['#6366f1', '#22d3ee', '#f59e0b', '#10b981', '#f43f5e', '#a78bfa'];
 
 export const DEFAULT_MARGIN = { top: 10, right: 20, left: 0, bottom: 0 };
 

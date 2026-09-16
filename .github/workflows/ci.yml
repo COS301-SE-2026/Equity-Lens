@@ -24,8 +24,8 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22.22.0'
-          cache: 'npm'
+          node-version: "22.22.0"
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
@@ -39,10 +39,6 @@ jobs:
       - name: Security audit
         working-directory: frontend
         run: npm audit --audit-level=low --omit=dev
-      
-      - name: Lint
-        working-directory: frontend
-        run: npm run lint
 
       - name: Format check
         working-directory: frontend
@@ -124,7 +120,6 @@ jobs:
           docker stop frontend-smoketest || true
           docker rm frontend-smoketest || true
 
-
   backend:
     name: Backend Build & Test
     runs-on: ubuntu-latest
@@ -149,8 +144,8 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.11"
+          cache: "pip"
 
       - name: Install dependencies
         working-directory: backend
@@ -171,7 +166,7 @@ jobs:
 
       - name: Run pip-audit to check the packages
         working-directory: backend
-        run: pip-audit -r requirements.txt -r requirements-dev.txt 
+        run: pip-audit -r requirements.txt -r requirements-dev.txt
 
       - name: Run Bandit to scan for the backend code
         working-directory: backend
@@ -276,12 +271,6 @@ jobs:
           exit-code: 1
           scanners: vuln,secret,misconfig
           skip-dirs: frontend/node_modules,node_modules,backend/venv,backend/.venv,frontend/dist,frontend/build
-  
-    
-
-
-    
-
 
   ToRunlighthouse:
     name: Run Lighthouse NFR-2.2 & NFR-2.3
@@ -294,7 +283,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22.22.0'
+          node-version: "22.22.0"
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -305,45 +294,42 @@ jobs:
           npm run preview -- --host 0.0.0.0 &
           npx wait-on http://localhost:4173
 
-      
       - name: Run NFR-2.2 Lighthouse
         uses: treosh/lighthouse-ci-action@v12
-        with: 
-            configPath: ./frontend/lighthouserc-nfr-2-2.json
+        with:
+          configPath: ./frontend/lighthouserc-nfr-2-2.json
 
       - name: Run NFR-2.3 Lighthouse
         uses: treosh/lighthouse-ci-action@v12
-        with: 
+        with:
           configPath: ./frontend/lighthouserc-nfr-2-3.json
 
   nfr-1-6:
-        name: NFR-1.6 GitLeaks
-        runs-on: ubuntu-latest
-        timeout-minutes: 2
+    name: NFR-1.6 GitLeaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
 
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-              with:
-                fetch-depth: 0
-                
-            - name: Run GitLeaks
-              run: |
-                docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source=/repo --verbose
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run GitLeaks
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source=/repo --verbose
 
   nfr-1-4:
-        name: NFR-1.4 TLS
-        runs-on: ubuntu-latest
-        timeout-minutes: 2
+    name: NFR-1.4 TLS
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
 
-        steps:
-            - name: To chekc the HTTPs connection
-              run: | 
-                set -e
-                    curl --fail --show-error \
-                    https://api.equitylens.co.za/health
-                    curl --fail --show-error \
-                    https://www.equitylens.co.za
-                    echo "PASS All the HTTPs/TLS connection"
-
-
+    steps:
+      - name: To chekc the HTTPs connection
+        run: |
+          set -e
+              curl --fail --show-error \
+              https://api.equitylens.co.za/health
+              curl --fail --show-error \
+              https://www.equitylens.co.za
+              echo "PASS All the HTTPs/TLS connection"

@@ -12,7 +12,12 @@ const Topbar = ({ onMenuClick, sidebarOpen }) => {
   const { blurMoney, toggleBlurMoney } = useBlur();
 
   const initials = user?.full_name
-    ? user.full_name.split(' ').map((/** @type {string} */ n) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? user.full_name
+        .split(' ')
+        .map((/** @type {string} */ n) => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2)
     : 'U';
 
   const timestamp = new Date().toISOString().slice(0, 10);
@@ -65,7 +70,9 @@ const Topbar = ({ onMenuClick, sidebarOpen }) => {
               fontWeight: 700,
               letterSpacing: '0.06em',
               color: 'var(--text-primary)',
-              fontFamily: 'var(--font-mono)',}}>
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
             EQUITY
           </span>
           <span
@@ -74,18 +81,21 @@ const Topbar = ({ onMenuClick, sidebarOpen }) => {
               fontWeight: 700,
               letterSpacing: '0.06em',
               color: 'var(--accent-primary)',
-              fontFamily: 'var(--font-mono)',}}>
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
             LENS
           </span>
         </span>
 
-        <span style={{
-          fontSize: '10px',
-          color: 'var(--text-ghost)',
-          fontFamily: 'var(--font-mono)',
-          fontVariantNumeric: 'tabular-nums',
-          display: 'none',
-        }}
+        <span
+          style={{
+            fontSize: '10px',
+            color: 'var(--text-ghost)',
+            fontFamily: 'var(--font-mono)',
+            fontVariantNumeric: 'tabular-nums',
+            display: 'none',
+          }}
           className="sm:block"
         >
           {timestamp} · SAST
@@ -106,9 +116,11 @@ const Topbar = ({ onMenuClick, sidebarOpen }) => {
             justifyContent: 'center',
             cursor: 'pointer',
             color: blurMoney ? 'var(--accent-primary)' : 'var(--text-secondary)',
-            flexShrink: 0,}}
+            flexShrink: 0,
+          }}
           aria-label={blurMoney ? 'Show monetary values' : 'Blur monetary values'}
-          title="Blur rand values - handy while screen-sharing. Blurred text is still selectable, this only hides it visually.">
+          title="Blur rand values - handy while screen-sharing. Blurred text is still selectable, this only hides it visually."
+        >
           {blurMoney ? <EyeOff size={13} /> : <Eye size={13} />}
         </button>
         <button
@@ -126,19 +138,22 @@ const Topbar = ({ onMenuClick, sidebarOpen }) => {
           Sign out
         </button>
 
-        <div className="glass-surface glass-control" style={{
-          width: '28px',
-          height: '28px',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '9px',
-          fontWeight: 700,
-          color: 'var(--accent-primary)',
-          fontFamily: 'var(--font-mono)',
-          flexShrink: 0,
-        }}>
+        <div
+          className="glass-surface glass-control"
+          style={{
+            width: '28px',
+            height: '28px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '9px',
+            fontWeight: 700,
+            color: 'var(--accent-primary)',
+            fontFamily: 'var(--font-mono)',
+            flexShrink: 0,
+          }}
+        >
           {initials}
         </div>
       </div>

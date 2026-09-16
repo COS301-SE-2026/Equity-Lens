@@ -1,8 +1,8 @@
-import { useThemeContext } from '../../../context/ThemeContext.jsx'
+import { useThemeContext } from '../../../context/ThemeContext.jsx';
 
 function ThemeToggle() {
-  const { theme, toggleTheme } = useThemeContext()
-  const isDark = theme === 'dark'
+  const { theme, toggleTheme } = useThemeContext();
+  const isDark = theme === 'dark';
 
   return (
     <button
@@ -38,15 +38,15 @@ function ThemeToggle() {
           justifyContent: 'center',
           transition: 'left 150ms ease-out',
         }}
-      > 
-      <img
-        src={isDark ? '/assets/dark.png' : '/assets/light.png'}
-        alt=""
-        style={{ width: '16px', height: '16px' }}
-      />
+      >
+        <img
+          src={isDark ? '/assets/dark.png' : '/assets/light.png'}
+          alt=""
+          style={{ width: '16px', height: '16px' }}
+        />
       </span>
     </button>
-  )
+  );
 }
 
-export default ThemeToggle
+export default ThemeToggle;

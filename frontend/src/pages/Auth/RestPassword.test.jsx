@@ -32,7 +32,7 @@ describe('ResetPassword', () => {
     return render(
       <MemoryRouter initialEntries={[{ pathname: '/reset-password', state: initialState }]}>
         <ResetPassword />
-      </MemoryRouter>
+      </MemoryRouter>,
     );
   };
 
@@ -44,7 +44,9 @@ describe('ResetPassword', () => {
   it('renders correctly with pre-filled email from location state', () => {
     renderComponent({ email: 'test@domain.com' });
 
-    expect(screen.getByRole('heading', { level: 1, name: /reset your password/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: /reset your password/i }),
+    ).toBeInTheDocument();
     expect(screen.getByText('test@domain.com')).toBeInTheDocument();
     expect(screen.queryByLabelText(/email address/i)).not.toBeInTheDocument();
   });
@@ -93,32 +95,32 @@ describe('ResetPassword', () => {
   });
 
   it('submits successfully and redirects after delay', async () => {
-  const user = userEvent.setup();
-  mockConfirmPasswordReset.mockResolvedValueOnce();
+    const user = userEvent.setup();
+    mockConfirmPasswordReset.mockResolvedValueOnce();
 
-  renderComponent({ email: 'user@example.com' });
+    renderComponent({ email: 'user@example.com' });
 
-  await user.type(screen.getByLabelText(/verification code/i), '123456');
-  await user.type(screen.getByLabelText(/^new password/i), 'Password123!');
-  await user.type(screen.getByLabelText(/confirm new password/i), 'Password123!');
-  await user.click(screen.getByRole('button', { name: /reset password/i }));
+    await user.type(screen.getByLabelText(/verification code/i), '123456');
+    await user.type(screen.getByLabelText(/^new password/i), 'Password123!');
+    await user.type(screen.getByLabelText(/confirm new password/i), 'Password123!');
+    await user.click(screen.getByRole('button', { name: /reset password/i }));
 
-  expect(mockConfirmPasswordReset).toHaveBeenCalledWith(
-    'user@example.com',
-    '123456',
-    'Password123!'
-  );
+    expect(mockConfirmPasswordReset).toHaveBeenCalledWith(
+      'user@example.com',
+      '123456',
+      'Password123!',
+    );
 
-  const statusAlert = await screen.findByRole('status');
-  expect(statusAlert).toHaveTextContent(/password reset\. redirecting to sign in/i);
+    const statusAlert = await screen.findByRole('status');
+    expect(statusAlert).toHaveTextContent(/password reset\. redirecting to sign in/i);
 
-  await waitFor(
-    () => {
-      expect(mockNavigate).toHaveBeenCalledWith('/login');
-    },
-    { timeout: 2000 }
-  );
-});
+    await waitFor(
+      () => {
+        expect(mockNavigate).toHaveBeenCalledWith('/login');
+      },
+      { timeout: 2000 },
+    );
+  });
 
   it('displays an error alert when API call fails', async () => {
     const user = userEvent.setup();
@@ -155,7 +157,7 @@ describe('ResetPassword', () => {
       expect(mockConfirmPasswordReset).toHaveBeenCalledWith(
         'manual@domain.com',
         '112233',
-        'Password123!'
+        'Password123!',
       );
     });
   });

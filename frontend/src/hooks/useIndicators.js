@@ -14,7 +14,7 @@ const useIndicators = () => {
       try {
         const data = await getIndicatorData();
         const mapped = Object.fromEntries(
-          data.map((stock) => [stock.ticker, { loading: false, results: stock }])
+          data.map((stock) => [stock.ticker, { loading: false, results: stock }]),
         );
         setStockData(mapped);
       } catch (err) {
