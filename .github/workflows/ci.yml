@@ -38,7 +38,7 @@ jobs:
 
       - name: Security audit
         working-directory: frontend
-        run: npm audit --audit-level=high --omit=dev
+        run: npm audit --audit-level=low --omit=dev
       
       - name: Lint
         working-directory: frontend
