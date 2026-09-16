@@ -20,7 +20,9 @@ def _cents_to_major(symbol: str) -> float:
         return 1.0
     return 100.0 if symbol.upper().endswith(".JO") else 1.0
 
+
 WATCHLIST_QUOTE_TYPES = {"EQUITY", "ETF", "INDEX"}
+
 
 def get_current_price(symbol: str) -> CurrentPriceResponse:
     history = get_cached_price_history(symbol, period="1y")
@@ -74,7 +76,9 @@ def get_historical_data(symbol: str, period: str) -> HistoryResponse:
             high=float(row["High"]) / divisor,
             low=float(row["Low"]) / divisor,
             close=float(row["Close"]) / divisor,
-            prev_close=float(row["Prev Close"]) / divisor if "Prev Close" in row and not pd.isna(row["Prev Close"]) else None,
+            prev_close=float(row["Prev Close"]) / divisor
+            if "Prev Close" in row and not pd.isna(row["Prev Close"])
+            else None,
             volume=int(row["Volume"]) if not pd.isna(row["Volume"]) else 0,
         )
         for index, row in history.iterrows()
@@ -82,18 +86,21 @@ def get_historical_data(symbol: str, period: str) -> HistoryResponse:
 
     return HistoryResponse(symbol=symbol.upper(), period=period, data=data)
 
+
 _SEARCH_CACHE: dict[str, tuple[float, SearchResponse]] = {}
 _SEARCH_CACHE_TTL_SECONDS = 300
-#In-memory cache to avoid yfinance rate-limiting (aggressive requests get rate limited fast
-#- see stock_cache.py for reference), 5 minutes TTL and no persistency.
+
+
+# In-memory cache to avoid yfinance rate-limiting (aggressive requests get rate limited fast
+# - see stock_cache.py for reference), 5 minutes TTL and no persistency.
 def search_stocks(query: str) -> SearchResponse:
-    normalized_query= query.strip().lower()
+    normalized_query = query.strip().lower()
     cached = _SEARCH_CACHE.get(normalized_query)
     if cached is not None:
         cached_at, cached_response = cached
         if time.time() - cached_at < _SEARCH_CACHE_TTL_SECONDS:
             return cached_response
-        
+
     search_results = yf.Search(query, max_results=10)
     results = [
         SearchResultItem(

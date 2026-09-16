@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 # router tests — cognito is mocked
 
+
 def test_register_new_user_success(client, sample_user_data):
     with patch("app.routers.auth.cognito.cognito_register") as mock_register:
         mock_register.return_value = {

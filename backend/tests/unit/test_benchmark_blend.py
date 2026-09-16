@@ -147,5 +147,3 @@ def test_nearest_benchmark_falls_back_to_the_last_trading_day():
     assert portfolio_service._nearest_benchmark(series, saturday) == 1000.0
     assert portfolio_service._nearest_benchmark(series, date(2026, 7, 1)) is None
     assert portfolio_service._nearest_benchmark({}, monday) is None
-
-

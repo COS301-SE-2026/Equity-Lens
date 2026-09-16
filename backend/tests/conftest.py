@@ -20,6 +20,7 @@ def _clear_priced_holdings_cache():
     yield
     invalidate_priced_holdings()
 
+
 @pytest.fixture
 def db_engine():
     engine = create_engine(
@@ -32,6 +33,7 @@ def db_engine():
     db_module.Base.metadata.drop_all(bind=engine)
     engine.dispose()
 
+
 @pytest.fixture
 def db_session(db_engine):
     SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db_engine)
@@ -40,6 +42,7 @@ def db_session(db_engine):
         yield session
     finally:
         session.close()
+
 
 @pytest.fixture
 def client(db_engine):
@@ -58,6 +61,7 @@ def client(db_engine):
     finally:
         app.dependency_overrides.clear()
 
+
 @pytest.fixture
 def sample_user_data():
     return {
@@ -65,6 +69,7 @@ def sample_user_data():
         "email": "test@example.com",
         "password": "Password1!",
     }
+
 
 @pytest.fixture
 def test_user(db_session, sample_user_data):
@@ -80,6 +85,7 @@ def test_user(db_session, sample_user_data):
     db_session.refresh(user)
     return user
 
+
 @pytest.fixture
 def registered_user(client, sample_user_data):
     with patch("app.routers.auth.cognito.cognito_register") as mock_register:
@@ -89,6 +95,7 @@ def registered_user(client, sample_user_data):
         }
         client.post("/api/auth/register", json=sample_user_data)
     return sample_user_data
+
 
 @pytest.fixture
 def auth_headers(test_user):

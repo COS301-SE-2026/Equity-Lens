@@ -10,22 +10,20 @@ from app.main import app
 def fake_user():
     return SimpleNamespace(id=1)
 
+
 def fake_db():
     yield None
 
+
 client = TestClient(app, raise_server_exceptions=False)
+
 
 def test_ai_provide_failure_returns_controlled_error(mocker):
     app.dependency_overrides[get_current_user] = fake_user
     app.dependency_overrides[get_db] = fake_db
     mocker.patch("app.routers.ai_chat.chat", side_effect=Exception("Bedrock unavailable"))
 
-    response = client.post(
-        "/api/ai_chat/",
-        json={
-            "message": "hello"
-        }
-    )
+    response = client.post("/api/ai_chat/", json={"message": "hello"})
 
     assert response.status_code == 500
 

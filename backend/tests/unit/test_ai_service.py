@@ -12,18 +12,16 @@ def test_portfolio_linked_no_data(db_session, test_user):
     ai_reply = get_user_portfolio_context(db_session, test_user.id)
     assert ai_reply == "User has not uploaded portfolio data."
 
+
 def test_portfolio_with_data(db_session, test_user):
     portfolio = Portfolios(
-        user_id = test_user.id,
-        account_number = "U23-536",
-        portfolio_name = "The invesment portfolio of mine from Easy Equities"
+        user_id=test_user.id,
+        account_number="U23-536",
+        portfolio_name="The invesment portfolio of mine from Easy Equities",
     )
     db_session.add(portfolio)
 
-    document = Document(
-        user_id = test_user.id,
-        file_name = "portfolio.pdf"
-    )
+    document = Document(user_id=test_user.id, file_name="portfolio.pdf")
     db_session.add(document)
 
     db_session.commit()
@@ -37,15 +35,17 @@ def test_portfolio_with_data(db_session, test_user):
 @patch("app.services.ai_service.get_bedrock_client")
 def test_new_chat(mock_bedrock_client, db_session, test_user):
     mocked_client = MagicMock()
-    mocked_client.converse.return_value = {"output": {"message": {"content": [{"text": "A response."}] }}}
-    
+    mocked_client.converse.return_value = {
+        "output": {"message": {"content": [{"text": "A response."}]}}
+    }
+
     mock_bedrock_client.return_value = mocked_client
-    reply, conversation_id = chat("A question?" ,db_session, test_user.id)
+    reply, conversation_id = chat("A question?", db_session, test_user.id)
 
     assert reply == "A response."
     assert conversation_id is not None
 
-    messages = db_session.query(ChatMessages).filter_by(conversation_id = conversation_id).all()
+    messages = db_session.query(ChatMessages).filter_by(conversation_id=conversation_id).all()
     assert len(messages) == 2
     assert messages[0].role == "user"
     assert messages[1].role == "assistant"
@@ -57,25 +57,25 @@ def test_new_chat(mock_bedrock_client, db_session, test_user):
 def test_existing_chat(mock_bedrock_client, db_session, test_user):
     mocked_client = MagicMock()
     mocked_client.converse.return_value = {
-        "output": {"message": {"content": [{"text": "A response."}] }}
+        "output": {"message": {"content": [{"text": "A response."}]}}
     }
-    
+
     mock_bedrock_client.return_value = mocked_client
-    reply, conversation_id = chat("A question?" ,db_session, test_user.id)
+    reply, conversation_id = chat("A question?", db_session, test_user.id)
 
     assert reply == "A response."
     assert conversation_id is not None
 
     mocked_client.converse.return_value = {
-        "output": {"message": {"content": [{"text": "A second response."}] }}
+        "output": {"message": {"content": [{"text": "A second response."}]}}
     }
-    
-    reply2, conversation_id2 = chat("A second question?" ,db_session, test_user.id, conversation_id)
+
+    reply2, conversation_id2 = chat("A second question?", db_session, test_user.id, conversation_id)
 
     assert reply2 == "A second response."
     assert conversation_id2 == conversation_id
 
-    messages = db_session.query(ChatMessages).filter_by(conversation_id = conversation_id).all()
+    messages = db_session.query(ChatMessages).filter_by(conversation_id=conversation_id).all()
     assert len(messages) == 4
     assert messages[0].role == "user"
     assert messages[1].role == "assistant"
@@ -89,7 +89,8 @@ def test_existing_chat(mock_bedrock_client, db_session, test_user):
 
 def test_empty_message():
     with pytest.raises(ValueError):
-        ChatRequest(message = "", conversation_id = None)    
+        ChatRequest(message="", conversation_id=None)
+
 
 @patch("app.services.ai_service.compute_health_score")
 @patch("app.services.ai_service._price_holdings")
@@ -97,23 +98,23 @@ def test_portfolio_context_includes_health_score(
     mock_price_holdings, mock_health, db_session, test_user
 ):
     portfolio = Portfolios(
-        user_id=test_user.id,
-        account_number="U23-536",
-        portfolio_name="Test portfolio"
+        user_id=test_user.id, account_number="U23-536", portfolio_name="Test portfolio"
     )
     db_session.add(portfolio)
     db_session.flush()
 
-    db_session.add(Holdings(
-        portfolio_id=portfolio.id,
-        instrument_name="Naspers",
-        ticker="NPN.JO",
-        sector="Technology",
-        quantity=10,
-        cost_price=3000,
-        total_cost=30000,
-        weight_percentage=100
-    ))
+    db_session.add(
+        Holdings(
+            portfolio_id=portfolio.id,
+            instrument_name="Naspers",
+            ticker="NPN.JO",
+            sector="Technology",
+            quantity=10,
+            cost_price=3000,
+            total_cost=30000,
+            weight_percentage=100,
+        )
+    )
     db_session.commit()
 
     mock_price_holdings.return_value = [{"ticker": "NPN.JO", "value": 30000.0}]
@@ -150,15 +151,17 @@ def test_portfolio_context_skips_health_when_unscorable(
     db_session.add(portfolio)
     db_session.flush()
 
-    db_session.add(Holdings(
-        portfolio_id=portfolio.id,
-        instrument_name="Naspers",
-        ticker="NPN.JO",
-        quantity=10,
-        cost_price=3000,
-        total_cost=30000,
-        weight_percentage=100
-    ))
+    db_session.add(
+        Holdings(
+            portfolio_id=portfolio.id,
+            instrument_name="Naspers",
+            ticker="NPN.JO",
+            quantity=10,
+            cost_price=3000,
+            total_cost=30000,
+            weight_percentage=100,
+        )
+    )
     db_session.commit()
 
     mock_price_holdings.return_value = []

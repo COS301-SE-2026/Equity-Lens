@@ -128,7 +128,9 @@ def _walk_average_cost(transactions: list[dict]) -> dict[str, dict]:
         if sell_qty > pos["qty"]:
             logger.warning(
                 "sale exceeds held quantity for %s (selling %s, held %s), clamping",
-                ticker, sell_qty, pos["qty"],
+                ticker,
+                sell_qty,
+                pos["qty"],
             )
             sell_qty = pos["qty"]
 

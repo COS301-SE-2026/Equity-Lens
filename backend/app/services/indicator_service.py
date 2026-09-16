@@ -20,26 +20,28 @@ INDICATOR_UNITS = {
     "sortino": "",
 }
 
+
 def serialize_indicator_value(value, unit, fallback_reason="Data could not be retrieved."):
     if isinstance(value, dict) and "status" in value:
         return value
-    
-    if value is None or (isinstance(value,float) and pd.isna(value)):
-        return{
+
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        return {
             "status": "insufficient_data",
             "reason": fallback_reason,
         }
-    return{
+    return {
         "status": "ok",
         "value": value,
         "unit": unit,
     }
 
+
 def serialize_indicator_row(row: dict) -> dict:
     normalized = {
         "ticker": row.get("ticker"),
-        "name": row.get("name"),   
-        "status": row.get("status", "ok"),    
+        "name": row.get("name"),
+        "status": row.get("status", "ok"),
         "live_fetch": row.get("live_fetch", False),
     }
 
@@ -49,17 +51,24 @@ def serialize_indicator_row(row: dict) -> dict:
             normalized[key] = {"status": "error"}
         normalized["error"] = row["error"]
         return normalized
-    
+
     for key, unit in INDICATOR_UNITS.items():
         normalized[key] = serialize_indicator_value(row.get(key), unit)
     return normalized
 
-def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, price_history: pd.DataFrame | None = None) -> dict:
+
+def build_live_indicator_row(
+    symbol: str, name: str, market_returns: pd.Series, price_history: pd.DataFrame | None = None
+) -> dict:
     try:
-        hist = price_history if price_history is not None else get_cached_price_history(symbol,period="1y")
+        hist = (
+            price_history
+            if price_history is not None
+            else get_cached_price_history(symbol, period="1y")
+        )
         if hist.empty or "Close" not in hist:
             raise ValueError("No price data")
-        
+
         close = hist["Close"].dropna() / _cents_to_major(symbol)
         returns = close.pct_change().dropna()
         # We use 'inner' join here to account for holiday dates where the market would be closed
@@ -73,7 +82,7 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
         except Exception as exc:
             print(f"Beta calculation failed for {symbol}: {exc}")
             beta = None
-        
+
         rsi_value = None
         try:
             if len(close) > 14:
@@ -81,7 +90,7 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
         except Exception as exc:
             print(f"RSI calculation failed for {symbol}: {exc}")
             rsi_value = None
-        
+
         sharpe = None
         try:
             if len(returns) > 10:
@@ -89,7 +98,7 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
         except Exception as exc:
             print(f"Sharpe calculation failed for {symbol} : {exc}")
             sharpe = None
-        
+
         sortino = None
         try:
             if len(returns) > 10:
@@ -108,17 +117,17 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
 
         fundamentals = get_cached_fundamentals(symbol)
 
-        info = fundamentals.get("info",{})
+        info = fundamentals.get("info", {})
         balance_sheet = fundamentals.get("balance_sheet")
         financials = fundamentals.get("financials")
         live_fetch = fundamentals.get("live_fetch", False)
 
-        #Altman Z and PE not applicable to Mutual funds and ETF
+        # Altman Z and PE not applicable to Mutual funds and ETF
         quote_type = (info.get("quoteType") or "").upper()
         is_fund = quote_type in ("ETF", "MUTUALFUND", "INDEX")
         fund_reason = "N/A - financial instrument doesn't report company-level financials."
 
-        #Altman Z is built for retail/industrial companies, therefore Total Revenue is N/A from financial institutions
+        # Altman Z is built for retail/industrial companies, therefore Total Revenue is N/A from financial institutions
         sector = (info.get("sector") or "").upper()
         is_financial = sector in ("FINANCIAL SERVICES", "FINANCIALS")
         sector_reason = "N/A - Altman Z Score not meaningful for banks and financial institutions."
@@ -127,7 +136,7 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
         pe = None
         try:
             if eps is not None and float(eps) > 0:
-                pe = calculate_pe_ratio(float(close.iloc[-1]),float(eps))
+                pe = calculate_pe_ratio(float(close.iloc[-1]), float(eps))
             else:
                 trailing_pe = info.get("trailingPE") or info.get("forwardPE")
                 if trailing_pe is not None:
@@ -141,7 +150,12 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
 
         altman = None
         try:
-            if balance_sheet is not None and not balance_sheet.empty and financials is not None and not financials.empty:
+            if (
+                balance_sheet is not None
+                and not balance_sheet.empty
+                and financials is not None
+                and not financials.empty
+            ):
                 working_capital = None
                 if "Working Capital" in balance_sheet.index:
                     working_capital = float(balance_sheet.loc["Working Capital"].iloc[0])
@@ -162,15 +176,35 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
 
                 total_liabilities = None
                 if "Total Liabilities Net Minority Interest" in balance_sheet.index:
-                    total_liabilities = float(balance_sheet.loc["Total Liabilities Net Minority Interest"].iloc[0])
+                    total_liabilities = float(
+                        balance_sheet.loc["Total Liabilities Net Minority Interest"].iloc[0]
+                    )
 
                 sales = None
                 if "Total Revenue" in financials.index:
                     sales = float(financials.loc["Total Revenue"].iloc[0])
 
-                if all(value is not None
-                       for value in [working_capital,total_assets,retained_earnings,ebit,market_cap,total_liabilities,sales]):
-                    altman = calculate_altman_zscore(working_capital,total_assets,retained_earnings,ebit,market_cap,total_liabilities,sales,)
+                if all(
+                    value is not None
+                    for value in [
+                        working_capital,
+                        total_assets,
+                        retained_earnings,
+                        ebit,
+                        market_cap,
+                        total_liabilities,
+                        sales,
+                    ]
+                ):
+                    altman = calculate_altman_zscore(
+                        working_capital,
+                        total_assets,
+                        retained_earnings,
+                        ebit,
+                        market_cap,
+                        total_liabilities,
+                        sales,
+                    )
         except Exception as exc:
             print(f"Altman calculation failed for {symbol}: {exc}")
             altman = None
@@ -180,8 +214,8 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
 
         if altman is None and is_financial:
             altman = {"status": "insufficient_data", "reason": sector_reason}
-        
-        return{
+
+        return {
             "ticker": symbol,
             "name": name,
             "capm": capm_value,
@@ -195,7 +229,7 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
         }
     except Exception as e:
         print(f"build_live_indicator_row failed for {symbol}: {e}")
-        return{
+        return {
             "ticker": symbol,
             "name": name,
             "error": str(e),
@@ -207,4 +241,4 @@ def build_live_indicator_row(symbol: str, name: str, market_returns: pd.Series, 
             "sharpe": None,
             "sortino": None,
             "live_fetch": False,
-}
+        }

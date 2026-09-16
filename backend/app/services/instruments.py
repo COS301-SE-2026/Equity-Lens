@@ -9,6 +9,7 @@ class Instrument(NamedTuple):
     region: str
     display_name: str
 
+
 KIND_STOCK = "stock"
 KIND_ETF = "etf"
 REGION_SA = "South Africa"
@@ -37,7 +38,9 @@ _STOCKS = {
 
 _ETFS = {
     "10X S&P South Africa Top50 Index Exchange Traded Fund": (
-        "CTOP50.JO", EXPOSURE_SA_EQUITY, REGION_SA
+        "CTOP50.JO",
+        EXPOSURE_SA_EQUITY,
+        REGION_SA,
     ),
     "10X S&P 500 Exchange Traded Fund": ("CSP500.JO", EXPOSURE_US_EQUITY, REGION_US),
     "Satrix 40 Exchange Traded Fund": ("STX40.JO", EXPOSURE_SA_EQUITY, REGION_SA),
@@ -48,10 +51,13 @@ _ETFS = {
     "1NVEST S&P 500 Index STANLIB Feeder ETF": ("ETF500.JO", EXPOSURE_US_EQUITY, REGION_US),
     "Satrix MSCI World Exchange Traded Fund": ("STXWDM.JO", EXPOSURE_GLOBAL_EQUITY, REGION_GLOBAL),
     "Satrix MSCI Emerging Markets Exchange Traded Fund": (
-        "STXEMG.JO", EXPOSURE_EM_EQUITY, REGION_EM
+        "STXEMG.JO",
+        EXPOSURE_EM_EQUITY,
+        REGION_EM,
     ),
     "EasyETFs AI World Actively Managed ETF": ("EASYAI.JO", EXPOSURE_GLOBAL_EQUITY, REGION_GLOBAL),
 }
+
 
 def is_zar_listed(ticker: str | None) -> bool:
     return bool(ticker) and ticker.upper().endswith(".JO")
@@ -80,6 +86,7 @@ LOOK_THROUGH_NOTES = {
 
 def get_look_through_note(ticker: str) -> str | None:
     return LOOK_THROUGH_NOTES.get((ticker or "").upper())
+
 
 _FUND_NOISE = sorted(
     [
@@ -113,8 +120,10 @@ _SECTOR_ALIASES = {
     "real estate": "RealEstate",
 }
 
+
 def normalize_sector(sector: str) -> str:
     return _SECTOR_ALIASES.get(sector.strip().lower(), sector)
+
 
 def _canonical(instrument_name: str) -> str:
     name = re.sub(r"[^0-9a-z&]+", "", (instrument_name or "").lower())
@@ -122,19 +131,23 @@ def _canonical(instrument_name: str) -> str:
         name = name.replace(noise, "")
     return name
 
+
 def _build_table(rows: dict, kind: str) -> dict[str, Instrument]:
     return {
         _canonical(name): Instrument(ticker, normalize_sector(sector), kind, region, name)
         for name, (ticker, sector, region) in rows.items()
     }
 
+
 KNOWN_INSTRUMENTS: dict[str, Instrument] = {
     **_build_table(_STOCKS, KIND_STOCK),
     **_build_table(_ETFS, KIND_ETF),
 }
 
+
 def resolve_known_instrument(instrument_name: str) -> Instrument | None:
     return KNOWN_INSTRUMENTS.get(_canonical(instrument_name))
+
 
 def looks_like_fund(instrument_name: str) -> bool:
     name = " ".join((instrument_name or "").split()).lower()

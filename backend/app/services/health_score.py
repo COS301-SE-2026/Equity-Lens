@@ -5,9 +5,9 @@ from app.services.instruments import KIND_ETF
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass(frozen=True)
 class HealthConfig:
-
     weight_sector_concentration: float
     weight_single_position: float
     weight_breadth: float
@@ -15,6 +15,7 @@ class HealthConfig:
     concentration_high: float
     hhi_well_spread: float
     breadth_target_n: float
+
 
 WEIGHT_MIN = 0.05
 WEIGHT_MAX = 0.70
@@ -319,7 +320,7 @@ def _sector_concentration_subscore(
         if score >= 7
         else f"Adding exposure outside {top_sector} would bring this HHI down and spread the risk."
     )
-    
+
     equivalent_sectors = round(1 / config.hhi_well_spread)
     return {
         "key": "sectorConcentration",
