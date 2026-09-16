@@ -26,13 +26,16 @@ const DeleteAccountModal = ({ userEmail, onClose, onConfirmed }) => {
     <div
       className="fixed inset-0 flex items-center justify-center p-4"
       style={{ background: 'rgba(0,0,0,0.6)', zIndex: 10000 }}
-      onClick={deleting ? undefined : onClose}
+      onClick={(e) => {
+        if (!deleting && e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
       role="presentation"
     >
       <div
         className="rounded-xl w-full max-w-md"
         style={{ background: 'var(--bg-primary,#0a0a0a)', border: '1px solid rgba(239,68,68,0.6)' }}
-        onClick={(e) => e.stopPropagation()}
       >
         <div
           className="px-5 py-4"

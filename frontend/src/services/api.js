@@ -16,8 +16,9 @@ api.interceptors.request.use(
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-    } catch (err) {
+    } catch {
       //Fails naturally so this can be empty
+     
     }
     return config;
   },

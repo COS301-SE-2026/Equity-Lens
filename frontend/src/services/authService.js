@@ -63,7 +63,7 @@ export async function isAuthenticated() {
       return true;
     }
     return false;
-  } catch (err) {
+  } catch  {
     return false;
   }
 }

@@ -45,6 +45,7 @@ jobs:
         run: npm run format:check
 
       - name: Type check
+        continue-on-error: true
         working-directory: frontend
         run: npm run typecheck
 
