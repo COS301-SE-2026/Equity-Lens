@@ -1,15 +1,13 @@
-import { useEffect, useState } from 'react';
 import {
   TrendingUp,
   TrendingDown,
-  Bookmark,
   Star,
   Newspaper,
-  Globe,
   UserRound,
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+
 import api from '../../services/api';
-import { all } from 'axios';
 
 const NewsInvestment = () => {
   const [articles, setArticles] = useState(/** @type {any[]}*/ ([]));
@@ -59,7 +57,7 @@ const NewsInvestment = () => {
           pubDate: article.published_at,
           source_name: article.source,
           category: [ticker],
-          sentiment: sentiment,
+          sentiment,
           sentiment_score: score ?? 0,
         };
       });
@@ -99,7 +97,7 @@ const NewsInvestment = () => {
         pubDate: article.published_at,
         source_name: article.source,
         category: [ticker],
-        sentiment: sentiment,
+        sentiment,
         sentiment_score: score ?? 0,
       };
     });
@@ -129,7 +127,7 @@ const NewsInvestment = () => {
     }
 
     await api.post('/watchlist/', {
-      ticker: ticker,
+      ticker,
     });
 
     setTicker('');
@@ -391,7 +389,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('All');
                       setActiveCategory('All');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'All' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'All' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     All{' '}
@@ -401,7 +399,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('Top');
                       setActiveCategory('Top');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'Top' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'Top' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     Top{' '}
@@ -411,7 +409,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('Business');
                       setActiveCategory('Business');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'Business' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'Business' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     Business{' '}
@@ -421,7 +419,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('Technology');
                       setActiveCategory('Technology');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'Technology' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'Technology' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     Technology{' '}
@@ -431,7 +429,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('Politics');
                       setActiveCategory('Politics');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'Politics' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'Politics' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     Politics{' '}
@@ -441,7 +439,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('Crime');
                       setActiveCategory('Crime');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'Crime' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'Crime' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     Crime{' '}
@@ -512,7 +510,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('All');
                       setActiveCategory('All');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'All' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'All' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     All{' '}
@@ -522,7 +520,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('Top');
                       setActiveCategory('Top');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'Top' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'Top' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     Top{' '}
@@ -532,7 +530,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('Business');
                       setActiveCategory('Business');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'Business' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'Business' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     Business{' '}
@@ -542,7 +540,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('Technology');
                       setActiveCategory('Technology');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'Technology' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'Technology' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     Technology{' '}
@@ -552,7 +550,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('Politics');
                       setActiveCategory('Politics');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'Politics' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'Politics' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     Politics{' '}
@@ -562,7 +560,7 @@ const NewsInvestment = () => {
                       ToGetTheNews('Crime');
                       setActiveCategory('Crime');
                     }}
-                    className={`px-3 py-1 rounded-full ${activeCategory == 'Crime' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
+                    className={`px-3 py-1 rounded-full ${activeCategory === 'Crime' ? 'bg-blue-500/20 text-blue border border-blue-500/40 ' : 'bg-[var(--surface-card)] text-[var(--text-secondary)]'}`}
                   >
                     {' '}
                     Crime{' '}

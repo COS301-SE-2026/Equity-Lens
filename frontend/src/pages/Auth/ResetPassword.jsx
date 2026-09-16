@@ -105,7 +105,6 @@ const ResetPassword = () => {
                 onBlur={handleBlur}
                 error={touched.code ? errors.code : undefined}
                 placeholder="000000"
-                autoFocus
                 required
               />
 

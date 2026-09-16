@@ -586,7 +586,7 @@ const IndicatorPickerModal = ({
           background: 'var(--bg-primary,#0a0a0a)',
           border: '1px solid var(--border-subtle,#2a2a2a)',
         }}
-        onClick={(e) => e.stopPropagation()}
+        onClick={type="button" (e) => e.stopPropagation()}
       >
         <div
           className="flex items-center justify-between px-5 py-4"
