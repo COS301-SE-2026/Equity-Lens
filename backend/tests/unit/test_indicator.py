@@ -8,6 +8,7 @@ def _mock_user(user_id=1):
     user.id = user_id
     return user
 
+
 def _mock_db(portfolios=None, holdings=None):
     db = MagicMock()
 
@@ -23,6 +24,7 @@ def _mock_db(portfolios=None, holdings=None):
     db.query.side_effect = query_side_effect
     return db
 
+
 def _mock_holding(ticker, instrument_name=None, portfolio_id=1):
     holding = MagicMock()
     holding.ticker = ticker
@@ -30,10 +32,12 @@ def _mock_holding(ticker, instrument_name=None, portfolio_id=1):
     holding.portfolio_id = portfolio_id
     return holding
 
+
 def _mock_portfolio(portfolio_id=1):
     portfolio = MagicMock()
     portfolio.id = portfolio_id
     return portfolio
+
 
 def test_returns_empty_list_when_user_has_no_portfolios():
     db = _mock_db(portfolios=[])
@@ -43,6 +47,7 @@ def test_returns_empty_list_when_user_has_no_portfolios():
 
     assert result == []
 
+
 def test_returns_empty_list_when_portfolios_have_no_holdings():
     db = _mock_db(portfolios=[_mock_portfolio()], holdings=[])
 
@@ -51,21 +56,28 @@ def test_returns_empty_list_when_portfolios_have_no_holdings():
 
     assert result == []
 
+
 @patch("app.routers.indicators.time.sleep")
 @patch("app.routers.indicators.get_market_returns", return_value=None)
 @patch("app.routers.indicators.serialize_indicator_row", side_effect=lambda r: r)
-@patch("app.routers.indicators.get_cached_price_histories", return_value={}) 
+@patch("app.routers.indicators.get_cached_price_histories", return_value={})
 @patch("app.routers.indicators.build_live_indicator_row")
-def test_serializes_every_built_row_and_returns_them_in_order(mock_build_row, _mock_histories, _mock_serialize, _mock_returns, _mock_sleep):
+def test_serializes_every_built_row_and_returns_them_in_order(
+    mock_build_row, _mock_histories, _mock_serialize, _mock_returns, _mock_sleep
+):
     holdings = [_mock_holding(ticker="NPN"), _mock_holding(ticker="ABG")]
     db = _mock_db(portfolios=[_mock_portfolio()], holdings=holdings)
 
-    built_rows = {"NPN": {"ticker": "NPN", "pe_ratio": 12.0, "live_fetch": False}, "ABG": {"ticker": "ABG", "pe_ratio": 8.5, "live_fetch": False}}
+    built_rows = {
+        "NPN": {"ticker": "NPN", "pe_ratio": 12.0, "live_fetch": False},
+        "ABG": {"ticker": "ABG", "pe_ratio": 8.5, "live_fetch": False},
+    }
     mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker]
 
     result = get_indicators(current_user=_mock_user(), db=db)
 
     assert result == [built_rows["NPN"], built_rows["ABG"]]
+
 
 @patch("app.routers.indicators.time.sleep")
 @patch("app.routers.indicators.serialize_indicator_row", side_effect=lambda r: r)
@@ -88,6 +100,7 @@ def test_sleep_is_skipped_when_no_ticker_made_a_live_fetch(
 
     mock_sleep.assert_not_called()
 
+
 @patch("app.routers.indicators.time.sleep")
 @patch("app.routers.indicators.serialize_indicator_row", side_effect=lambda r: r)
 @patch("app.routers.indicators.get_cached_price_histories", return_value={})
@@ -96,7 +109,11 @@ def test_sleep_is_skipped_when_no_ticker_made_a_live_fetch(
 def test_sleep_fires_only_after_a_ticker_that_made_a_live_fetch(
     mock_build_row, _mock_returns, _mock_cached_histories, _mock_serialize, mock_sleep
 ):
-    holdings = [_mock_holding(ticker="NPN"), _mock_holding(ticker="ABG"), _mock_holding(ticker="MTN")]
+    holdings = [
+        _mock_holding(ticker="NPN"),
+        _mock_holding(ticker="ABG"),
+        _mock_holding(ticker="MTN"),
+    ]
     db = _mock_db(portfolios=[_mock_portfolio()], holdings=holdings)
 
     built_rows = {

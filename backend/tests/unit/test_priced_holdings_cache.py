@@ -15,6 +15,7 @@ from app.services.returns import (
 @pytest.fixture
 def make_txn():
     """Factory fixture for building transaction dicts with consistent defaults."""
+
     def _factory(ticker, date_val, side, quantity, value_zar):
         return {
             "ticker": ticker,
@@ -23,7 +24,9 @@ def make_txn():
             "quantity": quantity,
             "value_zar": value_zar,
         }
+
     return _factory
+
 
 def test_twr_no_cash_flows_doubling():
     snapshots = [(date(2026, 1, 1), 100.0), (date(2026, 6, 1), 200.0)]
@@ -98,7 +101,6 @@ def test_twr_index_handles_initial_zero_balance():
 def test_twr_index_returns_empty_when_insufficient_data():
     assert time_weighted_index([], []) == []
     assert time_weighted_index([(date(2026, 1, 1), 100.0)], []) == []
-
 
 
 def test_xirr_single_annual_contribution():
