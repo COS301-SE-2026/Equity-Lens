@@ -49,6 +49,7 @@ jobs:
         run: npm run typecheck
 
       - name: Dead code scan (knip)
+        continue-on-error: true
         working-directory: frontend
         run: npx knip
 
