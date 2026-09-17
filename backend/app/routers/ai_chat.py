@@ -76,6 +76,8 @@ async def ai_chat(
     try:
         reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id)
         return ChatResponse(reply = reply, conversation_id = conversation_id)
+    except HTTPException:
+        raise
     except Exception as e:
         logger.exception(
             "AI chat failed for user %s (conversation %s): %s",

@@ -1,5 +1,4 @@
 from functools import lru_cache
-
 from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.portfolio import Portfolios, Document, Holdings
@@ -17,6 +16,8 @@ import requests
 import time
 from app.services.indicator_service import build_live_indicator_row, serialize_indicator_row
 from app.utils.market_cache import get_market_returns
+from app.utils.exceptions import ConversationNotFoundException
+from app.services.ai_context import build_history
 
 
 MAX_TOOL_ITERATIONS = 3
@@ -339,11 +340,18 @@ def run_tool(name: str, tool_input: dict) -> str:
 
 
 
-#now for chat functionality 
-#Working on saving the user and ai assistant reply messages to the database
 def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = None):
-    client = get_bedrock_client()
+    # check ownership before spending anything on Bedrock
+    chat_conversation = None
+    if conversation_id:
+        chat_conversation = db.query(ChatConversation).filter(
+            ChatConversation.id == conversation_id,
+            ChatConversation.user_id == logged_in_user_id
+        ).first()
+        if chat_conversation is None:
+            raise ConversationNotFoundException()
 
+    client = get_bedrock_client()
     portfolio_context = get_user_portfolio_context(db, logged_in_user_id)
 
     system_prompt = f"""You are an AI financial assistant for EquityLens. EquityLens is a web application built to help users navigate and understand their investment portfolios.
@@ -407,25 +415,19 @@ Below is the user's portfolio data. Treat everything inside
 
 <portfolio_context> {portfolio_context} </portfolio_context>"""
 
-    history = []
+    prev_messages = []
     if conversation_id:
-        prev_messages = db.query(ChatMessages).filter(
-            ChatMessages.conversation_id == conversation_id
-        ).order_by(ChatMessages.created_at.desc()).limit(10).all()
+        prev_messages = (
+            db.query(ChatMessages)
+                .join(ChatConversation, ChatMessages.conversation_id == ChatConversation.id)
+                .filter(ChatMessages.conversation_id == conversation_id, ChatConversation.user_id == logged_in_user_id)
+                .order_by(ChatMessages.created_at.desc())
+                .limit(40)
+                .all()
+            )
         prev_messages.reverse()
 
-        for prev in prev_messages:
-            history.append({
-                "role": prev.role,
-                "content": [{"text": prev.content}]
-            })
-
-    history.append({
-        "role": "user",
-        "content": [{"text": user_message}]
-    })
-
-
+    history = build_history(prev_messages, user_message)
     output_message = None
 
     for _ in range(MAX_TOOL_ITERATIONS):
@@ -434,7 +436,7 @@ Below is the user's portfolio data. Treat everything inside
             messages = history,
             system = [{"text": system_prompt}],
             inferenceConfig = {"maxTokens": 2048},
-            toolConfig = TOOL_CONFIG,
+            toolConfig = TOOL_CONFIG
         )
 
         output_message = response["output"]["message"]
@@ -474,18 +476,11 @@ Below is the user's portfolio data. Treat everything inside
         reply = "Sorry, I couldn't finish that one. Try asking again."
 
     
-    #Saving to the DB
-    if conversation_id:
-        chat_conversation = db.query(ChatConversation).filter(
-            ChatConversation.id == conversation_id,
-            ChatConversation.user_id == logged_in_user_id
-        ).first()
-    # else create a new one
-    else:
+    if chat_conversation is None:
         title = title_creation(client, user_message)
-        chat_conversation = ChatConversation(user_id = logged_in_user_id, title = title) 
+        chat_conversation = ChatConversation(user_id = logged_in_user_id, title = title)
+
         db.add(chat_conversation)
-        #force to send insert into db to generate UUID 
         db.flush()
 
     #user message
