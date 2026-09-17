@@ -1,22 +1,38 @@
+import logging
 import time
+from datetime import UTC, datetime
 from typing import Any
 
 import requests
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
 from app.dependencies import get_current_user
+from app.models.news_event import NewsArticle
 from app.models.portfolio import Holdings, Portfolios
 from app.models.user import User
+from app.repositories.news_repository import NewsRepository
 from app.schemas.auth import UserResponse
+from app.services.ticker_map import match_entity, query_symbol, storage_map
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/news", tags=["importing news"])
 _PORTFOLIO_NEWS_CACHE: dict[tuple[str, ...], tuple[float, dict]] = {}
 _TICKER_NEWS_CACHE: dict[str, tuple[float, dict]] = {}
-_NEWS_TTL_SECONDS = 900
+_NEWS_TTL_SECONDS = 300
+_NEWS_CACHE_MAX_KEYS = 200
+
+_BREAKER_FAILURE_LIMIT = 3
+_BREAKER_PAUSE_SECONDS = 900
+_breaker_failures = 0
+_breaker_open_until = 0.0
+
+MARKETAUX_URL = "https://api.marketaux.com/v1/news/all"
+MARKETAUX_TIMEOUT_SECONDS = 6
 
 EMPTY_ENVELOPE: dict[str, Any] = {
     "total_articles": 0,
@@ -43,6 +59,46 @@ class TickerNewsResponse(BaseModel):
 
 class TickerResponse(BaseModel):
     tickers: list[str] = Field(examples=[["AAPL", "MFST", "TSLA"]])
+
+
+def _cache_get(cache: dict, key: object) -> dict | None:
+    now = time.monotonic()
+    for stale in [k for k, (cached_at, _) in cache.items() if now - cached_at >= _NEWS_TTL_SECONDS]:
+        cache.pop(stale, None)
+    entry = cache.get(key)
+    return entry[1] if entry else None
+
+
+def _cache_put(cache: dict, key: object, envelope: dict) -> None:
+    if len(cache) >= _NEWS_CACHE_MAX_KEYS:
+        oldest = min(cache, key=lambda k: cache[k][0])
+        cache.pop(oldest, None)
+    cache[key] = (time.monotonic(), envelope)
+
+
+def _breaker_open() -> bool:
+    return time.monotonic() < _breaker_open_until
+
+
+def _record_provider_result(ok: bool) -> None:
+    global _breaker_failures, _breaker_open_until
+    if ok:
+        _breaker_failures = 0
+        _breaker_open_until = 0.0
+        return
+    _breaker_failures += 1
+    if _breaker_failures >= _BREAKER_FAILURE_LIMIT:
+        _breaker_open_until = time.monotonic() + _BREAKER_PAUSE_SECONDS
+        logger.warning(
+            "marketaux circuit breaker open for %ss after %s consecutive failures",
+            _BREAKER_PAUSE_SECONDS, _breaker_failures,
+        )
+
+
+def reset_circuit_breaker() -> None:
+    global _breaker_failures, _breaker_open_until
+    _breaker_failures = 0
+    _breaker_open_until = 0.0
 
 
 def _newsdata_articles(params: dict) -> list[dict]:
@@ -120,64 +176,136 @@ def get_portfolio_tickers(
   return {"tickers": _user_tickers(db, current_user.id)}
 
 
-def _to_article(article: dict, tickers: set[str]) -> dict:
-    entity = next(
-        (e for e in article.get("entities", []) if e.get("symbol") in tickers),
-        None,
-    )
-    score = entity.get("sentiment_score") if entity else None
-
-    sentiment = "neutral"
+def _sentiment_label(score: float | None) -> str:
     if score is not None and score > 0:
-        sentiment = "positive"
-    elif score is not None and score < 0:
-        sentiment = "negative"
+        return "positive"
+    if score is not None and score < 0:
+        return "negative"
+    return "neutral"
 
+
+def _parse_published(value: object) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
+
+
+def _iso_utc(value: datetime) -> str:
+    aware = value if value.tzinfo else value.replace(tzinfo=UTC)
+    return aware.astimezone(UTC).isoformat().replace("+00:00", "Z")
+
+
+def _for_storage(article: dict, wanted: dict[str, str]) -> dict | None:
+    published = _parse_published(article.get("published_at"))
+    if not article.get("uuid") or not article.get("title") or published is None:
+        return None
+    links: dict[str, float | None] = {}
+    for entity in article.get("entities", []):
+        key = match_entity(entity.get("symbol"), wanted)
+        if key and key not in links:
+            links[key] = entity.get("sentiment_score")
+
+    lead = next(iter(links.values()), None)
     return {
-        "article_id": article.get("uuid"),
-        "title": article.get("title"),
+        "external_id": article["uuid"],
+        "source": "marketaux",
+        "title": article["title"],
         "description": article.get("description"),
+        "url": article.get("url"),
         "image_url": article.get("image_url"),
-        "pubDate": article.get("published_at"),
         "source_name": article.get("source"),
-        "category": [entity.get("symbol")] if entity else [],
-        "sentiment": sentiment,
-        "sentiment_score": score if score is not None else 0,
+        "published_at": published,
+        "sentiment": _sentiment_label(lead),
+        "sentiment_score": lead,
+        "tickers": [
+            {"ticker": key, "sentiment_score": score} for key, score in links.items()
+        ],
     }
 
 
-def _fetch_portfolio_news(tickers: list[str]) -> dict:
+def _stored_article(row: NewsArticle) -> dict:
+    return {
+        "article_id": row.external_id,
+        "title": row.title,
+        "description": row.description,
+        "image_url": row.image_url,
+        "pubDate": _iso_utc(row.published_at) if row.published_at else None,
+        "source_name": row.source_name,
+        "category": [link.ticker for link in row.tickers],
+        "sentiment": row.sentiment or "neutral",
+        "sentiment_score": row.sentiment_score if row.sentiment_score is not None else 0,
+    }
+
+
+def _marketaux_articles(
+    symbols: list[str],
+    limit: int,
+    published_after: str | None = None,
+    published_before: str | None = None,
+) -> list[dict] | None:
     if not settings.market_api_key:
-        return dict(EMPTY_ENVELOPE)
+        return None
+    if _breaker_open():
+        logger.info("skipping marketaux call for %s, circuit breaker open", symbols)
+        return None
+
+    params = {
+        "api_token": settings.market_api_key,
+        "symbols": ",".join(symbols),
+        "filter_entities": "true",
+        "language": "en",
+        "limit": limit,
+    }
+    if published_after:
+        params["published_after"] = published_after
+    if published_before:
+        params["published_before"] = published_before
 
     try:
-        response = requests.get(
-            "https://api.marketaux.com/v1/news/all",
-            params={
-                "api_token": settings.market_api_key,
-                "symbols": ",".join(tickers),
-                "filter_entities": "true",
-                "language": "en",
-                "limit": 50,
-            },
-            timeout=6,
-        )
+        response = requests.get(MARKETAUX_URL, params=params, timeout=MARKETAUX_TIMEOUT_SECONDS)
         payload = response.json()
-    except (requests.RequestException, ValueError):
-        return dict(EMPTY_ENVELOPE)
+    except (requests.RequestException, ValueError) as exc:
+        logger.warning("marketaux fetch failed for %s: %s", symbols, exc)
+        _record_provider_result(ok=False)
+        return None
 
     if "error" in payload:
-        return dict(EMPTY_ENVELOPE)
+        logger.warning("marketaux returned an error for %s", symbols)
+        _record_provider_result(ok=False)
+        return None
 
-    wanted = set(tickers)
-    results = [_to_article(article, wanted) for article in payload.get("data", [])]
+    _record_provider_result(ok=True)
+    return payload.get("data", [])
 
+
+def _refresh_from_provider(db: Session, repo: NewsRepository, scope: str,
+                           symbols: list[str], limit: int) -> None:
+    if not repo.should_fetch(scope, settings.news_refresh_floor_hours):
+        return
+    raw = _marketaux_articles([query_symbol(s) for s in symbols], limit)
+    if raw is None:
+        repo.record_fetch(scope, "marketaux", 0, ok=False)
+        db.commit()
+        return
+
+    wanted = storage_map(symbols)
+    rows = [row for row in (_for_storage(a, wanted) for a in raw) if row]
+    repo.upsert_articles(rows)
+    repo.record_fetch(scope, "marketaux", len(rows), ok=True)
+    db.commit()
+
+
+def _portfolio_envelope(articles: list[dict]) -> dict:
     return {
-        "total_articles": len(results),
-        "positive": sum(1 for r in results if r["sentiment"] == "positive"),
-        "negative": sum(1 for r in results if r["sentiment"] == "negative"),
-        "neutral": sum(1 for r in results if r["sentiment"] == "neutral"),
-        "results": results,
+        "total_articles": len(articles),
+        "positive": sum(1 for a in articles if a["sentiment"] == "positive"),
+        "negative": sum(1 for a in articles if a["sentiment"] == "negative"),
+        "neutral": sum(1 for a in articles if a["sentiment"] == "neutral"),
+        "results": articles,
     }
 
 
@@ -185,18 +313,22 @@ def _fetch_portfolio_news(tickers: list[str]) -> dict:
 def get_portfolio_news(
     current_user: UserResponse = Depends(get_current_user),
     db: Session = Depends(get_db),
-):
+) -> dict:
     tickers = _user_tickers(db, current_user.id)
     if not tickers:
         return dict(EMPTY_ENVELOPE)
 
     key = tuple(sorted(tickers))
-    cached = _PORTFOLIO_NEWS_CACHE.get(key)
-    if cached and time.monotonic() - cached[0] < _NEWS_TTL_SECONDS:
-        return cached[1]
+    cached = _cache_get(_PORTFOLIO_NEWS_CACHE, key)
+    if cached is not None:
+        return cached
 
-    envelope = _fetch_portfolio_news(list(key))
-    _PORTFOLIO_NEWS_CACHE[key] = (time.monotonic(), envelope)
+    repo = NewsRepository(db)
+    _refresh_from_provider(db, repo, f"portfolio:{','.join(key)}", list(key), limit=50)
+
+    articles = [_stored_article(row) for row in repo.articles_for_tickers(list(key), limit=50)]
+    envelope = _portfolio_envelope(articles)
+    _cache_put(_PORTFOLIO_NEWS_CACHE, key, envelope)
     return envelope
 
 
@@ -205,66 +337,34 @@ def _empty_ticker_envelope(ticker: str) -> dict:
             "neutral": 0, "articles": []}
 
 
-def _fetch_ticker_news(ticker: str) -> dict:
-    if not settings.market_api_key:
-        return _empty_ticker_envelope(ticker)
+@router.get(
+    "/ticker/{ticker}",
+    response_model=TickerNewsResponse,
+    responses={404: {"description": "That ticker is not in the caller's portfolio"}},
+)
+def get_ticker_news(
+    ticker: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> dict:
+    if ticker.upper() not in {t.upper() for t in _user_tickers(db, current_user.id)}:
+        raise HTTPException(status_code=404, detail=f"{ticker} is not in this portfolio")
 
-    try:
-        response = requests.get(
-            "https://api.marketaux.com/v1/news/all",
-            params={
-                "api_token": settings.market_api_key,
-                "symbols": ticker,
-                "filter_entities": "true",
-                "language": "en",
-                "limit": 20
-            },
-            timeout=6,
-        )
-        data = response.json()
-    except (requests.RequestException, ValueError):
-        data = {"error": "upstream unavailable"}
+    cached = _cache_get(_TICKER_NEWS_CACHE, ticker)
+    if cached is not None:
+        return cached
 
-    if "error" in data:
-        return _empty_ticker_envelope(ticker)
+    repo = NewsRepository(db)
+    _refresh_from_provider(db, repo, f"ticker:{ticker.upper()}", [ticker], limit=20)
 
-    articles = data.get("data", [])
-
-    positive = 0
-    negative = 0
-    neutral = 0
-
-    for article in articles:
-        for entity in article.get("entities",[]):
-            if entity.get("symbol") == ticker:
-                sentiment = entity.get("sentiment_score")
-
-                if sentiment is None:
-                    continue
-
-                if sentiment > 0:
-                    positive += 1
-                elif sentiment < 0:
-                    negative += 1
-                else:
-                    neutral += 1
-
-    return {
+    articles = [_stored_article(row) for row in repo.articles_for_tickers([ticker], limit=20)]
+    envelope = {
         "ticker": ticker,
         "total_articles": len(articles),
-        "positive": positive,
-        "negative": negative,
-        "neutral": neutral,
-        "articles": articles
+        "positive": sum(1 for a in articles if a["sentiment"] == "positive"),
+        "negative": sum(1 for a in articles if a["sentiment"] == "negative"),
+        "neutral": sum(1 for a in articles if a["sentiment"] == "neutral"),
+        "articles": articles,
     }
-
-
-@router.get("/ticker/{ticker}", response_model=TickerNewsResponse)
-def get_ticker_news(ticker: str, current_user: User = Depends(get_current_user)):
-    cached = _TICKER_NEWS_CACHE.get(ticker)
-    if cached and time.monotonic() - cached[0] < _NEWS_TTL_SECONDS:
-        return cached[1]
-
-    envelope = _fetch_ticker_news(ticker)
-    _TICKER_NEWS_CACHE[ticker] = (time.monotonic(), envelope)
+    _cache_put(_TICKER_NEWS_CACHE, ticker, envelope)
     return envelope

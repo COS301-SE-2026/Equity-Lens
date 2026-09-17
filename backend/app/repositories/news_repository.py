@@ -1,4 +1,4 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
@@ -6,6 +6,7 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
 
 from app.models.news_event import NewsArticle, NewsArticleTicker, NewsFetchLog
+from app.services.ticker_map import canonical_key
 
 
 class NewsRepository:
@@ -56,7 +57,7 @@ class NewsRepository:
         links = [
             {
                 "article_id": article_id,
-                "ticker": entry["ticker"].upper(),
+                "ticker": canonical_key(entry["ticker"]),
                 "sentiment_score": entry.get("sentiment_score"),
             }
             for article_id, external_id in ids
@@ -79,7 +80,7 @@ class NewsRepository:
         stmt = (
             select(NewsArticle)
             .join(NewsArticleTicker, NewsArticleTicker.article_id == NewsArticle.id)
-            .where(NewsArticleTicker.ticker.in_([t.upper() for t in tickers]))
+            .where(NewsArticleTicker.ticker.in_([canonical_key(t) for t in tickers]))
             .order_by(NewsArticle.published_at.desc())
             .distinct()
             .limit(limit)
@@ -93,7 +94,7 @@ class NewsRepository:
             select(NewsArticle)
             .join(NewsArticleTicker, NewsArticleTicker.article_id == NewsArticle.id)
             .where(
-                NewsArticleTicker.ticker == ticker.upper(),
+                NewsArticleTicker.ticker == canonical_key(ticker),
                 NewsArticle.published_at >= start,
                 NewsArticle.published_at <= end,
             )
@@ -102,6 +103,27 @@ class NewsRepository:
             .limit(limit)
         )
         return list(self.db.scalars(stmt).all())
+
+    def linked_article_dates(
+        self, tickers: list[str], start: datetime, end: datetime
+    ) -> dict[str, list[date]]:
+        if not tickers:
+            return {}
+
+        stmt = (
+            select(NewsArticleTicker.ticker, NewsArticle.published_at)
+            .join(NewsArticle, NewsArticle.id == NewsArticleTicker.article_id)
+            .where(
+                NewsArticleTicker.ticker.in_([canonical_key(t) for t in tickers]),
+                NewsArticle.published_at >= start,
+                NewsArticle.published_at <= end,
+            )
+        )
+
+        dates: dict[str, list[date]] = {}
+        for ticker, published_at in self.db.execute(stmt):
+            dates.setdefault(ticker, []).append(published_at.date())
+        return dates
 
     def corpus_for_idf(self, limit: int = 2000) -> list[str]:
         stmt = (
