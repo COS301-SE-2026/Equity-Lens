@@ -22,7 +22,7 @@ from app.routers import (
 from app.routers import market_data as market_data_router
 from app.schemas.responses import STATUS_ERROR_CODES
 
-app = FastAPI(title="EquityLens API", lifespan=lifespan)
+app = FastAPI(title="EquityLens API")
 
 
 class HealthResponse(BaseModel):
