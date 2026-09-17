@@ -11,6 +11,7 @@ from app.models import user  # noqa: F401
 from app.models import portfolio
 from app.models import chat
 from app.models import market_data
+from app.models import news_event
 config = context.config
 
 #Overrides with app's real settings
