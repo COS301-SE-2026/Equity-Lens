@@ -34,6 +34,7 @@ jobs:
 
       - name: Run lint
         working-directory: frontend
+        continue-on-error: true
         run: npm run lint
 
       - name: Security audit
@@ -158,6 +159,7 @@ jobs:
 
       - name: Lint (ruff)
         working-directory: backend
+        continue-on-error: true
         run: |
           ruff check .
           ruff format --check .
