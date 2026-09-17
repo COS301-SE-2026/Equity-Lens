@@ -57,7 +57,16 @@ class UserRepository:
             cognito_sub=cognito_sub,
         )
         self.db.add(user)
-        self.db.commit()
+        try:
+            self.db.commit()
+        except IntegrityError:
+            # two first requests from the same new identity raced us to the insert
+            self.db.rollback()
+            existing = self.get_by_cognito_sub(cognito_sub) or self.get_by_email(email)
+            if existing is None:
+                raise
+            return existing
+
         self.db.refresh(user)
         return user
 

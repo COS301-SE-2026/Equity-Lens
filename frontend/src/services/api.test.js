@@ -52,7 +52,7 @@ describe('api response interceptor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     delete window.location;
-    window.location = { ...originalLocation, href: '' };
+    window.location = { ...originalLocation, href: '', pathname: '/dashboard' };
   });
 
   afterEach(() => {

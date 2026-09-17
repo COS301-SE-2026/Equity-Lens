@@ -105,8 +105,9 @@ def get_bedrock_client():
 
 
 def get_user_portfolio_context(db: Session, user_id):
-    portfolios = db.query(Portfolios).filter(Portfolios.user_id == user_id).all()
+    portfolio = PortfolioRepository(db).get_latest_portfolio(user_id)
     knowledge = ""
+    holdings = []
 
     if portfolios:
         for info in portfolios:
@@ -128,7 +129,8 @@ def get_user_portfolio_context(db: Session, user_id):
                 f"overall cost: R{i.total_cost}, weight: {i.weight_percentage}%\n"
             )
 
-        health = compute_health_score(_price_holdings(holdings))
+        config = resolve_health_config(db, user_id).config
+        health = compute_health_score(_price_holdings(holdings), config)
         if health["score"] is not None:
             knowledge += f"\nPortfolio Health: {health['score']}/10 ({health['label']})\n"
             for s in health["subscores"]:

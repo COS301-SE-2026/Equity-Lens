@@ -11,6 +11,8 @@
 }
 
 :root {
+  color-scheme: dark;
+
   --surface-base: #000000;
   --surface-raised: #0d0d0d;
   --surface-card: #0a0a0a;
@@ -142,6 +144,14 @@
   --chart-grid: #eae7e1;
   --chart-axis-text: #9aa0ab;
   --chart-tooltip-bg: #ffffff;
+
+  --glass-bg: rgba(255, 255, 255, 0.88);
+  --glass-border: rgba(0, 0, 0, 0.10);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.96);
+  --glass-border-elevated: rgba(0, 0, 0, 0.14);
+  --glass-highlight: rgba(255, 255, 255, 0.90);
+  --glass-hover: rgba(0, 0, 0, 0.04);
+  --scrim: rgba(0, 0, 0, 0.40);
 
   --text-page: rgba(0, 0, 0, 0.88);
   --text-page-secondary: rgba(0, 0, 0, 0.6);

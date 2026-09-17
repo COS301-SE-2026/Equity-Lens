@@ -22,7 +22,7 @@ from app.routers import (
 from app.routers import market_data as market_data_router
 from app.schemas.responses import STATUS_ERROR_CODES
 
-app = FastAPI(title="EquityLens API")
+app = FastAPI(title="EquityLens API", lifespan=lifespan)
 
 
 class HealthResponse(BaseModel):
@@ -62,9 +62,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
-    tb = traceback.format_exc()
-    print(tb)
-    return JSONResponse(
+    logger.exception("unhandled error on %s %s", request.method, request.url.path)
+    response = JSONResponse(
         status_code=500,
         content={"error_code": "INTERNAL_ERROR", "detail": "Something went wrong"},
     )
