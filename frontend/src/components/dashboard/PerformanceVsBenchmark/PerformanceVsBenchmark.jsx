@@ -490,6 +490,14 @@ const PerfChart = ({
     </ResponsiveContainer>
   );
 };
+/** @param {string | undefined} ticker @param {{ ticker: string, value: number }[]} holdings */
+const holdingWeightPct = (ticker, holdings) => {
+  if (!ticker) return null;
+  const upper = ticker.toUpperCase();
+  const bookValue = holdings.reduce((sum, h) => sum + (h.value ?? 0), 0);
+  const held = holdings.find((h) => (h.ticker ?? '').toUpperCase() === upper);
+  return held && bookValue ? (held.value / bookValue) * 100 : null;
+};
 
 /**
  * @param {{
@@ -686,6 +694,7 @@ const PerformanceVsBenchmark = ({
   };
 
   const openKey = openEvent ? `${openEvent.event.ticker}:${openEvent.event.date}` : null;
+  const eventWeightPct = holdingWeightPct(openEvent?.event?.ticker, holdings);
 
   const tooShortToPlot = chosenSeries.length < 2;
 
@@ -871,6 +880,7 @@ const PerformanceVsBenchmark = ({
                 event={openEvent.event}
                 detail={openKey ? eventDetails[openKey] : null}
                 pending={Boolean(openKey) && eventPendingKey === openKey}
+                weightPct={eventWeightPct}
                 onClose={() => setOpenEvent(null)}
                 onAsk={onAskAboutEvent}
               />
