@@ -16,10 +16,16 @@ router = APIRouter(prefix="/api/portfolio_snapshot", tags=["Portfolio Snapshot"]
 def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),current_user: UserResponse = Depends(get_current_user)):
     repository = PortfolioRepository(db)
 
-    portfolio = repository.get_portfolio_for_user(portfolio_id=portfolio_id, user_id=current_user.id,)
+    portfolio = repository.get_portfolio_for_user(
+        portfolio_id=portfolio_id, 
+        user_id=current_user.id,
+    )
 
     if portfolio is None:
-        raise HTTPException(status_code=404,detail="Portfolio not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Portfolio Not Found"
+        )
 
     summary = get_summary_import_PDF(
         database=db,
@@ -89,4 +95,46 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
         "stored_snapshot_id": str(stored_snapshot.id),
         "created_at": stored_snapshot.created_at,
     }
+
+@router.get("/{portfolio_id}/download")
+def download_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),current_user: UserResponse = Depends(get_current_user)):
+    repository = PortfolioRepository(db)
+    portfolio = repository.get_portfolio_for_user(
+        portfolio_id=portfolio_id, 
+        user_id=current_user.id,
+    )
+
+    if portfolio is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Portfolio Not Found"
+        )
+
+    stored_snapshot = (
+        repository.get_latest_canonical_snapshot(portfolio_id)
+    )
+
+    if stored_snapshot is None:
+        raise HTTPException(
+            status_code=404,
+            detail="No snapshot found for this portfolio"
+        )
+
+    pdf = generate_portfolio_brief(
+        portfolio_id=str(portfolio_id),
+        snapshot_hash=stored_snapshot.snapshot_hash,
+        snapshot=stored_snapshot.snapshot_data,
+    )
+
+    return StreamingResponse(
+        pdf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": (
+                "attachment; "
+                f'filename="Equity-lens-{current_user.full_name}.pdf"'
+            )
+        },
+    )
+
 
