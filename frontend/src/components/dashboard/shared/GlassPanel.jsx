@@ -11,18 +11,23 @@ export const GlassPanel = ({ children, className = '', style, elevated = false, 
   </div>
 );
 
-/** @param {{ label: string, hint?: any, help?: string }} props */
-export const PanelHead = ({ label, hint, help }) => (
+/** @param {{ label: string, hint?: any, help?: string, action?: any }} props */
+export const PanelHead = ({ label, hint, help, action }) => (
   <div
     className="flex items-center justify-between px-5 py-4"
     style={{ borderBottom: '1px solid var(--border-subtle)' }} >
-    <div className="flex items-center gap-1.5 font-mono text-[10px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+    <div className="flex items-center gap-1.5 font-mono text-[11px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
       {label}
       {help && <HelpTooltip text={help} />}
     </div>
-    {hint && (
-      <div className="font-mono text-[10px]" style={{ color: 'var(--text-ghost)' }}>
-        {hint}
+    {(hint || action) && (
+      <div className="flex items-center gap-2">
+        {hint && (
+          <div className="font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
+            {hint}
+          </div>
+        )}
+        {action}
       </div>
     )}
   </div>

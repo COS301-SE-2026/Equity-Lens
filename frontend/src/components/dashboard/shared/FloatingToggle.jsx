@@ -68,7 +68,7 @@ const FloatingToggle = ({
               className="flex shrink-0 items-center justify-between px-4 py-3"
               style={{ borderBottom: '1px solid var(--border-subtle)' }}>
               <span
-                className="font-mono text-[10px] tracking-widest"
+                className="font-mono text-[11px] tracking-widest"
                 style={{ color: 'var(--text-ghost)' }}>
                 {label}
               </span>
