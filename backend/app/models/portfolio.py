@@ -9,8 +9,8 @@ class CanonicalPortfolioSnapshot(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
 
-    portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolio.id",ondelete="CASCADE"), nullable=False, index=True)
-    snapshot_hash = Column(string(64), nullable=False, index=True)
+    portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolios.id",ondelete="CASCADE"), nullable=False, index=True)
+    snapshot_hash = Column(String(64), nullable=False, index=True)
     snapshot_data = Column(JSON, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     
