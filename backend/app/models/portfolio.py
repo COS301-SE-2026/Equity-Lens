@@ -1,9 +1,19 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Date, Numeric, UniqueConstraint
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Date, Numeric, UniqueConstraint, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from app.database import Base
 
+class CanonicalPortfolioSnapshot(Base):
+    __tablename__ = "canonical_portfolio_snapshots"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    portfolio_id = Column(UUID(as_uuid=True), ForeignKey("portfolio.id",ondelete="CASCADE"), nullable=False, index=True)
+    snapshot_hash = Column(string(64), nullable=False, index=True)
+    snapshot_data = Column(JSON, nullable=False)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    
 class Document(Base):
     __tablename__ = "documents"
 
