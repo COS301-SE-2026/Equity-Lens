@@ -72,3 +72,16 @@ class TransactionExpensesRequest(BaseModel):
     value_zar: Decimal
 
 
+class ImportSaveResponse(BaseModel):
+    Success: bool
+    Message: str
+
+class DocumentSavedResponse(ImportSaveResponse):
+    document_id: str
+
+class PortfolioSavedResponse(ImportSaveResponse):
+    portfolio_id: str
+
+class LatestPortfolioResponse(BaseModel):
+    Found: bool
+    portfolio_id: Optional[str] = None
