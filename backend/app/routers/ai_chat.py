@@ -7,7 +7,7 @@ from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
-from app.models.chat import ChatConversation, ChatMessages
+from app.models.chat import ChatConversation, ChatMessages, UserMemory
 from pydantic import BaseModel
 from typing import Any
 from app.utils.ai_rate_limit import check_limit
@@ -179,3 +179,38 @@ async def delete_conversation(
     db.commit()
 
     return {"detail": "Conversation deleted"}
+
+
+@router.get("/memories/")
+async def get_memories(
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)
+):
+    memories = db.query(UserMemory).filter(
+        UserMemory.user_id == current_user.id
+    ).order_by(UserMemory.created_at.asc()).all()
+
+    return [
+        {"id": str(m.id), "fact": m.fact, "created_at": m.created_at}
+        for m in memories
+    ]
+
+
+@router.delete("/memories/{memory_id}/")
+async def delete_memory(
+    memory_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)
+):
+    memory = db.query(UserMemory).filter(
+        UserMemory.id == memory_id,
+        UserMemory.user_id == current_user.id
+    ).first()
+
+    if not memory:
+        raise HTTPException(status_code = 404, detail = "Memory not found")
+
+    db.delete(memory)
+    db.commit()
+
+    return {"detail": "Memory deleted"}
