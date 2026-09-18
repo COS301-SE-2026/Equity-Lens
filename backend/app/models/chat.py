@@ -12,8 +12,24 @@ class ChatConversation(Base):
 
     title = Column(String(255), nullable = False, default = "New Chat")
 
+    summary = Column(Text, nullable = True)
+    summarised = Column(DateTime, nullable = True)
+
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+
+
+class UserMemory(Base):
+    """This is one fact the user has told the assistant that is kept across conversations."""
+    __tablename__ = "user_memories"
+
+    id = Column(UUID(as_uuid=True), primary_key = True, default = uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete = "CASCADE"), nullable = False, index = True)
+
+    fact = Column(String(300), nullable = False)
+
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
 
 class ChatMessages(Base):
     __tablename__ = "chat_messages"
