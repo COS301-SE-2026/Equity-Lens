@@ -58,3 +58,35 @@ def test_parse_facts_handles_model_output(raw, expected):
     assert _parse_facts(raw) == expected
 
 
+@patch("app.services.ai_service.get_bedrock_client")
+def test_fact_saved(mock_bedrock_client, db_session, test_user):
+    client, captured = memory_client(fact_reply = '["User plans to retire in 15 years"]')
+    mock_bedrock_client.return_value = client
+
+    _, conversation_id = chat("I want to retire in 15 years", db_session, test_user.id)
+
+    facts = db_session.query(UserMemory).filter(UserMemory.user_id == test_user.id).all()
+    assert [f.fact for f in facts] == ["User plans to retire in 15 years"]
+
+    chat("what next?", db_session, test_user.id, conversation_id)
+    assert "User plans to retire in 15 years" in captured["system_prompts"][-1]
+    assert "<user_memory>" in captured["system_prompts"][-1]
+    assert captured["summary_calls"] == 0      
+
+
+@patch("app.services.ai_service.get_bedrock_client")
+def test_overflow_summarised(mock_bedrock_client, db_session, test_user):
+    client, captured = memory_client(summary_reply = "Earlier the user asked about MTN.")
+    mock_bedrock_client.return_value = client
+
+    _, conversation_id = chat("first question", db_session, test_user.id)
+    fill(db_session, conversation_id)
+    chat("a later question", db_session, test_user.id, conversation_id)
+
+    conversation = db_session.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()     
+    assert captured["summary_calls"] == 1
+    assert conversation.summary == "Earlier the user asked about MTN."
+    assert conversation.summarised is not None
+    assert "Earlier the user asked about MTN." in captured["system_prompts"][-1]
+
+
