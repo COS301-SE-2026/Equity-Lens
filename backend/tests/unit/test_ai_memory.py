@@ -90,3 +90,44 @@ def test_overflow_summarised(mock_bedrock_client, db_session, test_user):
     assert "Earlier the user asked about MTN." in captured["system_prompts"][-1]
 
 
+@patch("app.services.ai_service.get_bedrock_client")
+def test_failures(mock_bedrock_client, db_session, test_user):
+    client, _ = memory_client(summary_reply = "First summary.")
+    mock_bedrock_client.return_value = client
+
+    _, conversation_id = chat("first question", db_session, test_user.id)
+    fill(db_session, conversation_id)
+    chat("second question", db_session, test_user.id, conversation_id)
+
+    conversation = db_session.query(ChatConversation).filter(ChatConversation.id == conversation_id).first()     
+    watermark = conversation.summarised
+
+    client, _ = memory_client(summary_reply = RuntimeError("bedrock exploded"), fact_reply = RuntimeError("bedrock exploded"))
+    mock_bedrock_client.return_value = client
+    fill(db_session, conversation_id)
+    reply, _ = chat("third question", db_session, test_user.id, conversation_id)
+
+    assert reply == "An answer."
+    db_session.refresh(conversation)
+    assert conversation.summary == "First summary."
+    assert conversation.summarised == watermark
+
+
+@patch("app.services.ai_service.get_bedrock_client")
+def test_memories_cap(mock_bedrock_client, db_session, test_user):
+    other_user = User(email = "other@example.com", full_name = "Other", hashed_password = None, cognito_sub = "other-sub-789", is_active = True)
+    db_session.add(other_user)
+    db_session.flush()
+    db_session.add(UserMemory(user_id = other_user.id, fact = "SECRET-OTHER-USER-FACT"))
+    for i in range(MAX_FACTS_PER_USER):
+        db_session.add(UserMemory(user_id = test_user.id, fact = f"existing fact {i}"))
+    db_session.commit()
+
+    client, captured = memory_client(fact_reply = '["one more fact"]')
+    mock_bedrock_client.return_value = client
+
+    chat("a question", db_session, test_user.id)
+
+    assert "SECRET-OTHER-USER-FACT" not in captured["system_prompts"][0]
+    assert db_session.query(UserMemory).filter(UserMemory.user_id == test_user.id).count() == MAX_FACTS_PER_USER 
+    assert captured["fact_calls"] == 0      

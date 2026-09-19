@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from app.services.ai_context import build_history, estimate_tokens, message_tokens
+from app.services.ai_context import build_history, estimate_tokens, message_tokens, fit_to_budget, HISTORY_MESSAGE_LIMIT
 
 
 def row(role, content):
@@ -62,3 +62,14 @@ def test_whole_conversation_fits():
 
     assert [m["content"][0]["text"] for m in history] == ["q1", "a1", "q2", "a2", "q3"]
 
+
+
+def test_message_limit():
+    prev = [row("user" if i % 2 == 0 else "assistant", "hi") for i in range(100)]
+
+    kept, dropped = fit_to_budget(prev, "a question")
+
+    assert len(kept) == HISTORY_MESSAGE_LIMIT
+    assert len(dropped) == 100 - HISTORY_MESSAGE_LIMIT
+    assert [r.content for r in dropped + kept] == [r.content for r in prev]
+    assert kept[0].role == "user"
