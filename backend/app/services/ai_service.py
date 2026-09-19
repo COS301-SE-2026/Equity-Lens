@@ -505,10 +505,12 @@ Memory:
         reply = "Sorry, I couldn't finish that one. Try asking again."
 
 
+    saved_facts = []
     room = MAX_FACTS_PER_USER - len(memories)
     if room > 0:
         for fact in extract_facts(client, [m.fact for m in memories], user_message)[:room]:
-            db.add(UserMemory(user_id = logged_in_user_id, fact = fact))    
+            db.add(UserMemory(user_id = logged_in_user_id, fact = fact))
+            saved_facts.append(fact)   
 
     
     if chat_conversation is None:
@@ -528,4 +530,4 @@ Memory:
     #make it permanent 
     db.commit()
 
-    return reply, chat_conversation.id
+    return reply, chat_conversation.id, saved_facts

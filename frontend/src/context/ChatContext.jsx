@@ -3,7 +3,7 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
 
 /**
- * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean}} ChatMessage
+ * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean, savedFacts?: string[]}} ChatMessage
  * @typedef {{id: string, title: string}} Conversation
  * @typedef {{id: string, role: 'user'|'assistant', content: string, created_at?: string|null}} ApiMessage
  */
@@ -36,6 +36,8 @@ export const ChatProvider = ({ children }) => {
   const [isThinking, setIsThinking] = useState(false);
   const [regeneratingId, setRegeneratingId] = useState(/** @type {number|string|null} */ (null));
   const [conversations, setConversations] = useState(/** @type {Conversation[]} */ ([]));
+  /** @typedef {{id: string, fact: string, created_at?: string|null}} Memory */
+  const [memories, setMemories] = useState(/** @type {Memory[]} */ ([]));
 
   const refreshConversations = () =>
     api.get('/ai_chat/conversations/')
@@ -44,6 +46,19 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     refreshConversations();
   }, []);
+
+  const refreshMemories = () =>
+    api.get('/ai_chat/memories/')
+      .then((res) => setMemories(res.data))
+      .catch(() => {});
+
+  /** @param {string} memoryId */
+  const deleteMemory = (memoryId) => {
+    return api.delete(`/ai_chat/memories/${memoryId}/`)
+      .then(() => {
+        setMemories((prev) => prev.filter((m) => m.id !== memoryId));
+      })
+      .catch(() => {});};
 
   /** @param {string} rawText */
   const sendMessage = (rawText) => {
@@ -63,9 +78,11 @@ export const ChatProvider = ({ children }) => {
           id: Date.now() + 1,
           role: 'assistant',
           text: res.data.reply,
-          at: new Date(),});
+          at: new Date(),
+          savedFacts: res.data.saved_facts ?? []});
         setConversationId(res.data.conversation_id);
         setMessages((prev) => [...prev, responseMessage]);
+        if (res.data.saved_facts?.length) {refreshMemories();}
         return refreshConversations().then(() => 0);})
       .catch((err) => {
         const { text: errorText, retryAfter } = readError(err);
@@ -159,12 +176,15 @@ export const ChatProvider = ({ children }) => {
         isThinking,
         regeneratingId,
         conversations,
+        memories,
         sendMessage,
         regenerate,
         loadConversation,
         startNewChat,
         renameConversation,
         deleteConversation,
+        refreshMemories,
+        deleteMemory
       }}>
       {children}
     </ChatContext.Provider>);};

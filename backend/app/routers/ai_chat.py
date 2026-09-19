@@ -43,6 +43,11 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     reply: str
     conversation_id: UUID
+    saved_facts: list[str] = []
+
+class ChatResponse(BaseModel):
+    reply: str
+    conversation_id: UUID
 
 class ChangeConversationName(BaseModel):
     title: str = Field(min_length = 1)
@@ -74,8 +79,8 @@ async def ai_chat(
     current_user: UserResponse = Depends(enforce_limit)
     ):
     try:
-        reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id)
-        return ChatResponse(reply = reply, conversation_id = conversation_id)
+        reply, conversation_id, saved_facts = chat(request.message, db, current_user.id, request.conversation_id)
+        return ChatResponse(reply = reply, conversation_id = conversation_id, saved_facts = saved_facts)
     except HTTPException:
         raise
     except Exception as e:
