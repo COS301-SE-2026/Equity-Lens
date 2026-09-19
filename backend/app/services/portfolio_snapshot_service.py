@@ -32,3 +32,12 @@ def canonical_json(data: dict):
         ensure_ascii=False,
 
     )
+
+
+def create_snapshot_id(snapshot_data: dict):
+    canonical = canonical_json(snapshot_data)
+
+    return hashlib.sha256(
+        canonical.encode("utf-8")
+    ).hexdigest()
+    
