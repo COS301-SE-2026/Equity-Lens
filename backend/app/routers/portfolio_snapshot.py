@@ -9,6 +9,8 @@ from app.services.pdf_summary_service import get_summary_import_PDF,get_the_top_
 from app.services.portfolio_snapshot_service import build_snapshot
 from fastapi.responses import StreamingResponse
 from app.services.portfolio_brief_service import generate_portfolio_brief
+from app.models.portfolio import Holdings
+from app.routers.news import fetch_market_news, fetch_ticker_news
 
 router = APIRouter(prefix="/api/portfolio_snapshot", tags=["Portfolio Snapshot"])
 
@@ -71,6 +73,64 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
         user_id=current_user.id,
     )
 
+    tickers = (
+        db.query(Holdings.ticker)
+        .filter(
+            Holdings.portfolio_id == portfolio_id,
+            Holdings.ticker.isnot(None),
+            Holdings.ticker != "",
+            Holdings.ticker != "None",
+            Holdings.ticker != "none",
+        ).distinct().all()
+    )
+
+    ticker_list = [ticker[0] for ticker in tickers]
+
+    portfolio_news = []
+
+    for ticker in ticker_list:
+        try:
+            data = fetch_ticker_news(ticker)
+
+            articles = data.get("data", [])
+
+            for article in articles[:5]:
+                portfolio_news.append(
+                    {
+                        "ticker": ticker,
+                        "title": article.get("title"),
+                        "description": article.get("description"),
+                        "source": article.get("source"),
+                        "published_at": article.get("published_at"),
+                        "image_url": article.get("image_url"),
+                        "url": article.get("url"),
+                    }
+                )
+
+        except Exception as error:
+            print("Error getting news data")
+
+
+    market_news = []
+
+    try:
+        market_data = fetch_market_news("business")
+
+        for article in market_data.get("results", [])[:5]:
+            market_news.append(
+                {
+                    "title": article.get("title"),
+                    "description": article.get("description"),
+                    "source": article.get("source_name"),
+                    "published_at": article.get("pubDate"),
+                    "image_url": article.get("image_url"),
+                    "url": article.get("link"),
+                }
+            )
+
+    except Exception as error:
+        print("Error getting news data")
+
     snapshot = build_snapshot(
         portfolio_id=str(portfolio_id),
         summary=summary,
@@ -80,6 +140,8 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
         trading_activity=trading,
         cash_flow=cash_flow,
         dividend_income=dividends,
+        portfolio_news=portfolio_news,
+        market_news=market_news,
     )
 
     stored_snapshot = repository.save_canonical_snapshot(
