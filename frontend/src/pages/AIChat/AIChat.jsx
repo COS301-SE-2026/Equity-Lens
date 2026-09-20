@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import {Sparkles, Plus, Pencil, Trash2, MessageSquare, Search, Copy, Check, PanelLeftClose, X, Send, RefreshCw, PanelLeftOpen} from 'lucide-react';
+import {Sparkles, Plus, Pencil, Trash2, MessageSquare, Search, Copy, Check, PanelLeftClose, X, Send, RefreshCw, PanelLeftOpen, Brain} from 'lucide-react';
 
 import Button from '../../components/common/Button/Button';
 import useAuth from '../../hooks/useAuth';
@@ -9,7 +9,7 @@ import useChat from '../../hooks/useChat';
 import { useThemeContext } from '../../context/ThemeContext';
 
 /**
- * @typedef {{id: number | string, role: 'user' | 'assistant', text: string, at: Date, failed?: boolean}} ChatMessage
+ * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean, savedFacts?: string[]}} ChatMessage
  * @typedef {{id: number, title: string, updated_at: string}} Conversation
  * @typedef {{border: string, panelBg: string, bubbleBg: string, bubbleBorder: string, activeBg: string}} Palette
  */
@@ -242,6 +242,13 @@ const AIChat = () => {
   const cooling = cooldownLeft > 0;
   const busy = isThinking || regeneratingId !== null;
   const locked = busy || cooling;
+  const { memories, refreshMemories, deleteMemory } = useChat();
+  const [memoriesOpen, setMemoriesOpen] = useState(false);
+
+  const openMemories = () => {
+    setMemoriesOpen(true);
+    refreshMemories();
+  };
 
   const fieldStyle = {
     background: 'var(--surface-card)',
@@ -416,6 +423,15 @@ const AIChat = () => {
         </Button>
       </div>
 
+      <div className="flex justify-center px-3 pb-3">
+        <button type="button" onClick={openMemories}
+          className={`mx-auto flex w-full max-w-[180px] items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs ${HOVER}`}
+          style={{ color: 'var(--text-secondary)', border: `1px solid ${palette.border}` }}>
+          <Brain size={14} aria-hidden="true" />
+          Memory
+        </button>
+      </div>
+
       <div className = "convo">
         {conversations.length === 0 ? (
           <p className="flex justify-center errMessg">
@@ -470,6 +486,61 @@ const AIChat = () => {
         </div>
       </div>
     );
+
+
+  const memoriesPanel = memoriesOpen && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0, 0, 0, 0.5)' }}
+      onClick={() => setMemoriesOpen(false)}>
+
+      <div className="max-h-[70vh] w-full max-w-[520px] overflow-hidden rounded-xl"
+        style={{ background: palette.panelBg, border: `1px solid ${palette.border}` }}
+        onClick={(e) => e.stopPropagation()}>
+
+        <div className="flex items-center justify-between px-4 py-3"
+          style={{ borderBottom: `1px solid ${palette.border}` }}>
+          <h2 className="text-xs font-semibold uppercase tracking-widest"
+            style={{ color: 'var(--text-secondary)' }}>
+            What it remembers about you
+          </h2>
+          <button type="button" onClick={() => setMemoriesOpen(false)} aria-label="Close"
+            className={`rounded-lg p-1 ${HOVER}`} style={{ color: 'var(--text-secondary)' }}>
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-4 py-3" style={{ maxHeight: 'calc(70vh - 96px)' }}>
+          {memories.length === 0 ? (
+            <p className="py-6 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Nothing remembered yet. Tell the assistant about your goals and it will keep
+              track of them between chats.
+            </p>
+          ) : (
+            memories.map((/** @type {{id: string, fact: string}} */ memory) => (
+              <div key={memory.id} className="group mb-2 flex items-start gap-2 rounded-lg px-3 py-2"
+                style={{ background: palette.bubbleBg, border: `1px solid ${palette.bubbleBorder}` }}>
+                <span className="min-w-0 flex-1 break-words text-sm"
+                  style={{ color: 'var(--text-primary)' }}>
+                  {memory.fact}
+                </span>
+                <button type="button" onClick={() => deleteMemory(memory.id)}
+                  aria-label={`Forget: ${memory.fact}`}
+                  className={`shrink-0 rounded-lg p-1 ${HOVER}`}
+                  style={{ color: 'var(--text-secondary)' }}>
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="px-4 py-3 text-xs"
+          style={{ borderTop: `1px solid ${palette.border}`, color: 'var(--text-secondary)' }}>
+          These carry across all your chats. Deleting one means the assistant forgets it.
+        </div>
+      </div>
+    </div>
+  );
 
     let lastDay = '';
 
@@ -608,6 +679,18 @@ const AIChat = () => {
                       ) : (<div>
                           {regeneratingId === message.id ? (
                             <ReplyLoader />) : (<>
+                              {message.savedFacts?.length > 0 && (
+                                <div className="mb-2 flex items-center gap-1.5 text-xs"
+                                  title={message.savedFacts.join('\n')}
+                                  style={{ color: 'var(--text-secondary)' }}>
+                                  <Brain size={12} aria-hidden="true" />
+                                  <span>
+                                    {message.savedFacts.length === 1
+                                      ? 'Added to memory'
+                                      : `Added ${message.savedFacts.length} things to memory`}
+                                  </span>
+                                </div>
+                              )}
                               <div
                                 className="text-base"
                                 style={{color: 'var(--text-primary)', lineHeight: 1.7, overflowWrap: 'break-word'}}>
@@ -671,6 +754,7 @@ const AIChat = () => {
             </p>
         </div>
       </div>
+      {memoriesPanel}
     </div>
   );
 };
