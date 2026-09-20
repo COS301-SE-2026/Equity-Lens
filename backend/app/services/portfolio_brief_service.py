@@ -183,6 +183,34 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
     trading = activity.get("trading", [],)
 
+    if trading:
+        story.append(Paragraph("Trading Activity", styles["Heading2"],))
+
+        dividend_chart = create_trading_chart(trading)
+
+        story.append(Image(dividend_chart, width=160 * mm, height=90 * mm))
+        story.append(Spacer(1,15))
+
+    dividends = activity.get("dividend_income", [],)
+
+    if dividends:
+        story.append(Paragraph("Dividend Income", styles["Heading2"],))
+
+        trading_chart = create_dividend_chart(dividends)
+
+        story.append(Image(trading_chart, width=160 * mm, height=90 * mm))
+        story.append(Spacer(1,20))
+
+    story.append(Paragraph("This report was generated from the same " "canonical portfolio snapshot used by Equity Lens", styles["BodyText"],))
+
+    document.build(story)
+
+    output.seek(0)
+
+    return output
+
+
+
 
 
 
