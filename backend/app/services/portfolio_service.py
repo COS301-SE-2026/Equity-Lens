@@ -558,11 +558,22 @@ def _simulate_sector_investment(
         "health_score_after": after_score["score"],
         "is_smallest_sector": is_smallest,
         "explanation": (
-            f"{sector} is currently your smallest sector weight at {current['percentage']:.1f}% of your book. "
-            if is_smallest
-            else f"{sector} is {current['percentage']:.1f}% of your book, below your most concentrated sector. "
+        (
+            f"{sector} is currently your smallest sector weight at "
+            f"{current['percentage']:.1f}% of your book. "
         )
-        + "Adding here spreads sector risk rather than adding to a sector you already lean on, which is why Sector Concentration is the subscore most likely to move.",
+            if is_smallest
+            else (
+                f"{sector} is {current['percentage']:.1f}% of your book, "
+                f"below your most concentrated sector. "
+            )
+        )
+        
+        + (
+            "Adding here spreads sector risk rather than adding to a sector "
+            "you already lean on, which is why Sector Concentration is the "
+            "subscore most likely to move."
+        ),
         "disclaimer": "Analysis only, not a trade instruction - EquityLens doesn't execute trades.",
     }
 
@@ -614,10 +625,13 @@ def _simulate_sector_rebalance(
         "health_score_before": before_score["score"],
         "health_score_after": after_score["score"],
         "explanation": (
-            f"{highest['sector']} is your most concentrated sector at {highest['percentage']:.1f}%; "
-            f"{lowest['sector']} is your least at {lowest['percentage']:.1f}%. Shifting the excess above "
-            "a healthy single-sector band into your thinnest sector lowers Herfindahl concentration on "
-            "both ends of the spread at once."
+            f"{highest['sector']} is your most concentrated sector at "
+            f"{highest['percentage']:.1f}%; "
+            f"{lowest['sector']} is your least at {lowest['percentage']:.1f}%. "
+            "Shifting the excess above "
+            "a healthy single-sector band into "
+            "your thinnest sector lowers Herfindahl concentration on both "
+            "ends of the spread at once."
         ),
         "disclaimer": "Analysis only, not a trade instruction - EquityLens doesn't execute trades.",
     }
@@ -670,8 +684,9 @@ def _build_tax_analysis(
         "holdings": holdings_breakdown,
         "potential_realised_loss": round(potential_realised_loss, 2),
         "note": (
-            "Realising a loss can offset a capital gain elsewhere in the same tax year, subject to the "
-            "annual exclusion above. This isn't tax advice - consult a tax practitioner before acting on it."
+            "Realising a loss can offset a capital gain elsewhere in the "
+            "same tax year, subject to the annual exclusion above. This "
+            "isn't tax advice - consult a tax practitioner before acting on it."
         ),
     }
 

@@ -310,7 +310,8 @@ def _sector_concentration_subscore(
     sector_count = len(sector_weights)
     detail = (
         f"{top_sector} is {top_weight * 100:.0f}% of your book "
-        f"(Herfindahl index {hhi:.2f} across {sector_count} sector{'s' if sector_count != 1 else ''})."
+        f"(Herfindahl index {hhi:.2f} across {sector_count} " 
+        f"sector{'s' if sector_count != 1 else ''})."
     )
     if any(not h["priced_live"] for h in priced_holdings):
         detail += " Weights include holdings priced at cost, so they're partially stale."
@@ -393,14 +394,16 @@ def _breadth_subscore(
 
     count = len(priced_holdings)
     detail = (
-        f"{count} position{'s' if count != 1 else ''} in your book, but weighted by size that's only "
-        f"{effective_n:.1f} effective position{'s' if round(effective_n, 1) != 1.0 else ''} - a raw "
+        f"{count} position{'s' if count != 1 else ''} in your book, but "
+        f"weighted by size that's only {effective_n:.1f} effective "
+        "position{'s' if round(effective_n, 1) != 1.0 else ''} - a raw "
         "count hides how much one holding can dominate."
     )
     improvement = (
         "Effective breadth is already in a healthy range."
         if effective_n >= config.breadth_target_n
-        else "Adding positions - or trimming the ones that dominate - raises effective breadth toward the target."
+        else ("Adding positions - or trimming the ones that dominate - " 
+              "raises effective breadth toward the target.")
     )
 
     return {

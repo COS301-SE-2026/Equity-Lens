@@ -9,14 +9,14 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.chat import ChatConversation, ChatMessages
 from app.models.portfolio import Document, Holdings, Portfolios
+from app.repositories.portfolio_repository import PortfolioRepository
+from app.services.health_config_service import resolve_health_config
 from app.services.health_score import compute_health_score
 from app.services.indicator_service import build_live_indicator_row, serialize_indicator_row
 from app.services.market_data_service import _cents_to_major
 from app.services.portfolio_service import _price_holdings
 from app.utils.market_cache import get_market_returns
 from app.utils.stock_cache import get_cached_price_history
-from app.repositories.portfolio_repository import PortfolioRepository
-from app.services.health_config_service import resolve_health_config
 
 MAX_TOOL_ITERATIONS = 3
 

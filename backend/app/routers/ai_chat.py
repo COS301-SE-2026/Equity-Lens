@@ -62,7 +62,9 @@ def enforce_limit(current_user: UserResponse = Depends(get_current_user)):
         raise HTTPException(
             status_code=429,
             detail={
-                "message": f"You have been rate-limited by sending messages too quick. Try again in {retry_after} seconds.",
+                "message": (
+                    f"You have been rate-limited by sending messages too quick. "
+                    f"Try again in {retry_after} seconds."),
                 "retry_after": retry_after,
             },
             headers={"Retry-After": str(retry_after)},

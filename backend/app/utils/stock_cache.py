@@ -1,3 +1,4 @@
+import logging as logger
 import time
 from datetime import UTC, datetime, timedelta
 
@@ -30,8 +31,9 @@ def _trip_yfinance_global_cooldown() -> None:
     )
     _YFINANCE_GLOBAL_COOLDOWN_UNTIL = datetime.now(UTC) + timedelta(minutes=minutes)
     _YFINANCE_COOLDOWN_STRIKES += 1
-    print(
-        f"Yahoo rate limit hit - pausing all yfinance calls until {_YFINANCE_GLOBAL_COOLDOWN_UNTIL.isoformat()}"
+    logger.warning(
+        "Yahoo rate limit hit - pausing all yfinance calls until %s",
+        {_YFINANCE_GLOBAL_COOLDOWN_UNTIL.isoformat()},
     )
 
 

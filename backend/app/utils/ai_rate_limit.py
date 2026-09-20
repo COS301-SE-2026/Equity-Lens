@@ -10,7 +10,8 @@ _LOCK = Lock()
 def check_limit(key: str, limit: int, window_seconds: int) -> tuple[bool, int]:
     """
     Returns (allowed, retry_after_seconds).
-    A successful check records the hit and a rejected one does not, so being blocked never extends your own block.
+    A successful check records the hit and a rejected one does not, so being
+    blocked never extends your own block.
     """
     now = monotonic()
     cutoff = now - window_seconds

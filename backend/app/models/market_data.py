@@ -23,7 +23,10 @@ class MarketData(Base):
     __table_args__ = (Index("ix_market_data_ticker_date", "ticker", date, unique=True),)
 
     def __repr__(self):
-        return f"MarketData(id={self.id!r}, ticker={self.ticker!r}, date={self.date!r}, close={self.close!r})"
+        return (
+            f"MarketData(id={self.id!r}, ticker={self.ticker!r}, "
+            f"date={self.date!r}, close={self.close!r})"
+        )
 
 
 class FundamentalsCache(Base):

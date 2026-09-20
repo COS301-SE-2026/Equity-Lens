@@ -127,7 +127,8 @@ def build_live_indicator_row(
         is_fund = quote_type in ("ETF", "MUTUALFUND", "INDEX")
         fund_reason = "N/A - financial instrument doesn't report company-level financials."
 
-        # Altman Z is built for retail/industrial companies, therefore Total Revenue is N/A from financial institutions
+        # Altman Z is built for retail/industrial companies, therefore Total
+        # Revenue is N/A from financial institutions
         sector = (info.get("sector") or "").upper()
         is_financial = sector in ("FINANCIAL SERVICES", "FINANCIALS")
         sector_reason = "N/A - Altman Z Score not meaningful for banks and financial institutions."

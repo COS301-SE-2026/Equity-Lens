@@ -1,7 +1,7 @@
 from uuid import UUID, uuid4
 
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from app.models.chat import ChatConversation, ChatMessages
 from app.models.portfolio import (

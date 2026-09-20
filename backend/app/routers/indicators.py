@@ -22,7 +22,9 @@ router = APIRouter(prefix="/api/indicators", tags=["indicators"])
     "",
     response_model=list[IndicatorRowResponse],
     summary="Get Portfolio Indicators",
-    description="Calculates live technical and fundamental indicators for all valid holdings across user portfolios.",
+    description= (
+        "Calculates live technical and fundamental indicators for all "
+        "valid holdings across user portfolios."),
 )
 def get_indicators(
     current_user: UserResponse = Depends(get_current_user), db: Session = Depends(get_db)
