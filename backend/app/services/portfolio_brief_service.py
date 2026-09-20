@@ -9,6 +9,31 @@ from reportlab.platypus import (Image, Paragraph,SimpleDocTemplate,Spacer,Table,
 def _chart_buffer():
     return io.BytesIO()
 
+
+def create_cash_flow_chart(allocation: list):
+    labels = [item.get("name", "Unknown") for item in allocation]
+    values = [float(item.get("value",0)) for item in allocation]
+
+    buffer = _chart_buffer()
+
+    fig, ax = plt.subplots(figsize=(6, 3.5))
+
+    ax.bar(labels, values)
+
+    ax.set_title("Cash Flow")
+    ax.set_ylabel("Value(ZAR)")
+
+    plt.xticks(rotation=30, ha="right")
+    plt.tight_layout()
+
+    fig.savefig(buffer,format="png",dpi=160,bbox_inches="tight",)
+
+    plt.close(fig)
+
+    buffer.seek(0)
+
+    return buffer
+
 def create_allocation_chart(allocation: list):
     labels = [item.get("name", "Unknown") for item in allocation]
     values = [float(item.get("weight_percentage",0)) for item in allocation]
@@ -201,7 +226,20 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         story.append(Image(trading_chart, width=160 * mm, height=90 * mm))
         story.append(Spacer(1,20))
 
+    cash_flow = activity.get("cash_flow", [],)
+
+    if cash_flow:
+        story.append(Paragraph("Cash Flow", styles["Heading2"],))
+
+        cash_flow_chart = create_cash_flow_chart(cash_flow)
+
+        story.append(Image(cash_flow_chart, width=160 * mm, height=90 * mm))
+        story.append(Spacer(1,15))
+
+    story.append(Spacer(1,15))
+
     story.append(Paragraph("This report was generated from the same " "canonical portfolio snapshot used by Equity Lens", styles["BodyText"],))
+
 
     document.build(story)
 
