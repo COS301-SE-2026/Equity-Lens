@@ -1,6 +1,6 @@
-import pandas as pd
-
 import logging
+
+import pandas as pd
 
 from app.indicators.altman_z_score import calculate_altman_zscore
 from app.indicators.beta import calculate_beta
@@ -82,7 +82,7 @@ def build_live_indicator_row(
         try:
             if len(aligned_returns) > 10 and len(aligned_market_returns) > 10:
                 beta = calculate_beta(aligned_returns.values, aligned_market_returns.values)
-        except Exception as exc:
+        except Exception:
             logger.warning("Beta calculation failed for %s", symbol, exc_info=True)
             beta = None
 
@@ -90,7 +90,7 @@ def build_live_indicator_row(
         try:
             if len(close) > 14:
                 rsi_value = float(calculate_rsi(close).iloc[-1])
-        except Exception as exc:
+        except Exception:
             logger.warning("RSI calculation failed for %s", symbol, exc_info=True)
             rsi_value = None
 
@@ -98,7 +98,7 @@ def build_live_indicator_row(
         try:
             if len(returns) > 10:
                 sharpe = calculate_sharpe_ratio(returns.values)
-        except Exception as exc:
+        except Exception:
             logger.warning("Sharpe calculation failed for %s", symbol, exc_info=True)
             sharpe = None
 
@@ -106,7 +106,7 @@ def build_live_indicator_row(
         try:
             if len(returns) > 10:
                 sortino = calculate_sortino_ratio(returns.values)
-        except Exception as exc:
+        except Exception:
             logger.warning("Sortino calculation failed for %s", symbol, exc_info=True)
             sortino = None
 
@@ -114,7 +114,7 @@ def build_live_indicator_row(
         try:
             if beta is not None:
                 capm_value = calculate_capm(0.02, beta, 0.08)
-        except Exception as exc:
+        except Exception:
             logger.warning("CAPM calculation failed for %s", symbol, exc_info=True)
             capm_value = None
 
@@ -145,7 +145,7 @@ def build_live_indicator_row(
                 trailing_pe = info.get("trailingPE") or info.get("forwardPE")
                 if trailing_pe is not None:
                     pe = float(trailing_pe)
-        except Exception as exc:
+        except Exception:
             logger.warning("PE Calculation failed for %s", symbol, exc_info=True)
             pe = None
 
@@ -209,7 +209,7 @@ def build_live_indicator_row(
                         total_liabilities,
                         sales,
                     )
-        except Exception as exc:
+        except Exception:
             logger.warning("Altman calculation failed for %s", symbol, exc_info=True)
             altman = None
 

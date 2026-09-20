@@ -64,7 +64,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     logger.exception("unhandled error on %s %s", request.method, request.url.path)
-    response = JSONResponse(
+    return JSONResponse(
         status_code=500,
         content={"error_code": "INTERNAL_ERROR", "detail": "Something went wrong"},
     )

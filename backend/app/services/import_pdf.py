@@ -12,7 +12,6 @@ from app.repositories.import_pdf import (
     save_contributions_and_withdrawals,
     save_dividends_and_withholding_tax,
     save_document,
-    save_holdings,
     save_instrument_purchases_and_sales,
     save_portfolios,
     save_transaction_expenses,
@@ -137,8 +136,6 @@ def get_my_portfolio(database, user_id):
 
 
 def save_holdings_import(database, user_id, data):
-    ticker = search_ticket_number(data.instrument_name)
-    document = save_holdings(database, user_id, data, ticker["ticker"], ticker["sector"])
     invalidate_priced_holdings(user_id)
 
     return {"Success": True, "Message": "Holdings has been saved successfully"}
@@ -153,7 +150,7 @@ def delete_portfolio_import(database, user_id, portfolio_id):
 
 def save_instrument_purchases_and_sales_import(database, user_id, data):
     ticker = search_ticket_number(data.instrument_name)
-    document = save_instrument_purchases_and_sales(
+    save_instrument_purchases_and_sales(
         database, user_id, data, ticker["ticker"], ticker["sector"]
     )
 
@@ -161,14 +158,14 @@ def save_instrument_purchases_and_sales_import(database, user_id, data):
 
 
 def save_contributions_and_withdrawals_import(database, user_id, data):
-    document = save_contributions_and_withdrawals(database, user_id, data)
+    save_contributions_and_withdrawals(database, user_id, data)
 
     return {"Success": True, "Message": "Contributions and withdrawals has been saved successfully"}
 
 
 def save_dividends_and_withholding_tax_import(database, user_id, data):
     ticker = search_ticket_number(data.instrument_name)
-    document = save_dividends_and_withholding_tax(
+    save_dividends_and_withholding_tax(
         database, user_id, data, ticker["ticker"], ticker["sector"]
     )
 
@@ -179,6 +176,6 @@ def save_dividends_and_withholding_tax_import(database, user_id, data):
 
 
 def save_transaction_expenses_import(database, user_id, data):
-    document = save_transaction_expenses(database, user_id, data)
+    save_transaction_expenses(database, user_id, data)
 
     return {"Success": True, "Message": "Transaction expenses has been saved successfully"}

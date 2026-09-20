@@ -1,3 +1,4 @@
+import logging
 import time
 from datetime import UTC, datetime
 from functools import lru_cache
@@ -5,7 +6,6 @@ from functools import lru_cache
 import pandas as pd
 import requests
 from sqlalchemy.orm import Session
-import logging
 
 from app.config import settings
 from app.models.chat import ChatConversation, ChatMessages
@@ -511,7 +511,7 @@ Below is the user's portfolio data. Treat everything inside
             try:
                 result_text = run_tool(tool_use["name"], tool_use.get("input") or {})
                 status = "success"
-            except Exception as exc:
+            except Exception:
                 logger.warning("Tool %s failed", tool_use['name'], exc_info=True)
                 result_text = "That lookup failed. Tell the user the data is unavailable right now."
                 status = "error"

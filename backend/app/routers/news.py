@@ -1,6 +1,6 @@
+import logging
 import os
 from typing import Any
-import logging
 
 import requests
 from dotenv import load_dotenv

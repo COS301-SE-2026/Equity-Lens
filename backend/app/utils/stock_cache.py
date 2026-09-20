@@ -253,7 +253,7 @@ def _refresh_price_history(ticker: str, period: str, force_live: bool = False) -
             logger.info("Alpha Vantage refresh: %s", ticker)
             _save_price_history(ticker, history)
             return _load_local_price_history(ticker)
-        except Exception as exc:
+        except Exception:
             logger.warning("Alpha Vantage refresh failed for %s", ticker, exc_info=True)
 
     if settings.allow_live_market_fallback or force_live:
@@ -263,7 +263,7 @@ def _refresh_price_history(ticker: str, period: str, force_live: bool = False) -
                 logger.info("Yahoo refresh: %s", ticker)
                 _save_price_history(ticker, history)
                 return _load_local_price_history(ticker)
-        except Exception as exc:
+        except Exception:
             logger.warning("Yahoo refresh failed for %s", ticker, exc_info=True)
     else:
         if ticker.upper().endswith(".JO"):
@@ -357,7 +357,7 @@ def get_cached_price_histories(
                     _PRICE_REFRESH_COOLDOWN_UNTIL.pop(ticker, None)
                     results[ticker] = refreshed
                     continue
-            except Exception as exc:
+            except Exception:
                 logger.warning("Alpha Vantage refresh failed for %s", ticker, exc_info=True)
             if settings.allow_live_market_fallback or force_live:
                 yf_tickers.append(ticker)
@@ -415,8 +415,10 @@ def get_cached_price_histories(
                                 _PRICE_REFRESH_COOLDOWN_UNTIL.pop(ticker, None)
                                 results[ticker] = _load_local_price_history(ticker)
                                 continue
-                    except Exception as exc:
-                        logger.warning("Processing batched Yahoo data failed for %s", ticker, exc_info=True)
+                    except Exception:
+                        logger.warning(
+                            "Processing batched Yahoo data failed for %s", ticker, exc_info=True
+                            )
                     _PRICE_REFRESH_COOLDOWN_UNTIL[ticker] = datetime.now(UTC) + timedelta(
                         minutes=PRICE_REFRESH_COOLDOWN_MINUTES
                     )
