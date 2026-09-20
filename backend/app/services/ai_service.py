@@ -69,9 +69,10 @@ TOOL_CONFIG = { "tools": [
                     },
                     { "toolSpec": {
                             "name": "get_market_news",
-                            "description": ("Fetch recent financial headlines."
+                            "description": ("Fetch recent financial news with sentiment for the companies mentioned."
                                             "Pass a query such as a company name like 'Sasol' or a topic like 'interest rates' to search for news about those."
-                                            "Leave the query out for a roundup of the latest business headlines."
+                                            "Leave the query out for a roundup of the latest market news."       
+                                            "Results say whether coverage is positive or negative for a company and quote the sentence it is based on."
                             ),
                             "inputSchema": { "json":
                                                 {
@@ -206,57 +207,73 @@ def get_stock_data_tool(ticker: str) -> str:
         f"This is end-of-day data, not a live intraday price."
     )
 
+MAX_NEWS_ARTICLES = 3
+MARKETAUX_URL = "https://api.marketaux.com/v1/news/all"
+SENTIMENT_DEADBAND = 0.15
 
-_NEWS_CACHE: dict[str, tuple[float, str]] = {}
-_NEWS_CACHE_TTL_SECONDS = 900
-MAX_NEWS_ARTICLES = 5
+
+def _sentiment_label(score) -> str:
+    if score is None:
+        return "no sentiment score"
+    if score > SENTIMENT_DEADBAND:
+        return "positive"
+    if score < -SENTIMENT_DEADBAND:
+        return "negative"
+    return "neutral"
+
+
+def _describe_article(article: dict) -> str:
+    title = (article.get("title") or "").strip()
+    if not title:
+        return ""
+
+    source = article.get("source") or "unknown source"
+    published = article.get("published_at") or "unknown date"
+    line = f"- {title} ({source}, {published})"
+
+    body = (article.get("description") or article.get("snippet") or "").strip()
+    if body:
+        if len(body) > 250:
+            body = body[:250] + "..."
+        line += f": {body}"
+
+    for entity in (article.get("entities") or [])[:2]:
+        symbol = entity.get("symbol")
+        if not symbol:
+            continue
+        line += f"\n  Sentiment for {symbol}: {_sentiment_label(entity.get('sentiment_score'))}"
+        for highlight in (entity.get("highlights") or [])[:1]:
+            text = (highlight.get("highlight") or "").strip()
+            if text:
+                line += f"\n  Based on: \"{text[:200]}\""
+
+    return line
+
 
 def get_market_news_tool(query: str = "") -> str:
-    if not settings.newsdata_api_key:
+    if not settings.market_api_key:
         return "News is not on this server."
 
     query = (query or "").strip()
-    cache_key = query.lower() or "__headlines__"
 
-    cached_data = _NEWS_CACHE.get(cache_key)
-    if cached_data is not None:
-        cached_first, cached_result = cached_data
-        if time.time() - cached_first < _NEWS_CACHE_TTL_SECONDS:
-            return cached_result
+    params = {
+        "api_token": settings.market_api_key,
+        "language": "en",
+        "limit": MAX_NEWS_ARTICLES,
+    }
+    if query:
+        params["search"] = query
+        params["filter_entities"] = "true"
 
-    params = {"apikey": settings.newsdata_api_key, "language": "en"}
-    if query: 
-        params["q"] = query
-    else:
-        params["category"] = "business"
-
-    response = requests.get("https://newsdata.io/api/1/latest", params = params, timeout = 6)
+    response = requests.get(MARKETAUX_URL, params = params, timeout = 6)
     response.raise_for_status()
-    articles = response.json().get("results") or []
+    articles = response.json().get("data") or []
 
     if not articles:
-        result = f"No recent news has been found for '{query}'." if query else "No recent business headlines found."
-        _NEWS_CACHE[cache_key] = (time.time(), result)
-        return result
+        return f"No recent news has been found for '{query}'." if query else "No recent market news found."      
 
-    lines = []
-    for a in articles[:MAX_NEWS_ARTICLES]:
-        title = (a.get("title") or "").strip()
-        if not title:
-            continue
-        source = a.get("source_name") or a.get("source_id") or "unknown source"
-        pub_date = a.get("pubDate") or "unknown date"
-        description = (a.get("description") or "").strip()
-        if len(description) > 250:
-            description = description[:250] + "..."
-        line = f"- {title} ({source}, {pub_date})"
-        if description:
-            line += f": {description}"
-        lines.append(line)
-
-    result = "Recent headlines:\n" + "\n".join(lines)
-    _NEWS_CACHE[cache_key] = (time.time(), result)
-    return result
+    lines = [line for line in (_describe_article(a) for a in articles) if line]
+    return "Recent market news:\n" + "\n".join(lines)
 
 
 INDICATOR_LABELS = {

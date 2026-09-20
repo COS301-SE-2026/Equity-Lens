@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     ai_window_limit: int = 60
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     newsdata_api_key: str | None = None
+    market_api_key: str | None = None
 
 @lru_cache
 def get_settings() -> Settings:
