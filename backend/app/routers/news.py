@@ -1,5 +1,6 @@
 import os
 from typing import Any
+import logging
 
 import requests
 from dotenv import load_dotenv
@@ -17,6 +18,7 @@ load_dotenv()
 
 router = APIRouter(prefix="/api/news", tags=["importing news"])
 
+logger = logging.getLogger(__name__)
 
 class NewsResponse(BaseModel):
     total_articles: int = Field(examples=[23])
@@ -113,7 +115,7 @@ def get_news(category: str = "business", current_user: User = Depends(get_curren
     for article in articles:
         sentiment = article.get("sentiment")
 
-        print("Errors:", sentiment)
+        logger.warning("Errors: %s", sentiment)
 
         if sentiment is None:
             continue

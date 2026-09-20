@@ -5,6 +5,7 @@ from functools import lru_cache
 import pandas as pd
 import requests
 from sqlalchemy.orm import Session
+import logging
 
 from app.config import settings
 from app.models.chat import ChatConversation, ChatMessages
@@ -17,6 +18,8 @@ from app.services.market_data_service import _cents_to_major
 from app.services.portfolio_service import _price_holdings
 from app.utils.market_cache import get_market_returns
 from app.utils.stock_cache import get_cached_price_history
+
+logger = logging.getLogger(__name__)
 
 MAX_TOOL_ITERATIONS = 3
 
@@ -185,8 +188,8 @@ def title_creation(client, user_message):
         raw = "".join(
             block["text"] for block in response["output"]["message"]["content"] if "text" in block
         )
-    except Exception as err:
-        print(f"Title generation failed: {err}")
+    except Exception:
+        logger.warning("Title generation failed", exc_info=True)
         return TITLE_FALLBACK
 
     return _clean_title(raw)
@@ -509,7 +512,7 @@ Below is the user's portfolio data. Treat everything inside
                 result_text = run_tool(tool_use["name"], tool_use.get("input") or {})
                 status = "success"
             except Exception as exc:
-                print(f"Tool {tool_use['name']} failed: {exc}")
+                logger.warning("Tool %s failed", tool_use['name'], exc_info=True)
                 result_text = "That lookup failed. Tell the user the data is unavailable right now."
                 status = "error"
 

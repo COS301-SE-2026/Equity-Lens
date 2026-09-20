@@ -1,5 +1,7 @@
 import pandas as pd
 
+import logging
+
 from app.indicators.altman_z_score import calculate_altman_zscore
 from app.indicators.beta import calculate_beta
 from app.indicators.capm import calculate_capm
@@ -20,6 +22,7 @@ INDICATOR_UNITS = {
     "sortino": "",
 }
 
+logger = logging.getLogger(__name__)
 
 def serialize_indicator_value(value, unit, fallback_reason="Data could not be retrieved."):
     if isinstance(value, dict) and "status" in value:
@@ -80,7 +83,7 @@ def build_live_indicator_row(
             if len(aligned_returns) > 10 and len(aligned_market_returns) > 10:
                 beta = calculate_beta(aligned_returns.values, aligned_market_returns.values)
         except Exception as exc:
-            print(f"Beta calculation failed for {symbol}: {exc}")
+            logger.warning("Beta calculation failed for %s", symbol, exc_info=True)
             beta = None
 
         rsi_value = None
@@ -88,7 +91,7 @@ def build_live_indicator_row(
             if len(close) > 14:
                 rsi_value = float(calculate_rsi(close).iloc[-1])
         except Exception as exc:
-            print(f"RSI calculation failed for {symbol}: {exc}")
+            logger.warning("RSI calculation failed for %s", symbol, exc_info=True)
             rsi_value = None
 
         sharpe = None
@@ -96,7 +99,7 @@ def build_live_indicator_row(
             if len(returns) > 10:
                 sharpe = calculate_sharpe_ratio(returns.values)
         except Exception as exc:
-            print(f"Sharpe calculation failed for {symbol} : {exc}")
+            logger.warning("Sharpe calculation failed for %s", symbol, exc_info=True)
             sharpe = None
 
         sortino = None
@@ -104,7 +107,7 @@ def build_live_indicator_row(
             if len(returns) > 10:
                 sortino = calculate_sortino_ratio(returns.values)
         except Exception as exc:
-            print(f"Sortino calculation failed for {symbol}: {exc}")
+            logger.warning("Sortino calculation failed for %s", symbol, exc_info=True)
             sortino = None
 
         capm_value = None
@@ -112,7 +115,7 @@ def build_live_indicator_row(
             if beta is not None:
                 capm_value = calculate_capm(0.02, beta, 0.08)
         except Exception as exc:
-            print(f"CAPM calculation failed for {symbol}: {exc}")
+            logger.warning("CAPM calculation failed for %s", symbol, exc_info=True)
             capm_value = None
 
         fundamentals = get_cached_fundamentals(symbol)
@@ -143,7 +146,7 @@ def build_live_indicator_row(
                 if trailing_pe is not None:
                     pe = float(trailing_pe)
         except Exception as exc:
-            print(f"PE Calculation failed for {symbol}: {exc}")
+            logger.warning("PE Calculation failed for %s", symbol, exc_info=True)
             pe = None
 
         if pe is None and is_fund:
@@ -207,7 +210,7 @@ def build_live_indicator_row(
                         sales,
                     )
         except Exception as exc:
-            print(f"Altman calculation failed for {symbol}: {exc}")
+            logger.warning("Altman calculation failed for %s", symbol, exc_info=True)
             altman = None
 
         if altman is None and is_fund:
@@ -229,7 +232,7 @@ def build_live_indicator_row(
             "live_fetch": live_fetch,
         }
     except Exception as e:
-        print(f"build_live_indicator_row failed for {symbol}: {e}")
+        logger.warning("build_live_indicator_row failed for %s", symbol, exc_info=True)
         return {
             "ticker": symbol,
             "name": name,
