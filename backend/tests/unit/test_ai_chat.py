@@ -1,7 +1,6 @@
 from unittest.mock import MagicMock, patch
 
 from app.models.chat import ChatConversation, ChatMessages
-from app.models.user import User
 
 
 def test_delete_conversation(client, db_session, test_user, auth_headers):

@@ -580,6 +580,7 @@ const IndicatorPickerModal = ({
       onClick={onClose}
       role="presentation"
     >
+      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className="terminal-card w-full max-w-md max-h-[85vh] overflow-y-auto"
         style={{
@@ -1005,7 +1006,7 @@ export default function Analytics() {
                     </div>
                     <div className="grid grid-cols-7 p-3 gap-3">
                       {Array.from({ length: 7 }).map((_, j) => (
-                        // eslint-disable-next-line react/no-array-index-key -- static skeleton count, never reordered
+                         
                         <div
                           key={j}
                           className="h-10 rounded"

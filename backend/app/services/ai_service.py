@@ -15,6 +15,8 @@ from app.services.market_data_service import _cents_to_major
 from app.services.portfolio_service import _price_holdings
 from app.utils.market_cache import get_market_returns
 from app.utils.stock_cache import get_cached_price_history
+from app.repositories.portfolio_repository import PortfolioRepository
+from app.services.health_config_service import resolve_health_config
 
 MAX_TOOL_ITERATIONS = 3
 
@@ -105,7 +107,7 @@ def get_bedrock_client():
 
 
 def get_user_portfolio_context(db: Session, user_id):
-    portfolio = PortfolioRepository(db).get_latest_portfolio(user_id)
+    portfolios = PortfolioRepository(db).get_latest_portfolio(user_id)
     knowledge = ""
     holdings = []
 

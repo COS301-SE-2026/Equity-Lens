@@ -1,5 +1,4 @@
-import traceback
-
+import logging
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
@@ -24,6 +23,7 @@ from app.schemas.responses import STATUS_ERROR_CODES
 
 app = FastAPI(title="EquityLens API")
 
+logger = logging.getLogger(__name__)
 
 class HealthResponse(BaseModel):
     status: str
