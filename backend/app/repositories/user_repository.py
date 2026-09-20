@@ -65,8 +65,7 @@ class UserRepository:
         ]
 
         try:
-            self.db.delete(user)
-            self.db.flush()
+  
             #Backup delete to ensure everything removed incase CASCADE failed
             if portfolio_ids:
                 self.db.query(Holdings).filter(Holdings.portfolio_id.in_(portfolio_ids)).delete(synchronize_session=False)
@@ -83,8 +82,9 @@ class UserRepository:
 
             self.db.query(Document).filter(Document.user_id == user_id).delete(synchronize_session=False)
             self.db.query(Watchlist).filter(Watchlist.user_id == user_id).delete(synchronize_session=False)
-
+            self.db.delete(user)
             self.db.commit()
+                     
         except Exception:
             self.db.rollback()
             raise
