@@ -12,7 +12,7 @@ from app.services.watchlist import (
 
 @patch("app.services.watchlist.add_watchlist")
 @patch("app.services.watchlist.yf.Ticker")
-def test_add_watchlist_service(mock_ticker, mock_data):
+def test_add_watchlist_service(mock_ticker, _mock_data):
     mock_ticker.return_value.info = {"longName": "Apple", "sector": "Tec"}
 
     data = Mock()
@@ -71,7 +71,7 @@ def test_get_watchlist_service_divides_jse_cents_price_by_100(mock_ticker, mock_
 
 
 @patch("app.services.watchlist.remove_watchlist")
-def test_remove_watchlist_service(mock_remove):
+def test_remove_watchlist_service(_mock_remove):
     result = remove_watchlist_service(Mock(), 1, 10)
 
     assert result["success"] is True

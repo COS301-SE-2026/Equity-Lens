@@ -1,3 +1,4 @@
+import pytest
 from unittest.mock import MagicMock, patch
 
 from app.models.chat import ChatConversation, ChatMessages
@@ -84,9 +85,9 @@ def test_load_all_converastions(client, db_session, test_user, auth_headers):
     assert "1" in name
     assert "2" in name
 
-
+@pytest.mark.usefixtures("db_session", "test_user")
 @patch("app.services.ai_service.get_bedrock_client")
-def test_send_message(mock_bedrock_client, client, db_session, test_user, auth_headers):
+def test_send_message(mock_bedrock_client, client, auth_headers):
     mocked_client = MagicMock()
     mocked_client.converse.return_value = {
         "output": {"message": {"content": [{"text": "A response."}]}}

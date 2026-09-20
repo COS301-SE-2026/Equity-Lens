@@ -21,7 +21,7 @@ def fake_history(monkeypatch):
 
     series: dict[str, pd.DataFrame] = {}
 
-    def fake_get_cached_price_history(symbol, period="1y", force_live=False):
+    def fake_get_cached_price_history(symbol, period="1y", force_live=False): # noqa: ARG001
         if symbol not in series:
             raise ValueError(f"no data for {symbol}")
         return series[symbol]

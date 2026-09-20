@@ -253,7 +253,7 @@ def test_fetch_from_alpha_vantage_raises_on_empty_series(mock_get):
 @patch("app.utils.stock_cache._save_price_history")
 @patch("app.utils.stock_cache._fetch_from_alpha_vantage")
 def test_refresh_price_history_uses_alpha_vantage_when_key_present(
-    mock_fetch_av, mock_save, mock_load_local
+    mock_fetch_av, _mock_save, mock_load_local
 ):
     mock_fetch_av.return_value = _good_history()
     mock_load_local.return_value = _good_history()
@@ -270,7 +270,7 @@ def test_refresh_price_history_uses_alpha_vantage_when_key_present(
 @patch("app.utils.stock_cache._fetch_from_yfinance")
 @patch("app.utils.stock_cache._fetch_from_alpha_vantage", side_effect=Exception("quota exceeded"))
 def test_refresh_price_history_falls_back_to_yahoo_when_alpha_vantage_fails(
-    mock_fetch_av, mock_fetch_yf, mock_save, mock_load_local
+    _mock_fetch_av, mock_fetch_yf, _mock_save, mock_load_local
 ):
     mock_fetch_yf.return_value = _good_history()
     mock_load_local.return_value = _good_history()

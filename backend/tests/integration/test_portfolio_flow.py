@@ -30,7 +30,7 @@ def stub_data():
     for ticker, closed_values in TICKER_VALUES.items():
         history[ticker] = frame_data_builder(closed_values)
 
-    def mock_history(ticker, period="1y"):
+    def mock_history(ticker, period="1y"): # noqa: ARG001
         return history.get(ticker.upper(), pd.DataFrame())
 
     with (
@@ -66,8 +66,8 @@ def importe_portfolio(db_session, test_user):
     )
     db_session.commit()
 
-
-def test_import_to_dashboard(client, auth_headers, importe_portfolio, stub_data):
+@pytest.mark.usefixtures("importe_portfolio", "stub_data")
+def test_import_to_dashboard(client, auth_headers):
     response = client.get("/api/portfolio", headers=auth_headers)
     assert response.status_code == 200
 
@@ -114,9 +114,9 @@ def test_import_to_dashboard(client, auth_headers, importe_portfolio, stub_data)
     assert body["cgt"]["available"] is False
     assert body["cgt"]["reason"] == "account_type_unknown"
 
-
+@pytest.mark.usefixtures("importe_portfolio", "stub_data")
 def test_tagging_a_portfolio_tfsa_suppresses_the_cgt_estimate(
-    client, auth_headers, importe_portfolio, stub_data
+    client, auth_headers
 ):
     patch_response = client.patch(
         "/api/portfolio/account-type", json={"account_type": "tfsa"}, headers=auth_headers
@@ -131,9 +131,9 @@ def test_tagging_a_portfolio_tfsa_suppresses_the_cgt_estimate(
     assert body["cgt"]["available"] is False
     assert body["cgt"]["reason"] == "tfsa_exempt"
 
-
+@pytest.mark.usefixtures("importe_portfolio", "stub_data")
 def test_tagging_a_portfolio_zar_with_a_priced_gain_produces_a_real_estimate(
-    client, auth_headers, importe_portfolio, stub_data
+    client, auth_headers
 ):
     patch_response = client.patch(
         "/api/portfolio/account-type", json={"account_type": "zar"}, headers=auth_headers
@@ -149,8 +149,8 @@ def test_tagging_a_portfolio_zar_with_a_priced_gain_produces_a_real_estimate(
     assert cgt["taxable_capital_gain"] == 0.0
     assert cgt["holdings_from_statement_only"] == ["NPN.JO"]
 
-
-def test_rejects_an_unknown_account_type(client, auth_headers, importe_portfolio):
+@pytest.mark.usefixtures("importe_portfolio")
+def test_rejects_an_unknown_account_type(client, auth_headers):
     response = client.patch(
         "/api/portfolio/account-type", json={"account_type": "crypto_wallet"}, headers=auth_headers
     )
