@@ -27,11 +27,11 @@
   --border-accent: #FF6A00;
 
 
-  --text-primary: rgba(255, 255, 255, 0.95);
-  --text-secondary: rgba(255, 255, 255, 0.72);
-  --text-dim: rgba(255, 255, 255, 0.58);
-  --text-disabled: rgba(255, 255, 255, 0.30);
-  --text-ghost: rgba(255, 255, 255, 0.54);
+  --text-primary: rgba(255, 255, 255, 0.96);
+  --text-secondary: rgba(255, 255, 255, 0.80);
+  --text-dim: rgba(255, 255, 255, 0.70);
+  --text-disabled: rgba(255, 255, 255, 0.34);
+  --text-ghost: rgba(255, 255, 255, 0.68);
 
   --accent-primary: #FF6A00;
   --accent-primary-rgb: 255, 106, 0;
@@ -58,6 +58,12 @@
   --signal-info: #60a5fa;
   --signal-info-bg: rgba(96, 165, 250, 0.08);
   --signal-info-border: rgba(96, 165, 250, 0.12);
+
+  --cta-emphasis: #F97316;
+  --cta-emphasis-text: #000000;
+
+  --accent-deep: #C2410C;
+  --icon-on-accent: #FFFFFF;
 
   --color-success: var(--signal-positive);
   --color-danger: var(--signal-negative);
@@ -127,11 +133,11 @@
   --border-divider: rgba(0, 0, 0, 0.07);
   --border-accent: #B34700;
 
-  --text-primary: rgba(0, 0, 0, 0.90);
-  --text-secondary: rgba(0, 0, 0, 0.66);
-  --text-dim: rgba(0, 0, 0, 0.54);
-  --text-disabled: rgba(0, 0, 0, 0.30);
-  --text-ghost: rgba(0, 0, 0, 0.50);
+  --text-primary: rgba(0, 0, 0, 0.92);
+  --text-secondary: rgba(0, 0, 0, 0.74);
+  --text-dim: rgba(0, 0, 0, 0.64);
+  --text-disabled: rgba(0, 0, 0, 0.34);
+  --text-ghost: rgba(0, 0, 0, 0.62);
 
   --accent-primary: #B34700;
   --accent-primary-rgb: 179, 71, 0;
@@ -157,6 +163,11 @@
   --signal-info: #1D5FBF;
   --signal-info-bg: rgba(29, 95, 191, 0.08);
   --signal-info-border: rgba(29, 95, 191, 0.18);
+  --cta-emphasis: #F97316;
+  --cta-emphasis-text: #000000;
+
+  --accent-deep: #C2410C;
+  --icon-on-accent: #FFFFFF;
 
   --chart-grid: rgba(0, 0, 0, 0.08);
   --chart-tooltip-bg: #FFFFFF;
@@ -358,7 +369,8 @@ body {
   transition: filter 150ms ease;
 }
 .money-blurred .money-value {
-  filter: blur(6px);
+  filter: blur(0.55em);
+  user-select: none;
 }
 
 .dashboard-highlight {
@@ -368,6 +380,26 @@ body {
 .dashboard-highlight.is-active {
   box-shadow: inset 0 0 0 3px var(--accent-primary);
   background-color: var(--accent-subtle);
+}
+
+.scroll-list {
+  scrollbar-color: var(--border-mid) transparent;
+  -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
+  mask-image: linear-gradient(to bottom, black calc(100% - 24px), transparent 100%);
+}
+.scroll-list.is-at-end {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.scroll-list::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll-list::-webkit-scrollbar-thumb {
+  background: var(--border-mid);
+  border-radius: 3px;
+}
+.scroll-list::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 *:focus-visible {

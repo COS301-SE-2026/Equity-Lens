@@ -23,24 +23,22 @@ export const SubscoreDeltas = ({ deltas = [] }) => {
 
   return (
     <div>
-      <dl className="space-y-1">
+      <dl className="grid grid-cols-[1fr_auto_auto] items-baseline gap-x-4 gap-y-2">
         {ordered.map((factor) => {
           const move = factor.after - factor.before;
           const contribution = move * factor.weight;
           const sign = contribution >= 0 ? '+' : '';
-          return (
-            <div key={factor.key} className="flex items-baseline justify-between gap-3">
-              <dt className="text-[11px]" style={{ color: 'var(--text-ghost)' }}>
+             return (
+            <div key={factor.key} className="contents">
+              <dt className="text-[13px]" style={{ color: 'var(--text-ghost)' }}>
                 {factor.label}
               </dt>
-              <dd className="flex items-baseline gap-3 font-mono text-[11px]">
-                <span className="w-[72px] text-right" style={{ color: 'var(--text-ghost)' }} aria-hidden="true">
-                  {factor.before.toFixed(1)} &rarr; {factor.after.toFixed(1)}
-                </span>
-                <span className="w-[104px] text-right" aria-hidden="true">
-                  <span style={{ color: deltaColor(move) }}>{sign}{contribution.toFixed(2)}</span>
-                  <span style={{ color: 'var(--text-ghost)' }}> to overall</span>
-                </span>
+              <dd className="text-right font-mono text-[13px]" style={{ color: 'var(--text-ghost)' }} aria-hidden="true">
+                {factor.before.toFixed(1)} &rarr; {factor.after.toFixed(1)}
+              </dd>
+              <dd className="text-right font-mono text-[13px]">
+                <span style={{ color: deltaColor(move) }}>{sign}{contribution.toFixed(2)}</span>
+                <span style={{ color: 'var(--text-ghost)' }}> to overall</span>
                 <span className="sr-only">
                   {factor.label}, {factor.before.toFixed(1)} before, {factor.after.toFixed(1)} after,{' '}
                   {contribution >= 0 ? 'plus' : 'minus'} {Math.abs(contribution).toFixed(2)} to overall score
@@ -50,7 +48,7 @@ export const SubscoreDeltas = ({ deltas = [] }) => {
           );
         })}
       </dl>
-      <p className="mt-1.5 text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+      <p className="mt-2 text-[12px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
         &ldquo;to overall&rdquo; is each factor&apos;s weighted contribution to the overall score.
       </p>
     </div>

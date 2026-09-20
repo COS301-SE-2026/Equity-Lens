@@ -41,7 +41,7 @@ const ThemeTogglePill = () => {
       </span>
 
       <span
-        className="inline-block w-9 font-mono text-[10px] tracking-widest"
+        className="inline-block w-9 font-mono text-[11px] tracking-widest"
         style={{ color: 'var(--text-secondary)' }}
       >
         {isDark ? 'Dark' : 'Light'}

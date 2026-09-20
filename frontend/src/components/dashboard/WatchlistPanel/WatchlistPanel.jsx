@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import WatchlistItem from '../WatchlistItem/WatchlistItem';
 import useWatchlist from '../../../hooks/useWatchlist';
 import { searchStocks } from '../../../services/marketDataService';
+import AnimatedReveal from '../shared/AnimatedReveal';
 
 const VISIBLE_LIMIT = 3;
 const SEARCH_MIN_CHARS = 2;
@@ -129,7 +130,7 @@ const WatchlistPanel = () => {
         <button
           type="button"
           onClick={() => { setAdding((v) => !v); setAddError(null); }}
-          className="flex items-center gap-1 font-mono text-[9px]"
+          className="flex items-center gap-1 font-mono text-[11px]"
           style={{ color: adding ? 'var(--accent-primary)' : 'var(--text-ghost)' }}
         >
           <Plus size={11} /> Add
@@ -153,7 +154,7 @@ const WatchlistPanel = () => {
             aria-expanded={suggestStatus === 'done'}
             aria-controls="watchlist-suggestion-listbox"
             aria-activedescendant={activeIndex >= 0 ? `watchlist-suggestion-${activeIndex}` : undefined}
-            className="w-full min-w-0 rounded-md px-2.5 py-1.5 font-mono text-[11px] focus:outline-none"
+            className="w-full min-w-0 rounded-md px-2.5 py-1.5 font-mono text-[12px] focus:outline-none"
             style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
           />
 
@@ -162,17 +163,17 @@ const WatchlistPanel = () => {
                 className="glass-surface-elevated absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-md py-1"
               >
                 {suggestStatus === 'loading' && (
-                  <div className="px-2.5 py-1.5 font-mono text-[10px]" style={{ color: 'var(--text-ghost)' }}>
+                  <div className="px-2.5 py-1.5 font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
                     Searching…
                   </div>
                 )}
                 {suggestStatus === 'error' && (
-                  <div className="px-2.5 py-1.5 font-mono text-[10px]" style={{ color: 'var(--signal-negative)' }}>
+                  <div className="px-2.5 py-1.5 font-mono text-[11px]" style={{ color: 'var(--signal-negative)' }}>
                     Search failed
                   </div>
                 )}
                 {suggestStatus === 'no-results' && (
-                  <div className="px-2.5 py-1.5 font-mono text-[10px]" style={{ color: 'var(--text-ghost)' }}>
+                  <div className="px-2.5 py-1.5 font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
                     No matches
                   </div>
                 )}
@@ -188,7 +189,7 @@ const WatchlistPanel = () => {
                           e.preventDefault();
                           selectSuggestion(s);
                         }}
-                        className="cursor-pointer px-2.5 py-1.5 font-mono text-[11px]"
+                        className="cursor-pointer px-2.5 py-1.5 font-mono text-[12px]"
                         style={{ background: i === activeIndex ? 'var(--surface-hover)' : 'transparent' }}
                       >
                         <span className="font-bold">{s.symbol}</span>{' '}
@@ -204,16 +205,17 @@ const WatchlistPanel = () => {
           <button
             type="submit"
             disabled={submitting || !ticker.trim()}
-            className="rounded-md px-3 font-mono text-[11px] font-medium disabled:opacity-40"
+            className="rounded-md px-3 font-mono text-[12px] font-medium disabled:opacity-40"
             style={{ background: 'var(--accent-primary)', color: 'var(--text-on-accent)' }}
           >
             {submitting ? '...' : 'Add'}
           </button>
         </form>
-        {addError && (
-          <p className="px-3 pt-1.5 font-mono text-[10px]" style={{ color: 'var(--signal-negative)' }}>
+        <AnimatedReveal show={Boolean(addError)}>
+          <p className="px-3 pt-1.5 font-mono text-[11px]" style={{ color: 'var(--signal-negative)' }}>
             {addError}
-          </p>)}
+          </p>
+        </AnimatedReveal>
         </>
       )}
 
@@ -224,11 +226,11 @@ const WatchlistPanel = () => {
             <div className="h-8 rounded" style={{ background: 'var(--border-subtle)' }} />
           </div>
         ) : error ? (
-          <p className="py-3 text-[11px]" style={{ color: 'var(--signal-negative)' }}>
+          <p className="py-3 text-[12px]" style={{ color: 'var(--signal-negative)' }}>
             Couldn&apos;t load your watchlist.
           </p>
         ) : watchlist.length === 0 ? (
-          <p className="py-3 text-[11px]" style={{ color: 'var(--text-ghost)' }}>
+          <p className="py-3 text-[12px]" style={{ color: 'var(--text-ghost)' }}>
             No stocks tracked yet - add a ticker to follow it here.
           </p>
         ) : (
