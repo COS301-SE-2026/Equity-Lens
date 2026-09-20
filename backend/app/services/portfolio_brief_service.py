@@ -33,7 +33,7 @@ def create_allocation_chart(allocation: list):
 
 def create_trading_chart(trading: list):
     labels = [item.get("name", "Unknown") for item in trading]
-    values = [float(item.get("value",0) for item in trading)]
+    values = [item.get("value",0) for item in trading]
 
     buffer = _chart_buffer()
 
@@ -83,7 +83,7 @@ def create_dividend_chart(dividends: list):
 
     return buffer
 
-def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: dict)
+def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: dict):
     output = io.BytesIO()
 
     document = SimpleDocTemplate(
@@ -115,10 +115,40 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
     summary_data = [
         ["Portfolio Value", f"R {float(summary.get('PortfolioValue', 0)):,.2f}",],
-        ["Total Holdings", f"R {float(summary.get('TotalHoldings', 0)):,.2f}",],
-        ["Purchase & Sales", f"R {float(summary.get('TotalPurchaseAndSales', 0)):,.2f}",],
+        ["Total Holdings", str(summary.get('TotalHoldings', 0))],
+        ["Purchase & Sales", f"R {float(summary.get('TotalPurchasesAndSales', 0)):,.2f}",],
         ["Contributions & withdrawals", f"R {float(summary.get('TotalContributionsAndWithdrawals', 0)):,.2f}",],
         ["Dividends", f"R {float(summary.get('TotalDividendsAndWithholdingTax', 0)):,.2f}",],
         ["Expenses", f"R {float(summary.get('TotalTransactionExpenses', 0)):,.2f}",],
     ]
+
+
+    summary_table = Table(summary_data, colWidths=[90 * mm, 70 * mm,],)
+
+    summary_table.setStyle(TableStyle(
+        [
+            ("BACKGROUND", (0,0), (0,-1), colors.HexColor('#F3F4F6'),),
+            ("FONTNAME", (0,0), (0,-1), 'Helvetica-Bold'),
+            ("GRID", (0,0), (-1,-1),0.5, colors.HexColor('#D1D5DB'),),
+            ("LEFTPADDING", (0,0), (-1,-1), 8,),
+            ("RIGHTPADDING", (0,0), (-1,-1), 8,),
+            ("TOPPADDING", (0,0), (-1,-1), 7,),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 7,),
+        ]
+        ))
+
+    story.append(summary_table)
+    story.append(Spacer(1,20))
+
+    allocation = holdings.get(
+        "allocation", [],
+    )
+
+    if allocation:
+        story.append(Paragraph("Portfolio Allocation", styles["Heading2"],))
+        allocation_chart = (create_allocation_chart(allocation))
+        story.append(Image(allocation_chart, width=160 * mm, height=90 * mm,))
+        story.append(Spacer(1,15))
+
+
 
