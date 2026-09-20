@@ -82,3 +82,43 @@ def create_dividend_chart(dividends: list):
     buffer.seek(0)
 
     return buffer
+
+def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: dict)
+    output = io.BytesIO()
+
+    document = SimpleDocTemplate(
+        output,
+        pagesize=A4,
+        rightMargin=15 * mm,
+        leftMargin=15 * mm,
+        topMargin=15 * mm,
+        bottomMargin=15 * mm,
+        title="Equity Lens Portfolio Summary",
+    )
+
+    styles = getSampleStyleSheet()
+
+    story = []
+
+    summary = snapshot.get("summary", {})
+    holdings = snapshot.get("holdings", {})
+    activity = snapshot.get("activity", {})
+
+    story.append(Paragraph("Equity Lens - Smart Portfolio Snapshot", styles["Title"]))
+    story.append(Spacer(1,8))
+    story.append(Paragraph(f"Portfolio: {portfolio_id}", styles["BodyText"]))
+    story.append(Spacer(1,4))
+    story.append(Paragraph(f"Verified SHA-256 Snapshot: {snapshot_hash}", styles["BodyText"]))
+    story.append(Spacer(1,18))
+
+    story.append(Paragraph("Portfolio Summary", styles["Heading2"],))
+
+    summary_data = [
+        ["Portfolio Value", f"R {float(summary.get('PortfolioValue', 0)):,.2f}",],
+        ["Total Holdings", f"R {float(summary.get('TotalHoldings', 0)):,.2f}",],
+        ["Purchase & Sales", f"R {float(summary.get('TotalPurchaseAndSales', 0)):,.2f}",],
+        ["Contributions & withdrawals", f"R {float(summary.get('TotalContributionsAndWithdrawals', 0)):,.2f}",],
+        ["Dividends", f"R {float(summary.get('TotalDividendsAndWithholdingTax', 0)):,.2f}",],
+        ["Expenses", f"R {float(summary.get('TotalTransactionExpenses', 0)):,.2f}",],
+    ]
+
