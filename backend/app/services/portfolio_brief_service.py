@@ -152,3 +152,42 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
 
 
+    top_holdings = holdings.get("top", [],)
+    if top_holdings:
+        story.append(Paragraph("Top Holdings", styles["Heading2"],))
+        holdings_data = [["Holding", "Value"]]
+        for holding in top_holdings:
+            holdings_data.append([holding.get("name", "Unknown"), ("R " f"{float(holding.get('value',0)):,.2f}")])
+
+        holdings_table = Table(
+            holdings_data,
+            colWidths=[
+                100 * mm,
+                60 * mm,
+            ],
+            repeatRows=1,
+        )
+
+        holdings_table.setStyle(TableStyle(
+        [
+            ("BACKGROUND", (0,0), (0,-1), colors.HexColor('#F3F4F6'),),
+            ("FONTNAME", (0,0), (0,-1), 'Helvetica-Bold'),
+            ("GRID", (0,0), (-1,-1),0.5, colors.HexColor('#D1D5DB'),),
+            ("TOPPADDING", (0,0), (-1,-1), 7,),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 7,),
+        ]
+        ))
+
+        story.append(holdings_table)
+        story.append(Spacer(1,20))
+
+    trading = activity.get("trading", [],)
+
+
+
+
+
+
+
+
+
