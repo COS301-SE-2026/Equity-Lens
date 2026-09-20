@@ -403,7 +403,7 @@ const AIChat = () => {
   };
   
   const conversationList = (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between px-4 py-4" style={{borderBottom: `1px solid ${palette.border}`}}>
         <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>
           Conversations
@@ -423,16 +423,7 @@ const AIChat = () => {
         </Button>
       </div>
 
-      <div className="flex justify-center px-3 pb-3">
-        <button type="button" onClick={openMemories}
-          className={`mx-auto flex w-full max-w-[180px] items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs ${HOVER}`}
-          style={{ color: 'var(--text-secondary)', border: `1px solid ${palette.border}` }}>
-          <Brain size={14} aria-hidden="true" />
-          Memory
-        </button>
-      </div>
-
-      <div className = "convo">
+      <div className = "convo flex-1 min-h-0 overflow-y-auto">
         {conversations.length === 0 ? (
           <p className="flex justify-center errMessg">
             No saved chats yet 
@@ -484,7 +475,15 @@ const AIChat = () => {
             })
           )}
         </div>
+      <div className="flex shrink-0 justify-center px-3 py-3" style={{ borderTop: `1px solid ${palette.border}` }}>
+        <button type="button" onClick={openMemories}
+          className={`mx-auto flex w-full max-w-[180px] items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs ${HOVER}`}
+          style={{ color: 'var(--text-secondary)', border: `1px solid ${palette.border}` }}>
+          <Brain size={14} aria-hidden="true" />
+          Memory
+        </button>
       </div>
+    </div>
     );
 
 
@@ -657,6 +656,7 @@ const AIChat = () => {
                   const showDay = day !== lastDay;
 
                   lastDay = day;
+                  const savedFacts = message.savedFacts ?? [];
 
                   return (<div key={message.id}>
                       {showDay && (<p className="mb-6 text-center text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -679,15 +679,15 @@ const AIChat = () => {
                       ) : (<div>
                           {regeneratingId === message.id ? (
                             <ReplyLoader />) : (<>
-                              {message.savedFacts?.length > 0 && (
+                              {savedFacts.length > 0 && (
                                 <div className="mb-2 flex items-center gap-1.5 text-xs"
-                                  title={message.savedFacts.join('\n')}
+                                  title={savedFacts.join('\n')}
                                   style={{ color: 'var(--text-secondary)' }}>
                                   <Brain size={12} aria-hidden="true" />
                                   <span>
-                                    {message.savedFacts.length === 1
+                                    {savedFacts.length === 1
                                       ? 'Added to memory'
-                                      : `Added ${message.savedFacts.length} things to memory`}
+                                      : `Added ${savedFacts.length} things to memory`}
                                   </span>
                                 </div>
                               )}
