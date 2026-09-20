@@ -11,13 +11,13 @@ def _chart_buffer():
 
 def create_allocation_chart(allocation: list):
     labels = [item.get("name", "Unknown") for item in allocation]
-    values = [float(item.get("weight_percentage",0) for item in allocation)]
+    values = [float(item.get("weight_percentage",0)) for item in allocation]
 
     buffer = _chart_buffer()
 
     fig, ax = plt.subplots(figsize=(6, 3.5))
 
-    ax.pie(values,labels=labels,autopct="%1.1f%"startangle=90)
+    ax.pie(values,labels=labels,autopct="%1.1f%%",startangle=90,)
 
     ax.set_title("Portfolio Allocation")
 
@@ -55,17 +55,17 @@ def create_trading_chart(trading: list):
 
     return buffer
 
-def def create_dividend_chart(dividends: list):
+def create_dividend_chart(dividends: list):
     labels = [item.get("name", "Unknown") for item in dividends]
-    gross = [float(item.get("value",0) for item in dividends)]
-    gross = [float(item.get("value",0) for item in dividends)]
+    gross = [float(item.get("gross_dividend",0)) for item in dividends]
+    net = [float(item.get("net_dividend",0)) for item in dividends]
 
     buffer = _chart_buffer()
 
     fig, ax = plt.subplots(figsize=(6, 3.5))
 
-    ax.plot(labels, gross, marker="0", label="Gross Dividend")
-    ax.plot(labels, net, marker="0", label="Net Dividend")
+    ax.plot(labels, gross, marker="o", label="Gross Dividend")
+    ax.plot(labels, net, marker="o", label="Net Dividend")
 
     ax.set_title("Dividend Income")
     ax.set_ylabel("Value(ZAR)")
