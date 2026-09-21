@@ -19,6 +19,10 @@ from app.utils.market_cache import get_market_returns
 from app.utils.exceptions import ConversationNotFoundException
 from app.services.ai_context import build_history, fit_to_budget
 from app.services.ai_memory import summarise_dropped, extract_facts, MAX_FACTS_PER_USER
+from threading import Lock
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 MAX_TOOL_ITERATIONS = 3
@@ -90,6 +94,26 @@ TOOL_CONFIG = { "tools": [
                     }}
         ]
 }
+
+PORTFOLIO_CONTEXT_TTL_SECONDS = 60
+_PORTFOLIO_CONTEXT_CACHE: dict[str, tuple[float, str]] = {}
+_PORTFOLIO_CONTEXT_LOCK = Lock()
+
+def _cached_portfolio_context(db: Session, user_id) -> str:
+    key = str(user_id)
+    now = time.monotonic()
+
+    with _PORTFOLIO_CONTEXT_LOCK:
+        cached = _PORTFOLIO_CONTEXT_CACHE.get(key)
+        if cached and cached[0] > now:
+            return cached[1]
+        
+    context = get_user_portfolio_context(db, user_id)
+
+    with _PORTFOLIO_CONTEXT_LOCK:
+        _PORTFOLIO_CONTEXT_CACHE[key] = (now + PORTFOLIO_CONTEXT_TTL_SECONDS, context)
+
+    return context
 
 
 @lru_cache(maxsize=1)
@@ -370,7 +394,7 @@ def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = No
             raise ConversationNotFoundException()
 
     client = get_bedrock_client()
-    portfolio_context = get_user_portfolio_context(db, logged_in_user_id)
+    portfolio_context = _cached_portfolio_context(db, logged_in_user_id)
 
     memories = (
         db.query(UserMemory)
@@ -536,19 +560,8 @@ Memory:
     if not reply:
         reply = "Sorry, I couldn't finish that one. Try asking again."
 
-
-    saved_facts = []
-    room = MAX_FACTS_PER_USER - len(memories)
-    if room > 0:
-        for fact in extract_facts(client, [m.fact for m in memories], user_message)[:room]:
-            db.add(UserMemory(user_id = logged_in_user_id, fact = fact))
-            saved_facts.append(fact)   
-
-    
     if chat_conversation is None:
-        title = title_creation(client, user_message)
-        chat_conversation = ChatConversation(user_id = logged_in_user_id, title = title)
-
+        chat_conversation = ChatConversation(user_id = logged_in_user_id)
         db.add(chat_conversation)
         db.flush()
 
@@ -559,7 +572,47 @@ Memory:
 
     chat_conversation.updated_at = datetime.now(timezone.utc)
 
-    #make it permanent 
+    #make it permanent
     db.commit()
 
-    return reply, chat_conversation.id, saved_facts
+    return reply, chat_conversation.id
+
+
+DEFAULT_TITLE = "New Chat"
+
+
+def run_post_turn(conversation_id, user_id, user_message: str) -> None:
+    from app.database import SessionLocal
+
+    db = SessionLocal()
+    try:
+        conversation = db.query(ChatConversation).filter(
+            ChatConversation.id == conversation_id,
+            ChatConversation.user_id == user_id
+        ).first()
+
+        if conversation is None:
+            return
+
+        if conversation.title == DEFAULT_TITLE:
+            conversation.title = title_creation(get_bedrock_client(), user_message)
+
+        memories = (
+            db.query(UserMemory)
+                .filter(UserMemory.user_id == user_id)
+                .order_by(UserMemory.created_at.asc())
+                .all()
+        )
+
+        room = MAX_FACTS_PER_USER - len(memories)
+        if room > 0:
+            facts = extract_facts(get_bedrock_client(), [m.fact for m in memories], user_message)
+            for fact in facts[:room]:
+                db.add(UserMemory(user_id = user_id, fact = fact))
+
+        db.commit()
+    except Exception:
+        logger.exception("post-turn work failed for conversation %s", conversation_id)
+        db.rollback()
+    finally:
+        db.close()

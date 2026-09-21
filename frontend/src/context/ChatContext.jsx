@@ -82,7 +82,10 @@ export const ChatProvider = ({ children }) => {
           savedFacts: res.data.saved_facts ?? []});
         setConversationId(res.data.conversation_id);
         setMessages((prev) => [...prev, responseMessage]);
-        if (res.data.saved_facts?.length) {refreshMemories();}
+        window.setTimeout(() => {
+          refreshConversations();
+          refreshMemories();
+        }, 2500);
         return refreshConversations().then(() => 0);})
       .catch((err) => {
         const { text: errorText, retryAfter } = readError(err);

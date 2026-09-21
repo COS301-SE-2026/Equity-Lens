@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel, field_validator, Field
 from sqlalchemy.orm import Session
-from app.services.ai_service import chat
+from app.services.ai_service import chat, run_post_turn
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
@@ -58,12 +58,14 @@ def enforce_limit(current_user: UserResponse = Depends(get_current_user)):
 @router.post("/", response_model = ChatResponse)
 async def ai_chat(
     request: ChatRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(enforce_limit)
     ):
     try:
-        reply, conversation_id, saved_facts = chat(request.message, db, current_user.id, request.conversation_id)
-        return ChatResponse(reply = reply, conversation_id = conversation_id, saved_facts = saved_facts)
+        reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id)
+        background_tasks.add_task(run_post_turn, conversation_id, current_user.id, request.message)
+        return ChatResponse(reply = reply, conversation_id = conversation_id)
     except HTTPException:
         raise
     except Exception as e:
