@@ -92,6 +92,7 @@ def build_snapshot(
     lowest_holding: dict,
     portfolio_news: list,
     market_news: list,
+    analytics: list,
 ):
 
     snapshot_data = {
@@ -114,7 +115,9 @@ def build_snapshot(
         "news": {
             "portfolio": portfolio_news,
             "market": market_news,
-        } 
+        },
+
+        "analytics": analytics,
     }
 
     snapshot_data["insights"] = rank_insights(snapshot_data)

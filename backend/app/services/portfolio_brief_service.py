@@ -93,6 +93,9 @@ def create_news_card(article: dict, styles, show_ticker=False,):
 
     if image_buffer:
         article_image = Image(image_buffer, width=45 *mm, height=30 * mm)
+    else:
+        article_image = Paragraph("Image unaviable", styles["NewsMeta"])
+
 
     card = Table([[article_image, text_content]], colWidths=[50 * mm, 120 * mm,],)
 
@@ -242,6 +245,7 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
     news = snapshot.get("news", {})
     portfolio_news = news.get("portfolio", [])
     market_news = news.get("market", [])
+    analytics = snapshot.get("analytics", [])
 
     story.append(Paragraph("Equity Lens - Smart Portfolio Snapshot", styles["Title"]))
     story.append(Spacer(1,8))
@@ -352,8 +356,31 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
     story.append(Spacer(1,15))
 
-    story.append(Paragraph("My portfolio News", styles["Heading2"]))
+    story.append(Paragraph("My Portfolio News", styles["SectionTitle"]))
+    story.append(Paragraph("This is the latest news related to holdings in this portfolio", styles["NewsMeta"]))
+    story.append(Spacer(1,8,))
 
+    if portfolio_news:
+        for article in portfolio_news[:5]:
+            news_card = create_news_card(article, styles, show_ticker=True,)
+
+            story.append(KeepTogether([news_card, Spacer(1,10,),]))
+
+    else:
+        story.append(Paragraph("No Portfolio news avaiable.", styles["BodyText"],))
+
+    story.append(Paragraph("All Market News", styles["SectionTitle"]))
+    story.append(Paragraph("Latest general market and business news.", styles["NewsMeta"]))
+    story.append(Spacer(1,8,))
+
+    if market_news:
+        for article in market_news[:5]:
+            news_card = create_news_card(article, styles, show_ticker=True,)
+
+            story.append(KeepTogether([news_card, Spacer(1,10,),]))
+
+    else:
+        story.append(Paragraph("No market news avaiable.", styles["BodyText"],))
 
 
     story.append(Paragraph("This report was generated from the same " "canonical portfolio snapshot used by Equity Lens", styles["BodyText"],))

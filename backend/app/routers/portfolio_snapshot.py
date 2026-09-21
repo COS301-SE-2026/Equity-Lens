@@ -11,6 +11,7 @@ from fastapi.responses import StreamingResponse
 from app.services.portfolio_brief_service import generate_portfolio_brief
 from app.models.portfolio import Holdings
 from app.routers.news import fetch_market_news, fetch_ticker_news
+from app.services.portfolio_analytics_service import (get_portfolio_analytics,)
 
 router = APIRouter(prefix="/api/portfolio_snapshot", tags=["Portfolio Snapshot"])
 
@@ -72,6 +73,8 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
         portfolioID=str(portfolio_id),
         user_id=current_user.id,
     )
+
+    analytics = get_portfolio_analytics(db=db, portfolio_id=portfolio_id,)
 
     tickers = (
         db.query(Holdings.ticker)
@@ -142,6 +145,7 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
         dividend_income=dividends,
         portfolio_news=portfolio_news,
         market_news=market_news,
+        analytics=analytics,
     )
 
     stored_snapshot = repository.save_canonical_snapshot(
