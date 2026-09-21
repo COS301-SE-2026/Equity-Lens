@@ -24,6 +24,26 @@ vi.mock("../../hooks/useTheme.js", () => ({
 vi.mock("../../hooks/useAuth.js");
 vi.mock("../../services/api.js");
 
+vi.mock("aws-amplify/auth", () => ({
+  fetchAuthSession: vi.fn().mockResolvedValue({
+    tokens: { accessToken: { toString: () => "test-token" } }
+  }),
+}));
+
+/** @param {...object} events */
+const sseBody = (...events) => {
+  const encoder = new TextEncoder();
+  const frames = events.map((e) => encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
+  let i = 0;
+  return {
+    getReader: () => ({
+      read: async () => (i < frames.length
+        ? { done: false, value: frames[i++] }
+        : { done: true, value: undefined }),
+    }),
+  };
+};
+
 const mockUseAuth = /** @type {any} */(useAuth);
 const mockGet = /** @type {any} */(api.get);
 const mockPost = /** @type {any} */(api.post);
@@ -67,15 +87,20 @@ describe("AIChat", () => {
       vi.clearAllMocks();
         mockGet.mockResolvedValue({data: []});
         mockPost.mockResolvedValue({data: {reply: "mock reply", conversation_id: 1}});
+        global.fetch = vi.fn().mockResolvedValue({
+          ok: true,
+          body: sseBody(
+            { type: "text", value: "mock reply" },
+            { type: "done", conversation_id: "c1" })});
     });
 
     it("adds the typed message to the conversation and clears input", () => {
       renderChat();
       const input = /**@type {HTMLInputElement} */ (screen.getByPlaceholderText("Ask the assistant..."));
-      const sendButton = screen.getByRole("button", {name: /send/i})
+      const sendButton = /** @type {HTMLButtonElement} */ (screen.getByRole("button", {name: /send/i}));
 
       fireEvent.change(input, {target: {value: "what is NPN?"}});
-      fireEvent.click(sendButton)
+      fireEvent.click(sendButton);
 
       expect(screen.getByText("what is NPN?")).toBeDefined();
       expect(input.value).toBe("");
@@ -101,13 +126,15 @@ describe("AIChat", () => {
       fireEvent.click(sendButton);
 
       expect(await screen.findByText("mock reply")).toBeDefined();
-      expect(api.post).toHaveBeenCalledWith("/ai_chat/", {message: "hi", conversation_id: null});
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining("/ai_chat/stream/"),
+        expect.objectContaining({ method: "POST" }));      
     });
 
     it("ignores submissions that are empty or only whitespace", () => {
       renderChat();
       const input = screen.getByPlaceholderText("Ask the assistant...");
-      const sendButton = screen.getByRole("button", { name: /send/i });
+      const sendButton = /** @type {HTMLButtonElement} */ (screen.getByRole("button", { name: /send/i }));
 
       fireEvent.change(input, { target: { value: "   " } });
       fireEvent.click(sendButton);
@@ -131,8 +158,8 @@ describe("AIChat", () => {
     it("loading indicator appears while waiting for a response from the assistant.", () => {
       renderChat();
       const input = screen.getByPlaceholderText("Ask the assistant...");
-      const sendButton = /** @type {HTMLButtonElement} */ screen.getByRole("button", {name: /send/i});  
-      
+      const sendButton = /** @type {HTMLButtonElement} */ (screen.getByRole("button", {name: /send/i}));
+
       fireEvent.change(input, {target: {value: "hello"}});
       fireEvent.click(sendButton);
 

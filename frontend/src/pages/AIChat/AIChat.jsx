@@ -207,11 +207,11 @@ const AIChat = () => {
   const [input, setInput] = useState('');
   const {
     messages, isThinking, conversationId, conversations, regeneratingId,
-    sendMessage, regenerate, loadConversation, startNewChat, renameConversation,
+    sendMessage, sendMessageStreaming, regenerate, loadConversation, startNewChat, renameConversation,
     deleteConversation,
   } = /**@type {{messages: ChatMessage[], isThinking: boolean, conversationId: number|null,
         conversations: Conversation[], regeneratingId: string|number|null, sendMessage: Function,
-        regenerate: Function, loadConversation: Function, startNewChat: Function,
+        sendMessageStreaming: Function, regenerate: Function, loadConversation: Function, startNewChat: Function,
         renameConversation: Function, deleteConversation: Function}}*/ (useChat());
   const [searchParams, setSearchParams] = useSearchParams();
   /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
@@ -326,7 +326,7 @@ const AIChat = () => {
 
   /** @param {string} text */
   const submitMessage = (text) => {
-    const sent = sendMessage(text);
+    const sent = sendMessageStreaming(text);
     if (!sent) return;
 
     setInput('');

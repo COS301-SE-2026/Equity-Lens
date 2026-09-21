@@ -1,16 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator, Field
 from sqlalchemy.orm import Session
-from app.services.ai_service import chat, run_post_turn
-from app.database import get_db
+from app.services.ai_service import chat, run_post_turn, chat_stream
+from app.database import get_db, SessionLocal
 from app.dependencies import get_current_user
 from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages, UserMemory
 from app.utils.ai_rate_limit import check_limit
+from app.utils.exceptions import ConversationNotFoundException
 from app.config import settings
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -74,6 +77,37 @@ async def ai_chat(
             current_user.id, request.conversation_id, e,
         )
         raise HTTPException(status_code = 500, detail = "Something went wrong")
+
+
+@router.post("/stream/")
+async def ai_chat_stream(
+    request: ChatRequest,
+    current_user: UserResponse = Depends(enforce_limit)
+    ):
+    def event_source():
+        db = SessionLocal()
+        conversation_id = None
+        try:
+            for event in chat_stream(request.message, db, current_user.id, request.conversation_id):
+                if event["type"] == "done":
+                    conversation_id = event["conversation_id"]
+                yield f"data: {json.dumps(event)}\n\n"
+        except ConversationNotFoundException:
+            yield f"data: {json.dumps({'type': 'error', 'value': 'Conversation not found'})}\n\n"
+        except Exception as e:
+            logger.exception("AI chat stream failed for user %s: %s", current_user.id, e)
+            yield f"data: {json.dumps({'type': 'error', 'value': 'Something went wrong'})}\n\n"
+        finally:
+            db.close()
+            if conversation_id:
+                run_post_turn(conversation_id, current_user.id, request.message)
+
+    return StreamingResponse(
+        event_source(),
+        media_type = "text/event-stream",
+        headers = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
 
 # now to return all conversations for the logged user
 @router.get("/conversations/")

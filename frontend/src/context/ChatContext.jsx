@@ -1,4 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { fetchAuthSession } from 'aws-amplify/auth';
+import { API_BASE_URL } from '../utils/constants';
 
 import api from '../services/api';
 
@@ -28,6 +30,19 @@ const readError = (err) => {
       ? detail.message
       : `You have been rate limited. Please try again in ${retryAfter} seconds.`,
     retryAfter,};};
+
+/**
+ * @param {Response} response
+ * @returns {Promise<Error & {response: object}>}
+ */
+const asAxiosError = async (response) => {
+  const data = await response.json().catch(() => ({}));
+  const err = /** @type {Error & {response: object}} */ (new Error(String(response.status)));
+  err.response = {
+    status: response.status,
+    data,
+    headers: { 'retry-after': response.headers.get('retry-after') },};
+  return err;};
 
 /** @param {{ children: import('react').ReactNode }} props */
 export const ChatProvider = ({ children }) => {
@@ -99,6 +114,101 @@ export const ChatProvider = ({ children }) => {
         return retryAfter;})
       .finally(() => setIsThinking(false));};
 
+
+  /**
+   * @param {string} rawText
+   * @returns {Promise<number>|undefined}
+   */
+  const sendMessageStreaming = (rawText) => {
+    if (isThinking) {return;}
+    const text = rawText.trim();
+    if (!text) {return;}
+    return runStream(text);};
+
+  /**
+   * @param {string} text
+   * @returns {Promise<number>} 
+   */
+  const runStream = async (text) => {
+    const stamp = Date.now();
+    const userId = `u-${stamp}`;
+    const assistantId = `a-${stamp}`;
+
+    setMessages((prev) => [...prev, /** @type {ChatMessage} */ ({
+      id: userId, role: 'user', text, at: new Date() })]);
+    setIsThinking(true);
+    let opened = false;
+
+    try {
+      const session = await fetchAuthSession();
+      const token = session.tokens?.accessToken?.toString();
+
+      const response = await fetch(`${API_BASE_URL}/ai_chat/stream/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}` }, body: JSON.stringify({ message: text, conversation_id: conversationId }) });
+
+      if (!response.ok) {throw await asAxiosError(response);}
+
+      if (!response.body) {
+        throw new Error('Streaming response body is unavailable.');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) {break;}
+
+        buffer += decoder.decode(value, { stream: true });
+        const frames = buffer.split('\n\n');
+        buffer = frames.pop() ?? '';
+
+        for (const frame of frames) {
+          if (!frame.startsWith('data: ')) {continue;}
+          const event = JSON.parse(frame.slice(6));
+
+          if (event.type === 'text') {
+            if (!opened) {
+              opened = true;
+              setIsThinking(false);
+              setMessages((prev) => [...prev, /** @type {ChatMessage} */ ({
+                id: assistantId, role: 'assistant', text: '', at: new Date() })]);
+            }
+            setMessages((prev) => prev.map((m) =>
+              (m.id === assistantId ? { ...m, text: m.text + event.value } : m)));
+          } else if (event.type === 'done') {
+            setConversationId(event.conversation_id);
+          } else if (event.type === 'error') {
+            throw new Error(event.value);
+          }
+        }
+      }
+
+      window.setTimeout(() => { refreshConversations(); refreshMemories(); }, 2500);
+      await refreshConversations();
+      return 0;
+    } catch (err) {
+      const { text: errorText, retryAfter } = readError(err);
+      const message = /** @type {ChatMessage} */ ({
+        id: opened ? assistantId : `a-${stamp}-failed`,
+        role: 'assistant',
+        text: errorText,
+        at: new Date(),
+        failed: true });
+      setMessages((prev) => (opened
+        ? prev.map((m) => (m.id === assistantId ? message : m))
+        : [...prev, message]));
+      return retryAfter;
+    } finally {
+      setIsThinking(false);
+    }};
+
+
+    
   /** @param {ChatMessage} message */
   const regenerate = (message) => {
     if (isThinking || regeneratingId !== null) {
@@ -181,6 +291,7 @@ export const ChatProvider = ({ children }) => {
         conversations,
         memories,
         sendMessage,
+        sendMessageStreaming,
         regenerate,
         loadConversation,
         startNewChat,
