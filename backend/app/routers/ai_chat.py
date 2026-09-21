@@ -8,26 +8,13 @@ from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages, UserMemory
-from pydantic import BaseModel
-from typing import Any
 from app.utils.ai_rate_limit import check_limit
 from app.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
-from pydantic import BaseModel
-from typing import Any
 
 router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
-
-class NewsResponse(BaseModel):
-    total_articles: int
-    positive: int
-    negative: int
-    result: list[dict[str, Any]]
-
-class TickerResponse(BaseModel):
-    ticker: list[str]
 
 class ChatRequest(BaseModel):
     message: str
@@ -44,10 +31,6 @@ class ChatResponse(BaseModel):
     reply: str
     conversation_id: UUID
     saved_facts: list[str] = []
-
-class ChatResponse(BaseModel):
-    reply: str
-    conversation_id: UUID
 
 class ChangeConversationName(BaseModel):
     title: str = Field(min_length = 1)

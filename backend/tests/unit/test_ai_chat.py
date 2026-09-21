@@ -92,3 +92,26 @@ def test_send_message(mock_bedrock_client, client, db_session, test_user, auth_h
     msg = output.json()
     assert msg["reply"] == "A response."
     assert msg["conversation_id"] is not None
+
+
+@patch("app.services.ai_service.get_bedrock_client")
+def test_send_message_returns_saved_facts(mock_bedrock_client, client, db_session, test_user, auth_headers):     
+    def reply(text):
+        return {"output": {"message": {"content": [{"text": text}]}}}
+
+    mocked_client = MagicMock()
+    mocked_client.converse.side_effect = [
+        reply("A response."),
+        reply('["The user wants to retire in 15 years"]'),
+        reply("Retirement Planning"),
+    ]
+    mock_bedrock_client.return_value = mocked_client
+
+    output = client.post(
+        "/api/ai_chat/",
+        json = {"message": "I want to retire in 15 years"},
+        headers = auth_headers
+    )
+
+    assert output.status_code == 200
+    assert output.json()["saved_facts"] == ["The user wants to retire in 15 years"]

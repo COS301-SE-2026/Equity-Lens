@@ -405,7 +405,7 @@ def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = No
 
     system_prompt = f"""You are an AI financial assistant for EquityLens. EquityLens is a web application built to help users navigate and understand their investment portfolios.
 
-NB -> Read this first (You should only help with the following 5 things):
+NB -> Read this first (You should only help with the following 6 things):
     1. Questions about the users own portfolio. (See <portfolio_context> at the end of this)
     2. How to use the EquityLens application.
     3. General finance and investing education (concepts, terminology, trade offs)
@@ -475,6 +475,7 @@ Memory:
     <portfolio_context> {portfolio_context} </portfolio_context>"""
 
     output_message = None
+    needs_final_answer = False
 
     for _ in range(MAX_TOOL_ITERATIONS):
         response = client.converse(
@@ -487,6 +488,7 @@ Memory:
 
         output_message = response["output"]["message"]
         history.append(output_message)
+        needs_final_answer = False
 
         if response.get("stopReason") != "tool_use":
             break
@@ -511,8 +513,21 @@ Memory:
                     "status": status,
                 }
             })
+        if not tool_results:
+            break
 
         history.append({"role": "user", "content": tool_results})
+        needs_final_answer = True
+
+    if needs_final_answer:
+        response = client.converse(
+            modelId = settings.bedrock_model,
+            messages = history,
+            system = [{"text": system_prompt}],
+            inferenceConfig = {"maxTokens": 2048}
+        )
+        output_message = response["output"]["message"]
+        history.append(output_message)
 
     reply = "".join(
         block["text"] for block in output_message["content"] if "text" in block
