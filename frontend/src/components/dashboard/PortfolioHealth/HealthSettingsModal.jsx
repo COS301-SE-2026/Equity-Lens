@@ -128,8 +128,8 @@ const HealthSettingsModal = ({ open, onClose, onChanged }) => {
         Scored against{' '}
         <span style={{ color: 'var(--text-primary)' }}>
           {active ? active.name : 'custom settings'}
-        </span>{' '}
-        - {SOURCE_LABEL[data.source] ?? data.source}
+        </span>
+        {data.source !== 'preset' && <> - {SOURCE_LABEL[data.source] ?? data.source}</>}
       </p>
 
       <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2">

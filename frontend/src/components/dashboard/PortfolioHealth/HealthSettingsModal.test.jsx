@@ -98,6 +98,13 @@ describe('HealthSettingsModal', () => {
     expect(screen.queryByText(/your choice/)).not.toBeInTheDocument();
   });
 
+  it('drops the redundant tail for a preset but keeps the name', async () => {
+    getHealthConfig.mockResolvedValue(payload({ source: 'preset', preset_key: 'growth' }));
+    await open();
+    expect(await screen.findByText(/Scored against/)).toBeInTheDocument();
+    expect(screen.queryByText(/your choice/)).not.toBeInTheDocument();
+  });
+
   it('renders nothing rather than a broken dialog when the config cannot be loaded', async () => {
     getHealthConfig.mockRejectedValueOnce(new Error('boom'));
     render(<HealthSettingsModal open onClose={vi.fn()} />);
@@ -147,7 +154,8 @@ describe('HealthSettingsModal', () => {
 
     await waitFor(() => expect(saveHealthConfig).toHaveBeenCalledWith({ preset_key: 'growth' }));
     await waitFor(() => expect(onChanged).toHaveBeenCalled());
-    expect(await screen.findByText(/your choice/)).toBeInTheDocument();
+    expect(await screen.findByText(/Scored against/)).toBeInTheDocument();
+    expect(screen.queryByText(/your choice/)).not.toBeInTheDocument();
   });
 
   it('says presets move the yardstick, not the risk', async () => {
