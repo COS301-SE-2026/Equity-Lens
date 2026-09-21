@@ -102,9 +102,9 @@ def test_chat_runs_the_stock_tool(mock_bedrock_client, mock_h, db_session, test_
         {"output": {"message": {"content": [{"text": "Sasol price"}]}}}
     ]
     mock_bedrock_client.return_value = mocked_client
-    reply, conversation_id, _ = chat("How is Sasol doing?", db_session, test_user.id)
+    reply, conversation_id = chat("How is Sasol doing?", db_session, test_user.id)
     assert reply == "Sasol closed at R110.00."
-    assert mocked_client.converse.call_count == 4
+    assert mocked_client.converse.call_count == 2
 
     assert mock_h.call_args.args[0] == "SOL.JO"
 

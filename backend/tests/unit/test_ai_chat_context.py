@@ -23,7 +23,7 @@ def test_history_order(mock_bedrock_client, db_session, test_user):
     mocked_client.converse.side_effect = converse_recorder(captured)
     mock_bedrock_client.return_value = mocked_client
 
-    _, conversation_id, _ = chat("A question?", db_session, test_user.id)
+    _, conversation_id = chat("A question?", db_session, test_user.id)
     chat("A second question?", db_session, test_user.id, conversation_id)
 
     second_turn = captured[1]

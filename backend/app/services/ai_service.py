@@ -21,6 +21,7 @@ from app.services.ai_context import build_history, fit_to_budget
 from app.services.ai_memory import summarise_dropped, extract_facts, MAX_FACTS_PER_USER
 from threading import Lock
 import logging
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -382,8 +383,7 @@ def run_tool(name: str, tool_input: dict) -> str:
 
 
 
-def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = None):
-    # check ownership before spending anything on Bedrock
+def _prepare_turn(user_message: str, db: Session, logged_in_user_id, conversation_id):    
     chat_conversation = None
     if conversation_id:
         chat_conversation = db.query(ChatConversation).filter(
@@ -498,6 +498,13 @@ Memory:
 
     <portfolio_context> {portfolio_context} </portfolio_context>"""
 
+    return client, chat_conversation, history, system_prompt
+
+def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = None):
+    client, chat_conversation, history, system_prompt = _prepare_turn(
+        user_message, db, logged_in_user_id, conversation_id
+    )
+
     output_message = None
     needs_final_answer = False
 
@@ -560,31 +567,135 @@ Memory:
     if not reply:
         reply = "Sorry, I couldn't finish that one. Try asking again."
 
+    return reply, _persist_turn(db, chat_conversation, logged_in_user_id, user_message, reply)
+
+def _persist_turn(db: Session, chat_conversation, user_id, user_message: str, reply: str):
     if chat_conversation is None:
-        chat_conversation = ChatConversation(user_id = logged_in_user_id)
+        chat_conversation = ChatConversation(user_id = user_id)
         db.add(chat_conversation)
         db.flush()
 
-    #user message
     db.add(ChatMessages(conversation_id = chat_conversation.id, role = "user", content = user_message))
-    #reply message
     db.add(ChatMessages(conversation_id = chat_conversation.id, role = "assistant", content = reply))
 
     chat_conversation.updated_at = datetime.now(timezone.utc)
-
-    #make it permanent
     db.commit()
 
-    return reply, chat_conversation.id
+    return chat_conversation.id
+
+def _stream_turn(client, history, system_prompt, reply_parts, with_tools: bool):
+    kwargs = {
+        "modelId": settings.bedrock_model,
+        "messages": history,
+        "system": [{"text": system_prompt}],
+        "inferenceConfig": {"maxTokens": 2048},
+    }
+    if with_tools:
+        kwargs["toolConfig"] = TOOL_CONFIG
+
+    content = []
+    block = None
+    stop_reason = None
+
+    for event in client.converse_stream(**kwargs)["stream"]:
+        if "contentBlockStart" in event:
+            start = event["contentBlockStart"]["start"]
+            if "toolUse" in start:
+                block = {"toolUse": dict(start["toolUse"], input = "")}
+
+        elif "contentBlockDelta" in event:
+            delta = event["contentBlockDelta"]["delta"]
+            if "text" in delta:
+                if block is None:
+                    block = {"text": ""}
+                block["text"] += delta["text"]
+                reply_parts.append(delta["text"])
+                yield {"type": "text", "value": delta["text"]}
+            elif "toolUse" in delta and block is not None:
+                block["toolUse"]["input"] += delta["toolUse"]["input"]
+
+        elif "contentBlockStop" in event:
+            if block is not None:
+                if "toolUse" in block:
+                    block["toolUse"]["input"] = json.loads(block["toolUse"]["input"] or "{}")
+                content.append(block)
+                block = None
+
+        elif "messageStop" in event:
+            stop_reason = event["messageStop"]["stopReason"]
+
+    return {"role": "assistant", "content": content}, stop_reason
+
+
+def chat_stream(user_message: str, db: Session, logged_in_user_id, conversation_id = None):
+    client, chat_conversation, history, system_prompt = _prepare_turn(
+        user_message, db, logged_in_user_id, conversation_id
+    )
+
+    reply_parts = []
+    needs_final_answer = False
+
+    for _ in range(MAX_TOOL_ITERATIONS):
+        output_message, stop_reason = yield from _stream_turn(
+            client, history, system_prompt, reply_parts, with_tools = True
+        )
+        history.append(output_message)
+        needs_final_answer = False
+
+        if stop_reason != "tool_use":
+            break
+
+        tool_results = []
+        for block in output_message["content"]:
+            if "toolUse" not in block:
+                continue
+            tool_use = block["toolUse"]
+            try:
+                result_text = run_tool(tool_use["name"], tool_use.get("input") or {})
+                status = "success"
+            except Exception as exc:
+                logger.warning("Tool %s failed: %s", tool_use["name"], exc)
+                result_text = "That lookup failed. Tell the user the data is unavailable right now."
+                status = "error"
+
+            tool_results.append({
+                "toolResult": {
+                    "toolUseId": tool_use["toolUseId"],
+                    "content": [{"text": result_text}],
+                    "status": status,
+                }
+            })
+
+        if not tool_results:
+            break
+
+        history.append({"role": "user", "content": tool_results})
+        needs_final_answer = True
+
+    if needs_final_answer:
+        output_message, _ = yield from _stream_turn(
+            client, history, system_prompt, reply_parts, with_tools = False
+        )
+        history.append(output_message)
+
+    reply = "".join(reply_parts).strip()
+    if not reply:
+        reply = "Sorry, I couldn't finish that one. Try asking again."
+
+    saved_id = _persist_turn(db, chat_conversation, logged_in_user_id, user_message, reply)
+
+    yield {"type": "done", "conversation_id": str(saved_id)}
 
 
 DEFAULT_TITLE = "New Chat"
 
 
-def run_post_turn(conversation_id, user_id, user_message: str) -> None:
+def run_post_turn(conversation_id, user_id, user_message: str, db: Session = None) -> None:
     from app.database import SessionLocal
 
-    db = SessionLocal()
+    owns_session = db is None
+    if owns_session:
+        db = SessionLocal()
     try:
         conversation = db.query(ChatConversation).filter(
             ChatConversation.id == conversation_id,
@@ -615,4 +726,5 @@ def run_post_turn(conversation_id, user_id, user_message: str) -> None:
         logger.exception("post-turn work failed for conversation %s", conversation_id)
         db.rollback()
     finally:
-        db.close()
+        if owns_session:
+            db.close()

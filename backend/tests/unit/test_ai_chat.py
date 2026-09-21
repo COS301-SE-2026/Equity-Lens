@@ -95,23 +95,30 @@ def test_send_message(mock_bedrock_client, client, db_session, test_user, auth_h
 
 
 @patch("app.services.ai_service.get_bedrock_client")
-def test_send_message_returns_saved_facts(mock_bedrock_client, client, db_session, test_user, auth_headers):     
+def test_run_post_turn(mock_bedrock_client, db_session, test_user):
+    from app.services.ai_service import run_post_turn
+    from app.models.chat import UserMemory
+
     def reply(text):
         return {"output": {"message": {"content": [{"text": text}]}}}
-
+    
     mocked_client = MagicMock()
     mocked_client.converse.side_effect = [
-        reply("A response."),
-        reply('["The user wants to retire in 15 years"]'),
         reply("Retirement Planning"),
+        reply('["The user wants to retire in 15 years"]'),
     ]
     mock_bedrock_client.return_value = mocked_client
 
-    output = client.post(
-        "/api/ai_chat/",
-        json = {"message": "I want to retire in 15 years"},
-        headers = auth_headers
-    )
+    conversation = ChatConversation(user_id = test_user.id)
 
-    assert output.status_code == 200
-    assert output.json()["saved_facts"] == ["The user wants to retire in 15 years"]
+    db_session.add(conversation)
+    db_session.commit()
+
+    run_post_turn(conversation.id, test_user.id, "I want to retire in 15 years", db_session)
+
+    db_session.refresh(conversation)
+    assert conversation.title == "Retirement Planning"
+
+    facts = db_session.query(UserMemory).filter_by(user_id = test_user.id).all()
+    assert [f.fact for f in facts] == ["The user wants to retire in 15 years"]
+    

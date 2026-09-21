@@ -37,7 +37,7 @@ def test_new_chat(mock_bedrock_client, db_session, test_user):
     mocked_client.converse.return_value = {"output": {"message": {"content": [{"text": "A response."}] }}}
     
     mock_bedrock_client.return_value = mocked_client
-    reply, conversation_id, _ = chat("A question?" ,db_session, test_user.id)
+    reply, conversation_id = chat("A question?" ,db_session, test_user.id)
 
     assert reply == "A response."
     assert conversation_id is not None
@@ -58,7 +58,7 @@ def test_existing_chat(mock_bedrock_client, db_session, test_user):
     }
     
     mock_bedrock_client.return_value = mocked_client
-    reply, conversation_id, _ = chat("A question?" ,db_session, test_user.id)
+    reply, conversation_id = chat("A question?" ,db_session, test_user.id)
 
     assert reply == "A response."
     assert conversation_id is not None
@@ -67,7 +67,7 @@ def test_existing_chat(mock_bedrock_client, db_session, test_user):
         "output": {"message": {"content": [{"text": "A second response."}] }}
     }
     
-    reply2, conversation_id2, _ = chat("A second question?" ,db_session, test_user.id, conversation_id)
+    reply2, conversation_id2 = chat("A second question?" ,db_session, test_user.id, conversation_id)
 
     assert reply2 == "A second response."
     assert conversation_id2 == conversation_id
