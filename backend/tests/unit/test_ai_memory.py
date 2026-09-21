@@ -12,7 +12,7 @@ def memory_client(fact_reply = "[]", summary_reply = "The user asked about Sasol
     captured = {"system_prompts": [], "summary_calls": 0, "fact_calls": 0}
 
     def fake_converse(**kwargs):
-        system = kwargs.get("system", [{}])[0].get("text", "")
+        system = " ".join(b.get("text", "") for b in kwargs.get("system", []))
 
         if "running summary" in system:
             captured["summary_calls"] += 1
