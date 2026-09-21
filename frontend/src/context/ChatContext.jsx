@@ -5,7 +5,7 @@ import { API_BASE_URL } from '../utils/constants';
 import api from '../services/api';
 
 /**
- * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean, savedFacts?: string[]}} ChatMessage
+ * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean, savedFacts?: string[], streaming?: boolean}} ChatMessage
  * @typedef {{id: string, title: string}} Conversation
  * @typedef {{id: string, role: 'user'|'assistant', content: string, created_at?: string|null}} ApiMessage
  */
@@ -174,14 +174,16 @@ export const ChatProvider = ({ children }) => {
           if (event.type === 'text') {
             if (!opened) {
               opened = true;
-              setIsThinking(false);
               setMessages((prev) => [...prev, /** @type {ChatMessage} */ ({
-                id: assistantId, role: 'assistant', text: '', at: new Date() })]);
+                id: assistantId, role: 'assistant', text: '', at: new Date(), streaming: true })]);
             }
             setMessages((prev) => prev.map((m) =>
               (m.id === assistantId ? { ...m, text: m.text + event.value } : m)));
           } else if (event.type === 'done') {
             setConversationId(event.conversation_id);
+            setIsThinking(false);
+            setMessages((prev) => prev.map((m) =>
+              (m.id === assistantId ? { ...m, streaming: false } : m)));
           } else if (event.type === 'error') {
             throw new Error(event.value);
           }
@@ -205,6 +207,8 @@ export const ChatProvider = ({ children }) => {
       return retryAfter;
     } finally {
       setIsThinking(false);
+      setMessages((prev) => prev.map((m) =>
+        (m.id === assistantId ? { ...m, streaming: false } : m)));
     }};
 
 

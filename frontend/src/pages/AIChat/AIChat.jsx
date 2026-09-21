@@ -9,7 +9,7 @@ import useChat from '../../hooks/useChat';
 import { useThemeContext } from '../../context/ThemeContext';
 
 /**
- * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean, savedFacts?: string[]}} ChatMessage
+ * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean, savedFacts?: string[], streaming?: boolean}} ChatMessage
  * @typedef {{id: number, title: string, updated_at: string}} Conversation
  * @typedef {{border: string, panelBg: string, bubbleBg: string, bubbleBorder: string, activeBg: string}} Palette
  */
@@ -26,6 +26,7 @@ const HOVER = 'transition-colors duration-150 hover:bg-[var(--surface-hover)]';
 const COMPOSER_MAX_ROWS = 1500;
 const COPIED_LABEL_MS = 3200;
 const SWEEP_MS = 3200;
+const BEAT_MS = 1400;
 
 
 /**
@@ -112,9 +113,25 @@ const stampLabel = (iso) => {
   return `${d.toLocaleDateString('en-ZA',{weekday: 'short'})} ${timeLabel(d)}`;
 };
 
+const CARET_CSS = `
+.ai-streaming > :last-child::after {
+  content: '';
+  display: inline-block;
+  width: 0.45em;
+  height: 1.05em;
+  margin-left: 0.12em;
+  vertical-align: text-bottom;
+  background: var(--accent-primary);
+  border-radius: 1px;
+  animation: ai-caret 1.05s steps(1, end) infinite;
+}
+@keyframes ai-caret { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0 } }
+@media (prefers-reduced-motion: reduce) {
+  .ai-streaming > :last-child::after { animation: none }
+}`;
 
-//loader
-const ReplyLoader = () => {
+/** @param {{mode?: 'searching'|'beating'}} props */
+const ReplyLoader = ({ mode = 'searching' }) => {
   /**@type {React.MutableRefObject<HTMLSpanElement|null>}*/
   const loaderIcon = useRef(null);
 
@@ -128,17 +145,27 @@ const ReplyLoader = () => {
 
     /** @param {number} now */
     const loop = (now) => {
-      const angle = (((now - start) % SWEEP_MS) / SWEEP_MS) * Math.PI * 2;
-      const x = 10 * Math.sin(angle);
-      const y = 4 * Math.sin(angle * 2);
-      if (loaderIcon.current) loaderIcon.current.style.transform = `translate(${x}px, ${y}px)`;
+      if (loaderIcon.current) {
+        if (mode === 'beating') {
+          // lub-dub: two quick thumps, then rest for the remainder of the cycle
+          const p = ((now - start) % BEAT_MS) / BEAT_MS;
+          const thump = Math.exp(-(p ** 2) / 0.0015)
+            + 0.6 * Math.exp(-((p - 0.16) ** 2) / 0.0015);
+          loaderIcon.current.style.transform = `scale(${1 + 0.22 * thump})`;
+        } else {
+          const angle = (((now - start) % SWEEP_MS) / SWEEP_MS) * Math.PI * 2;
+          const x = 10 * Math.sin(angle);
+          const y = 4 * Math.sin(angle * 2);
+          loaderIcon.current.style.transform = `translate(${x}px, ${y}px)`;
+        }
+      }
       frame = requestAnimationFrame(loop);
     };
 
     frame = requestAnimationFrame(loop);
 
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [mode]);
 
   return (
     <div
@@ -216,6 +243,10 @@ const AIChat = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const bottomRef = useRef(null);
+  /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
+  const scrollRef = useRef(null);
+  const lastMessage = messages[messages.length - 1];
+  const streamingText = lastMessage?.streaming ? lastMessage.text : '';
   const [editingId, setEditingId] = useState(/**@type {number | null}*/(null));
   const [editTitle, setEditTitle] = useState('');
   /**@type {React.MutableRefObject<HTMLInputElement | null>}*/
@@ -271,8 +302,12 @@ const AIChat = () => {
   });
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length, isThinking]);
+    const el = scrollRef.current;
+    if (!el) {return;}
+    if (el.scrollHeight - el.scrollTop - el.clientHeight > 140) {return;}
+    bottomRef.current?.scrollIntoView({
+      behavior: streamingText ? 'auto' : 'smooth', block: 'end' });
+  }, [messages.length, isThinking, streamingText]);
 
   useEffect(() => {
     if (cooldownUntil === 0) 
@@ -370,9 +405,10 @@ const AIChat = () => {
     });
   };
 
-  /** @param {React.FormEvent<HTMLFormElement>} e */
+  /** @param {React.FormEvent} e */
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (locked) return;
     submitMessage(input);
   };
 
@@ -380,6 +416,7 @@ const AIChat = () => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      if (locked) return;
       submitMessage(input);
     }
   };
@@ -624,7 +661,8 @@ const AIChat = () => {
             )}
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <style>{CARET_CSS}</style>
+          <div ref = {scrollRef} className="min-h-0 flex-1 overflow-y-auto">
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center px-4 text-center">
                 <div className={CONTENT_MAX}>
@@ -692,35 +730,36 @@ const AIChat = () => {
                                 </div>
                               )}
                               <div
-                                className="text-base"
+                                className={`text-base${message.streaming ? ' ai-streaming' : ''}`}
                                 style={{color: 'var(--text-primary)', lineHeight: 1.7, overflowWrap: 'break-word'}}>
                                 <ReactMarkdown components={mdComponents}>{message.text}</ReactMarkdown>
                               </div>
+                                {!message.streaming && (
+                                  <div className="mt-2 flex items-center gap-4 text-xs"
+                                    style={{color: 'var(--text-secondary)'}}>
+                                    <span>{timeLabel(message.at)}</span>
 
-                              <div className="mt-2 flex items-center gap-4 text-xs"
-                                style={{color: 'var(--text-secondary)'}}>
-                                <span>{timeLabel(message.at)}</span>
-
-                                {message.failed ? (<button type="button" onClick={() => retry(message)} disabled={locked}
-                                  className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
-                                    <RefreshCw size={16} aria-hidden="true"/>
-                                    {cooling ? `Retry in ${cooldownLeft}s` : 'Retry'}
-                                  </button>) 
-                                : (<>
-                                    {copyButton(message)}
-                                    <button type="button" onClick={() => retry(message)} disabled={locked}
+                                    {message.failed ? (<button type="button" onClick={() => retry(message)} disabled={locked}
                                       className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
-                                      <RefreshCw size={16} aria-hidden="true"/>
-                                        Regenerate
-                                    </button>
-                                  </>)}
-                              </div>
+                                        <RefreshCw size={16} aria-hidden="true"/>
+                                        {cooling ? `Retry in ${cooldownLeft}s` : 'Retry'}
+                                      </button>)
+                                    : (<>
+                                        {copyButton(message)}
+                                        <button type="button" onClick={() => retry(message)} disabled={locked}     
+                                          className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
+                                          <RefreshCw size={16} aria-hidden="true"/>
+                                            Regenerate
+                                        </button>
+                                      </>)}
+                                  </div>
+                                )}
                             </>)}
                         </div>)}
                       </div>);
                 })}
 
-                {isThinking && <ReplyLoader/>}
+                {isThinking && !lastMessage?.streaming && <ReplyLoader/>}
 
                 <div ref={bottomRef}/>
               </div>)}
