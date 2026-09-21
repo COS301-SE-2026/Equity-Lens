@@ -9,6 +9,12 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import (Image, KeepTogether,Paragraph,SimpleDocTemplate,Spacer,Table,TableStyle,)
 
+def get_indicator_value(indicator: dict):
+    value = indicator.get("value")
+    unit = indicator.get("unit","")
+
+    return f"{float(value):.2f}{unit}"
+
 def safe_text(value):
     if value is None:
         return ""
@@ -382,6 +388,68 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
     else:
         story.append(Paragraph("No market news avaiable.", styles["BodyText"],))
 
+    if analytics:
+        story.append(Paragraph("Portfolio Analytics", styles["SectionTitle"],))
+        story.append(Paragraph("Key financial and risk indicators", styles["NewsMeta"],))
+        story.append(Spacer(1,8,))
+
+        analytics_data = [ [
+                "Ticker",
+                "Company",
+                "CAPM",
+                "P/E",
+                "Altman Z",
+                "Beta",
+                "RSI",
+                "Sharpe",
+                "Sortino",
+            ] ]
+
+
+        for stock in analytics:
+            analytics_data.append([stock.get("ticker", "UnKnown"), stock.get("name", stock.get("ticker","Unknown",),), 
+                get_indicator_value(stock.get("capm")),
+                get_indicator_value(stock.get("pe_ratio")),
+                get_indicator_value(stock.get("altman_z")),
+                get_indicator_value(stock.get("beta")),
+                get_indicator_value(stock.get("rsi")),
+                get_indicator_value(stock.get("sharpe")),
+                get_indicator_value(stock.get("sortino")),
+
+                ])
+
+        analytics_table = Table(
+            analytics_data,
+            repeatRows=1,
+            colWidths=[
+                19 * mm,
+                29 * mm,
+                18 * mm,
+                17 * mm,
+                20 * mm,
+                16 * mm,
+                16 * mm,
+                19 * mm,
+                19 * mm,
+            ]
+        )
+
+        analytics_table.setStyle(TableStyle(
+        [
+            ("BACKGROUND", (0,0), (-1,0), colors.HexColor('#E5E7EB'),),
+            ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold",),
+            ("FONTNAME", (0,0), (0,-1), "Helvetica-Bold",),
+            ("BOX", (0,0), (-1,-1),0.7, '#CBD5E1'),
+            ("LEFTPADDING", (0,0), (-1,-1), 8,),
+            ("RIGHTPADDING", (0,0), (-1,-1), 8,),
+            ("TOPPADDING", (0,0), (-1,-1), 7,),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 7,),
+        ]
+        ))
+
+        story.append(analytics_table)
+
+        story.append(Spacer(1,8,))
 
     story.append(Paragraph("This report was generated from the same " "canonical portfolio snapshot used by Equity Lens", styles["BodyText"],))
 
