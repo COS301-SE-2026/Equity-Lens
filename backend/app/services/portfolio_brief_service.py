@@ -1,14 +1,118 @@
 import io
+import requests
+from PIL import Image as PILImage
+from xml.sax.saxutils import escape
 import matplotlib.pyplot as plt
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import (Image, Paragraph,SimpleDocTemplate,Spacer,Table,TableStyle,)
+from reportlab.platypus import (Image, KeepTogether,Paragraph,SimpleDocTemplate,Spacer,Table,TableStyle,)
+
+def safe_text(value):
+    if value is None:
+        return ""
+
+    return escape(str(value))
+
+def get_news_image(image_url):
+    if not image_url:
+        return None
+
+    try:
+        response = requests.get(image_url,timeout=8,headers={
+            "User-Agent": (
+                "Mozilla/5.0 "
+                "(Window NT 10.0; Win64; x64)"
+            )
+        },
+        )
+
+        response.raise_for_status()
+
+        source_buffer = io.BytesIO(response.content)
+
+        image = PILImage.open(source_buffer)
+
+        if image.mode not in ("RGB", "RGBA"):
+            image = image.convert("RGB")
+
+        output_buffer = io.BytesIO()
+
+        image.save(output_buffer, format="PNG",)
+
+        output_buffer.seek(0)
+
+        return output_buffer
+
+    except Exception as error:
+        print("The image could not be loaded.")
+
+        return None
+
+def create_news_card(article: dict, styles, show_ticker=False,):
+    ticker = safe_text(article.get("ticker", ""))
+    title = safe_text(article.get("title", "No Title"))
+    source = safe_text(article.get("source", ""))
+    description = safe_text(article.get("description", ""))
+    published_at = safe_text(article.get("published_at", ""))
+    image_url = safe_text(article.get("image_url", ""))
+    article_url = safe_text(article.get("url", ""))
+
+    if show_ticker and ticker:
+        title_text = (f"{ticker} - {title}")
+    else:
+        title_text = title
+    
+    text_content = []
+
+    text_content.append(Paragraph(f"<b>{title_text}</b>", styles["NewsTitle"],))
+
+    allTogther = []
+
+    if source:
+        allTogther.append(source)
+
+    if published_at:
+        allTogther.append(published_at)
+
+    if allTogther:
+        text_content.append(Spacer(1,3))
+        text_content.append(Paragraph("|".join(allTogther), styles["NewsMeta"],))
+
+    if description:
+        text_content.append(Spacer(1,6))
+        text_content.append(Paragraph(description, styles["NewsDescription"],))
+
+    if article_url:
+        safe_url = escape(str(article_url), {'"': "&quot;",},)
+        text_content.append(Spacer(1,8))
+        text_content.append(Paragraph((f'<link href="{safe_url}" 'f'color="#2563EB">'f'<b>Read full article</b>'f'</link>'),styles["NewsLink"],))
+
+    image_buffer = get_news_image(image_url)
+
+    if image_buffer:
+        article_image = Image(image_buffer, width=45 *mm, height=30 * mm)
+
+    card = Table([[article_image, text_content]], colWidths=[50 * mm, 120 * mm,],)
+
+
+    card.setStyle(TableStyle(
+        [
+            ("BACKGROUND", (0,0), (0,-1), colors.HexColor('#F8FAFC'),),
+            ("BOX", (0,0), (-1,-1),0.7, '#CBD5E1'),
+            ("LEFTPADDING", (0,0), (-1,-1), 8,),
+            ("RIGHTPADDING", (0,0), (-1,-1), 8,),
+            ("TOPPADDING", (0,0), (-1,-1), 7,),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 7,),
+        ]
+        ))
+
+    return card
+
 
 def _chart_buffer():
     return io.BytesIO()
-
 
 def create_cash_flow_chart(allocation: list):
     labels = [item.get("name", "Unknown") for item in allocation]
@@ -123,11 +227,21 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
     styles = getSampleStyleSheet()
 
+    styles.add(ParagraphStyle(name="SectionTitle", parent=styles["Heading2"], fontName="Helvetica-Bold", fontSize=15, leading=18, textColor=colors.HexColor('#111827'), spaceAfter=8,))
+    styles.add(ParagraphStyle(name="NewsTitle", parent=styles["BodyText"], fontName="Helvetica-Bold", fontSize=10, leading=13, textColor=colors.HexColor('#111827')))
+    styles.add(ParagraphStyle(name="NewsMeta", parent=styles["BodyText"], fontSize=8, leading=10, textColor=colors.HexColor('#64748B'),))
+    styles.add(ParagraphStyle(name="NewsDescription", parent=styles["BodyText"], fontSize=9, leading=12, textColor=colors.HexColor('#334155'),))
+    styles.add(ParagraphStyle(name="NewsLink", parent=styles["BodyText"], fontSize=9, leading=11,))
+
+
     story = []
 
     summary = snapshot.get("summary", {})
     holdings = snapshot.get("holdings", {})
     activity = snapshot.get("activity", {})
+    news = snapshot.get("news", {})
+    portfolio_news = news.get("portfolio", [])
+    market_news = news.get("market", [])
 
     story.append(Paragraph("Equity Lens - Smart Portfolio Snapshot", styles["Title"]))
     story.append(Spacer(1,8))
@@ -238,6 +352,10 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
     story.append(Spacer(1,15))
 
+    story.append(Paragraph("My portfolio News", styles["Heading2"]))
+
+
+
     story.append(Paragraph("This report was generated from the same " "canonical portfolio snapshot used by Equity Lens", styles["BodyText"],))
 
 
@@ -246,14 +364,3 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
     output.seek(0)
 
     return output
-
-
-
-
-
-
-
-
-
-
-
