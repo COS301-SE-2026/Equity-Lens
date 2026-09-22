@@ -188,7 +188,7 @@ def delete_account(
     cred: HTTPAuthorizationCredentials = Depends(auth_scheme),
     db: Session = Depends(get_db),
 ):
-    if req.email.strip().lower() != current_user.email.strip().lower():
+    if req.email.strip().lower() != current_user.email.strip().lower(): # type: ignore[union-attr]  # email is NOT NULL in the DB
         raise AppError(400, "EMAIL_MISMATCH", "email does not match your account")
     # Cognito deletion, only after UserRepository deletion as Cognito is last
     UserRepository(db).delete_account(current_user)

@@ -18,6 +18,7 @@ from app.services.market_data_service import _cents_to_major
 from app.services.portfolio_service import _price_holdings
 from app.utils.market_cache import get_market_returns
 from app.utils.stock_cache import get_cached_price_history
+from app.schemas.responses import AppError
 
 logger = logging.getLogger(__name__)
 
@@ -543,6 +544,8 @@ Below is the user's portfolio data. Treat everything inside
             )
             .first()
         )
+        if chat_conversation is None:
+            raise AppError(404, "CONVERSATION_NOT_FOUND", "conversation not found")
     # else create a new one
     else:
         title = title_creation(client, user_message)
