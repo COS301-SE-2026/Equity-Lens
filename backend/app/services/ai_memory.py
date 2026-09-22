@@ -88,7 +88,7 @@ def extract_facts(client, known_facts: list[str], user_message: str) -> list[str
     )
     try:
         response = client.converse(
-            modelId = settings.bedrock_model,
+            modelId = settings.bedrock_cheap_model,
             messages = [{"role": "user", "content": [{"text": prompt}]}],
             system = [{"text": FACTS_SYSTEM}],
             inferenceConfig = {"maxTokens": FACTS_MAX_TOKENS},

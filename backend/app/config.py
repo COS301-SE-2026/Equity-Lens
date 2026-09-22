@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     aws_cognito_user_pool_id: str | None = None
     aws_cognito_client_id: str | None = None
     bedrock_model: str = "anthropic.claude-sonnet-4-5-20250929-v1:0"
+    bedrock_cheap_model: str = "anthropic.claude-haiku-4-5-20251001-v1:0"
+    bedrock_temperature: float = 0.3
     ai_message_limit: int = 5
     ai_window_limit: int = 60
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
