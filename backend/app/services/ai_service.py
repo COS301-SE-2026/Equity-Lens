@@ -5,6 +5,7 @@ from app.models.portfolio import Portfolios, Document, Holdings
 from app.models.chat import ChatConversation, ChatMessages, UserMemory
 from app.utils.stock_cache import get_cached_price_history
 from app.services.market_data_service import _cents_to_major, search_stocks
+from app.services.pdf_summary_service import (get_summary_import_PDF, get_expenses_import_PDF, get_dividend_income_import_PDF, get_trading_activity_import_PDF, get_cash_flow_import_PDF)
 from app.services.health_score import compute_health_score
 from app.services.portfolio_service import _price_holdings
 from datetime import datetime, timezone
@@ -151,6 +152,30 @@ TOOL_CONFIG = { "tools": [
                                                     "required": ["company"]
                                                 }}
                         }},
+                    { "toolSpec": {
+                            "name": "get_statement_detail",
+                            "description": ("Read the detail behind a user's imported brokerage statement:"      
+                                            " fees and expenses paid, dividends received, trading activity, cash in and out, or an overall summary."
+                                            "Use it whenever the user asks what something cost them, what they earned in dividends, what they bought or sold, or what they paid in."
+                                            "Leave portfolio out unless the user names one."
+                            ),
+                            "inputSchema": { "json":
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "section": {
+                                                            "type": "string",
+                                                            "enum": ["summary", "fees", "dividends", "trading", "cash_flow"],
+                                                            "description": "summary = headline totals; fees = charges and expenses; dividends = income and withholding tax; trading = buys and sells; cash_flow = contributions and withdrawals.",
+                                                        },
+                                                        "portfolio": {
+                                                            "type": "string",
+                                                            "description": "The portfolio name, only if the user named one. Omit it otherwise.",
+                                                        }
+                                                    },
+                                                    "required": ["section"]
+                                                }}
+                    }},
         {"cachePoint": {"type": "default"}}
         ]
 }
@@ -288,6 +313,82 @@ def title_creation(client, user_message):
         return TITLE_FALLBACK
 
     return _clean_title(raw)
+
+def _resolve_portfolio(db: Session, user_id, name: str = ""):
+    portfolios = db.query(Portfolios).filter(
+        Portfolios.user_id == user_id
+    ).order_by(Portfolios.created_at.asc()).all()
+
+    if not portfolios:
+        return None, "No portfolio has been imported yet. Ask the user to upload a statement first."
+
+    name = (name or "").strip().lower()
+    if name:
+        for i, p in enumerate(portfolios, start = 1):
+            if name in (p.portfolio_name or "").lower() or name == f"portfolio {i}":
+                return p, None
+        listed = ", ".join(f'"{p.portfolio_name}"' for p in portfolios)
+        return None, f"No portfolio matched '{name}'. The user has: {listed}. Ask which one they mean."
+
+    if len(portfolios) == 1:
+        return portfolios[0], None
+    
+    listed = ", ".join(f'"{p.portfolio_name}"' for p in portfolios)
+    return None, f"The user has more than one portfolio ({listed}). Ask which one they mean, then call this again with that name."
+
+
+def _money_rows(rows: list, label: str) -> str:
+    if not rows:
+        return f"No {label} recorded on this statement."
+    total = sum(r["value"] for r in rows)
+    lines = [f"- {r['name']}: R{r['value']:,.2f}" for r in rows]
+    lines.append(f"Total {label}: R{total:,.2f}")
+    return "\n".join(lines)
+
+
+def get_statement_detail_tool(db: Session, user_id, tool_input: dict) -> str:
+    section = (tool_input.get("section") or "").strip().lower()
+    portfolio, problem = _resolve_portfolio(db, user_id, tool_input.get("portfolio", ""))
+    if problem:
+        return problem
+
+    header = f"{section} for {portfolio.portfolio_name}:\n"
+    try:
+        if section == "summary":
+            s = get_summary_import_PDF(db, portfolio.id, user_id)
+            return header + "\n".join([
+                f"- Portfolio value (at cost): R{s['PortfolioValue']:,.2f}",
+                f"- Number of holdings: {s['TotalHoldings']}",
+                f"- Purchases and sales: R{s['TotalPurchasesAndSales']:,.2f}",
+                f"- Contributions and withdrawals: R{s['TotalContributionsAndWithdrawals']:,.2f}",
+                f"- Net dividends: R{s['TotalDividendsAndWithholdingTax']:,.2f}",
+                f"- Transaction expenses: R{s['TotalTransactionExpenses']:,.2f}",
+                "Portfolio value here is the cost basis from the statement, not today's market value.",
+            ])
+
+        if section == "fees":
+            return header + _money_rows(get_expenses_import_PDF(db, portfolio.id, user_id), "fees and expenses") 
+
+        if section == "trading":
+            return header + _money_rows(get_trading_activity_import_PDF(db, portfolio.id, user_id), "trading activity")
+
+        if section == "cash_flow":
+            return header + _money_rows(get_cash_flow_import_PDF(db, portfolio.id, user_id), "contributions and withdrawals")
+
+        if section == "dividends":
+            rows = get_dividend_income_import_PDF(db, portfolio.id, user_id)
+            if not rows:
+                return header + "No dividends recorded on this statement."
+            lines = [f"- {r['name']}: gross R{r['gross_dividend']:,.2f}, "
+                     f"withholding tax R{r['withholding_tax']:,.2f}, net R{r['net_dividend']:,.2f}"
+                     for r in rows]
+            lines.append(f"Total net dividends: R{sum(r['net_dividend'] for r in rows):,.2f}")
+            return header + "\n".join(lines)
+    except Exception as exc:
+        logger.warning("Statement detail %s failed for portfolio %s: %s", section, portfolio.id, exc)
+        return "That statement detail could not be read. Tell the user it is unavailable right now."
+
+    return f"Unknown section '{section}'. Valid sections: summary, fees, dividends, trading, cash_flow."
 
 
 MAX_TICKER_MATCHES = 5
@@ -575,11 +676,13 @@ def run_tool(name: str, tool_input: dict, db: Session, user_id) -> str:
         return get_indicators_tool(tool_input.get("ticker", ""))
     if name == "get_goal_projection":
         return get_goal_projection_tool(db, user_id, tool_input)
+    if name == "get_statement_detail":
+        return get_statement_detail_tool(db, user_id, tool_input)
     return f"Unknown tool: {name}"
 
 
 SYSTEM_RULES = """You are an AI financial assistant for EquityLens. EquityLens is a web application built to help users navigate and understand their investment portfolios.
-NB -> Read this first (You should only help with the following 7 things):
+NB -> Read this first (You should only help with the following 8 things):
     1. Questions about the users own portfolio. (See <portfolio_context> at the end of this)
     2. How to use the EquityLens application.
     3. General finance and investing education (concepts, terminology, trade offs)
@@ -587,6 +690,7 @@ NB -> Read this first (You should only help with the following 7 things):
     5. Questions about recent financial or market news, either in general or about a specific company
     6. Questions about how risky, volatile, cheap or financially healthy a share is, and about the indicators EquityLens calculates (CAPM, P/E, Altman Z-score, beta, RSI, Sharpe, Sortino)
     7. Questions about whether they can reach a financial goal - retiring, affording something, reaching an amount, or whether they are on track
+    8. Questions about what their statement shows - fees and charges paid, dividends received, what they bought or sold, and money paid in or taken out
 Anything else is out of scope. Refuse it briefly and go back to what you can help with.
 This includes those framed a financial or investing content:
     1. Writing, explaining,debugging or reviewing of any type of code. (Example: "Python code for an investment app" is still a coding request)
@@ -639,6 +743,10 @@ Behaviour:
     Explain what an indicator means in plain language before quoting its value, and prefer the user's own holdings for examples.
     If an indicator comes back as not available, say so and give the reason the tool provided. Never estimate or fill in a missing indicator.
     These are calculated from a year of end-of-day prices, so they describe the recent past and are not predictions.
+    When the user asks what they paid in fees, what dividends they received, what they bought or sold, or how    
+    much they contributed or withdrew, call the get_statement_detail tool. <portfolio_context> only holds current holdings, not this history.
+    Leave the portfolio argument out unless the user named a portfolio. If the tool says there is more than one, ask which before calling again.
+    These figures come from the statement they uploaded, so quote them as what the statement shows rather than as live values. Say which portfolio they belong to.   
     When the user asks whether they can reach a goal, afford something, retire by a certain age, or whether they are on track, call the get_goal_projection tool. Do not do the arithmetic yourself.
     Leave current_value out so the tool uses their real portfolio value. Only pass it when the user explicitly names a different starting amount.
     Check <user_memory> first - their goal, target amount, time horizon and monthly contribution are often already there, so use those instead of asking again.
