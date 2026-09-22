@@ -10,8 +10,14 @@ from reportlab.lib.units import mm
 from reportlab.platypus import (Image, KeepTogether,Paragraph,SimpleDocTemplate,Spacer,Table,TableStyle,)
 
 def get_indicator_value(indicator: dict):
+    if not indicator:
+        return "N/A"
+
     value = indicator.get("value")
     unit = indicator.get("unit","")
+
+    if value is None:
+        return "N/A"
 
     return f"{float(value):.2f}{unit}"
 

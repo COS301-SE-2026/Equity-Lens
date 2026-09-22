@@ -512,6 +512,8 @@ const Portfolio = () => {
   const [accountType,setAccountType] = useState("");
   const [showPortfolios,setShowPortfolios] = useState(false);
   const [portfolios, setPortfolios] = useState(/** @type {any[]}*/[]);
+  const [snapshot, setSnapshot] = useState(null);
+  const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
 
   useEffect( () => {
     const getInfo = async () => {
@@ -530,58 +532,33 @@ const Portfolio = () => {
   const ViewSummary = async(id) => {
 
   try{
+        
+  
     setLoadingPage(true)
 
+    setSelectedPortfolioId(id)
 
-          const getSummaryRequest = await api.get(
-        `/import_pdf_summary/summary/${id}`
-      )
+    const response = await api.get(`/portfolio_snapshot/${id}`)
 
-      const getSummary = getSummaryRequest.data;
-      setSummary(getSummary);
+    const portfolioSnapshot = response.data;
+    const data = portfolioSnapshot.snapshot;
 
-      const SummaGetTheTopAllocationImportPDFRequest = await api.get(
-        `/import_pdf_summary/top_holdings/${id}`,
-      )
+    setSnapshot(portfolioSnapshot)
 
-      const getSummaGetTheTopAllocationImportPDFry = SummaGetTheTopAllocationImportPDFRequest.data;
-      setGetTheTopHoldingsImportPDF(getSummaGetTheTopAllocationImportPDFry);
+    setSummary(data.summary)
+    
+    setGetTheTopHoldingsImportPDF(data.holdings?.top || []);
 
+    setGetTheTopAllocationImportPDF(data.holdings?.allocation || []);
 
-      const getSummaryGetTheTopHoldingsImportPDFRequest = await api.get(
-        `/import_pdf_summary/portfolio_allocation/${id}`
-      )
+    setGetTheLowest(data.holdings?.lowest || {name: "", value: 0,});
 
-      const getSummaryGetTheTopHoldingsImportPDF = getSummaryGetTheTopHoldingsImportPDFRequest.data;
-      setGetTheTopAllocationImportPDF(getSummaryGetTheTopHoldingsImportPDF);
+    setGetTradingActivity(data.activity?.trading || []);
 
-      const LowestHoldingsRequest = await api.get(
-        `/import_pdf_summary/lowest_holdings/${id}`
-      )
+    setGetCashFlow(data.activity?.cash_flow || []);
 
-      const LowestHoldings = LowestHoldingsRequest.data;
-      setGetTheLowest(LowestHoldings);
+    setGetDividendIncome(data.activity?.dividend_income || []);
 
-       const TradingActivity = await api.get(
-        `/import_pdf_summary/trading_activity/${id}`
-      )
-
-      const TradingActivityImport = TradingActivity.data;
-      setGetTradingActivity(TradingActivityImport);
-
-       const CashFlow = await api.get(
-        `/import_pdf_summary/cash_flow/${id}`
-      )
-
-      const CashFlowImport = CashFlow.data;
-      setGetCashFlow(CashFlowImport);
-
-       const Income = await api.get(
-        `/import_pdf_summary/dividend_income/${id}`
-      )
-
-      const IncomeImport = Income.data;
-      setGetDividendIncome(IncomeImport);
     
   }
 
@@ -594,6 +571,43 @@ const Portfolio = () => {
     setLoadingPage(false)
   }
 
+  }
+
+  const downloadSnapshot = async () => {
+    if(!selectedPortfolioId)
+    {
+      alert("Please select a portfolio first");
+      return;
+    }
+
+    try {
+      const response = await api.get(`/portfolio_snapshot/${selectedPortfolioId}/download`,
+        {
+          responseType: "blob",
+        }
+      );
+
+      const blob = new Blob([response.data], {
+        type: "application/pdf"
+      });
+
+      const url = window.URL.createObjectURL(blob);
+
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = `equity-lens-${selectedPortfolioId}.pdf`;
+
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      window.URL.revokeObjectURL(url)
+    }
+    catch(error)
+    {
+      alert("Could not download the portfolio Summary. Please try again later")
+    }
   }
 
   const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
@@ -777,6 +791,12 @@ const Portfolio = () => {
 
       const IncomeImport = Income.data;
       setGetDividendIncome(IncomeImport);
+
+      setSelectedPortfolioId(savedPortfolio.portfolio_id);
+
+      const snapshotResponse = await api.get(`/portfolio_snapshot/${savedPortfolio.portfolio_id}`)
+
+      setSnapshot(snapshotResponse.data);
 
     }
     catch (theErrors)
@@ -1148,7 +1168,9 @@ const Portfolio = () => {
       }
 
 
-      <div className="grid grid-cols-4 gap-8 mt-8">
+      <div className="mt-8">
+
+       
          
       </div>
 
