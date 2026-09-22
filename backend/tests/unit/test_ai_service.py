@@ -113,7 +113,10 @@ def test_portfolio_context_includes_health_score(
     ))
     db_session.commit()
 
-    mock_price_holdings.return_value = [{"ticker": "NPN.JO", "value": 30000.0}]
+    mock_price_holdings.return_value = [{
+        "ticker": "NPN.JO", "name": "Naspers", "sector": "Technology",
+        "quantity": 10, "avg_cost": 3000.0, "value": 30000.0, "gain_loss_pct": 0.0
+    }]
     mock_health.return_value = {
         "score": 7.2,
         "label": "Well diversified",
@@ -158,7 +161,10 @@ def test_portfolio_context_skips_health_when_unscorable(
     ))
     db_session.commit()
 
-    mock_price_holdings.return_value = []
+    mock_price_holdings.return_value = [{
+        "ticker": "NPN.JO", "name": "Naspers", "sector": None,
+        "quantity": 10, "avg_cost": 3000.0, "value": 30000.0, "gain_loss_pct": 0.0
+    }]
     mock_health.return_value = {"score": None, "label": None, "subscores": []}
 
     output = get_user_portfolio_context(db_session, test_user.id)

@@ -9,6 +9,7 @@ from app.schemas.auth import UserResponse
 from uuid import UUID
 from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages, UserMemory
+from app.models.portfolio import Portfolios
 from app.utils.ai_rate_limit import check_limit
 from app.utils.exceptions import ConversationNotFoundException
 from app.config import settings
@@ -22,6 +23,7 @@ router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[UUID] = None
+    portfolio_id: Optional[UUID] = None
 
     @field_validator("message")
     @classmethod
@@ -66,7 +68,7 @@ async def ai_chat(
     current_user: UserResponse = Depends(enforce_limit)
     ):
     try:
-        reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id)
+        reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id, request.portfolio_id)
         background_tasks.add_task(run_post_turn, conversation_id, current_user.id, request.message)
         return ChatResponse(reply = reply, conversation_id = conversation_id)
     except HTTPException:
@@ -88,7 +90,7 @@ async def ai_chat_stream(
         db = SessionLocal()
         conversation_id = None
         try:
-            for event in chat_stream(request.message, db, current_user.id, request.conversation_id):
+            for event in chat_stream(request.message, db, current_user.id, request.conversation_id, request.portfolio_id):
                 if event["type"] == "done":
                     conversation_id = event["conversation_id"]
                 yield f"data: {json.dumps(event)}\n\n"
@@ -101,6 +103,24 @@ async def ai_chat_stream(
             db.close()
             if conversation_id:
                 run_post_turn(conversation_id, current_user.id, request.message)
+
+@router.get("/portfolios/")
+async def get_chat_portfolios(
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)
+):
+    portfolios = db.query(Portfolios).filter(
+        Portfolios.user_id == current_user.id
+    ).order_by(Portfolios.created_at.asc()).all()
+    return [
+        {
+            "id": str(p.id),
+            "label": f"Portfolio {i}",
+            "portfolio_name": p.portfolio_name,
+            "account_number": p.account_number,
+        }
+        for i, p in enumerate(portfolios, start = 1)
+    ]   
 
     return StreamingResponse(
         event_source(),
