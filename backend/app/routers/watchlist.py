@@ -21,8 +21,8 @@ router = APIRouter(prefix="/api/watchlist", tags=["watchlist"])
 
 
 class WatchlistActionResponse(BaseModel):
-    success: bool = Field(example=[True])
-    Message: str = Field(example=["Deleted watchlist successfully"])
+    success: bool = Field(examples=[True])
+    Message: str = Field(examples=["Deleted watchlist successfully"])
 
 
 class WatchlistItemResponse(BaseModel):
@@ -35,8 +35,8 @@ class WatchlistItemResponse(BaseModel):
 
 
 class WatchlisResponse(BaseModel):
-    success: bool = Field(example=[True])
-    Message: str = Field(example=["Add watchlist successfully"])
+    success: bool = Field(examples=[True])
+    Message: str = Field(examples=["Add watchlist successfully"])
     watchlist: list[WatchlistItemResponse]
     highest: WatchlistItemResponse | None = None
     lowest: WatchlistItemResponse | None = None

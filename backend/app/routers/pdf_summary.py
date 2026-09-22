@@ -20,31 +20,31 @@ router = APIRouter(prefix="/api/import_pdf_summary", tags=["Import PDF"])
 
 
 class SummaryResponse(BaseModel):
-    PortfolioValue: float = Field(example=["APPLE"])
-    TotalHoldings: int = Field(example=["22"])
-    TotalPurchasesAndSales: float = Field(example=["23"])
-    TotalTransactionCosts: float = Field(example=["23"])
-    TotalContributionsAndWithdrawals: float = Field(example=[34.0])
-    TotalDividendsAndWithholdingTax: float = Field(example=["45"])
-    TotalTransactionInterest: float = Field(example=["56"])
-    TotalTransactionExpenses: float = Field(example=["68"])
+    PortfolioValue: float = Field(examples=["APPLE"])
+    TotalHoldings: int = Field(examples=["22"])
+    TotalPurchasesAndSales: float = Field(examples=["23"])
+    TotalTransactionCosts: float = Field(examples=["23"])
+    TotalContributionsAndWithdrawals: float = Field(examples=[34.0])
+    TotalDividendsAndWithholdingTax: float = Field(examples=["45"])
+    TotalTransactionInterest: float = Field(examples=["56"])
+    TotalTransactionExpenses: float = Field(examples=["68"])
 
 
 class HoldingResponse(BaseModel):
-    name: str | None = Field(default=None, example=["APPLE"])
-    value: float = Field(example=["68"])
+    name: str | None = Field(default=None, examples=["APPLE"])
+    value: float = Field(examples=["68"])
 
 
 class PortfolioResponse(BaseModel):
-    name: str = Field(example=["APPLE"])
-    weight_percentage: float = Field(example=["56"])
+    name: str = Field(examples=["APPLE"])
+    weight_percentage: float = Field(examples=["56"])
 
 
 class DividendResponse(BaseModel):
-    name: str = Field(example=["APPLE"])
-    gross_dividend: float = Field(example=[2.3])
-    withholding_tax: float = Field(example=[2.3])
-    net_dividend: float = Field(example=[2.3])
+    name: str = Field(examples=["APPLE"])
+    gross_dividend: float = Field(examples=[2.3])
+    withholding_tax: float = Field(examples=[2.3])
+    net_dividend: float = Field(examples=[2.3])
 
 
 @router.get("/summary/{portfolioID}", response_model=SummaryResponse)
