@@ -10,6 +10,43 @@ from reportlab.lib.units import mm
 from reportlab.platypus import (Image,PageBreak,Paragraph,SimpleDocTemplate,Spacer,Table,TableStyle,)
 from pathlib import Path
 
+def add_header_footer(canvas, doc):
+
+    canvas.saveState()
+
+    page_width, page_height = A4
+
+
+    logo_path = (Path(__file__).resolve().parent.parent
+        / "assets"
+        / "equity_lens_logo.png"
+    )
+
+
+    if logo_path.exists():
+        canvas.drawImage(str(logo_path),15 * mm,page_height - 20 * mm,width=10 * mm,height=10 * mm,preserveAspectRatio=True,mask="auto",)
+
+    canvas.setFont("Helvetica-Bold",9,)
+    canvas.setFillColor(colors.HexColor('#111827'))
+    canvas.drawString(28 * mm, page_height - 15 * mm, "EQUITY LENS",)
+
+    canvas.setFont("Helvetica",8,)
+    canvas.setFillColor(colors.HexColor('#64748B'))
+    canvas.drawRightString(page_width - 15 * mm, page_height - 15 * mm, "Smart Portfolio Snapshot",)
+    canvas.setStrokeColor(colors.HexColor('#CBD5E1'))
+    canvas.line(15 * mm, page_height - 23 * mm, page_width - 15 * mm, page_height - 23 * mm,)
+    canvas.setStrokeColor(colors.HexColor('#CBD5E1'))
+    canvas.line(15 * mm, 15 * mm, page_width - 15 * mm, 15 * mm)
+
+
+    canvas.setFont("Helvetica",7,)
+    canvas.setFillColor(colors.HexColor('#64748B'))
+    canvas.drawString(15 * mm, 10 * mm, "Equity Lens | Smart Portfolio Snapshot",)
+
+    canvas.drawRightString(page_width - 15 * mm, 10 * mm, f"Page {doc.page}",)
+
+    canvas.restoreState()
+
 def get_indicator_value(indicator: dict):
     if not indicator:
         return "N/A"
@@ -386,7 +423,7 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
 
             story.append(news_card)
-            story.append(Spacer(1.10))
+            story.append(Spacer(1,10))
 
     else:
         story.append(Paragraph("No Portfolio news avaiable.", styles["BodyText"],))
@@ -401,7 +438,7 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
 
             story.append(news_card)
-            story.append(Spacer(1.10))
+            story.append(Spacer(1,10))
 
     else:
         story.append(Paragraph("No market news avaiable.", styles["BodyText"],))
