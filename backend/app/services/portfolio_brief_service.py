@@ -7,7 +7,8 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import (Image, KeepTogether,Paragraph,SimpleDocTemplate,Spacer,Table,TableStyle,)
+from reportlab.platypus import (Image,PageBreak,Paragraph,SimpleDocTemplate,Spacer,Table,TableStyle,)
+from pathlib import Path
 
 def get_indicator_value(indicator: dict):
     if not indicator:
@@ -67,6 +68,11 @@ def create_news_card(article: dict, styles, show_ticker=False,):
     title = safe_text(article.get("title", "No Title"))
     source = safe_text(article.get("source", ""))
     description = safe_text(article.get("description", ""))
+
+    words = description.split()
+    if len(words) > 100:
+        description = " ".join(words[:100]) + "..."
+
     published_at = safe_text(article.get("published_at", ""))
     image_url = safe_text(article.get("image_url", ""))
     article_url = safe_text(article.get("url", ""))
@@ -235,8 +241,8 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         pagesize=A4,
         rightMargin=15 * mm,
         leftMargin=15 * mm,
-        topMargin=15 * mm,
-        bottomMargin=15 * mm,
+        topMargin=32 * mm,
+        bottomMargin=22 * mm,
         title="Equity Lens Portfolio Summary",
     )
 
@@ -250,6 +256,8 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
 
     story = []
+
+    story.append(PageBreak())
 
     summary = snapshot.get("summary", {})
     holdings = snapshot.get("holdings", {})
@@ -376,7 +384,9 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         for article in portfolio_news[:5]:
             news_card = create_news_card(article, styles, show_ticker=True,)
 
-            story.append(KeepTogether([news_card, Spacer(1,10,),]))
+
+            story.append(news_card)
+            story.append(Spacer(1.10))
 
     else:
         story.append(Paragraph("No Portfolio news avaiable.", styles["BodyText"],))
@@ -389,7 +399,9 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         for article in market_news[:5]:
             news_card = create_news_card(article, styles, show_ticker=True,)
 
-            story.append(KeepTogether([news_card, Spacer(1,10,),]))
+
+            story.append(news_card)
+            story.append(Spacer(1.10))
 
     else:
         story.append(Paragraph("No market news avaiable.", styles["BodyText"],))
@@ -459,8 +471,7 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
     story.append(Paragraph("This report was generated from the same " "canonical portfolio snapshot used by Equity Lens", styles["BodyText"],))
 
-
-    document.build(story)
+    document.build(story, onFirstPage=add_front_page, onLaterPages=add_header_footer,)
 
     output.seek(0)
 
