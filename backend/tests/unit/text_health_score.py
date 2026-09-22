@@ -89,7 +89,10 @@ def test_score_is_the_weighted_sum_of_its_subscores():
 def test_every_subscore_carries_its_explanatory_copy():
     for sub in compute_health_score(SPREAD)["subscores"]:
         assert 0.0 <= sub["value"] <= 10.0
-        assert sub["label"] and sub["detail"] and sub["target"] and sub["improvement"]
+        assert sub["label"]
+        assert sub["detail"]
+        assert sub["target"]
+        assert sub["improvement"]
 
 
 def test_subscores_clamp_at_ten_for_a_very_broad_book():
@@ -267,7 +270,8 @@ def test_presets_payload_exposes_every_preset_with_its_config():
     payload = presets_payload()
     assert [p["key"] for p in payload] == list(PRESETS)
     for entry in payload:
-        assert entry["name"] and entry["description"]
+        assert entry["name"] 
+        assert entry["description"]
         assert set(entry["config"]) == set(CONFIG_FIELDS)
 
 

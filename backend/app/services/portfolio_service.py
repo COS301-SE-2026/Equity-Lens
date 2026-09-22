@@ -533,7 +533,8 @@ def _simulate_sector_investment(
         return {"available": False, "reason": "unknown_sector"}
 
     amount = round(total * SECTOR_INVESTMENT_PCT_OF_PORTFOLIO, 2)
-    hypothetical = priced_holdings + [
+    hypothetical = [
+        *priced_holdings,
         {
             "ticker": None,
             "value": amount,

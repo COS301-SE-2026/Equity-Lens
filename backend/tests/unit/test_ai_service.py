@@ -88,7 +88,7 @@ def test_existing_chat(mock_bedrock_client, db_session, test_user):
 
 
 def test_empty_message():
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="cannot send an empty message"):
         ChatRequest(message="", conversation_id=None)
 
 

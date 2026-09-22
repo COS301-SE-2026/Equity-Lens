@@ -88,7 +88,9 @@ def get_news(_current_user: User = Depends(get_current_user)):
 
 
 @router.get("/", response_model=NewsResponse)
-def get_news(category: str = "business", _current_user: User = Depends(get_current_user)):
+def get_news_by_category(
+    category: str = "business", _current_user: User = Depends(get_current_user)
+):
     api_key = os.getenv("NEWSDATA_API_KEY")
 
     response = requests.get(

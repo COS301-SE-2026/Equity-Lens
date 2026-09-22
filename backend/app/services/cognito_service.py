@@ -1,3 +1,4 @@
+import contextlib
 import logging
 from functools import lru_cache
 
@@ -177,10 +178,8 @@ def cognito_get_user(access_token: str) -> dict:
 
 
 def cognito_logout(access_token: str) -> bool:
-    try:
+    with contextlib.suppress(ClientError):
         _get_client().global_sign_out(AccessToken=access_token)
-    except ClientError:
-        pass
     return True
 
 

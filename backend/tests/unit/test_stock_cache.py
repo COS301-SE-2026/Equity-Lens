@@ -383,7 +383,7 @@ def test_save_fundamentals_converts_timestamp_columns_to_strings(mock_session_lo
     stock_cache._save_fundamentals(MOCK_TICKER, {"sector": "Technology"}, balance_sheet, financials)
     added_obj = mock_db.add.call_args[0][0]
 
-    assert all(isinstance(k, str) for k in added_obj.balance_sheet.keys())
+    assert all(isinstance(k, str) for k in added_obj.balance_sheet)
     assert added_obj.info == {"sector": "Technology"}
 
 

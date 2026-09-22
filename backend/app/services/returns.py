@@ -1,5 +1,6 @@
 import logging
 from datetime import date
+from itertools import pairwise
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +95,7 @@ def time_weighted_index(
     cumulative = 1.0
     index = [(snapshots[0][0], 100.0)]
 
-    for (prev_date, prev_value), (this_date, this_value) in zip(snapshots, snapshots[1:]):
+    for (prev_date, prev_value), (this_date, this_value) in pairwise(snapshots):
         if prev_value > 0:
             period_flow = sum(amt for d, amt in flows if prev_date < d <= this_date)
             cumulative *= (this_value - period_flow) / prev_value

@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     allow_live_market_fallback: bool = False
     alpha_vantage_api_key: str | None = None
     market_data_refresh_ttl_hours: int = 24
-    secret_key: str = "to-be-changed-later"
+    secret_key: str = "to-be-changed-later" # noqa: S105
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     cors_origins: list[str] = [
