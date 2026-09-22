@@ -104,6 +104,13 @@ async def ai_chat_stream(
             if conversation_id:
                 run_post_turn(conversation_id, current_user.id, request.message)
 
+    return StreamingResponse(
+        event_source(),
+        media_type = "text/event-stream",
+        headers = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
 @router.get("/portfolios/")
 async def get_chat_portfolios(
     db: Session = Depends(get_db),
@@ -112,6 +119,7 @@ async def get_chat_portfolios(
     portfolios = db.query(Portfolios).filter(
         Portfolios.user_id == current_user.id
     ).order_by(Portfolios.created_at.asc()).all()
+    logger.info("chat portfolios for user %s: %s found", current_user.id, len(portfolios))
     return [
         {
             "id": str(p.id),

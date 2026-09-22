@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { API_BASE_URL } from '../utils/constants';
 
@@ -53,6 +53,16 @@ export const ChatProvider = ({ children }) => {
   const [conversations, setConversations] = useState(/** @type {Conversation[]} */ ([]));
   /** @typedef {{id: string, fact: string, created_at?: string|null}} Memory */
   const [memories, setMemories] = useState(/** @type {Memory[]} */ ([]));
+  /** @typedef {{id: string, label: string, portfolio_name: string, account_number: string}} ChatPortfolio */    
+  const [portfolios, setPortfolios] = useState(/** @type {ChatPortfolio[]} */ ([]));
+  const [portfolioId, setPortfolioId] = useState(/** @type {string|null} */ (null));
+  const scopeByConversation = useRef(/** @type {Record<string, string|null>} */ ({}));
+
+  useEffect(() => {
+    api.get('/ai_chat/portfolios/')
+      .then((res) => setPortfolios(res.data))
+      .catch(() => {});
+  }, []);
 
   const refreshConversations = () =>
     api.get('/ai_chat/conversations/')
@@ -147,7 +157,7 @@ export const ChatProvider = ({ children }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` }, body: JSON.stringify({ message: text, conversation_id: conversationId }) });
+          Authorization: `Bearer ${token}` }, body: JSON.stringify({ message: text, conversation_id: conversationId, portfolio_id: portfolioId }) });
 
       if (!response.ok) {throw await asAxiosError(response);}
 
@@ -184,7 +194,12 @@ export const ChatProvider = ({ children }) => {
             setIsThinking(false);
             setMessages((prev) => prev.map((m) =>
               (m.id === assistantId ? { ...m, streaming: false } : m)));
-          } else if (event.type === 'error') {
+          } else if (event.type === 'done') {
+            setConversationId(event.conversation_id);
+            scopeByConversation.current[event.conversation_id] = portfolioId;
+            setIsThinking(false);
+            setMessages((prev) => prev.map((m) =>
+              (m.id === assistantId ? { ...m, streaming: false } : m)));
             throw new Error(event.value);
           }
         }
@@ -247,6 +262,7 @@ export const ChatProvider = ({ children }) => {
   /** @param {Conversation} convo */
   const loadConversation = (convo) => {
     setConversationId(convo.id);
+    setPortfolioId(scopeByConversation.current[convo.id] ?? null);
     return api.get(`/ai_chat/conversations/${convo.id}/messages/`)
       .then((res) => {
         setMessages(
@@ -260,6 +276,7 @@ export const ChatProvider = ({ children }) => {
 
   const startNewChat = () => {
     setConversationId(null);
+    setPortfolioId(null);
     setMessages([]);};
 
   /** @param {string} convoId @param {string} title */
@@ -294,6 +311,9 @@ export const ChatProvider = ({ children }) => {
         regeneratingId,
         conversations,
         memories,
+        portfolios,
+        portfolioId,
+        setPortfolioId,
         sendMessage,
         sendMessageStreaming,
         regenerate,

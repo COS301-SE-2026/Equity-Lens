@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import {Sparkles, Plus, Pencil, Trash2, MessageSquare, Search, Copy, Check, PanelLeftClose, X, Send, RefreshCw, PanelLeftOpen, Brain} from 'lucide-react';
+import {Sparkles, Plus, Pencil, Trash2, MessageSquare, Search, Copy, Check, PanelLeftClose, X, Send, RefreshCw, PanelLeftOpen, Brain, Check as CheckIcon, Briefcase} from 'lucide-react';
 
 import Button from '../../components/common/Button/Button';
 import useAuth from '../../hooks/useAuth';
@@ -234,12 +234,16 @@ const AIChat = () => {
   const [input, setInput] = useState('');
   const {
     messages, isThinking, conversationId, conversations, regeneratingId,
-    sendMessage, sendMessageStreaming, regenerate, loadConversation, startNewChat, renameConversation,
-    deleteConversation,
+    sendMessageStreaming, regenerate, loadConversation, startNewChat, renameConversation,
+    deleteConversation, portfolios, portfolioId, setPortfolioId,
   } = /**@type {{messages: ChatMessage[], isThinking: boolean, conversationId: number|null,
-        conversations: Conversation[], regeneratingId: string|number|null, sendMessage: Function,
-        sendMessageStreaming: Function, regenerate: Function, loadConversation: Function, startNewChat: Function,
-        renameConversation: Function, deleteConversation: Function}}*/ (useChat());
+        conversations: Conversation[], regeneratingId: string|number|null,
+        sendMessageStreaming: Function, regenerate: Function, loadConversation: Function,
+        startNewChat: Function, renameConversation: Function, deleteConversation: Function,
+        portfolios: {id: string, label: string, portfolio_name: string}[],
+        portfolioId: string|null, setPortfolioId: Function}}*/ (useChat());
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const activePortfolio = portfolios.find((p) => p.id === portfolioId) ?? null;
   const [searchParams, setSearchParams] = useSearchParams();
   /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const bottomRef = useRef(null);
@@ -767,11 +771,63 @@ const AIChat = () => {
 
           <div className="shrink-0 px-6 pb-4 pt-3" style={{ borderTop: `1px solid ${palette.border}` }}>
             <form className={`mx-auto ${CONTENT_MAX}`} onSubmit={handleSubmit}>
-              <div style={{display: 'flex', alignItems: 'flex-end', gap: 8, background: 'var(--surface-card)',
+              {activePortfolio && (
+                <div className="mb-1 flex justify-end pr-1 text-xs" style={{ color: 'var(--text-secondary)' }}>  
+                  <span>{activePortfolio.label} · {activePortfolio.portfolio_name}</span>
+                </div>
+              )}
+
+              <div style={{position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 8, background: 'var(--surface-card)',
                     border: `1px solid ${composerFocused ? 'var(--accent-primary)' : palette.border}`,
                     boxShadow: composerFocused ? '0 0 0 1px var(--accent-primary)' : 'none',
                    borderRadius: 16,padding: '8px 12px'}}>
-                <textarea ref={composerRef} rows={1} value={input} onChange={(e) => setInput(e.target.value)}
+
+                {pickerOpen && (
+                  <div className="absolute bottom-full left-0 mb-2 w-[280px] overflow-hidden rounded-xl"
+                    style={{ background: palette.panelBg, border: `1px solid ${palette.border}`, zIndex: 40 }}>  
+                    <div className="px-3 py-2 text-xs font-semibold uppercase tracking-widest"
+                      style={{ color: 'var(--text-secondary)', borderBottom: `1px solid ${palette.border}` }}>   
+                      Chat about
+                    </div>
+                    <button type="button" onClick={() => { setPortfolioId(null); setPickerOpen(false); }}        
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${HOVER}`}
+                      style={{ color: 'var(--text-primary)' }}>
+                      {portfolioId === null
+                        ? <CheckIcon size={14} aria-hidden="true" />
+                        : <span style={{ width: 14 }} />}
+                      All portfolios
+                    </button>
+                    {portfolios.map((p) => (
+                      <button key={p.id} type="button"
+                        onClick={() => { setPortfolioId(p.id); setPickerOpen(false); }}
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${HOVER}`}        
+                        style={{ color: 'var(--text-primary)' }}>
+                        {portfolioId === p.id
+                          ? <CheckIcon size={14} aria-hidden="true" />
+                          : <span style={{ width: 14 }} />}
+                        <span className="min-w-0 flex-1 truncate">
+                          {p.label} · {p.portfolio_name}
+                        </span>
+                      </button>
+                    ))}
+                    {portfolios.length === 0 && (
+                      <div className="px-3 py-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        No portfolios imported yet.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button type="button" onClick={() => setPickerOpen((open) => !open)}
+                  aria-label="Choose a portfolio to chat about"
+                  aria-expanded={pickerOpen}
+                  className={`rounded-lg p-1 ${HOVER}`}
+                  style={{ color: activePortfolio ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                           alignSelf: 'center', flexShrink: 0 }}>
+                  {activePortfolio ? <Briefcase size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
+                </button>
+
+                <textarea ref={composerRef} rows={1} value={input} onChange={(e) => setInput(e.target.value)}    
                   onKeyDown={handleKeyDown} onFocus={() => setComposerFocused(true)} onBlur={() => setComposerFocused(false)}
                   placeholder={cooling ? `Rate limited - ${cooldownLeft}s left` : 'Ask the assistant...'}
                   maxLength={500}  aria-label="Message the assistant"
