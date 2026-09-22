@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     bedrock_temperature: float = 0.3
     ai_message_limit: int = 5
     ai_window_limit: int = 60
+    ai_daily_limit: int = 50
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     newsdata_api_key: str | None = None
     market_api_key: str | None = None

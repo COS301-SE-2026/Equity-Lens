@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, field_validator, Field
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from datetime import datetime, timezone
 from app.services.ai_service import chat, run_post_turn, chat_stream
 from app.database import get_db, SessionLocal
 from app.dependencies import get_current_user
@@ -41,7 +43,40 @@ class ChangeConversationName(BaseModel):
     title: str = Field(min_length = 1)
 
 
-def enforce_limit(current_user: UserResponse = Depends(get_current_user)):
+def _messages_today(db: Session, user_id) -> int:
+    start = datetime.now(timezone.utc).replace(
+        tzinfo = None, hour = 0, minute = 0, second = 0, microsecond = 0)
+
+    return (
+        db.query(func.count(ChatMessages.id))
+          .join(ChatConversation, ChatMessages.conversation_id == ChatConversation.id)
+          .filter(
+              ChatConversation.user_id == user_id,
+              ChatMessages.role == "user",
+              ChatMessages.created_at >= start,
+          ).scalar() or 0
+    )
+
+
+def enforce_limit(
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)
+):
+    used = _messages_today(db, current_user.id)
+    if used >= settings.ai_daily_limit:
+        midnight = datetime.now(timezone.utc).replace(
+            tzinfo = None, hour = 0, minute = 0, second = 0, microsecond = 0)
+        retry_after = max(1, int(86400 - (datetime.now(timezone.utc).replace(tzinfo = None) - midnight).total_seconds()))
+        logger.info("daily cap hit: user %s used %s", current_user.id, used)
+        raise HTTPException(
+            status_code = 429,
+            detail = {
+                "message": f"You have reached your daily limit of {settings.ai_daily_limit} messages. It resets at midnight UTC.",
+                "retry_after": retry_after
+            },
+            headers = {"Retry-After": str(retry_after)}
+        )
+
     allowed, retry_after = check_limit(
         key = str(current_user.id),
         limit = settings.ai_message_limit,
