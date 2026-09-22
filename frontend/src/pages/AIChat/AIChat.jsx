@@ -529,11 +529,11 @@ const AIChat = () => {
 
 
   const memoriesPanel = memoriesOpen && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+    <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center p-4"
       style={{ background: 'rgba(0, 0, 0, 0.5)' }}
       onClick={() => setMemoriesOpen(false)}>
 
-      <div className="max-h-[70vh] w-full max-w-[520px] overflow-hidden rounded-xl"
+      <div role="presentation" className="max-h-[70vh] w-full max-w-[520px] overflow-hidden rounded-xl"
         style={{ background: palette.panelBg, border: `1px solid ${palette.border}` }}
         onClick={(e) => e.stopPropagation()}>
 

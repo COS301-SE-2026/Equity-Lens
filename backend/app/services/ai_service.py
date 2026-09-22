@@ -675,10 +675,6 @@ def get_goal_projection_tool(db: Session, user_id, tool_input: dict) -> str:
     return "\n".join(lines)
 
 
-    if name == "find_ticker":
-        return find_ticker_tool(tool_input.get("company", ""))
-
-
 def run_tool(name: str, tool_input: dict, db: Session, user_id) -> str:
     if name == "get_stock_data":
         return get_stock_data_tool(tool_input.get("ticker", ""))
@@ -690,6 +686,8 @@ def run_tool(name: str, tool_input: dict, db: Session, user_id) -> str:
         return get_goal_projection_tool(db, user_id, tool_input)
     if name == "get_statement_detail":
         return get_statement_detail_tool(db, user_id, tool_input)
+    if name == "find_ticker":
+        return find_ticker_tool(tool_input.get("company", ""))
     return f"Unknown tool: {name}"
 
 

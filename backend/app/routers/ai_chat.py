@@ -165,12 +165,6 @@ async def get_chat_portfolios(
         for i, p in enumerate(portfolios, start = 1)
     ]   
 
-    return StreamingResponse(
-        event_source(),
-        media_type = "text/event-stream",
-        headers = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
-
 
 # now to return all conversations for the logged user
 @router.get("/conversations/")

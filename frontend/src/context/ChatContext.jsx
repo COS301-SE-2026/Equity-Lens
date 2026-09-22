@@ -13,6 +13,16 @@ const ChatContext = createContext(/** @type {any} */ (null));
 
 const GENERIC_ERROR = 'Something went wrong, try again.';
 
+const SCOPE_STORAGE_KEY = 'equitylens.chatScope';
+
+/** @returns {Record<string, string|null>} */
+const readScopes = () => {
+  try {
+    return JSON.parse(window.localStorage.getItem(SCOPE_STORAGE_KEY) ?? '{}') ?? {};
+  } catch {
+    return {};
+  }};
+
 /**
  * @param {any} err
  * @returns {{text: string, retryAfter: number}}
@@ -56,13 +66,24 @@ export const ChatProvider = ({ children }) => {
   /** @typedef {{id: string, label: string, portfolio_name: string, account_number: string}} ChatPortfolio */    
   const [portfolios, setPortfolios] = useState(/** @type {ChatPortfolio[]} */ ([]));
   const [portfolioId, setPortfolioId] = useState(/** @type {string|null} */ (null));
-  const scopeByConversation = useRef(/** @type {Record<string, string|null>} */ ({}));
+  const [savedScopes] = useState(readScopes);
+  const scopeByConversation = useRef(savedScopes);
 
   useEffect(() => {
     api.get('/ai_chat/portfolios/')
       .then((res) => setPortfolios(res.data))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (!conversationId) {return;}
+    scopeByConversation.current[conversationId] = portfolioId;
+    try {
+      window.localStorage.setItem(SCOPE_STORAGE_KEY, JSON.stringify(scopeByConversation.current));
+    } catch {
+      //storage blocked or full
+    }
+  }, [conversationId, portfolioId]);
 
   const refreshConversations = () =>
     api.get('/ai_chat/conversations/')
@@ -194,12 +215,7 @@ export const ChatProvider = ({ children }) => {
             setIsThinking(false);
             setMessages((prev) => prev.map((m) =>
               (m.id === assistantId ? { ...m, streaming: false } : m)));
-          } else if (event.type === 'done') {
-            setConversationId(event.conversation_id);
-            scopeByConversation.current[event.conversation_id] = portfolioId;
-            setIsThinking(false);
-            setMessages((prev) => prev.map((m) =>
-              (m.id === assistantId ? { ...m, streaming: false } : m)));
+          } else if (event.type === 'error') {
             throw new Error(event.value);
           }
         }
@@ -243,7 +259,7 @@ export const ChatProvider = ({ children }) => {
     setMessages((prev) => prev.slice(0, index + 1));
     setRegeneratingId(message.id);
 
-    return api.post('/ai_chat/', { message: priorUser.text, conversation_id: conversationId })
+    return api.post('/ai_chat/', { message: priorUser.text, conversation_id: conversationId, portfolio_id: portfolioId })
       .then((res) => {
         setConversationId(res.data.conversation_id);
         setMessages((prev) => prev.map((m) =>
