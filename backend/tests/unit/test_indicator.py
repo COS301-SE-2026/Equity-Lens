@@ -72,7 +72,7 @@ def test_serializes_every_built_row_and_returns_them_in_order(
         "NPN": {"ticker": "NPN", "pe_ratio": 12.0, "live_fetch": False},
         "ABG": {"ticker": "ABG", "pe_ratio": 8.5, "live_fetch": False},
     }
-    mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker]
+    mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker] # noqa: ARG005
 
     result = get_indicators(current_user=_mock_user(), db=db)
 
@@ -94,7 +94,7 @@ def test_sleep_is_skipped_when_no_ticker_made_a_live_fetch(
         "NPN": {"ticker": "NPN", "pe_ratio": 12.0, "live_fetch": False},
         "ABG": {"ticker": "ABG", "pe_ratio": 8.5, "live_fetch": False},
     }
-    mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker]
+    mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker] # noqa: ARG005
 
     get_indicators(current_user=_mock_user(), db=db)
 
@@ -121,7 +121,7 @@ def test_sleep_fires_only_after_a_ticker_that_made_a_live_fetch(
         "ABG": {"ticker": "ABG", "pe_ratio": 8.5, "live_fetch": False},
         "MTN": {"ticker": "MTN", "pe_ratio": 9.0, "live_fetch": False},
     }
-    mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker]
+    mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker] # noqa: ARG005
 
     get_indicators(current_user=_mock_user(), db=db)
 
@@ -140,7 +140,7 @@ def test_no_sleep_after_the_last_ticker_even_if_it_was_a_live_fetch(
     db = _mock_db(portfolios=[_mock_portfolio()], holdings=holdings)
 
     built_rows = {"NPN": {"ticker": "NPN", "pe_ratio": 12.0, "live_fetch": True}}
-    mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker]
+    mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker] # noqa: ARG005
 
     get_indicators(current_user=_mock_user(), db=db)
 
@@ -162,7 +162,7 @@ def test_price_histories_batched_once_for_all_tickers(
         "NPN": {"ticker": "NPN", "live_fetch": False},
         "ABG": {"ticker": "ABG", "live_fetch": False},
     }
-    mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker]
+    mock_build_row.side_effect = lambda ticker, *args, **kwargs: built_rows[ticker] # noqa: ARG005
 
     get_indicators(current_user=_mock_user(), db=db)
 

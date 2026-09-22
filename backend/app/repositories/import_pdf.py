@@ -79,7 +79,7 @@ def get_latest_portfolio(database, user_id):
     )
 
 
-def save_holdings(database, user_id, data, ticker, sector):
+def save_holdings(database, user_id, data, ticker, sector): # noqa: ARG001
 
     saving = Holdings(
         instrument_name=data.instrument_name,
@@ -101,7 +101,7 @@ def save_holdings(database, user_id, data, ticker, sector):
     return saving
 
 
-def save_instrument_purchases_and_sales(database, user_id, data, ticker, sector):
+def save_instrument_purchases_and_sales(database, user_id, data, ticker, sector): # noqa: ARG001
 
     saving = InstrumentPurchasesAndSales(
         portfolio_id=data.portfolio_id,
@@ -122,7 +122,7 @@ def save_instrument_purchases_and_sales(database, user_id, data, ticker, sector)
     return saving
 
 
-def save_contributions_and_withdrawals(database, user_id, data):
+def save_contributions_and_withdrawals(database, user_id, data): # noqa: ARG001
 
     saving = ContributionsAndWithdrawals(
         portfolio_id=data.portfolio_id,
@@ -139,7 +139,7 @@ def save_contributions_and_withdrawals(database, user_id, data):
     return saving
 
 
-def save_dividends_and_withholding_tax(database, user_id, data, ticker, sector):
+def save_dividends_and_withholding_tax(database, user_id, data, ticker, sector): # noqa: ARG001
 
     saving = DividendsAndWithholdingTax(
         portfolio_id=data.portfolio_id,
@@ -160,7 +160,7 @@ def save_dividends_and_withholding_tax(database, user_id, data, ticker, sector):
     return saving
 
 
-def save_transaction_expenses(database, user_id, data):
+def save_transaction_expenses(database, user_id, data): # noqa: ARG001
 
     saving = TransactionExpenses(
         portfolio_id=data.portfolio_id,

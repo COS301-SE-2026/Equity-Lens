@@ -37,8 +37,8 @@ def decode_token(token: str) -> str:
         if user_id is None:
             raise InvalidCredentialsException()
         return user_id
-    except JWTError:
-        raise TokenExpiredException()
+    except JWTError as err:
+        raise TokenExpiredException() from err
 
 
 class AuthService:

@@ -88,7 +88,7 @@ async def ai_chat(
             request.conversation_id,
             e,
         )
-        raise HTTPException(status_code=500, detail="Something went wrong")
+        raise HTTPException(status_code=500, detail="Something went wrong") from e
 
 
 # now to return all conversations for the logged user

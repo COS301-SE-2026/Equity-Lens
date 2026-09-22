@@ -12,6 +12,7 @@ from app.repositories.import_pdf import (
     save_contributions_and_withdrawals,
     save_dividends_and_withholding_tax,
     save_document,
+    save_holdings,
     save_instrument_purchases_and_sales,
     save_portfolios,
     save_transaction_expenses,
@@ -136,8 +137,9 @@ def get_my_portfolio(database, user_id):
 
 
 def save_holdings_import(database, user_id, data):
+    ticker = search_ticket_number(data.instrument_name)
+    save_holdings(database, user_id, data, ticker["ticker"], ticker["sector"])
     invalidate_priced_holdings(user_id)
-
     return {"Success": True, "Message": "Holdings has been saved successfully"}
 
 

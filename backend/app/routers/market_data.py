@@ -23,7 +23,7 @@ router = APIRouter(prefix="/api/stocks", tags=["stocks"])
 )
 def stock_details(
     params: CurrentPriceParams = Depends(),
-    current_user: UserResponse = Depends(get_current_user),
+    _current_user: UserResponse = Depends(get_current_user),
 ):
     """Get full stock details"""
     return get_current_price(params.symbol)
@@ -40,7 +40,7 @@ def stock_details(
 )
 def stock_history(
     params: HistoryParams = Depends(),
-    current_user: UserResponse = Depends(get_current_user),
+    _current_user: UserResponse = Depends(get_current_user),
 ):
     """Get historical OHLCV data"""
     try:
@@ -49,7 +49,7 @@ def stock_history(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Unable to fetch history for symbol '{params.symbol}': {e!s}",
-        )
+        ) from e
 
 
 @router.get(
@@ -59,7 +59,7 @@ def stock_history(
     description="Search for available stocks by symbol or company name.",
 )
 def search_stocks_endpoint(
-    params: SearchParams = Depends(), current_user: UserResponse = Depends(get_current_user)
+    params: SearchParams = Depends(), _current_user: UserResponse = Depends(get_current_user)
 ):
     """Search for stocks by name or symbol"""
     return search_stocks(params.query)

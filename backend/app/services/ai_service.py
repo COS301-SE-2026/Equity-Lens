@@ -110,7 +110,7 @@ def get_bedrock_client():
 
 
 def get_user_portfolio_context(db: Session, user_id):
-    portfolios = PortfolioRepository(db).get_latest_portfolio(user_id)
+    portfolios = PortfolioRepository(db).get_current_portfolios(user_id)
     knowledge = ""
     holdings = []
 
@@ -153,9 +153,9 @@ def get_user_portfolio_context(db: Session, user_id):
 
     return knowledge
 
+TITLE_FALLBACK = "New Chat"
 
 def title_creation(client, user_message):
-    TITLE_FALLBACK = "New Chat"
 
     def _clean_title(raw: str) -> str:
         first_line = next((line.strip() for line in (raw or "").splitlines() if line.strip()), "")

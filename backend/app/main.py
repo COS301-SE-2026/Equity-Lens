@@ -44,7 +44,7 @@ app.add_middleware(
 
 
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+async def http_exception_handler(_request: Request, exc: StarletteHTTPException):
     code = getattr(exc, "error_code", None) or STATUS_ERROR_CODES.get(exc.status_code, "ERROR")
     return JSONResponse(
         status_code=exc.status_code,
@@ -54,7 +54,7 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(_request: Request, exc: RequestValidationError):
     return JSONResponse(
         status_code=422,
         content={"error_code": "VALIDATION_ERROR", "detail": jsonable_encoder(exc.errors())},
@@ -62,7 +62,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
+async def general_exception_handler(request: Request, _exc: Exception):
     logger.exception("unhandled error on %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=500,

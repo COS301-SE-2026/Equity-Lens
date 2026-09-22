@@ -12,7 +12,7 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "S105", "S106", "PT019"]
+"tests/*" = ["S101", "S105", "S106", "PT019","N806", "N802", "N803"]
 "alembic/versions/*" = ["E501", "F401"]
 "app/services/ai_service.py" = ["E501"]
 "app/services/pdf_summary_service.py" = ["N802", "N803", "N806"]

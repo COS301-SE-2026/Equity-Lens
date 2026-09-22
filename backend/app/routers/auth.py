@@ -195,10 +195,11 @@ def delete_account(
 
     try:
         cognito.cognito_delete_user(cred.credentials)
-    except ClientError:
+    except ClientError as e:
         logger.error(
             "Cognito deletion failed after DB commit - orphaned cognito_sub: %s",
             current_user.cognito_sub,
         )
-        raise AppError(500, "ACCOUNT_DELETION_FAILED", "Account deletion failed, contact support")
+        raise AppError(500, "ACCOUNT_DELETION_FAILED", 
+                       "Account deletion failed, contact support") from e
     return {"status": "deleted"}
