@@ -275,7 +275,7 @@ def get_user_portfolio_context(db: Session, user_id, portfolio_id = None):
 
     knowledge = ""
     if len(blocks) > 1:
-        names = ", ".join(f'"{p.portfolio_name}"' for p in portfolios)
+        names = ", ".join(f'"{_sanitise(p.portfolio_name, 60)}"' for p in portfolios)
         knowledge += (f"The user has {len(blocks)} portfolios: {names}. "
                       "Each is scored separately below - never add them together "
                       "or quote one portfolio's figures for another.\n\n")
@@ -285,7 +285,7 @@ def get_user_portfolio_context(db: Session, user_id, portfolio_id = None):
     if documents:
         knowledge += "\nUploaded Documents\n"
         for document in documents:
-            knowledge += f"- {document.file_name}\n"
+            knowledge += f"- {_sanitise(document.file_name, 100)}\n"
 
     if not knowledge.strip():
         return "User has not uploaded portfolio data."
@@ -328,7 +328,7 @@ def title_creation(client, user_message):
 
     return _clean_title(raw)
 
-def _resolve_portfolio(db: Session, user_id, name: str = ""):
+def _resolve_portfolio(db: Session, user_id, name: str = "", portfolio_id = None):
     portfolios = db.query(Portfolios).filter(
         Portfolios.user_id == user_id
     ).order_by(Portfolios.created_at.asc()).all()
@@ -341,13 +341,18 @@ def _resolve_portfolio(db: Session, user_id, name: str = ""):
         for i, p in enumerate(portfolios, start = 1):
             if name in (p.portfolio_name or "").lower() or name == f"portfolio {i}":
                 return p, None
-        listed = ", ".join(f'"{p.portfolio_name}"' for p in portfolios)
+        listed = ", ".join(f'"{_sanitise(p.portfolio_name, 60)}"' for p in portfolios)
         return None, f"No portfolio matched '{name}'. The user has: {listed}. Ask which one they mean."
+
+    if portfolio_id is not None:
+        for p in portfolios:
+            if str(p.id) == str(portfolio_id):
+                return p, None
 
     if len(portfolios) == 1:
         return portfolios[0], None
     
-    listed = ", ".join(f'"{p.portfolio_name}"' for p in portfolios)
+    listed = ", ".join(f'"{_sanitise(p.portfolio_name, 60)}"' for p in portfolios)
     return None, f"The user has more than one portfolio ({listed}). Ask which one they mean, then call this again with that name."
 
 
@@ -355,18 +360,18 @@ def _money_rows(rows: list, label: str) -> str:
     if not rows:
         return f"No {label} recorded on this statement."
     total = sum(r["value"] for r in rows)
-    lines = [f"- {r['name']}: R{r['value']:,.2f}" for r in rows]
+    lines = [f"- {_sanitise(r['name'])}: R{r['value']:,.2f}" for r in rows]
     lines.append(f"Total {label}: R{total:,.2f}")
     return "\n".join(lines)
 
 
-def get_statement_detail_tool(db: Session, user_id, tool_input: dict) -> str:
+def get_statement_detail_tool(db: Session, user_id, tool_input: dict, portfolio_id = None) -> str:
     section = (tool_input.get("section") or "").strip().lower()
-    portfolio, problem = _resolve_portfolio(db, user_id, tool_input.get("portfolio", ""))
+    portfolio, problem = _resolve_portfolio(db, user_id, tool_input.get("portfolio", ""), portfolio_id)
     if problem:
         return problem
 
-    header = f"{section} for {portfolio.portfolio_name}:\n"
+    header = f"{section} for {_sanitise(portfolio.portfolio_name, 60)}:\n"
     try:
         if section == "summary":
             s = get_summary_import_PDF(db, portfolio.id, user_id)
@@ -393,7 +398,7 @@ def get_statement_detail_tool(db: Session, user_id, tool_input: dict) -> str:
             rows = get_dividend_income_import_PDF(db, portfolio.id, user_id)
             if not rows:
                 return header + "No dividends recorded on this statement."
-            lines = [f"- {r['name']}: gross R{r['gross_dividend']:,.2f}, "
+            lines = [f"- {_sanitise(r['name'])}: gross R{r['gross_dividend']:,.2f}, "
                      f"withholding tax R{r['withholding_tax']:,.2f}, net R{r['net_dividend']:,.2f}"
                      for r in rows]
             lines.append(f"Total net dividends: R{sum(r['net_dividend'] for r in rows):,.2f}")
@@ -425,7 +430,7 @@ def find_ticker_tool(company: str) -> str:
     lines = [f"Ticker matches for '{company}' (most relevant first):"]
     for r in results:
         market = "JSE" if r.symbol.upper().endswith(".JO") else "non-JSE"
-        lines.append(f"- {r.symbol} - {r.name} [{market}]")
+        lines.append(f"- {_sanitise(r.symbol, 20)} - {_sanitise(r.name, 80)} [{market}]")
     lines.append("Pick the listing the user means. EquityLens users are South African, so prefer the .JO listing unless they asked about another market.")
     return "\n".join(lines)
 
@@ -607,8 +612,11 @@ DEFAULT_VOLATILITY_PCT = 18.0
 MAX_PROJECTION_YEARS = 50
 
 
-def _current_portfolio_value(db: Session, user_id) -> float:
-    portfolios = db.query(Portfolios).filter(Portfolios.user_id == user_id).all()
+def _current_portfolio_value(db: Session, user_id, portfolio_id = None) -> float:
+    query = db.query(Portfolios).filter(Portfolios.user_id == user_id)
+    if portfolio_id is not None:
+        query = query.filter(Portfolios.id == portfolio_id)
+    portfolios = query.all()
     total = 0.0
     for portfolio in portfolios:
         holdings = db.query(Holdings).filter(Holdings.portfolio_id == portfolio.id).all()
@@ -616,7 +624,7 @@ def _current_portfolio_value(db: Session, user_id) -> float:
     return total
 
 
-def get_goal_projection_tool(db: Session, user_id, tool_input: dict) -> str:
+def get_goal_projection_tool(db: Session, user_id, tool_input: dict, portfolio_id = None) -> str:
     years = tool_input.get("years")
     if not years or years <= 0:
         return "I need to know how many years to project over before I can run that."
@@ -626,7 +634,7 @@ def get_goal_projection_tool(db: Session, user_id, tool_input: dict) -> str:
     current_value = tool_input.get("current_value")
     used_own_portfolio = current_value is None
     if used_own_portfolio:
-        current_value = _current_portfolio_value(db, user_id)
+        current_value = _current_portfolio_value(db, user_id, portfolio_id)
         if current_value <= 0:
             return ("No portfolio value is available to project from. Ask the user to upload a statement, "
                     "or to tell you the starting amount they want to assume.")
@@ -651,7 +659,12 @@ def get_goal_projection_tool(db: Session, user_id, tool_input: dict) -> str:
     if result["median_final_value"] is None:
         return "Those numbers don't make a projection possible. Check the target and the time horizon with the user."  
     
-    start_note = "their current portfolio value" if used_own_portfolio else "the amount given"
+    if not used_own_portfolio:
+        start_note = "the amount given"
+    elif portfolio_id is not None:
+        start_note = "the current value of the portfolio this chat is about"
+    else:
+        start_note = "the current value of all their portfolios combined"
     lines = [
         f"Monte Carlo projection over {years:g} years ({result['months']} months), 2000 simulated paths.",
         f"- Starting from: R{current_value:,.2f} ({start_note})",
@@ -675,7 +688,7 @@ def get_goal_projection_tool(db: Session, user_id, tool_input: dict) -> str:
     return "\n".join(lines)
 
 
-def run_tool(name: str, tool_input: dict, db: Session, user_id) -> str:
+def run_tool(name: str, tool_input: dict, db: Session, user_id, portfolio_id = None) -> str:
     if name == "get_stock_data":
         return get_stock_data_tool(tool_input.get("ticker", ""))
     if name == "get_market_news":
@@ -683,9 +696,9 @@ def run_tool(name: str, tool_input: dict, db: Session, user_id) -> str:
     if name == "get_indicators":
         return get_indicators_tool(tool_input.get("ticker", ""))
     if name == "get_goal_projection":
-        return get_goal_projection_tool(db, user_id, tool_input)
+        return get_goal_projection_tool(db, user_id, tool_input, portfolio_id)
     if name == "get_statement_detail":
-        return get_statement_detail_tool(db, user_id, tool_input)
+        return get_statement_detail_tool(db, user_id, tool_input, portfolio_id)
     if name == "find_ticker":
         return find_ticker_tool(tool_input.get("company", ""))
     return f"Unknown tool: {name}"
@@ -797,7 +810,7 @@ def _prepare_turn(user_message: str, db: Session, logged_in_user_id, conversatio
             .order_by(UserMemory.created_at.asc())
             .all()
     )
-    memory_context = "\n".join(f"- {m.fact}" for m in memories) or "Nothing remembered yet."
+    memory_context = "\n".join(f"- {_sanitise(m.fact, 300)}" for m in memories) or "Nothing remembered yet."  
 
     prev_messages = []
     if chat_conversation is not None:
@@ -819,7 +832,7 @@ def _prepare_turn(user_message: str, db: Session, logged_in_user_id, conversatio
             chat_conversation.summary = new_summary
             chat_conversation.summarised = dropped_rows[-1].created_at
 
-    conversation_summary = (chat_conversation.summary if chat_conversation else None) or "No earlier messages."  
+    conversation_summary = _sanitise(chat_conversation.summary if chat_conversation else None, 2000) or "No earlier messages."
     history = build_history(kept_rows, user_message)
 
     system = [
@@ -865,7 +878,7 @@ def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = No
                 continue
             tool_use = block["toolUse"]
             try:
-                result_text = run_tool(tool_use["name"], tool_use.get("input") or {}, db, logged_in_user_id)
+                result_text = run_tool(tool_use["name"], tool_use.get("input") or {}, db, logged_in_user_id, portfolio_id)
                 status = "success"
             except Exception as exc:
                 print(f"Tool {tool_use['name']} failed: {exc}")
@@ -986,7 +999,7 @@ def chat_stream(user_message: str, db: Session, logged_in_user_id, conversation_
                 continue
             tool_use = block["toolUse"]
             try:
-                result_text = run_tool(tool_use["name"], tool_use.get("input") or {}, db, logged_in_user_id)
+                result_text = run_tool(tool_use["name"], tool_use.get("input") or {}, db, logged_in_user_id, portfolio_id)
                 status = "success"
             except Exception as exc:
                 logger.warning("Tool %s failed: %s", tool_use["name"], exc)
