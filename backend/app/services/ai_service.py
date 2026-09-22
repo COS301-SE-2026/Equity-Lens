@@ -19,6 +19,7 @@ from app.utils.market_cache import get_market_returns
 from app.utils.exceptions import ConversationNotFoundException
 from app.services.ai_context import build_history, fit_to_budget
 from app.services.ai_memory import summarise_dropped, extract_facts, MAX_FACTS_PER_USER
+from app.services.monte_carlo import simulate_goal
 from threading import Lock
 import logging
 import json
@@ -93,6 +94,45 @@ TOOL_CONFIG = { "tools": [
 
 
                     }},
+                    { "toolSpec": {
+                            "name": "get_goal_projection",
+                            "description": ("Run a Monte Carlo projection of whether the user can reach a savings or investment goal."
+                                            "Use it when they ask about retiring, affording something, reaching an amount, or whether they are on track."
+                                            "Returns the probability of hitting the target plus the 10th, 50th and 90th percentile outcomes."
+                                            "Leave current_value out to use the live value of their own holdings."     
+                            ),
+                            "inputSchema": { "json":
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "target_value": {
+                                                            "type": "number",
+                                                            "description": "The amount in rands they are aiming for and omit to project growth with no target.",
+                                                        },
+                                                        "years": {
+                                                            "type": "number",
+                                                            "description": "How many years from now, e.g. 15 for retiring in 15 years.",
+                                                        },
+                                                        "monthly_contribution": {
+                                                            "type": "number",
+                                                            "description": "Rands added every month. Use 0 if they are not contributing.",
+                                                        },
+                                                        "current_value": {
+                                                            "type": "number",
+                                                            "description": "Starting amount in rands. OMIT THIS to use the live market value of the user's own portfolio, which is almost always what you want.",
+                                                        },
+                                                        "expected_return_pct": {
+                                                            "type": "number",
+                                                            "description": "Expected annual return percent. Omit for the 9% long-run equity default.",
+                                                        },
+                                                        "volatility_pct": {
+                                                            "type": "number",
+                                                            "description": "Expected annual volatility percent. Omit for the 18% equity default.",
+                                                        }
+                                                    },
+                                                    "required": ["years"]
+                                                }}
+                      }},
         {"cachePoint": {"type": "default"}}
         ]
 }
@@ -373,24 +413,100 @@ def get_indicators_tool(ticker: str) -> str:
     )
 
 
-def run_tool(name: str, tool_input: dict) -> str:
+DEFAULT_RETURN_PCT = 9.0
+DEFAULT_VOLATILITY_PCT = 18.0
+MAX_PROJECTION_YEARS = 50
+
+
+def _current_portfolio_value(db: Session, user_id) -> float:
+    portfolios = db.query(Portfolios).filter(Portfolios.user_id == user_id).all()
+    total = 0.0
+    for portfolio in portfolios:
+        holdings = db.query(Holdings).filter(Holdings.portfolio_id == portfolio.id).all()
+        total += sum(h["value"] for h in _price_holdings(holdings))
+    return total
+
+
+def get_goal_projection_tool(db: Session, user_id, tool_input: dict) -> str:
+    years = tool_input.get("years")
+    if not years or years <= 0:
+        return "I need to know how many years to project over before I can run that."
+    if years > MAX_PROJECTION_YEARS:
+        return f"That horizon is too long to project meaningfully. Ask again with {MAX_PROJECTION_YEARS} years or fewer."
+
+    current_value = tool_input.get("current_value")
+    used_own_portfolio = current_value is None
+    if used_own_portfolio:
+        current_value = _current_portfolio_value(db, user_id)
+        if current_value <= 0:
+            return ("No portfolio value is available to project from. Ask the user to upload a statement, "
+                    "or to tell you the starting amount they want to assume.")
+
+    target_value = tool_input.get("target_value")
+    monthly = tool_input.get("monthly_contribution") or 0.0
+    expected_return = tool_input.get("expected_return_pct")
+    volatility = tool_input.get("volatility_pct")
+    assumed_defaults = expected_return is None or volatility is None
+    expected_return = DEFAULT_RETURN_PCT if expected_return is None else expected_return
+    volatility = DEFAULT_VOLATILITY_PCT if volatility is None else volatility
+
+    result = simulate_goal(
+        current_value = float(current_value),
+        target_value = float(target_value) if target_value else None,
+        years = float(years),
+        monthly_contribution = float(monthly),
+        expected_return_pct = float(expected_return),
+        volatility_pct = float(volatility),
+    )
+
+    if result["median_final_value"] is None:
+        return "Those numbers don't make a projection possible. Check the target and the time horizon with the user."  
+    
+    start_note = "their current portfolio value" if used_own_portfolio else "the amount given"
+    lines = [
+        f"Monte Carlo projection over {years:g} years ({result['months']} months), 2000 simulated paths.",
+        f"- Starting from: R{current_value:,.2f} ({start_note})",
+        f"- Monthly contribution: R{monthly:,.2f}",
+        f"- Assumed return: {expected_return:g}% a year, volatility {volatility:g}%",
+        f"- Median outcome: R{result['median_final_value']:,.2f}",
+    ]
+
+    percentiles = result["path_percentiles"]
+    if percentiles:
+        final = percentiles[-1]
+        lines.append(f"- Range of outcomes: R{final['p10']:,.2f} (pessimistic) to R{final['p90']:,.2f} (optimistic)")  
+
+    if result["probability_pct"] is not None:
+        lines.append(f"- Probability of reaching R{float(target_value):,.2f}: {result['probability_pct']}%")
+
+    if assumed_defaults:
+        lines.append(f"- NOTE: return and volatility were assumed ({DEFAULT_RETURN_PCT}% / {DEFAULT_VOLATILITY_PCT}%), not taken from the user. Say so in your answer.")
+
+    lines.append("This is a simulation of possible outcomes from random market paths, not a prediction or a guarantee.")
+    return "\n".join(lines)
+
+
+def run_tool(name: str, tool_input: dict, db: Session, user_id) -> str:
     if name == "get_stock_data":
         return get_stock_data_tool(tool_input.get("ticker", ""))
     if name == "get_market_news":
         return get_market_news_tool(tool_input.get("query", ""))
     if name == "get_indicators":
         return get_indicators_tool(tool_input.get("ticker", ""))
+    if name == "get_goal_projection":
+        return get_goal_projection_tool(db, user_id, tool_input)
     return f"Unknown tool: {name}"
 
 
 SYSTEM_RULES = """You are an AI financial assistant for EquityLens. EquityLens is a web application built to help users navigate and understand their investment portfolios.
-NB -> Read this first (You should only help with the following 6 things):
+NB -> Read this first (You should only help with the following 7 things):
     1. Questions about the users own portfolio. (See <portfolio_context> at the end of this)
     2. How to use the EquityLens application.
     3. General finance and investing education (concepts, terminology, trade offs)
     4. Questions about how a specific listed stock is performing or what it is trading at
     5. Questions about recent financial or market news, either in general or about a specific company
     6. Questions about how risky, volatile, cheap or financially healthy a share is, and about the indicators EquityLens calculates (CAPM, P/E, Altman Z-score, beta, RSI, Sharpe, Sortino)
+    7. Questions about whether they can reach a financial goal - retiring, affording something, reaching an amount, or whether they are on track
 Anything else is out of scope. Refuse it briefly and go back to what you can help with.
 This includes those framed a financial or investing content:
     1. Writing, explaining,debugging or reviewing of any type of code. (Example: "Python code for an investment app" is still a coding request)
@@ -436,6 +552,12 @@ Behaviour:
     Explain what an indicator means in plain language before quoting its value, and prefer the user's own holdings for examples.
     If an indicator comes back as not available, say so and give the reason the tool provided. Never estimate or fill in a missing indicator.
     These are calculated from a year of end-of-day prices, so they describe the recent past and are not predictions.
+    When the user asks whether they can reach a goal, afford something, retire by a certain age, or whether they are on track, call the get_goal_projection tool. Do not do the arithmetic yourself.
+    Leave current_value out so the tool uses their real portfolio value. Only pass it when the user explicitly names a different starting amount.
+    Check <user_memory> first - their goal, target amount, time horizon and monthly contribution are often already there, so use those instead of asking again.
+    If you are missing the time horizon you must ask for it; everything else has a sensible default.
+    Report it as a range of outcomes, never a single number, and say plainly that it is a simulation rather than a prediction.
+      If the tool says the return and volatility were assumed, say so and offer to re-run it with their own figures.    
     The portfolio context may include a Portfolio Health score out of 10 with weighted subscores.
     Explain what a subscore measures and why it scored that way when asked, but never present the score as a rating of investment quality or a reason to buy or sell.
 Memory:
@@ -535,7 +657,7 @@ def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = No
                 continue
             tool_use = block["toolUse"]
             try:
-                result_text = run_tool(tool_use["name"], tool_use.get("input") or {})
+                result_text = run_tool(tool_use["name"], tool_use.get("input") or {}, db, logged_in_user_id)
                 status = "success"
             except Exception as exc:
                 print(f"Tool {tool_use['name']} failed: {exc}")
@@ -656,7 +778,7 @@ def chat_stream(user_message: str, db: Session, logged_in_user_id, conversation_
                 continue
             tool_use = block["toolUse"]
             try:
-                result_text = run_tool(tool_use["name"], tool_use.get("input") or {})
+                result_text = run_tool(tool_use["name"], tool_use.get("input") or {}, db, logged_in_user_id)
                 status = "success"
             except Exception as exc:
                 logger.warning("Tool %s failed: %s", tool_use["name"], exc)
