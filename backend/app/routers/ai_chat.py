@@ -1,22 +1,23 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
-from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, field_validator, Field
-from sqlalchemy.orm import Session
-from sqlalchemy import func
-from datetime import datetime, timezone
-from app.services.ai_service import chat, run_post_turn, chat_stream
-from app.database import get_db, SessionLocal
-from app.dependencies import get_current_user
-from app.schemas.auth import UserResponse
+import json
+import logging
+from datetime import UTC, datetime
 from uuid import UUID
-from typing import Optional
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field, field_validator
+from sqlalchemy import func
+from sqlalchemy.orm import Session
+
+from app.config import settings
+from app.database import SessionLocal, get_db
+from app.dependencies import get_current_user
 from app.models.chat import ChatConversation, ChatMessages, UserMemory
 from app.models.portfolio import Portfolios
+from app.schemas.auth import UserResponse
+from app.services.ai_service import chat, chat_stream, run_post_turn
 from app.utils.ai_rate_limit import check_limit
 from app.utils.exceptions import ConversationNotFoundException
-from app.config import settings
-import logging
-import json
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +25,8 @@ router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
 
 class ChatRequest(BaseModel):
     message: str
-    conversation_id: Optional[UUID] = None
-    portfolio_id: Optional[UUID] = None
+    conversation_id: UUID | None = None
+    portfolio_id: UUID | None = None
     replace_last: bool = False
 
     @field_validator("message")
@@ -45,7 +46,7 @@ class ChangeConversationName(BaseModel):
 
 
 def _messages_today(db: Session, user_id) -> int:
-    start = datetime.now(timezone.utc).replace(
+    start = datetime.now(UTC).replace(
         tzinfo = None, hour = 0, minute = 0, second = 0, microsecond = 0)
 
     return (
@@ -65,14 +66,18 @@ def enforce_limit(
 ):
     used = _messages_today(db, current_user.id)
     if used >= settings.ai_daily_limit:
-        midnight = datetime.now(timezone.utc).replace(
+        midnight = datetime.now(UTC).replace(
             tzinfo = None, hour = 0, minute = 0, second = 0, microsecond = 0)
-        retry_after = max(1, int(86400 - (datetime.now(timezone.utc).replace(tzinfo = None) - midnight).total_seconds()))
+        now = datetime.now(UTC).replace(tzinfo = None)
+        retry_after = max(1, int(86400 - (now - midnight).total_seconds()))
         logger.info("daily cap hit: user %s used %s", current_user.id, used)
         raise HTTPException(
             status_code = 429,
             detail = {
-                "message": f"You have reached your daily limit of {settings.ai_daily_limit} messages. It resets at midnight UTC.",
+                "message": (
+                    f"You have reached your daily limit of {settings.ai_daily_limit} messages. "
+                    "It resets at midnight UTC."
+                ),
                 "retry_after": retry_after
             },
             headers = {"Retry-After": str(retry_after)}
@@ -88,7 +93,10 @@ def enforce_limit(
         raise HTTPException(
             status_code = 429,
             detail = {
-                "message": f"You have been rate-limited by sending messages too quick. Try again in {retry_after} seconds.",
+                "message": (
+                    "You have been rate-limited by sending messages too quick. "
+                    f"Try again in {retry_after} seconds."
+                ),
                 "retry_after": retry_after
             },
             headers = {"Retry-After": str(retry_after)}
@@ -104,7 +112,10 @@ def ai_chat(
     current_user: UserResponse = Depends(enforce_limit)
     ):
     try:
-        reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id, request.portfolio_id, request.replace_last)
+        reply, conversation_id = chat(
+            request.message, db, current_user.id,
+            request.conversation_id, request.portfolio_id, request.replace_last,
+        )
         background_tasks.add_task(run_post_turn, conversation_id, current_user.id, request.message)
         return ChatResponse(reply = reply, conversation_id = conversation_id)
     except HTTPException:
@@ -114,7 +125,7 @@ def ai_chat(
             "AI chat failed for user %s (conversation %s): %s",
             current_user.id, request.conversation_id, e,
         )
-        raise HTTPException(status_code = 500, detail = "Something went wrong")
+        raise HTTPException(status_code = 500, detail = "Something went wrong") from e
 
 
 @router.post("/stream/")
@@ -126,7 +137,10 @@ async def ai_chat_stream(
         db = SessionLocal()
         conversation_id = None
         try:
-            for event in chat_stream(request.message, db, current_user.id, request.conversation_id, request.portfolio_id):
+            for event in chat_stream(
+                request.message, db, current_user.id,
+                request.conversation_id, request.portfolio_id,
+            ):
                 if event["type"] == "done":
                     conversation_id = event["conversation_id"]
                 yield f"data: {json.dumps(event)}\n\n"

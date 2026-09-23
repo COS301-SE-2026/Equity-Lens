@@ -1,9 +1,12 @@
-from app.services.ai_service import get_user_portfolio_context, chat
-from app.models.portfolio import Portfolios, Document, Holdings
 from unittest.mock import MagicMock, patch
-from app.models.chat import ChatMessages
+
 import pytest
+
+from app.models.chat import ChatMessages
+from app.models.portfolio import Document, Holdings, Portfolios
 from app.routers.ai_chat import ChatRequest
+from app.services.ai_service import chat, get_user_portfolio_context
+
 
 def test_portfolio_linked_no_data(db_session, test_user):
     ai_reply = get_user_portfolio_context(db_session, test_user.id)
@@ -34,7 +37,9 @@ def test_portfolio_with_data(db_session, test_user):
 @patch("app.services.ai_service.get_bedrock_client")
 def test_new_chat(mock_bedrock_client, db_session, test_user):
     mocked_client = MagicMock()
-    mocked_client.converse.return_value = {"output": {"message": {"content": [{"text": "A response."}] }}}
+    mocked_client.converse.return_value = {
+        "output": {"message": {"content": [{"text": "A response."}]}}
+    }
     
     mock_bedrock_client.return_value = mocked_client
     reply, conversation_id = chat("A question?" ,db_session, test_user.id)
@@ -85,7 +90,7 @@ def test_existing_chat(mock_bedrock_client, db_session, test_user):
 
 
 def test_empty_message():
-    with pytest.raises(ValueError):
+     with pytest.raises(ValueError, match = "empty message"):
         ChatRequest(message = "", conversation_id = None)    
 
 @patch("app.services.ai_service.compute_health_score")

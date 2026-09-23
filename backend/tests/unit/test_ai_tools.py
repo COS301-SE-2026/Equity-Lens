@@ -1,9 +1,16 @@
-import pandas as pd
-import pytest
 from unittest.mock import MagicMock, patch
-from app.services import ai_service
-from app.services.ai_service import chat, get_market_news_tool, get_stock_data_tool, MAX_NEWS_ARTICLES
+
+import pandas as pd
+
 from app.models.chat import ChatMessages
+from app.services import ai_service
+from app.services.ai_service import (
+    MAX_NEWS_ARTICLES,
+    chat,
+    get_market_news_tool,
+    get_stock_data_tool,
+)
+
 
 @patch("app.services.ai_service.requests.get")
 def test_news_headlines(mock_get):
@@ -19,7 +26,12 @@ def test_news_headlines(mock_get):
                     {
                         "symbol": "SOL.JO",
                         "sentiment_score": 0.42,
-                        "highlights": [{"highlight": "Sasol gained on the news.", "highlighted_in": "main_text"}],
+                        "highlights": [
+                            {
+                                "highlight": "Sasol gained on the news.",
+                                "highlighted_in": "main_text",
+                            }
+                        ],
                     }
                 ],
             },

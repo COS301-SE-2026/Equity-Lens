@@ -1,7 +1,8 @@
 import uuid
 from unittest.mock import MagicMock, patch
+
 from app.models.chat import ChatConversation, ChatMessages
-from app.services.ai_service import chat_stream, MAX_TOOL_ITERATIONS, SYSTEM_RULES
+from app.services.ai_service import MAX_TOOL_ITERATIONS, SYSTEM_RULES, chat_stream
 
 
 def text_round(*chunks, stop_reason = "end_turn"):
@@ -12,7 +13,8 @@ def text_round(*chunks, stop_reason = "end_turn"):
 
 
 def tool_round(name, input_fragments, tool_use_id = "tu-1"):
-    events = [{"contentBlockStart": {"start": {"toolUse": {"toolUseId": tool_use_id, "name": name}}}}]
+    start = {"toolUse": {"toolUseId": tool_use_id, "name": name}}
+    events = [{"contentBlockStart": {"start": start}}]
     events += [{"contentBlockDelta": {"delta": {"toolUse": {"input": f}}}} for f in input_fragments]
     events.append({"contentBlockStop": {}})
     events.append({"messageStop": {"stopReason": "tool_use"}})
@@ -115,7 +117,7 @@ def test_stream_exhaustion(mock_client, mock_run_tool, db_session, test_user):
 @patch("app.services.ai_service.get_bedrock_client")
 def test_stream_falls_back(mock_client, db_session, test_user):
     mock_client.return_value = stream_client(text_round())
-    _, text, done = drain(chat_stream("a question", db_session, test_user.id))
+    _, text, _done = drain(chat_stream("a question", db_session, test_user.id))
 
     row = (db_session.query(ChatMessages)
            .filter(ChatMessages.role == "assistant").first())
