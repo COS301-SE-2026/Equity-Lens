@@ -122,8 +122,12 @@ class UserRepository:
                     ChatConversation.id.in_(conversation_ids)
                 ).delete(synchronize_session=False)
 
-            self.db.query(Document).filter(Document.user_id == user_id).delete(synchronize_session=False)
-            self.db.query(Watchlist).filter(Watchlist.user_id == user_id).delete(synchronize_session=False)
+            self.db.query(Document).filter(
+                Document.user_id == user_id
+                ).delete(synchronize_session=False)
+            self.db.query(Watchlist).filter(
+                Watchlist.user_id == user_id
+                ).delete(synchronize_session=False)
 
             self.db.commit()
                      

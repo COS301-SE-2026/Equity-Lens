@@ -48,12 +48,15 @@ def get_portfolio_analytics(db: Session, portfolio_id: UUID,):
 
     results = []
 
-    for index,ticker in enumerate(tickers):
+    for ticker in tickers:
         name = ticker_to_name.get(ticker,ticker)
 
-        row = build_live_indicator_row(ticker,name,market_returns,price_history=price_histories.get(ticker),)
+        row = build_live_indicator_row(
+            ticker,name,market_returns,
+            price_history=price_histories.get(ticker),
+            )
 
-        serialized = (serialize_indicator_row(row))
+        serialized = serialize_indicator_row(row)
 
         results.append(serialized)
 

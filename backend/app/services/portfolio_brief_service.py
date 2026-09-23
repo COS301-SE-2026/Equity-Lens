@@ -20,7 +20,7 @@ from reportlab.platypus import (
 )
 
 
-def add_front_page(canvas, doc):
+def add_front_page(canvas, _doc):
     canvas.saveState()
 
     page_width, page_height = A4
@@ -31,10 +31,26 @@ def add_front_page(canvas, doc):
     background_path = assets_path / "Front_page.avif.avif"
 
     if background_path.exists():
-        canvas.drawImage(str(background_path),0,0,width=page_width,height=page_height,preserveAspectRatio=False,mask="auto",)
+        canvas.drawImage(
+            str(background_path),
+            0,
+            0,
+            width=page_width,
+            height=page_height,
+            preserveAspectRatio=False,
+            mask="auto",
+        )
 
     if logo_path.exists():
-        canvas.drawImage(str(logo_path),15 * mm,page_height - 29 * mm,width=16 * mm,height=16 * mm,preserveAspectRatio=False,mask="auto",)
+        canvas.drawImage(
+            str(logo_path),
+            15 * mm,
+            page_height - 29 * mm,
+            width=16 * mm,
+            height=16 * mm,
+            preserveAspectRatio=False,
+            mask="auto",
+        )
 
 
     canvas.setFillColor(colors.HexColor('#111827'))
@@ -105,7 +121,10 @@ def add_front_page(canvas, doc):
     canvas.setFillColor(colors.HexColor('#475569'))
     canvas.setFont("Helvetica-Oblique",10,)
     canvas.drawString(25 * mm, quote_y + 16 * mm, "Investing is not about beating others,",)
-    canvas.drawString(25 * mm, quote_y + 10 * mm, "but about building a better future for yourself",)
+    canvas.drawString(
+        25 * mm, quote_y + 10 * mm, 
+        "but about building a better future for yourself",
+    )
     canvas.setFont("Helvetica-Bold",8,)
     canvas.drawString(25 * mm, quote_y + 4 * mm, "- EQUITY LENS",)
 
@@ -132,7 +151,14 @@ def add_header_footer(canvas, doc):
 
 
     if logo_path.exists():
-        canvas.drawImage(str(logo_path),15 * mm,page_height - 20 * mm,width=10 * mm,height=10 * mm,preserveAspectRatio=True,mask="auto",)
+        canvas.drawImage(
+            str(logo_path),
+            15 * mm,page_height - 20 * mm,
+            width=10 * mm,
+            height=10 * mm,
+            preserveAspectRatio=True,
+            mask="auto",
+        )
 
     canvas.setFont("Helvetica-Bold",9,)
     canvas.setFillColor(colors.HexColor('#111827'))
@@ -204,8 +230,6 @@ def get_news_image(image_url):
         return output_buffer
 
     except Exception:
-        print("The image could not be loaded.")
-
         return None
 
 def create_news_card(article: dict, styles, show_ticker=False,):
@@ -231,26 +255,42 @@ def create_news_card(article: dict, styles, show_ticker=False,):
 
     text_content.append(Paragraph(f"<b>{title_text}</b>", styles["NewsTitle"],))
 
-    allTogther = []
+    all_together = []
 
     if source:
-        allTogther.append(source)
+        all_together.append(source)
 
     if published_at:
-        allTogther.append(published_at)
+        all_together.append(published_at)
 
-    if allTogther:
+    if all_together:
         text_content.append(Spacer(1,3))
-        text_content.append(Paragraph("|".join(allTogther), styles["NewsMeta"],))
+        text_content.append(Paragraph("|".join(all_together), styles["NewsMeta"],))
 
     if description:
         text_content.append(Spacer(1,6))
         text_content.append(Paragraph(description, styles["NewsDescription"],))
 
     if article_url:
-        safe_url = escape(str(article_url), {'"': "&quot;",},)
+        safe_url = escape(
+            str(article_url), 
+            {'"': "&quot;",},
+            )
+
         text_content.append(Spacer(1,8))
-        text_content.append(Paragraph((f'<link href="{safe_url}" 'f'color="#2563EB">'f'<b>Read full article</b>'f'</link>'),styles["NewsLink"],))
+
+        link_text = (
+            f'<link href="{safe_url}" color="#2563EB">'
+            "<b>Read full article</b>"
+            "</link>"
+        )
+
+        text_content.append(
+            Paragraph(
+                link_text,
+                styles["NewsLink"],
+            )
+        )
 
     image_buffer = get_news_image(image_url)
 
@@ -393,11 +433,51 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
     styles = getSampleStyleSheet()
 
-    styles.add(ParagraphStyle(name="SectionTitle", parent=styles["Heading2"], fontName="Helvetica-Bold", fontSize=15, leading=18, textColor=colors.HexColor('#111827'), spaceAfter=8,))
-    styles.add(ParagraphStyle(name="NewsTitle", parent=styles["BodyText"], fontName="Helvetica-Bold", fontSize=10, leading=13, textColor=colors.HexColor('#111827')))
-    styles.add(ParagraphStyle(name="NewsMeta", parent=styles["BodyText"], fontSize=8, leading=10, textColor=colors.HexColor('#64748B'),))
-    styles.add(ParagraphStyle(name="NewsDescription", parent=styles["BodyText"], fontSize=9, leading=12, textColor=colors.HexColor('#334155'),))
-    styles.add(ParagraphStyle(name="NewsLink", parent=styles["BodyText"], fontSize=9, leading=11,))
+    styles.add(
+        ParagraphStyle(
+            name="SectionTitle", 
+            parent=styles["Heading2"], 
+            fontName="Helvetica-Bold", 
+            fontSize=15, 
+            leading=18, 
+            textColor=colors.HexColor('#111827'), 
+            spaceAfter=8,
+            )
+        )
+    styles.add(
+        ParagraphStyle(
+            name="NewsTitle", 
+            parent=styles["BodyText"], 
+            fontName="Helvetica-Bold", 
+            fontSize=10, leading=13, 
+            textColor=colors.HexColor('#111827')
+            )
+        )
+    styles.add(
+        ParagraphStyle(
+            name="NewsMeta", 
+            parent=styles["BodyText"], 
+            fontSize=8, 
+            leading=10, 
+            textColor=colors.HexColor('#64748B'),
+            )
+        )
+    styles.add(ParagraphStyle(
+            name="NewsDescription", 
+            parent=styles["BodyText"], 
+            fontSize=9, 
+            leading=12, 
+            textColor=colors.HexColor('#334155'),
+            )
+        )
+    styles.add(
+        ParagraphStyle(
+            name="NewsLink", 
+            parent=styles["BodyText"], 
+            fontSize=9, 
+            leading=11,
+            )
+        )
 
 
     story = []
@@ -422,12 +502,30 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
     story.append(Paragraph("Portfolio Summary", styles["Heading2"],))
 
     summary_data = [
-        ["Portfolio Value", f"R {float(summary.get('PortfolioValue', 0)):,.2f}",],
-        ["Total Holdings", str(summary.get('TotalHoldings', 0))],
-        ["Purchase & Sales", f"R {float(summary.get('TotalPurchasesAndSales', 0)):,.2f}",],
-        ["Contributions & withdrawals", f"R {float(summary.get('TotalContributionsAndWithdrawals', 0)):,.2f}",],
-        ["Dividends", f"R {float(summary.get('TotalDividendsAndWithholdingTax', 0)):,.2f}",],
-        ["Expenses", f"R {float(summary.get('TotalTransactionExpenses', 0)):,.2f}",],
+        [
+            "Portfolio Value", 
+            f"R {float(summary.get('PortfolioValue', 0)):,.2f}",
+        ],
+        [
+            "Total Holdings", 
+            str(summary.get('TotalHoldings', 0))
+        ],
+        [
+            "Purchase & Sales", 
+            f"R {float(summary.get('TotalPurchasesAndSales', 0)):,.2f}",
+        ],
+        [
+            "Contributions & withdrawals", 
+            f"R {float(summary.get('TotalContributionsAndWithdrawals', 0)):,.2f}",
+        ],
+        [
+            "Dividends", 
+            f"R {float(summary.get('TotalDividendsAndWithholdingTax', 0)):,.2f}",
+        ],
+        [
+            "Expenses", 
+            f"R {float(summary.get('TotalTransactionExpenses', 0)):,.2f}",
+        ],
     ]
 
 
@@ -465,7 +563,12 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         story.append(Paragraph("Top Holdings", styles["Heading2"],))
         holdings_data = [["Holding", "Value"]]
         for holding in top_holdings:
-            holdings_data.append([holding.get("name", "Unknown"), ("R " f"{float(holding.get('value',0)):,.2f}")])
+            holdings_data.append(
+                [
+                    holding.get("name", "Unknown"), 
+                    ("R " f"{float(holding.get('value',0)):,.2f}")
+                ]
+            )
 
         holdings_table = Table(
             holdings_data,
@@ -522,7 +625,11 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
     story.append(Spacer(1,15))
 
     story.append(Paragraph("My Portfolio News", styles["SectionTitle"]))
-    story.append(Paragraph("This is the latest news related to holdings in this portfolio", styles["NewsMeta"]))
+    story.append(
+        Paragraph("This is the latest news related to holdings in this portfolio", 
+        styles["NewsMeta"]
+        )
+    )
     story.append(Spacer(1,8,))
 
     if portfolio_news:
@@ -570,7 +677,11 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
 
         for stock in analytics:
-            analytics_data.append([stock.get("ticker", "UnKnown"), stock.get("name", stock.get("ticker","Unknown",),), 
+            analytics_data.append(
+                [
+                    stock.get("ticker", "UnKnown"), 
+                    stock.get("name", stock.get("ticker","Unknown",),
+                ), 
                 get_indicator_value(stock.get("capm")),
                 get_indicator_value(stock.get("pe_ratio")),
                 get_indicator_value(stock.get("altman_z")),
@@ -614,7 +725,14 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
         story.append(Spacer(1,8,))
 
-    story.append(Paragraph("This report was generated from the same " "canonical portfolio snapshot used by Equity Lens", styles["BodyText"],))
+    story.append(
+        Paragraph
+        (
+            "This report was generated from the same " 
+            "canonical portfolio snapshot used by Equity Lens", 
+            styles["BodyText"],
+            )
+        )
 
     document.build(story, onFirstPage=add_front_page, onLaterPages=add_header_footer,)
 

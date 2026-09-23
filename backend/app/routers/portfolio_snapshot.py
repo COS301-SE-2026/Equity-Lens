@@ -28,7 +28,10 @@ from app.services.portfolio_snapshot_service import build_snapshot
 router = APIRouter(prefix="/api/portfolio_snapshot", tags=["Portfolio Snapshot"])
 
 @router.get("/{portfolio_id}")
-def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),current_user: UserResponse = Depends(get_current_user)):
+def get_portfolio_snapshot(
+    portfolio_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)):
     repository = PortfolioRepository(db)
 
     portfolio = repository.get_portfolio_for_user(
@@ -124,8 +127,7 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
                 )
 
         except Exception:
-            print("Error getting news data")
-
+            return None
 
     market_news = []
 
@@ -145,7 +147,7 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
             )
 
     except Exception:
-        print("Error getting news data")
+        return None
 
     snapshot = build_snapshot(
         portfolio_id=str(portfolio_id),
@@ -176,7 +178,10 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
     }
 
 @router.get("/{portfolio_id}/download")
-def download_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),current_user: UserResponse = Depends(get_current_user)):
+def download_portfolio_snapshot(
+    portfolio_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)):
     repository = PortfolioRepository(db)
     portfolio = repository.get_portfolio_for_user(
         portfolio_id=portfolio_id, 
