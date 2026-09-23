@@ -12,6 +12,7 @@ from app.database import create_tables
 from app.config import settings
 from app.models import user
 from app.models import market_data
+from app.models import news_event
 from app.schemas.responses import STATUS_ERROR_CODES
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
