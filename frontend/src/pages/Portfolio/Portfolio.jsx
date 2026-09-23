@@ -94,7 +94,6 @@ export const parsePurchaseRow = (text) => {
 
   if (valueZar === undefined || quantity === undefined || priceCents === undefined) {
     return null;
-    return null;
   }
 
   return {
@@ -322,7 +321,7 @@ const ReadingPDFFile = async (file, password) => {
   for (const items of allRows) {
     const ExistRow = allRowsTogther.find((row) => row.y === items.y && row.page === items.page)
 
-    if (ExistRow) {
+
     if (ExistRow) {
       ExistRow.items.push(items);
     }
@@ -368,6 +367,8 @@ const ReadingPDFFile = async (file, password) => {
     portfolio_name: PortfolioRow,
     statement_date: date,
 
+  }];
+
   let instrumentName = '';
 
   const Holdings = HoldingsTable.map((row) => {
@@ -383,7 +384,6 @@ const ReadingPDFFile = async (file, password) => {
       return null;
     }
 
-    const holdings = {
     const holdings = {
       ...parsed,
       instrument_name: (instrumentName + ' ' + parsed.instrument_name).trim(),
@@ -469,27 +469,27 @@ const Portfolio = () => {
    * @type {[any[], function]}
    */
   const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState(
-    /** @type {any[]}*/ [],
+    /** @type {any[]}*/[],
   );
   /**
    * @type {[any[], function]}
    */
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState(
-    /** @type {any[]}*/ [],
+    /** @type {any[]}*/[],
   );
   const [GetTheLowest, setGetTheLowest] = useState({ name: '', value: 0 });
   /**
    * @type {[any[], function]}
    */
-  const [GetTradingActivity, setGetTradingActivity] = useState(/** @type {any[]}*/ []);
+  const [GetTradingActivity, setGetTradingActivity] = useState(/** @type {any[]}*/[]);
   /**
    * @type {[any[], function]}
    */
-  const [GetCashFlow, setGetCashFlow] = useState(/** @type {any[]}*/ []);
+  const [GetCashFlow, setGetCashFlow] = useState(/** @type {any[]}*/[]);
   /**
    * @type {[any[], function]}
    */
-  const [GetDividendIncome, setGetDividendIncome] = useState(/** @type {any[]}*/ []);
+  const [GetDividendIncome, setGetDividendIncome] = useState(/** @type {any[]}*/[]);
   /**
    * @type {[boolean,function]}
    */
@@ -500,7 +500,7 @@ const Portfolio = () => {
   const [snapshot, setSnapshot] = useState(null);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
 
-  useEffect(() => {
+
   useEffect(() => {
     const getInfo = async () => {
       const responses = await api.get('/portfolio/current');
@@ -886,12 +886,6 @@ const Portfolio = () => {
                 onChange={(event) => setAccountType(event.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 text-white p-3 rounded-xl"
               >
-              <select
-                id="account-type-select"
-                value={accountType}
-                onChange={(event) => setAccountType(event.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-white p-3 rounded-xl"
-              >
                 <option value=""> Select account type</option>
                 {ACCOUNT_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -989,395 +983,387 @@ const Portfolio = () => {
           </div>
         </div>
 
-      </div>
 
 
 
-      {showPortfolios && (
+        {showPortfolios && (
 
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-hidden">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                My Portfolios
-              </h3>
+          <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-hidden">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  My Portfolios
+                </h3>
 
-              <button onClick={() => setShowPortfolios(false)} className="text-gray-400 hover:text-white">
-                X
-              </button>
-            </div>
-            </div>
+                <button onClick={() => setShowPortfolios(false)} className="text-gray-400 hover:text-white">
+                  X
+                </button>
+              </div>
 
-            <div>
-              <div className="max-h-[65vh] overflow-y-auto pr-2">
-                {portfolios.map(/** @param {any} portfolio*/(portfolio, index) => (
 
-                  <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
-                    <div className="flex justify-between items-center">
+              <div>
+                <div className="max-h-[65vh] overflow-y-auto pr-2">
+                  {portfolios.map(/** @param {any} portfolio*/(portfolio, index) => (
 
-                      <p className="text-white font-semibold">
-                        {portfolio.portfolio_name}
+                    <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
+                      <div className="flex justify-between items-center">
+
+                        <p className="text-white font-semibold">
+                          {portfolio.portfolio_name}
+                        </p>
+
+                        <span className="text-purple-400 font-semibold">
+                          {accountTypeLabel(portfolio.account_type)}
+                        </span>
+
+                      </div>
+
+                      <p className="text-sm text-gray-400">
+                        Account: {portfolio.account_number}
                       </p>
 
-                      <span className="text-purple-400 font-semibold">
-                        {accountTypeLabel(portfolio.account_type)}
-                      </span>
+                      <p className="text-sm text-gray-400">
+                        {statementPeriod(portfolio)}
+                      </p>
 
+                      <button onClick={() => ViewSummary(portfolio.id)} className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
+                        View Summary
+                      </button>
                     </div>
 
-                    <p className="text-sm text-gray-400">
-                      Account: {portfolio.account_number}
-                    </p>
+                  ))}
 
-                    <p className="text-sm text-gray-400">
-                      {statementPeriod(portfolio)}
-                    </p>
+                </div>
+              </div>
+            </div>
 
-                    <button onClick={() => ViewSummary(portfolio.id)} className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
-                      View Summary
-                    </button>
+          </div>
+        )
+
+
+
+        }
+
+        {summary && <div className="grid grid-cols-6 gap-8 mt-8">
+
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+
+            <div className="flex items-center gap-3 mb-2">
+
+              <Wallet size={20} className="text-yellow-500" />
+              <p style={mutedStyle}>Portfolio Value</p>
+
+            </div>
+
+            <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.PortfolioValue || 0}</h2>
+
+
+          </div>
+
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+
+            <div className="flex items-center gap-3 mb-2">
+
+              <Briefcase size={20} className="text-blue-500" />
+              <p style={mutedStyle}>Holdings</p>
+
+            </div>
+
+            <h2 className="text-2xl font-bold" style={titleStyle}>{summary?.TotalHoldings || 0}</h2>
+
+          </div>
+
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+
+            <div className="flex items-center gap-3 mb-2">
+              <ArrowLeftRight size={20} className="text-green-500" />
+              <p style={mutedStyle}>Purchase & Sales</p>
+            </div>
+
+            <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalPurchasesAndSales || 0}</h2>
+
+          </div>
+
+
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+
+            <div className="flex items-center gap-3 mb-2">
+
+              <Landmark size={20} className="text-purple-500" />
+              <p style={mutedStyle}>Contributions</p>
+
+            </div>
+
+            <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalContributionsAndWithdrawals || 0}</h2>
+
+          </div>
+
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+
+            <div className="flex items-center gap-3 mb-2">
+
+              <TrendingUp size={20} className="text-green-500" />
+              <p style={mutedStyle}>Dividends</p>
+
+            </div>
+
+            <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalDividendsAndWithholdingTax || 0}</h2>
+
+          </div>
+
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+
+            <div className="flex items-center gap-3 mb-2">
+
+              <CreditCard size={20} className="text-orange-500" />
+              <p style={mutedStyle}>Expenses</p>
+
+            </div>
+
+            <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalTransactionExpenses || 0}</h2>
+
+          </div>
+        </div>
+
+
+        }
+
+
+        <div className="mt-8">
+
+          {snapshot && (
+            <div className="mt-8 p-6 border rounded-2xl" style={panelStyle}>
+              <div className="flex flex-col gap-5 lg:items-start lg:justify-between">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <span className="w-3 h-3 rounded-full bg-green-500" />
+                    <h2 className="text-xl font-bold" style={titleStyle}>
+                      Smart Portfolio Snapshot
+                    </h2>
+
                   </div>
 
-                ))}
-
-              </div>
-            </div>
-          </div>
-
-        </div>
-      )
-
-
-
-      }
-
-      {summary && <div className="grid grid-cols-6 gap-8 mt-8">
-
-        <div className="p-5 border rounded-2xl" style={panelStyle}>
-
-          <div className="flex items-center gap-3 mb-2">
-
-            <Wallet size={20} className="text-yellow-500" />
-            <p style={mutedStyle}>Portfolio Value</p>
-
-          </div>
-
-          <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.PortfolioValue || 0}</h2>
-
-
-        </div>
-
-        <div className="p-5 border rounded-2xl" style={panelStyle}>
-
-          <div className="flex items-center gap-3 mb-2">
-
-            <Briefcase size={20} className="text-blue-500" />
-            <p style={mutedStyle}>Holdings</p>
-
-          </div>
-
-          <h2 className="text-2xl font-bold" style={titleStyle}>{summary?.TotalHoldings || 0}</h2>
-
-        </div>
-
-        <div className="p-5 border rounded-2xl" style={panelStyle}>
-
-          <div className="flex items-center gap-3 mb-2">
-            <ArrowLeftRight size={20} className="text-green-500" />
-            <p style={mutedStyle}>Purchase & Sales</p>
-          </div>
-
-          <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalPurchasesAndSales || 0}</h2>
-
-        </div>
-
-
-        <div className="p-5 border rounded-2xl" style={panelStyle}>
-
-          <div className="flex items-center gap-3 mb-2">
-
-            <Landmark size={20} className="text-purple-500" />
-            <p style={mutedStyle}>Contributions</p>
-
-          </div>
-
-          <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalContributionsAndWithdrawals || 0}</h2>
-
-        </div>
-
-        <div className="p-5 border rounded-2xl" style={panelStyle}>
-
-          <div className="flex items-center gap-3 mb-2">
-
-            <TrendingUp size={20} className="text-green-500" />
-            <p style={mutedStyle}>Dividends</p>
-
-          </div>
-
-          <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalDividendsAndWithholdingTax || 0}</h2>
-
-        </div>
-
-        <div className="p-5 border rounded-2xl" style={panelStyle}>
-
-          <div className="flex items-center gap-3 mb-2">
-
-            <CreditCard size={20} className="text-orange-500" />
-            <p style={mutedStyle}>Expenses</p>
-
-          </div>
-
-          <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalTransactionExpenses || 0}</h2>
-
-        </div>
-      </div>
-
-
-      }
-
-
-      <div className="mt-8">
-
-        {snapshot && (
-          <div className="mt-8 p-6 border rounded-2xl" style={panelStyle}>
-            <div className="flex flex-col gap-5 lg:items-start lg:justify-between">
-              <div>
-                <div className="flex items-center gap-3">
-                  <span className="w-3 h-3 rounded-full bg-green-500" />
-                  <h2 className="text-xl font-bold" style={titleStyle}>
-                    Smart Portfolio Snapshot
-                  </h2>
+                  <p className="mt-2 text-sm" style={mutedStyle}>
+                    All portfolio insights are generated
+                    from one verified canonical snapshot.
+                  </p>
 
                 </div>
 
-                <p className="mt-2 text-sm" style={mutedStyle}>
-                  All portfolio insights are generated
-                  from one verified canonical snapshot.
-                </p>
+                <span className="self-start px-3 py-1 rounded-full text-sm font-semibold bg-green-100/10 text-green-500">
+                  Verified
+                </span>
+              </div>
+
+              <div className="mt-5 p-4 rounded-xl" style={{ background: "var(--surface-inset)" }}>
+                <p className="text-sm mb-2" style={dimStyle}>SHA-256 Snapshot ID</p>
+                <p className="font-mono text-sm break-all" style={dimStyle}>{snapshot.snapshot_id}</p>
 
               </div>
 
-              <span className="self-start px-3 py-1 rounded-full text-sm font-semibold bg-green-100/10 text-green-500">
-                Verified
-              </span>
-            </div>
-
-            <div className="mt-5 p-4 rounded-xl" style={{ background: "var(--surface-inset)" }}>
-              <p className="text-sm mb-2" style={dimStyle}>SHA-256 Snapshot ID</p>
-              <p className="font-mono text-sm break-all" style={dimStyle}>{snapshot.snapshot_id}</p>
+              <button
+                type="button"
+                onClick={downloadSnapshot}
+                className="mt-5 w-full px-5 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition">
+                Download Portfolio Summary
+              </button>
 
             </div>
 
-            <button
-              type="button"
-              onClick={downloadSnapshot}
-              className="mt-5 w-full px-5 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition">
-              Download Portfolio Summary
+
+          )}
+
+
+        </div>
+
+
+        {summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 mb-7">
+
+          <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+            <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
+              Trading Activity
+            </h2>
+
+            <div className="flex justify-center w-full h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={GetTradingActivity}>
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" fill={colours[1]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+          </div>
+
+          <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+            <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
+              Cash flow
+            </h2>
+
+            <div className="flex justify-center w-full h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={GetCashFlow}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={50}
+                    outerRadius={80}>
+
+                    {GetCashFlow.map((item, index) => (<Cell key={index} fill={colours[index % colours.length]} />))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+          </div>
+
+          <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+            <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
+              Dividend Income
+            </h2>
+
+            <div className="flex justify-center w-full h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={GetDividendIncome}>
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+
+                  <Line dataKey="gross_dividend" stroke={colours[1]} />
+                  <Line dataKey="withholding_tax" stroke="#EF4444" />
+                  <Line dataKey="net_dividend" stroke={colours[2]} />
+
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+        </div>
+
+        }
+
+
+        {summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 ">
+
+
+
+          <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+            <h2 className="text-xl font-bold text-center" style={titleStyle}>
+              Assert allocation
+            </h2>
+
+            <div className="flex justify-center w-full h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={summaGetTheTopAllocationImportPDFry}
+                    dataKey="weight_percentage"
+                    innerRadius={50}
+                    outerRadius={80}>
+                    {summaGetTheTopAllocationImportPDFry.map((item, index) => (<Cell key={index} fill={colours[index % colours.length]} />))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+          </div>
+
+          <div className="col-span-2 min-w-0 border rounded-2xl p-4" style={panelStyle}>
+            <h2 className="text-xl font-bold text-center" style={titleStyle}>
+              Top Holdings
+            </h2>
+
+            {GetTheTopHoldingsImportPDF.map((item, index) =>
+              <div key={index} className="mb-4">
+                <div className="flex justify-between mb-1">
+                  <p style={mutedStyle}>
+                    {item.name}
+                  </p>
+                  <p style={mutedStyle}>
+                    R{item.value}
+                  </p>
+                </div>
+
+
+                <div className="w-full rounded-full h-3" style={{ background: 'var(--surface-inset)' }}>
+                  <div className="h-3 rounded-full"
+                    style={{
+                      width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
+                      backgroundColor: colours[index % colours.length]
+                    }}>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        }
+
+
+        {summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-2 gap-8 mt-8">
+
+          <div className="p-6 border border-red-700 rounded-2xl">
+
+            <div className="flex items-center gap-2">
+              <TriangleAlert size={24} className="text-red-500"></TriangleAlert>
+              <h2 className="text-xl font-bold" style={{ color: 'var(--signal-negative)' }}>
+                Lowest Holding
+              </h2>
+            </div>
+
+            <p className="mb-5" style={mutedStyle}>
+              Your smallest holdings by weight in the portfolio
+            </p>
+            <div className="flex justify-between border rounded-xl p-4" style={panelStyle}>
+
+              <div>
+                <p className="text-xl font-bold" style={titleStyle}>{GetTheLowest?.name ?? "No holdings"}</p>
+              </div>
+
+              <div>
+                <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
+              </div>
+
+            </div>
+          </div>
+
+          <div className="p-6 border border-purple-500 rounded-2xl">
+
+            <div className="flex items-center gap-2">
+              <Bot size={24} className="text-purple-500"></Bot>
+              <h2 className="text-xl font-bold" style={titleStyle}>
+                AI Portfolio Assistant
+              </h2>
+            </div>
+
+            <p className="mb-5" style={mutedStyle}>
+              Ask questions about your portfolio and recivce AI-powered insights.
+            </p>
+
+            <button onClick={() => navigate(ROUTES.AI_CHAT)} className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold">
+              Go To Assistant
             </button>
 
-
-
           </div>
-        )}
 
+        </div>
 
+        }
+        
       </div>
-
-
-      <div className="grid grid-cols-2 gap-8">
-
-
-      </div>
-
-
-      {summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 mb-7">
-
-        <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-          <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-            Trading Activity
-          </h2>
-
-          <div className="flex justify-center w-full h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={GetTradingActivity}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill={colours[1]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-
-        </div>
-
-        <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-          <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-            Cash flow
-          </h2>
-
-          <div className="flex justify-center w-full h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={GetCashFlow}
-                  dataKey="value"
-                  nameKey="name"
-                  innerRadius={50}
-                  outerRadius={80}>
-
-                  {GetCashFlow.map((item, index) => (<Cell key={index} fill={colours[index % colours.length]} />))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-        </div>
-
-        <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-          <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-            Dividend Income
-          </h2>
-
-          <div className="flex justify-center w-full h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={GetDividendIncome}>
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-
-                <Line dataKey="gross_dividend" stroke={colours[1]} />
-                <Line dataKey="withholding_tax" stroke="#EF4444" />
-                <Line dataKey="net_dividend" stroke={colours[2]} />
-
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-      </div>
-
-      }
-
-
-      {summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 ">
-
-
-
-        <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-          <h2 className="text-xl font-bold text-center" style={titleStyle}>
-            Assert allocation
-          </h2>
-
-          <div className="flex justify-center w-full h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={summaGetTheTopAllocationImportPDFry}
-                  dataKey="weight_percentage"
-                  innerRadius={50}
-                  outerRadius={80}>
-                  {summaGetTheTopAllocationImportPDFry.map((item, index) => (<Cell key={index} fill={colours[index % colours.length]} />))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-
-        </div>
-
-        <div className="col-span-2 min-w-0 border rounded-2xl p-4" style={panelStyle}>
-          <h2 className="text-xl font-bold text-center" style={titleStyle}>
-            Top Holdings
-          </h2>
-
-          {GetTheTopHoldingsImportPDF.map((item, index) =>
-            <div key={index} className="mb-4">
-              <div className="flex justify-between mb-1">
-                <p style={mutedStyle}>
-                  {item.name}
-                </p>
-                <p style={mutedStyle}>
-                  R{item.value}
-                </p>
-              </div>
-
-
-              <div className="w-full rounded-full h-3" style={{ background: 'var(--surface-inset)' }}>
-                <div className="h-3 rounded-full"
-                  style={{
-                    width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
-                    backgroundColor: colours[index % colours.length]
-                  }}>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      }
-
-
-      {summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-2 gap-8 mt-8">
-
-        <div className="p-6 border border-red-700 rounded-2xl">
-
-          <div className="flex items-center gap-2">
-            <TriangleAlert size={24} className="text-red-500"></TriangleAlert>
-            <h2 className="text-xl font-bold" style={{ color: 'var(--signal-negative)' }}>
-              Lowest Holding
-            </h2>
-          </div>
-
-          <p className="mb-5" style={mutedStyle}>
-            Your smallest holdings by weight in the portfolio
-          </p>
-          <div className="flex justify-between border rounded-xl p-4" style={panelStyle}>
-
-            <div>
-              <p className="text-xl font-bold" style={titleStyle}>{GetTheLowest?.name ?? "No holdings"}</p>
-            </div>
-
-            <div>
-              <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
-            </div>
-
-          </div>
-        </div>
-
-        <div className="p-6 border border-purple-500 rounded-2xl">
-
-          <div className="flex items-center gap-2">
-            <Bot size={24} className="text-purple-500"></Bot>
-            <h2 className="text-xl font-bold" style={titleStyle}>
-              AI Portfolio Assistant
-            </h2>
-          </div>
-
-          <p className="mb-5" style={mutedStyle}>
-            Ask questions about your portfolio and recivce AI-powered insights.
-          </p>
-
-          <button onClick={() => navigate(ROUTES.AI_CHAT)} className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold">
-            Go To Assistant
-          </button>
-
-        </div>
-
-      </div>
-
-      }
-
     </div>
 
 
   )
-
-
 
 };
 
