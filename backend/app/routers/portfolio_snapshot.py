@@ -1,18 +1,29 @@
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.schemas.auth import UserResponse
-from app.repositories.portfolio_repository import PortfolioRepository
-from app.services.pdf_summary_service import get_summary_import_PDF,get_the_top_holdings_import_PDF,get_the_top_allocation_import_PDF,get_the_lowest_holdings_import_PDF,get_trading_activity_import_PDF,get_cash_flow_import_PDF,get_dividend_income_import_PDF
-from app.services.portfolio_snapshot_service import build_snapshot
-from fastapi.responses import StreamingResponse
-from app.services.portfolio_brief_service import generate_portfolio_brief
 from app.models.portfolio import Holdings
+from app.repositories.portfolio_repository import PortfolioRepository
 from app.routers.news import fetch_market_news, fetch_ticker_news
-from app.services.portfolio_analytics_service import (get_portfolio_analytics,)
-from app.services.portfolio_service import PortfolioService
+from app.schemas.auth import UserResponse
+from app.services.pdf_summary_service import (
+    get_cash_flow_import_PDF,
+    get_dividend_income_import_PDF,
+    get_summary_import_PDF,
+    get_the_lowest_holdings_import_PDF,
+    get_the_top_allocation_import_PDF,
+    get_the_top_holdings_import_PDF,
+    get_trading_activity_import_PDF,
+)
+from app.services.portfolio_analytics_service import (
+    get_portfolio_analytics,
+)
+from app.services.portfolio_brief_service import generate_portfolio_brief
+from app.services.portfolio_snapshot_service import build_snapshot
 
 router = APIRouter(prefix="/api/portfolio_snapshot", tags=["Portfolio Snapshot"])
 
@@ -112,7 +123,7 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
                     }
                 )
 
-        except Exception as error:
+        except Exception:
             print("Error getting news data")
 
 
@@ -133,7 +144,7 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
                 }
             )
 
-    except Exception as error:
+    except Exception:
         print("Error getting news data")
 
     snapshot = build_snapshot(

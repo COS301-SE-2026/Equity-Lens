@@ -1,11 +1,17 @@
 from uuid import UUID
+
 from sqlalchemy.orm import Session
+
 from app.models.portfolio import Holdings
-from app.services.indicator_service import (build_live_indicator_row,serialize_indicator_row,)
+from app.services.indicator_service import (
+    build_live_indicator_row,
+    serialize_indicator_row,
+)
 from app.services.instruments import resolve_known_instrument
 from app.services.portfolio_service import INVALID_TICKER_MARKERS
 from app.utils.market_cache import get_market_returns
 from app.utils.stock_cache import get_cached_price_histories
+
 
 def get_portfolio_analytics(db: Session, portfolio_id: UUID,):
     holdings = (db.query(Holdings).filter(Holdings.portfolio_id == portfolio_id).all())

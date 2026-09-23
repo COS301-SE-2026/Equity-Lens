@@ -17,12 +17,11 @@ from app.routers import (
     news,
     pdf_summary,
     portfolio,
+    portfolio_snapshot,
     watchlist,
 )
 from app.routers import market_data as market_data_router
 from app.schemas.responses import STATUS_ERROR_CODES
-from app.routers import portfolio_snapshot
-
 
 app = FastAPI(title="EquityLens API")
 
