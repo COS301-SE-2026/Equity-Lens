@@ -23,6 +23,23 @@ const readScopes = () => {
     return {};
   }};
 
+/** @param {Record<string, string|null>} scopes */
+const persistScopes = (scopes) => {
+  try {
+    window.localStorage.setItem(SCOPE_STORAGE_KEY, JSON.stringify(scopes));
+  } catch {
+    // storage blocked or full
+  }};
+
+/**
+ * @param {ChatMessage[]} list
+ * @param {ChatMessage} message
+ * @returns {ChatMessage[]}
+ */
+const upsert = (list, message) => (list.some((m) => m.id === message.id)
+  ? list.map((m) => (m.id === message.id ? message : m))
+  : [...list, message]);
+
 /**
  * @param {any} err
  * @returns {{text: string, retryAfter: number}}
@@ -58,7 +75,10 @@ const asAxiosError = async (response) => {
 export const ChatProvider = ({ children }) => {
   const [conversationId, setConversationId] = useState(/** @type {string|null} */ (null));
   const [messages, setMessages] = useState(/** @type {ChatMessage[]} */ ([]));
-  const [isThinking, setIsThinking] = useState(false);
+  const [viewKey, setViewKey] = useState(/** @type {string|null} */ (null));
+  const viewKeyRef = useRef(/** @type {string|null} */ (null));
+  const [busyKeys, setBusyKeys] = useState(() => /** @type {Set<string>} */ (new Set()));
+  const isThinking = viewKey !== null && busyKeys.has(viewKey);
   const [regeneratingId, setRegeneratingId] = useState(/** @type {number|string|null} */ (null));
   const [conversations, setConversations] = useState(/** @type {Conversation[]} */ ([]));
   /** @typedef {{id: string, fact: string, created_at?: string|null}} Memory */
@@ -69,6 +89,17 @@ export const ChatProvider = ({ children }) => {
   const [savedScopes] = useState(readScopes);
   const scopeByConversation = useRef(savedScopes);
 
+  /** @param {string|null} key */
+  const showChat = (key) => {
+    viewKeyRef.current = key;
+    setViewKey(key);};
+
+  /** @param {string} key @param {boolean} on */
+  const markBusy = (key, on) => setBusyKeys((prev) => {
+    const next = new Set(prev);
+    if (on) {next.add(key);} else {next.delete(key);}
+    return next;});
+
   useEffect(() => {
     api.get('/ai_chat/portfolios/')
       .then((res) => setPortfolios(res.data))
@@ -78,12 +109,9 @@ export const ChatProvider = ({ children }) => {
   useEffect(() => {
     if (!conversationId) {return;}
     scopeByConversation.current[conversationId] = portfolioId;
-    try {
-      window.localStorage.setItem(SCOPE_STORAGE_KEY, JSON.stringify(scopeByConversation.current));
-    } catch {
-      //storage blocked or full
-    }
+    persistScopes(scopeByConversation.current);
   }, [conversationId, portfolioId]);
+
 
   const refreshConversations = () =>
     api.get('/ai_chat/conversations/')
@@ -106,45 +134,6 @@ export const ChatProvider = ({ children }) => {
       })
       .catch(() => {});};
 
-  /** @param {string} rawText */
-  const sendMessage = (rawText) => {
-    if (isThinking)
-      {return;}
-    const text = rawText.trim();
-    if (!text) {
-      return;}
-    const userMessage = /** @type {ChatMessage} */ ({
-      id: Date.now(), role: 'user', text, at: new Date() });
-    setMessages((prev) => [...prev, userMessage]);
-    setIsThinking(true);
-
-    return api.post('/ai_chat/', { message: text, conversation_id: conversationId })
-      .then((res) => {
-        const responseMessage = /** @type {ChatMessage} */ ({
-          id: Date.now() + 1,
-          role: 'assistant',
-          text: res.data.reply,
-          at: new Date(),
-          savedFacts: res.data.saved_facts ?? []});
-        setConversationId(res.data.conversation_id);
-        setMessages((prev) => [...prev, responseMessage]);
-        window.setTimeout(() => {
-          refreshConversations();
-          refreshMemories();
-        }, 2500);
-        return refreshConversations().then(() => 0);})
-      .catch((err) => {
-        const { text: errorText, retryAfter } = readError(err);
-        const errorMessage = /** @type {ChatMessage} */ ({
-          id: Date.now() + 1,
-          role: 'assistant',
-          text: errorText,
-          at: new Date(),
-          failed: true,});
-        setMessages((prev) => [...prev, errorMessage]);
-        return retryAfter;})
-      .finally(() => setIsThinking(false));};
-
 
   /**
    * @param {string} rawText
@@ -158,17 +147,33 @@ export const ChatProvider = ({ children }) => {
 
   /**
    * @param {string} text
-   * @returns {Promise<number>} 
+   * @returns {Promise<number>}
    */
   const runStream = async (text) => {
     const stamp = Date.now();
-    const userId = `u-${stamp}`;
-    const assistantId = `a-${stamp}`;
+    const startedIn = conversationId;
+    const scope = portfolioId;
+    const streamKey = startedIn ?? `pending-${stamp}`;
+    const onScreen = () => viewKeyRef.current === streamKey;
 
-    setMessages((prev) => [...prev, /** @type {ChatMessage} */ ({
-      id: userId, role: 'user', text, at: new Date() })]);
-    setIsThinking(true);
-    let opened = false;
+    const userMessage = /** @type {ChatMessage} */ ({
+      id: `u-${stamp}`, role: 'user', text, at: new Date() });
+    let replyText = '';
+    let replyAt = new Date();
+    let replyStatus = /** @type {'none'|'streaming'|'done'|'failed'} */ ('none');
+
+    const draw = () => {
+      if (!onScreen()) {return;}
+      setMessages((prev) => {
+        const next = upsert(prev, userMessage);
+        if (replyStatus === 'none') {return next;}
+        return upsert(next, /** @type {ChatMessage} */ ({
+          id: `a-${stamp}`, role: 'assistant', text: replyText, at: replyAt,
+          streaming: replyStatus === 'streaming', failed: replyStatus === 'failed' }));});};
+
+    if (!startedIn) {showChat(streamKey);}
+    markBusy(streamKey, true);
+    draw();
 
     try {
       const session = await fetchAuthSession();
@@ -178,7 +183,7 @@ export const ChatProvider = ({ children }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` }, body: JSON.stringify({ message: text, conversation_id: conversationId, portfolio_id: portfolioId }) });
+          Authorization: `Bearer ${token}` }, body: JSON.stringify({ message: text, conversation_id: startedIn, portfolio_id: scope }) });
 
       if (!response.ok) {throw await asAxiosError(response);}
 
@@ -200,21 +205,25 @@ export const ChatProvider = ({ children }) => {
 
         for (const frame of frames) {
           if (!frame.startsWith('data: ')) {continue;}
+
           const event = JSON.parse(frame.slice(6));
 
           if (event.type === 'text') {
-            if (!opened) {
-              opened = true;
-              setMessages((prev) => [...prev, /** @type {ChatMessage} */ ({
-                id: assistantId, role: 'assistant', text: '', at: new Date(), streaming: true })]);
-            }
-            setMessages((prev) => prev.map((m) =>
-              (m.id === assistantId ? { ...m, text: m.text + event.value } : m)));
+            if (replyStatus === 'none') {replyAt = new Date();}
+            replyStatus = 'streaming';
+            replyText += event.value;
+            draw();
           } else if (event.type === 'done') {
-            setConversationId(event.conversation_id);
-            setIsThinking(false);
-            setMessages((prev) => prev.map((m) =>
-              (m.id === assistantId ? { ...m, streaming: false } : m)));
+            if (onScreen()) {
+              showChat(event.conversation_id);
+              setConversationId(event.conversation_id);
+            } else if (!startedIn) {
+              scopeByConversation.current[event.conversation_id] = scope;
+              persistScopes(scopeByConversation.current);
+            }
+            if (replyStatus === 'streaming') {replyStatus = 'done';}
+            markBusy(streamKey, false);
+            draw();
           } else if (event.type === 'error') {
             throw new Error(event.value);
           }
@@ -226,24 +235,19 @@ export const ChatProvider = ({ children }) => {
       return 0;
     } catch (err) {
       const { text: errorText, retryAfter } = readError(err);
-      const message = /** @type {ChatMessage} */ ({
-        id: opened ? assistantId : `a-${stamp}-failed`,
-        role: 'assistant',
-        text: errorText,
-        at: new Date(),
-        failed: true });
-      setMessages((prev) => (opened
-        ? prev.map((m) => (m.id === assistantId ? message : m))
-        : [...prev, message]));
+      replyStatus = 'failed';
+      replyText = errorText;
+      replyAt = new Date();
+      draw();
       return retryAfter;
     } finally {
-      setIsThinking(false);
-      setMessages((prev) => prev.map((m) =>
-        (m.id === assistantId ? { ...m, streaming: false } : m)));
+      markBusy(streamKey, false);
+      if (replyStatus === 'streaming') {
+        replyStatus = 'done';
+        draw();
+      }
     }};
 
-
-    
   /** @param {ChatMessage} message */
   const regenerate = (message) => {
     if (isThinking || regeneratingId !== null) {
@@ -255,12 +259,15 @@ export const ChatProvider = ({ children }) => {
     if (!priorUser) {
       return;}
 
+    const key = viewKeyRef.current;
     const droppedTail = messages.slice(index + 1);
     setMessages((prev) => prev.slice(0, index + 1));
     setRegeneratingId(message.id);
 
     return api.post('/ai_chat/', { message: priorUser.text, conversation_id: conversationId, portfolio_id: portfolioId })
       .then((res) => {
+        if (viewKeyRef.current !== key) {return refreshConversations().then(() => 0);}
+        showChat(res.data.conversation_id);
         setConversationId(res.data.conversation_id);
         setMessages((prev) => prev.map((m) =>
           (m.id === message.id
@@ -269,18 +276,24 @@ export const ChatProvider = ({ children }) => {
         return refreshConversations().then(() => 0);})
       .catch((err) => {
         const { text: errorText, retryAfter } = readError(err);
-        setMessages((prev) => [
-          ...prev.map((m) => (m.id === message.id ? { ...m, text: errorText, failed: true } : m)),
-          ...droppedTail,]);
+        if (viewKeyRef.current === key) {
+          setMessages((prev) => [
+            ...prev.map((m) => (m.id === message.id ? { ...m, text: errorText, failed: true } : m)),
+            ...droppedTail,]);
+        }
         return retryAfter;})
-      .finally(() => setRegeneratingId(null));};
+      .finally(() => setRegeneratingId(null));};   
+
 
   /** @param {Conversation} convo */
   const loadConversation = (convo) => {
+    showChat(convo.id);
     setConversationId(convo.id);
     setPortfolioId(scopeByConversation.current[convo.id] ?? null);
+    setMessages([]);
     return api.get(`/ai_chat/conversations/${convo.id}/messages/`)
       .then((res) => {
+        if (viewKeyRef.current !== convo.id) {return;}
         setMessages(
           /** @type {ApiMessage[]} */ (res.data).map((m) => ({
             id: m.id,
@@ -291,6 +304,7 @@ export const ChatProvider = ({ children }) => {
       .catch(() => {});};
 
   const startNewChat = () => {
+    showChat(null);
     setConversationId(null);
     setPortfolioId(null);
     setMessages([]);};
@@ -312,7 +326,8 @@ export const ChatProvider = ({ children }) => {
     return api.delete(`/ai_chat/conversations/${convoId}/`)
       .then(() => {
         setConversations((prev) => prev.filter((c) => c.id !== convoId));
-        if (conversationId === convoId) {
+        if (viewKeyRef.current === convoId) {
+          showChat(null);
           setConversationId(null);
           setMessages([]);
         }})
@@ -330,7 +345,6 @@ export const ChatProvider = ({ children }) => {
         portfolios,
         portfolioId,
         setPortfolioId,
-        sendMessage,
         sendMessageStreaming,
         regenerate,
         loadConversation,
