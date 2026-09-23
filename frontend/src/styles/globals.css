@@ -14,39 +14,38 @@
   color-scheme: dark;
 
   --surface-base: #000000;
-  --surface-raised: #0D0D0D;
-  --surface-card: #0A0A0A;
+  --surface-raised: #0d0d0d;
+  --surface-card: #0a0a0a;
   --surface-elevated: #131313;
   --surface-inset: #000000;
   --surface-hover: rgba(255, 255, 255, 0.05);
 
-  --border-subtle: rgba(255, 255, 255, 0.10);
+  --border-subtle: rgba(255, 255, 255, 0.1);
   --border-mid: rgba(255, 255, 255, 0.16);
   --border-strong: rgba(255, 255, 255, 0.22);
   --border-divider: rgba(255, 255, 255, 0.06);
-  --border-accent: #FF6A00;
-
+  --border-accent: #ff6a00;
 
   --text-primary: rgba(255, 255, 255, 0.95);
   --text-secondary: rgba(255, 255, 255, 0.72);
   --text-dim: rgba(255, 255, 255, 0.58);
-  --text-disabled: rgba(255, 255, 255, 0.30);
+  --text-disabled: rgba(255, 255, 255, 0.3);
   --text-ghost: rgba(255, 255, 255, 0.54);
 
-  --accent-primary: #FF6A00;
+  --accent-primary: #ff6a00;
   --accent-primary-rgb: 255, 106, 0;
-  --accent-hover: #E65E00;
-  --accent-subtle: rgba(255, 106, 0, 0.10);
+  --accent-hover: #e65e00;
+  --accent-subtle: rgba(255, 106, 0, 0.1);
 
-  --accent-light: #FF9950;
+  --accent-light: #ff9950;
   --text-on-accent: #000000;
 
-  --signal-positive: #00D97E;
+  --signal-positive: #00d97e;
   --signal-positive-rgb: 0, 217, 126;
   --signal-positive-bg: rgba(0, 217, 126, 0.08);
   --signal-positive-border: rgba(0, 217, 126, 0.14);
 
-  --signal-negative: #FF5C5C;
+  --signal-negative: #ff5c5c;
   --signal-negative-rgb: 255, 92, 92;
   --signal-negative-bg: rgba(255, 92, 92, 0.08);
   --signal-negative-border: rgba(255, 92, 92, 0.14);
@@ -70,12 +69,12 @@
 
   --glass-bg: rgba(0, 0, 0, 0.85);
   --glass-border: rgba(255, 255, 255, 0.14);
-  --glass-bg-elevated: rgba(0, 0, 0, 0.90);
+  --glass-bg-elevated: rgba(0, 0, 0, 0.9);
   --glass-border-elevated: rgba(255, 255, 255, 0.18);
   --glass-blur: 24px;
   --glass-highlight: rgba(255, 255, 255, 0.22);
-  --glass-hover: rgba(0, 0, 0, 0.90);
-  --scrim: rgba(0, 0, 0, 0.60);
+  --glass-hover: rgba(0, 0, 0, 0.9);
+  --scrim: rgba(0, 0, 0, 0.6);
 
   --bg-primary: var(--surface-base);
   --bg-secondary: var(--surface-raised);
@@ -89,7 +88,7 @@
   --chart-axis-text: var(--text-dim);
   --chart-tooltip-bg: var(--surface-elevated);
 
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 20px rgba(0, 0, 0, 0.20);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 20px rgba(0, 0, 0, 0.2);
   --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.35);
   --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.55);
 
@@ -111,55 +110,40 @@
   --text-page-secondary: rgba(255, 255, 255, 0.68);
 }
 
-[data-theme="light"] {
-  color-scheme: light;
+[data-theme='light'] {
+  --surface-base: #fafaf8;
+  --surface-raised: #ffffff;
+  --surface-card: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-inset: #f3f2ee;
+  --surface-hover: rgba(20, 16, 10, 0.025);
 
-  --surface-base: #FFFFFF;
-  --surface-raised: #F4F4F2;
-  --surface-card: #FFFFFF;
-  --surface-elevated: #FFFFFF;
-  --surface-inset: #F4F4F2;
-  --surface-hover: rgba(0, 0, 0, 0.045);
+  --border-subtle: #e9e6e0;
+  --border-mid: #d9d5cc;
+  --border-strong: rgba(20, 16, 10, 0.22);
+  --border-divider: rgba(20, 16, 10, 0.06);
 
-  --border-subtle: rgba(0, 0, 0, 0.10);
-  --border-mid: rgba(0, 0, 0, 0.16);
-  --border-strong: rgba(0, 0, 0, 0.24);
-  --border-divider: rgba(0, 0, 0, 0.07);
-  --border-accent: #B34700;
+  --text-primary: #2b2118;
+  --text-secondary: #6b7280;
+  --text-dim: #9aa0ab;
+  --text-disabled: #c3c7cf;
+  --text-ghost: #b8bcc5;
 
-  --text-primary: rgba(0, 0, 0, 0.90);
-  --text-secondary: rgba(0, 0, 0, 0.66);
-  --text-dim: rgba(0, 0, 0, 0.54);
-  --text-disabled: rgba(0, 0, 0, 0.30);
-  --text-ghost: rgba(0, 0, 0, 0.50);
+  --accent-subtle: rgba(255, 106, 0, 0.1);
+  --signal-negative-bg: rgba(229, 72, 77, 0.08);
+  --signal-negative-border: rgba(229, 72, 77, 0.14);
 
-  --accent-primary: #B34700;
-  --accent-primary-rgb: 179, 71, 0;
-  --accent-hover: #8F3900;
-  --accent-subtle: rgba(179, 71, 0, 0.10);
-  --accent-light: #E06A1F;
-  --text-on-accent: #FFFFFF;
+  --glass-bg: rgba(255, 255, 255, 0.78);
+  --glass-border: rgba(20, 16, 10, 0.06);
+  --glass-bg-elevated: rgba(255, 255, 255, 0.9);
+  --glass-border-elevated: rgba(20, 16, 10, 0.1);
+  --glass-highlight: rgba(255, 255, 255, 0.6);
+  --glass-hover: rgba(20, 16, 10, 0.04);
+  --scrim: rgba(20, 16, 10, 0.35);
 
-  --signal-positive: #00875A;
-  --signal-positive-rgb: 0, 135, 90;
-  --signal-positive-bg: rgba(0, 135, 90, 0.08);
-  --signal-positive-border: rgba(0, 135, 90, 0.18);
-
-  --signal-negative: #C62828;
-  --signal-negative-rgb: 198, 40, 40;
-  --signal-negative-bg: rgba(198, 40, 40, 0.08);
-  --signal-negative-border: rgba(198, 40, 40, 0.18);
-
-  --signal-warning: #9A5B00;
-  --signal-warning-bg: rgba(154, 91, 0, 0.10);
-  --signal-warning-border: rgba(154, 91, 0, 0.20);
-
-  --signal-info: #1D5FBF;
-  --signal-info-bg: rgba(29, 95, 191, 0.08);
-  --signal-info-border: rgba(29, 95, 191, 0.18);
-
-  --chart-grid: rgba(0, 0, 0, 0.08);
-  --chart-tooltip-bg: #FFFFFF;
+  --chart-grid: #eae7e1;
+  --chart-axis-text: #9aa0ab;
+  --chart-tooltip-bg: #ffffff;
 
   --glass-bg: rgba(255, 255, 255, 0.88);
   --glass-border: rgba(0, 0, 0, 0.10);
@@ -170,10 +154,10 @@
   --scrim: rgba(0, 0, 0, 0.40);
 
   --text-page: rgba(0, 0, 0, 0.88);
-  --text-page-secondary: rgba(0, 0, 0, 0.60);
+  --text-page-secondary: rgba(0, 0, 0, 0.6);
 
   --shadow-card: 0 1px 2px rgba(20, 16, 10, 0.04), 0 2px 10px rgba(20, 16, 10, 0.05);
-  --shadow-elevated: 0 8px 24px rgba(20, 16, 10, 0.10);
+  --shadow-elevated: 0 8px 24px rgba(20, 16, 10, 0.1);
   --shadow-modal: 0 24px 64px rgba(20, 16, 10, 0.14);
 }
 
@@ -181,18 +165,28 @@
   --accent-subtle: rgba(255, 106, 0, 0.08);
 }
 
-.recharts-cartesian-axis-tick-value {fill: var(--chart-axis-text);}
+.recharts-cartesian-axis-tick-value {
+  fill: var(--chart-axis-text);
+}
 .recharts-cartesian-axis-line,
-.recharts-cartesian-axis-tick-line {stroke: var(--border-mid);}
-.recharts-cartesian-grid line {stroke: var(--chart-grid);}
-.recharts-legend-item-text {color: var(--text-secondary) !important;}
+.recharts-cartesian-axis-tick-line {
+  stroke: var(--border-mid);
+}
+.recharts-cartesian-grid line {
+  stroke: var(--chart-grid);
+}
+.recharts-legend-item-text {
+  color: var(--text-secondary) !important;
+}
 .recharts-default-tooltip {
   background: var(--chart-tooltip-bg) !important;
-  border: 1px solid var(--border-mid)  !important;
-  border-radius: 8px;  
-   color: var(--text-primary) !important;
+  border: 1px solid var(--border-mid) !important;
+  border-radius: 8px;
+  color: var(--text-primary) !important;
 }
-.recharts-tooltip-item {color: var(--text-primary) !important;}
+.recharts-tooltip-item {
+  color: var(--text-primary) !important;
+}
 
 body {
   font-family: var(--font-primary);
@@ -201,7 +195,8 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color var(--duration-theme) var(--ease-standard),
+  transition:
+    background-color var(--duration-theme) var(--ease-standard),
     color var(--duration-theme) var(--ease-standard);
 }
 
@@ -210,9 +205,12 @@ body {
   border: 1px solid var(--glass-border);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
-  box-shadow: var(--shadow-card), inset 0 1px 0 var(--glass-highlight);
+  box-shadow:
+    var(--shadow-card),
+    inset 0 1px 0 var(--glass-highlight);
   transform: translateZ(0);
-  transition: background-color var(--duration-theme) var(--ease-standard),
+  transition:
+    background-color var(--duration-theme) var(--ease-standard),
     border-color var(--duration-theme) var(--ease-standard),
     box-shadow var(--duration-theme) var(--ease-standard);
 }
@@ -226,16 +224,19 @@ body {
   border: 1px solid var(--glass-border-elevated);
   backdrop-filter: blur(var(--glass-blur));
   -webkit-backdrop-filter: blur(var(--glass-blur));
-  box-shadow: var(--shadow-modal), inset 0 1px 0 var(--glass-highlight);
+  box-shadow:
+    var(--shadow-modal),
+    inset 0 1px 0 var(--glass-highlight);
   transform: translateZ(0);
-  transition: background-color var(--duration-theme) var(--ease-standard),
+  transition:
+    background-color var(--duration-theme) var(--ease-standard),
     border-color var(--duration-theme) var(--ease-standard),
     box-shadow var(--duration-theme) var(--ease-standard);
 }
 
-
 .glass-control {
-  transition: background-color var(--duration-fast) var(--ease-standard),
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
     color var(--duration-fast) var(--ease-standard);
 }
 .glass-control:hover {
@@ -277,7 +278,8 @@ body {
 .sidebar-nav-item {
   color: var(--text-secondary);
   background: transparent;
-  transition: background-color var(--duration-fast) var(--ease-standard),
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
     color var(--duration-fast) var(--ease-standard),
     border-color var(--duration-fast) var(--ease-standard);
 }
@@ -297,7 +299,9 @@ body {
 }
 
 .pressable {
-  transition: transform var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
+  transition:
+    transform var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
 }
 .pressable:active {
   transform: scale(0.97);
@@ -314,7 +318,8 @@ body {
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--ease-standard),
+  transition:
+    background-color var(--duration-fast) var(--ease-standard),
     color var(--duration-fast) var(--ease-standard),
     transform var(--duration-fast) var(--ease-standard);
 }
@@ -325,13 +330,15 @@ body {
 .icon-button:active {
   transform: scale(0.93);
 }
-.icon-button[aria-pressed="true"] {
+.icon-button[aria-pressed='true'] {
   color: var(--accent-primary);
 }
 
 .topbar-text-action {
   color: var(--text-secondary);
-  transition: color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
 }
 .topbar-text-action:hover {
   color: var(--text-primary);
@@ -362,7 +369,9 @@ body {
 }
 
 .dashboard-highlight {
-  transition: box-shadow 300ms ease-in-out, background-color 300ms ease-in-out;
+  transition:
+    box-shadow 300ms ease-in-out,
+    background-color 300ms ease-in-out;
   box-shadow: inset 0 0 0 3px transparent;
 }
 .dashboard-highlight.is-active {
@@ -376,8 +385,12 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

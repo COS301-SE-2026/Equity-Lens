@@ -1,22 +1,22 @@
-import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
-import useForm from '../../hooks/useForm';
-import FormInput from '../../components/forms/FormInput/FormInput';
-import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
-import Button from '../../components/common/Button/Button';
-import { validateEmail } from '../../utils/validators';
-import { ROUTES } from '../../utils/constants';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 
-const validate = (values) => 
-  {
+import Button from '../../components/common/Button/Button';
+import FormInput from '../../components/forms/FormInput/FormInput';
+import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
+import useAuth from '../../hooks/useAuth';
+import useForm from '../../hooks/useForm';
+import { ROUTES } from '../../utils/constants';
+import { validateEmail } from '../../utils/validators';
+
+const validate = (values) => {
   const errors = {};
   const emailError = validateEmail(values.email);
   if (emailError) errors.email = emailError;
   if (!values.password) errors.password = 'Password required';
   return errors;
-  };
+};
 
 export const Card = ({ title, subtitle, serverError, children }) => (
   <div className="glass-surface-elevated rounded-2xl p-8">
@@ -26,7 +26,10 @@ export const Card = ({ title, subtitle, serverError, children }) => (
     </div>
 
     {serverError && (
-      <div className="mb-6 p-3 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] text-[var(--color-danger)] text-sm" role="alert">
+      <div
+        className="mb-6 p-3 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] text-[var(--color-danger)] text-sm"
+        role="alert"
+      >
         {serverError}
       </div>
     )}
@@ -35,8 +38,7 @@ export const Card = ({ title, subtitle, serverError, children }) => (
   </div>
 );
 
-const Login = () => 
-  {
+const Login = () => {
   const { login, submitMFACode, activateTOTP } = useAuth();
   const navigate = useNavigate();
 
@@ -47,32 +49,33 @@ const Login = () =>
   const [totpData, setTotpData] = useState({ secret: null, uri: null });
   const [email, setEmail] = useState('');
 
-  useEffect(() => 
-    {
+  useEffect(() => {
     const storedErr = sessionStorage.getItem('login_error');
-    if (storedErr) 
-      {
+    if (storedErr) {
       setServerError(storedErr);
       sessionStorage.removeItem('login_error');
     }
   }, []);
 
-  const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm({ email: '', password: '' }, validate);
+  const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm(
+    { email: '', password: '' },
+    validate,
+  );
 
-  const handleLoginSubmit = async (formValues) => 
-    {
+  const handleLoginSubmit = async (formValues) => {
     sessionStorage.removeItem('login_error');
     setServerError(null);
     setEmail(formValues.email);
-    
-    try 
-    {
+
+    try {
       const result = await login(formValues.email, formValues.password);
 
-      if (result?.challenge === 'MFA_SETUP') 
-        {
+      if (result?.challenge === 'MFA_SETUP') {
         const secret = result.totpSetupDetails?.sharedSecret;
-        setTotpData({ secret, uri: `otpauth://totp/EquityLens:${encodeURIComponent(formValues.email)}?secret=${secret}&issuer=EquityLens` });
+        setTotpData({
+          secret,
+          uri: `otpauth://totp/EquityLens:${encodeURIComponent(formValues.email)}?secret=${secret}&issuer=EquityLens`,
+        });
         setView('setup-qr');
         return;
       }
@@ -83,44 +86,32 @@ const Login = () =>
       }
 
       setTimeout(() => navigate(ROUTES.DASHBOARD, { replace: true }), 700);
-    }
-      catch
-    {
+    } catch {
       const msg = 'Incorrect email or password';
       sessionStorage.setItem('login_error', msg);
       setServerError(msg);
     }
   };
 
-  const handleMfaSubmit = async (actionType) => 
-    {
-    if (mfaCode.length !== 6) 
-      {
-        return;
-      }
-    
+  const handleMfaSubmit = async (actionType) => {
+    if (mfaCode.length !== 6) {
+      return;
+    }
+
     setIsMfaLoading(true);
     setServerError(null);
-    
-    try 
-    {
-      if (actionType === 'verify') 
-      {
+
+    try {
+      if (actionType === 'verify') {
         await submitMFACode(mfaCode);
-      }
-      else
-      {
+      } else {
         await activateTOTP(mfaCode);
       }
       setTimeout(() => navigate(ROUTES.DASHBOARD, { replace: true }), 700);
-    }
-      catch (err)
-    {
+    } catch (err) {
       setServerError(err.message || 'Code invalid');
       setMfaCode('');
-    } 
-      finally 
-    {
+    } finally {
       setIsMfaLoading(false);
     }
   };
@@ -134,7 +125,6 @@ const Login = () =>
         value={mfaCode}
         onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, ''))}
         placeholder="000000"
-        autoFocus
         className="w-full text-center tracking-[0.3em] text-2xl p-3 rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)] text-[var(--text-primary)] font-mono outline-none focus:border-[var(--accent-primary)] focus:ring-1 focus:ring-[var(--accent-primary)]"
       />
       <Button
@@ -146,10 +136,13 @@ const Login = () =>
       >
         {buttonText}
       </Button>
-      
+
       {view === 'setup-verify' && (
         <button
-          onClick={() => { setMfaCode(''); setView('setup-qr'); }}
+          onClick={() => {
+            setMfaCode('');
+            setView('setup-qr');
+          }}
           className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] text-center transition-colors"
         >
           Back to QR code
@@ -160,7 +153,11 @@ const Login = () =>
 
   if (view === 'mfa') {
     return (
-      <Card title="Two-factor authentication" subtitle="Enter your 6-digit code." serverError={serverError}>
+      <Card
+        title="Two-factor authentication"
+        subtitle="Enter your 6-digit code."
+        serverError={serverError}
+      >
         {renderMfaInput('Verify', 'verify')}
       </Card>
     );
@@ -194,7 +191,15 @@ const Login = () =>
             </div>
           </details>
 
-          <Button variant="primary" fullWidth onClick={() => { setMfaCode(''); setView('setup-verify'); }} disabled={!totpData.secret}>
+          <Button
+            variant="primary"
+            fullWidth
+            onClick={() => {
+              setMfaCode('');
+              setView('setup-verify');
+            }}
+            disabled={!totpData.secret}
+          >
             Continue
           </Button>
         </div>
@@ -204,14 +209,22 @@ const Login = () =>
 
   if (view === 'setup-verify') {
     return (
-      <Card title="Verify your authenticator" subtitle="Enter the 6-digit code your authenticator app is showing." serverError={serverError}>
+      <Card
+        title="Verify your authenticator"
+        subtitle="Enter the 6-digit code your authenticator app is showing."
+        serverError={serverError}
+      >
         {renderMfaInput('Activate MFA', 'setup')}
       </Card>
     );
   }
 
   return (
-    <Card title="Welcome back" subtitle="Sign in to your EquityLens account" serverError={serverError}>
+    <Card
+      title="Welcome back"
+      subtitle="Sign in to your EquityLens account"
+      serverError={serverError}
+    >
       <form onSubmit={handleSubmit(handleLoginSubmit)} noValidate aria-label="Login form">
         <div className="flex flex-col gap-5">
           <FormInput
@@ -250,7 +263,10 @@ const Login = () =>
       </form>
       <p className="mt-6 text-center text-sm text-[var(--text-secondary)]">
         Don&apos;t have an account?{' '}
-        <Link to={ROUTES.REGISTER} className="text-[var(--accent-primary)] hover:underline font-medium transition-all">
+        <Link
+          to={ROUTES.REGISTER}
+          className="text-[var(--accent-primary)] hover:underline font-medium transition-all"
+        >
           Create one
         </Link>
       </p>

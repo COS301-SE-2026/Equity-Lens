@@ -8,7 +8,6 @@ const SIZE_CLASS = {
 };
 const STYLE = { border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' };
 
-
 /**
  * @param {{
  *   to?: string,
@@ -22,7 +21,17 @@ const STYLE = { border: '1px solid var(--border-subtle)', color: 'var(--text-sec
  *   disabled?: boolean,
  * }} props
  */
-const SecondaryButton = ({ to, onClick, icon, trailing, expanded, size = 'md', className = '', children, disabled = false }) => {
+const SecondaryButton = ({
+  to,
+  onClick,
+  icon,
+  trailing,
+  expanded,
+  size = 'md',
+  className = '',
+  children,
+  disabled = false,
+}) => {
   const classes = `${BASE_CLASS} ${SIZE_CLASS[size]} ${className}`.trim();
 
   if (to) {
@@ -36,7 +45,14 @@ const SecondaryButton = ({ to, onClick, icon, trailing, expanded, size = 'md', c
   }
 
   return (
-    <button type="button" onClick={onClick} aria-expanded={expanded} disabled={disabled} className={classes} style={STYLE}>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={expanded}
+      disabled={disabled}
+      className={classes}
+      style={STYLE}
+    >
       {icon}
       {children}
       {trailing}

@@ -1,6 +1,7 @@
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
-import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+
 import { ROUTES } from '../../../utils/constants';
 
 const navItems = [
@@ -9,7 +10,7 @@ const navItems = [
   { label: 'Analytics', to: ROUTES.ANALYTICS },
   { label: 'News', to: ROUTES.NEWS },
   { label: 'AI Assistant', to: ROUTES.AI_CHAT },
-  { label: 'Settings', to: ROUTES.SETTINGS},
+  { label: 'Settings', to: ROUTES.SETTINGS },
   { label: 'Help', to: ROUTES.HELP },
 ];
 
@@ -27,13 +28,18 @@ const Sidebar = ({ open, onClose }) => {
     /** @param {MouseEvent} e */
     const handleClick = (e) => {
       const target = /** @type {HTMLElement} */ (e.target);
-      if (wrapperRef.current && !wrapperRef.current.contains(target) && !target.closest('[data-nav-trigger]')) {
+      if (
+        wrapperRef.current &&
+        !wrapperRef.current.contains(target) &&
+        !target.closest('[data-nav-trigger]')
+      ) {
         onClose();
       }
     };
     /** @param {KeyboardEvent} e */
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();};
+      if (e.key === 'Escape') onClose();
+    };
 
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleKeyDown);
@@ -50,7 +56,8 @@ const Sidebar = ({ open, onClose }) => {
           <nav
             aria-label="Main navigation"
             className="fixed z-30 flex flex-col gap-2.5"
-            style={{ top: '84px', left: '24px' }}>
+            style={{ top: '84px', left: '24px' }}
+          >
             {navItems.map(({ label, to }, i) => (
               <motion.div
                 key={to}
@@ -60,7 +67,9 @@ const Sidebar = ({ open, onClose }) => {
                 transition={{
                   duration: 0.22,
                   delay: shouldReduceMotion ? 0 : i * 0.045,
-                  ease: [0.16, 1, 0.3, 1],}}>
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+              >
                 <NavLink
                   to={to}
                   onClick={onClose}
@@ -81,7 +90,8 @@ const Sidebar = ({ open, onClose }) => {
                 </NavLink>
               </motion.div>
             ))}
-          </nav>)}
+          </nav>
+        )}
       </AnimatePresence>
     </div>
   );

@@ -5,7 +5,7 @@ export default defineConfig({
   
   forbidOnly: !!process.env.CI,
 
-  testMatch: ["tests/**/*.spec.js", "e2e/**/*.spec.js", "test/**/*.spec.js"],
+  testMatch: ['tests/**/*.spec.js', 'e2e/**/*.spec.js', 'test/**/*.spec.js'],
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
 
   //this will be used for all the pages

@@ -35,8 +35,8 @@ const StatCard = ({ label, value, sub, icon: Icon, positive }) => (
           positive === undefined
             ? 'text-[var(--text-secondary)]'
             : positive
-            ? 'text-[var(--color-success)]'
-            : 'text-[var(--color-danger)]'
+              ? 'text-[var(--color-success)]'
+              : 'text-[var(--color-danger)]'
         }`}
       >
         {positive !== undefined && (positive ? '▲' : '▼')} {sub}
@@ -44,7 +44,6 @@ const StatCard = ({ label, value, sub, icon: Icon, positive }) => (
     )}
   </div>
 );
-
 
 /**
  *  @param {object} objects
@@ -60,11 +59,7 @@ const PortfolioSummary = ({ summary }) => {
       className="grid grid-cols-2 lg:grid-cols-4 gap-4"
       aria-label="Portfolio summary statistics"
     >
-      <StatCard
-        label="Total Value"
-        value={formatCurrency(summary.total_value)}
-        icon={DollarSign}
-      />
+      <StatCard label="Total Value" value={formatCurrency(summary.total_value)} icon={DollarSign} />
       <StatCard
         label="Total Gain / Loss"
         value={`${gainPositive ? '+' : ''}${formatCurrency(summary.total_gain_loss)}`}

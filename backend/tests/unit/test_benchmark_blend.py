@@ -21,7 +21,7 @@ def fake_history(monkeypatch):
 
     series: dict[str, pd.DataFrame] = {}
 
-    def fake_get_cached_price_history(symbol, period="1y", force_live=False):
+    def fake_get_cached_price_history(symbol, period="1y", force_live=False): # noqa: ARG001
         if symbol not in series:
             raise ValueError(f"no data for {symbol}")
         return series[symbol]
@@ -147,5 +147,3 @@ def test_nearest_benchmark_falls_back_to_the_last_trading_day():
     assert portfolio_service._nearest_benchmark(series, saturday) == 1000.0
     assert portfolio_service._nearest_benchmark(series, date(2026, 7, 1)) is None
     assert portfolio_service._nearest_benchmark({}, monday) is None
-
-

@@ -1,3 +1,4 @@
+import contextlib
 import logging
 from functools import lru_cache
 
@@ -37,13 +38,13 @@ def cognito_register(full_name: str, email: str, password: str) -> dict:
     except ClientError as e:
         code = e.response["Error"]["Code"]
         msg = e.response["Error"]["Message"]
-        
+
         if code == "UsernameExistsException":
-            raise AppError(409, "EMAIL_ALREADY_REGISTERED", "email already registered")
+            raise AppError(409, "EMAIL_ALREADY_REGISTERED", "email already registered") from e
         if code == "InvalidPasswordException":
-            raise AppError(422, "WEAK_PASSWORD", msg)
-            
-        raise HTTPException(status_code=400, detail=msg)
+            raise HTTPException(status_code=422, detail=msg) from e
+
+        raise HTTPException(status_code=400, detail=msg) from e
 
 
 def cognito_confirm_registration(email: str, code: str) -> bool:
@@ -56,7 +57,7 @@ def cognito_confirm_registration(email: str, code: str) -> bool:
         )
         return True
     except ClientError as e:
-        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"])
+        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"]) from e
 
 
 def cognito_login(email: str, password: str) -> dict:
@@ -90,8 +91,8 @@ def cognito_login(email: str, password: str) -> dict:
                 "INVALID_CREDENTIALS",
                 "invalid email or password",
                 headers={"WWW-Authenticate": "Bearer"},
-            )
-        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"])
+            ) from e
+        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"]) from e
 
 
 def cognito_respond_to_mfa(session: str, email: str, totp_code: str) -> dict:
@@ -112,13 +113,13 @@ def cognito_respond_to_mfa(session: str, email: str, totp_code: str) -> dict:
             "id_token": tokens["IdToken"],
             "refresh_token": tokens["RefreshToken"],
         }
-    except ClientError:
+    except ClientError as e:
         raise AppError(
             401,
             "INVALID_MFA_CODE",
             "invalid mfa code",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from e
 
 
 def cognito_associate_totp(access_token: str) -> str:
@@ -127,7 +128,7 @@ def cognito_associate_totp(access_token: str) -> str:
         res = client.associate_software_token(AccessToken=access_token)
         return res["SecretCode"]
     except ClientError as e:
-        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"])
+        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"]) from e
 
 
 def cognito_verify_totp(access_token: str, totp_code: str) -> bool:
@@ -144,7 +145,7 @@ def cognito_verify_totp(access_token: str, totp_code: str) -> bool:
         )
         return True
     except ClientError as e:
-        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"])
+        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"]) from e
 
 
 def cognito_get_user(access_token: str) -> dict:
@@ -175,12 +176,12 @@ def cognito_get_user(access_token: str) -> dict:
             "sign-in check is temporarily unavailable, try again",
         ) from e
 
+
 def cognito_logout(access_token: str) -> bool:
-    try:
+    with contextlib.suppress(ClientError):
         _get_client().global_sign_out(AccessToken=access_token)
-    except ClientError:
-        pass 
     return True
+
 
 def cognito_delete_user(access_token: str) -> None:
     client = _get_client()
@@ -188,6 +189,6 @@ def cognito_delete_user(access_token: str) -> None:
         client.delete_user(AccessToken=access_token)
     except ClientError as e:
         if e.response["Error"]["Code"] == "UserNotFoundException":
-            #Gone already
+            # Gone already
             return
         raise

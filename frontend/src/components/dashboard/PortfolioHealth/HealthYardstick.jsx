@@ -37,18 +37,16 @@ const HealthYardstick = ({ onChanged }) => {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    try 
-    {
+    try {
       const data = await getHealthConfig();
       setState({ loading: false, error: null, data });
-    } 
-    catch (err) {
+    } catch (err) {
       console.warn('health config fetch failed:', err);
       setState({ loading: false, error: "Couldn't load your scoring settings.", data: null });
-    }}, []);
+    }
+  }, []);
 
-  useEffect(() => 
-    {
+  useEffect(() => {
     load();
   }, [load]);
 
@@ -59,14 +57,13 @@ const HealthYardstick = ({ onChanged }) => {
       const data = await run();
       setState({ loading: false, error: null, data });
       onChanged?.();
-    } catch (err) 
-    {
+    } catch (err) {
       console.warn('health config save failed:', err);
       setState((prev) => ({ ...prev, error: "Couldn't save that. Your settings are unchanged." }));
-    } finally 
-    {
+    } finally {
       setSaving(false);
-    }};
+    }
+  };
 
   const data = state.data;
   if (state.loading || !data) return null;
@@ -98,7 +95,10 @@ const HealthYardstick = ({ onChanged }) => {
               style={{
                 transform: open ? 'rotate(180deg)' : 'none',
                 transition: 'transform 0.2s ease',
-              }}/>}>
+              }}
+            />
+          }
+        >
           Change
         </SecondaryButton>
       </div>
@@ -108,7 +108,8 @@ const HealthYardstick = ({ onChanged }) => {
           <label
             htmlFor="health-preset-picker"
             className="block text-[10px] font-semibold"
-            style={{ color: 'var(--text-primary)' }}>
+            style={{ color: 'var(--text-primary)' }}
+          >
             Score my portfolio as
           </label>
           <GlassSelect
@@ -118,12 +119,14 @@ const HealthYardstick = ({ onChanged }) => {
             value={activeKey}
             placeholder="Custom settings"
             onChange={(key) => apply(() => saveHealthConfig({ preset_key: String(key) }))}
-            options={presets.map((p) => ({ value: p.key, label: p.name }))}/>
+            options={presets.map((p) => ({ value: p.key, label: p.name }))}
+          />
 
           {active && (
             <p className="text-[10px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
               {active.description}
-            </p>)}
+            </p>
+          )}
 
           <p className="text-[10px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
             Presets change what your portfolio is compared to, not how much risk it carries. The
@@ -135,7 +138,8 @@ const HealthYardstick = ({ onChanged }) => {
               <SecondaryButton
                 size="sm"
                 disabled={saving}
-                onClick={() => apply(() => clearHealthConfig())}>
+                onClick={() => apply(() => clearHealthConfig())}
+              >
                 Use the one matched to my goal{derived ? ` (${derived.name})` : ''}
               </SecondaryButton>
             )}
@@ -145,10 +149,12 @@ const HealthYardstick = ({ onChanged }) => {
                 disabled={saving}
                 onClick={() =>
                   apply(() => saveHealthConfig({ preset_key: data.default_preset_key }))
-                }>
+                }
+              >
                 Reset to EquityLens
               </SecondaryButton>
-            )}</div>
+            )}
+          </div>
 
           {state.error && (
             <p className="text-[10px]" style={{ color: 'var(--signal-negative)' }}>

@@ -33,14 +33,16 @@ const BackgroundGlow = () => {
       targetX = randomBetween(0, window.innerWidth);
       targetY = randomBetween(0, window.innerHeight);
       lerp = randomBetween(MIN_LERP, MAX_LERP);
-      wanderTimeout = setTimeout(pickNewTarget, randomBetween(MIN_WAIT_MS, MAX_WAIT_MS));};
+      wanderTimeout = setTimeout(pickNewTarget, randomBetween(MIN_WAIT_MS, MAX_WAIT_MS));
+    };
     wanderTimeout = setTimeout(pickNewTarget, randomBetween(MIN_WAIT_MS, MAX_WAIT_MS));
 
     let frame = requestAnimationFrame(function tick() {
       x += (targetX - x) * lerp;
       y += (targetY - y) * lerp;
       el.style.transform = `translate3d(${x - SIZE / 2}px, ${y - SIZE / 2}px, 0)`;
-      frame = requestAnimationFrame(tick);});
+      frame = requestAnimationFrame(tick);
+    });
 
     return () => {
       clearTimeout(wanderTimeout);
@@ -53,17 +55,29 @@ const BackgroundGlow = () => {
       ref={glowRef}
       aria-hidden="true"
       className="magnifying-glass-bg"
-      style={{ width: `${SIZE}px`, height: `${SIZE}px` }}>
+      style={{ width: `${SIZE}px`, height: `${SIZE}px` }}
+    >
       <svg viewBox="0 0 520 520" fill="none" xmlns="http://www.w3.org/2000/svg">
         <line
-          x1="345" y1="345" x2="475" y2="475"
-          stroke="var(--accent-primary)" strokeWidth="28" strokeLinecap="round"/>
+          x1="345"
+          y1="345"
+          x2="475"
+          y2="475"
+          stroke="var(--accent-primary)"
+          strokeWidth="28"
+          strokeLinecap="round"
+        />
         <circle cx="215" cy="215" r="165" fill="rgba(var(--accent-primary-rgb), 0.12)" />
         <circle cx="215" cy="215" r="165" stroke="var(--accent-primary)" strokeWidth="20" />
         <path
           d="M120 145 A130 130 0 0 1 245 82"
-          stroke="rgba(255,255,255,0.4)" strokeWidth="10" strokeLinecap="round"/>
+          stroke="rgba(255,255,255,0.4)"
+          strokeWidth="10"
+          strokeLinecap="round"
+        />
       </svg>
-    </div>);};
+    </div>
+  );
+};
 
 export default BackgroundGlow;

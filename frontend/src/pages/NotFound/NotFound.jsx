@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+
 import Button from '../../components/common/Button/Button';
 import { ROUTES } from '../../utils/constants';
 
@@ -9,7 +10,7 @@ const NotFound = () => (
     <p className="text-sm text-[var(--text-page-secondary)] text-center max-w-sm">
       The page you are looking for does not exist or has been moved.
     </p>
-    
+
     <Link to={ROUTES.HOME}>
       <Button variant="primary">Back to home</Button>
     </Link>

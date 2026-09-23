@@ -1,24 +1,23 @@
+import logging
+from typing import Any
+from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, field_validator, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.orm import Session
-from app.services.ai_service import ConversationNotFound, chat
+
+from app.config import settings
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.schemas.auth import UserResponse
-from uuid import UUID
-from typing import Optional
 from app.models.chat import ChatConversation, ChatMessages
-from pydantic import BaseModel
-from typing import Any
+from app.schemas.auth import UserResponse
+from app.services.ai_service import chat
 from app.utils.ai_rate_limit import check_limit
-from app.config import settings
-import logging
 
 logger = logging.getLogger(__name__)
-from pydantic import BaseModel
-from typing import Any
 
-router = APIRouter(prefix = "/api/ai_chat", tags = ["ai_chat"])
+router = APIRouter(prefix="/api/ai_chat", tags=["ai_chat"])
+
 
 class NewsResponse(BaseModel):
     total_articles: int
@@ -26,12 +25,14 @@ class NewsResponse(BaseModel):
     negative: int
     result: list[dict[str, Any]]
 
+
 class TickerResponse(BaseModel):
     ticker: list[str]
 
+
 class ChatRequest(BaseModel):
     message: str
-    conversation_id: Optional[UUID] = None
+    conversation_id: UUID | None = None
 
     @field_validator("message")
     @classmethod
@@ -40,68 +41,70 @@ class ChatRequest(BaseModel):
             raise ValueError("You cannot send an empty message.")
         return v.strip()
 
+
 class ChatResponse(BaseModel):
     reply: str
     conversation_id: UUID
 
+
 class ChangeConversationName(BaseModel):
-    title: str = Field(min_length = 1)
+    title: str = Field(min_length=1)
 
 
 def enforce_limit(current_user: UserResponse = Depends(get_current_user)):
     allowed, retry_after = check_limit(
-        key = str(current_user.id),
-        limit = settings.ai_message_limit,
-        window_seconds = settings.ai_window_limit
+        key=str(current_user.id),
+        limit=settings.ai_message_limit,
+        window_seconds=settings.ai_window_limit,
     )
 
     if not allowed:
         raise HTTPException(
-            status_code = 429,
-            detail = {
-                "message": f"You have been rate-limited by sending messages too quick. Try again in {retry_after} seconds.",
-                "retry_after": retry_after
+            status_code=429,
+            detail={
+                "message": (
+                    f"You have been rate-limited by sending messages too quick. "
+                    f"Try again in {retry_after} seconds."),
+                "retry_after": retry_after,
             },
-            headers = {"Retry-After": str(retry_after)}
+            headers={"Retry-After": str(retry_after)},
         )
     return current_user
 
 
-@router.post("/", response_model = ChatResponse)
+@router.post("/", response_model=ChatResponse)
 async def ai_chat(
     request: ChatRequest,
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(enforce_limit)
-    ):
+    current_user: UserResponse = Depends(enforce_limit),
+):
     try:
         reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id)
-        return ChatResponse(reply = reply, conversation_id = conversation_id)
-    except ConversationNotFound:
-        raise HTTPException(status_code = 404, detail = "Conversation not found")
+        return ChatResponse(reply=reply, conversation_id=conversation_id)
     except Exception as e:
         logger.exception(
             "AI chat failed for user %s (conversation %s): %s",
-            current_user.id, request.conversation_id, e,
+            current_user.id,
+            request.conversation_id,
+            e,
         )
-        raise HTTPException(status_code = 500, detail = "Something went wrong")
+        raise HTTPException(status_code=500, detail="Something went wrong") from e
+
 
 # now to return all conversations for the logged user
 @router.get("/conversations/")
 async def get_conversations(
-    db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user)
+    db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)
 ):
-    chat_conversation = db.query(ChatConversation).filter(
-        ChatConversation.user_id == current_user.id
-    ).order_by(ChatConversation.updated_at.desc()).all()
+    chat_conversation = (
+        db.query(ChatConversation)
+        .filter(ChatConversation.user_id == current_user.id)
+        .order_by(ChatConversation.updated_at.desc())
+        .all()
+    )
 
     return [
-        {
-            "id": str(c.id),
-            "title": c.title,
-            "created_at": c.created_at, 
-            "updated_at": c.updated_at
-        }
+        {"id": str(c.id), "title": c.title, "created_at": c.created_at, "updated_at": c.updated_at}
         for c in chat_conversation
     ]
 
@@ -111,30 +114,30 @@ async def get_conversations(
 async def get_messages(
     conversation_id: UUID,
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: UserResponse = Depends(get_current_user),
 ):
-    #verification of who conversation belongs to
-    chat_conversation = db.query(ChatConversation).filter(
-        ChatConversation.id == conversation_id,
-        ChatConversation.user_id == current_user.id
-    ).first()
+    # verification of who conversation belongs to
+    chat_conversation = (
+        db.query(ChatConversation)
+        .filter(ChatConversation.id == conversation_id, ChatConversation.user_id == current_user.id)
+        .first()
+    )
 
     if not chat_conversation:
-        raise HTTPException(status_code = 404, detail = "Conversation not found")
-    
-    messages = db.query(ChatMessages).filter(
-        ChatMessages.conversation_id == conversation_id
-    ).order_by(ChatMessages.created_at.asc()).all()
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    messages = (
+        db.query(ChatMessages)
+        .filter(ChatMessages.conversation_id == conversation_id)
+        .order_by(ChatMessages.created_at.asc())
+        .all()
+    )
 
     return [
-        {
-            "id": str(m.id),
-            "role": m.role,
-            "content": m.content,
-            "created_at": m.created_at
-        }
+        {"id": str(m.id), "role": m.role, "content": m.content, "created_at": m.created_at}
         for m in messages
     ]
+
 
 # to change the conversation name by editing it
 @router.put("/conversations/{conversation_id}/")
@@ -142,16 +145,17 @@ async def update_conversation(
     conversation_id: UUID,
     request: ChangeConversationName,
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user)
-    ):
-    chat_conversation = db.query(ChatConversation).filter(
-        ChatConversation.id == conversation_id,
-        ChatConversation.user_id == current_user.id
-    ).first()
+    current_user: UserResponse = Depends(get_current_user),
+):
+    chat_conversation = (
+        db.query(ChatConversation)
+        .filter(ChatConversation.id == conversation_id, ChatConversation.user_id == current_user.id)
+        .first()
+    )
 
     if not chat_conversation:
-        raise HTTPException(status_code = 404, detail = "Conversation not found")
-    
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
     chat_conversation.title = request.title
     db.commit()
 
@@ -162,19 +166,18 @@ async def update_conversation(
 async def delete_conversation(
     conversation_id: UUID,
     db: Session = Depends(get_db),
-    current_user: UserResponse = Depends(get_current_user)
-    ):
-    chat_conversation = db.query(ChatConversation).filter(
-        ChatConversation.id == conversation_id,
-        ChatConversation.user_id == current_user.id
-    ).first()
+    current_user: UserResponse = Depends(get_current_user),
+):
+    chat_conversation = (
+        db.query(ChatConversation)
+        .filter(ChatConversation.id == conversation_id, ChatConversation.user_id == current_user.id)
+        .first()
+    )
 
     if not chat_conversation:
-        raise HTTPException(status_code = 404, detail = "Conversation not found")
-    
-    db.query(ChatMessages).filter(
-        ChatMessages.conversation_id == conversation_id
-    ).delete()
+        raise HTTPException(status_code=404, detail="Conversation not found")
+
+    db.query(ChatMessages).filter(ChatMessages.conversation_id == conversation_id).delete()
     db.delete(chat_conversation)
     db.commit()
 

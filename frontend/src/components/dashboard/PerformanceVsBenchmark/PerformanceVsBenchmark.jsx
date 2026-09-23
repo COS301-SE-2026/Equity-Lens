@@ -9,15 +9,20 @@ import {
   CartesianGrid,
 } from 'recharts';
 
-import { GlassPanel } from '../shared/GlassPanel';
+import { zar } from '../../../utils/currency';
+import {
+  buildChartStats,
+  filterByRange,
+  buildExplanation,
+  buildingHistoryLabel,
+  buildPerformanceQuestions,
+} from '../../../utils/dashboardInsights';
+import CardMascotTrigger from '../../chat/CardMascotTrigger/CardMascotTrigger';
 import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
 import Money from '../../common/Money/Money';
-import MoneyAxisTick from '../shared/MoneyAxisTick';
-import { zar } from '../../../utils/currency';
-import { buildChartStats, filterByRange, buildExplanation, buildingHistoryLabel, buildPerformanceQuestions,
-} from '../../../utils/dashboardInsights';
 import ContributionsChart from '../ContributionsChart/ContributionsChart';
-import CardMascotTrigger from '../../chat/CardMascotTrigger/CardMascotTrigger';
+import { GlassPanel } from '../shared/GlassPanel';
+import MoneyAxisTick from '../shared/MoneyAxisTick';
 
 /** @typedef {'1D'|'1W'|'1M'|'3M'|'1Y'|'ALL'} RangeKey */
 /** @type {RangeKey[]} */
@@ -41,7 +46,8 @@ export const PerfTooltip = ({ active, payload, label, benchmarkLabel }) => {
   return (
     <div
       className="rounded-lg px-3 py-2 font-mono text-[11px]"
-      style={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--border-mid)' }}>
+      style={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--border-mid)' }}
+    >
       <div className="mb-1 text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
         {label}
       </div>
@@ -63,7 +69,8 @@ export const PerfTooltip = ({ active, payload, label, benchmarkLabel }) => {
         );
       })}
     </div>
-  );};
+  );
+};
 
 /** @param {{ label: string, value: string, tone: 'good'|'bad'|'neutral', help?: string, loading?: boolean }} props */
 const Stat = ({ label, value, tone, help, loading }) => {
@@ -79,24 +86,32 @@ const Stat = ({ label, value, tone, help, loading }) => {
   let valueDisplay;
   if (loading) {
     valueDisplay = (
-      <div className="mt-1.5 h-[18px] w-14 animate-pulse rounded" style={{ background: 'var(--border-subtle)' }} />
+      <div
+        className="mt-1.5 h-[18px] w-14 animate-pulse rounded"
+        style={{ background: 'var(--border-subtle)' }}
+      />
     );
   } else {
     valueDisplay = (
       <div className="mt-1 font-mono text-[15px] font-semibold" style={{ color }}>
         {value}
       </div>
-    );}
+    );
+  }
 
   return (
     <div>
-      <div className="flex items-center gap-1 font-mono text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+      <div
+        className="flex items-center gap-1 font-mono text-[9px] tracking-widest"
+        style={{ color: 'var(--text-ghost)' }}
+      >
         {label}
         {help && <HelpTooltip text={help} />}
       </div>
       {valueDisplay}
     </div>
-  );};
+  );
+};
 
 /** @param {{ range: string, active: boolean, onClick: () => void }} props */
 const RangeButton = ({ range, active, onClick }) => {
@@ -115,10 +130,12 @@ const RangeButton = ({ range, active, onClick }) => {
       type="button"
       onClick={onClick}
       className="rounded-md px-2.5 py-1 font-mono text-[10px] font-medium transition-colors"
-      style={{ background, color }}>
+      style={{ background, color }}
+    >
       {range}
     </button>
-  );};
+  );
+};
 
 /**
  * @param {{
@@ -142,33 +159,40 @@ const PerformanceVsBenchmark = ({
   const lastStepAtRef = useRef(0);
   const STEP_COOLDOWN_MS = 250;
   /** @param {WheelEvent} event */
-  const handleWheelZoom = useCallback((/** @type {WheelEvent} */ event) => {
-  const idx = RANGES.indexOf(range);
-  const scrollingToShorter = event.deltaY > 0;
-  const atFloor = idx === 0 && scrollingToShorter;
-  const atCeiling = idx === RANGES.length - 1 && !scrollingToShorter;
-  if (atFloor || atCeiling) return;
-  event.preventDefault();
-  const now = Date.now();
-  if (now - lastStepAtRef.current < STEP_COOLDOWN_MS) return;
-  lastStepAtRef.current = now;
-  setRange(RANGES[scrollingToShorter ? idx - 1 : idx + 1]);}, [range]);
+  const handleWheelZoom = useCallback(
+    (/** @type {WheelEvent} */ event) => {
+      const idx = RANGES.indexOf(range);
+      const scrollingToShorter = event.deltaY > 0;
+      const atFloor = idx === 0 && scrollingToShorter;
+      const atCeiling = idx === RANGES.length - 1 && !scrollingToShorter;
+      if (atFloor || atCeiling) return;
+      event.preventDefault();
+      const now = Date.now();
+      if (now - lastStepAtRef.current < STEP_COOLDOWN_MS) return;
+      lastStepAtRef.current = now;
+      setRange(RANGES[scrollingToShorter ? idx - 1 : idx + 1]);
+    },
+    [range],
+  );
 
   useEffect(() => {
     const node = chartContainerRef.current;
     if (!node) return undefined;
     node.addEventListener('wheel', handleWheelZoom, { passive: false });
-    return () => node.removeEventListener('wheel', handleWheelZoom);}, [handleWheelZoom]);
+    return () => node.removeEventListener('wheel', handleWheelZoom);
+  }, [handleWheelZoom]);
 
   const { series: visibleSeries } = useMemo(() => {
     return filterByRange(series, range);
   }, [series, range]);
 
   const { series: visibleContributionSeries } = useMemo(() => {
-    return filterByRange(contributionSeries, range);}, [contributionSeries, range]);
+    return filterByRange(contributionSeries, range);
+  }, [contributionSeries, range]);
 
   const stats = useMemo(() => {
-    return buildChartStats(visibleSeries, { historyDays });}, [visibleSeries, historyDays]);
+    return buildChartStats(visibleSeries, { historyDays });
+  }, [visibleSeries, historyDays]);
 
   const { explanation } = useMemo(() => {
     return buildExplanation({ stats, attribution });
@@ -177,7 +201,8 @@ const PerformanceVsBenchmark = ({
   /** @type {'good'|'bad'|'neutral'} */
   let portTone;
   if (!stats.portAvailable) {
-    portTone = 'neutral'; } else if (stats.portReturn.startsWith('-')) {
+    portTone = 'neutral';
+  } else if (stats.portReturn.startsWith('-')) {
     portTone = 'bad';
   } else {
     portTone = 'good';
@@ -194,7 +219,10 @@ const PerformanceVsBenchmark = ({
   let chartArea;
   if (visibleSeries.length === 0) {
     chartArea = (
-      <div className="flex h-full items-center justify-center text-[12px]" style={{ color: 'var(--text-ghost)' }}>
+      <div
+        className="flex h-full items-center justify-center text-[12px]"
+        style={{ color: 'var(--text-ghost)' }}
+      >
         Performance history will appear once portfolio has sufficient data.
       </div>
     );
@@ -218,69 +246,124 @@ const PerformanceVsBenchmark = ({
             axisLine={false}
           />
           <Tooltip content={<PerfTooltip benchmarkLabel={benchmarkLabel} />} />
-          <Line type="monotone" dataKey="benchmark" stroke="var(--text-secondary)" strokeWidth={1.5} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} />
-          <Line type="monotone" dataKey="value" stroke="var(--accent-primary)" strokeWidth={2} dot={false} activeDot={{ r: 5, fill: 'var(--accent-primary)', stroke: 'var(--surface-card)', strokeWidth: 2 }} />
+          <Line
+            type="monotone"
+            dataKey="benchmark"
+            stroke="var(--text-secondary)"
+            strokeWidth={1.5}
+            strokeDasharray="5 5"
+            dot={false}
+            activeDot={{ r: 4 }}
+          />
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke="var(--accent-primary)"
+            strokeWidth={2}
+            dot={false}
+            activeDot={{
+              r: 5,
+              fill: 'var(--accent-primary)',
+              stroke: 'var(--surface-card)',
+              strokeWidth: 2,
+            }}
+          />
         </LineChart>
       </ResponsiveContainer>
-    );}
+    );
+  }
 
   return (
-      <div className="group relative">
-        <CardMascotTrigger
-        questions={buildPerformanceQuestions({ diffPct: stats.diffPct, benchAvailable: stats.benchAvailable, benchmarkLabel })}
+    <div className="group relative">
+      <CardMascotTrigger
+        questions={buildPerformanceQuestions({
+          diffPct: stats.diffPct,
+          benchAvailable: stats.benchAvailable,
+          benchmarkLabel,
+        })}
         label="Ask AI about performance vs benchmark"
-        className="-right-6 top-16"/>
+        className="-right-6 top-16"
+      />
       <GlassPanel className="flex flex-col">
-      <div
-        className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
-        style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <div className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
-          Performance vs Benchmark
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-5 font-mono text-[10px]">
-            <LegendDot color="var(--accent-primary)" label="Portfolio" />
-            <LegendDot color="var(--text-secondary)" label={benchmarkLabel} dashed />
+        <div
+          className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
+          <div
+            className="font-mono text-[10px] tracking-widest"
+            style={{ color: 'var(--text-ghost)' }}
+          >
+            Performance vs Benchmark
           </div>
-          <div className="flex items-center gap-0.5 rounded-md p-0.5" style={{ background: 'var(--surface-raised)' }}>
-            {RANGES.map((r) => {
-              return <RangeButton key={r} range={r} active={range === r} onClick={() => setRange(r)} />;
-            })}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-5 font-mono text-[10px]">
+              <LegendDot color="var(--accent-primary)" label="Portfolio" />
+              <LegendDot color="var(--text-secondary)" label={benchmarkLabel} dashed />
+            </div>
+            <div
+              className="flex items-center gap-0.5 rounded-md p-0.5"
+              style={{ background: 'var(--surface-raised)' }}
+            >
+              {RANGES.map((r) => {
+                return (
+                  <RangeButton key={r} range={r} active={range === r} onClick={() => setRange(r)} />
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-3 gap-4 px-5 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <Stat label="Portfolio return" value={stats.portAvailable ? stats.portReturn : buildingHistoryLabel(stats.historyDays)} tone={portTone} help="Time-weighted return - how the money grew while it was invested, with purchases and sales taken back out, so it can be fairly compared to an index."/>
-        <Stat label={`${benchmarkLabel} return`} value={stats.benchReturn} tone="neutral" loading={!stats.benchAvailable} />
-        <Stat
-          label="Vs benchmark"
-          value={stats.diff}
-          tone={diffTone}
-          loading={!stats.benchAvailable}
-          help={`How your portfolio's return compares to the ${benchmarkLabel} over the selected period.`}/>
-      </div>
+        <div
+          className="grid grid-cols-3 gap-4 px-5 py-3"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
+          <Stat
+            label="Portfolio return"
+            value={stats.portAvailable ? stats.portReturn : buildingHistoryLabel(stats.historyDays)}
+            tone={portTone}
+            help="Time-weighted return - how the money grew while it was invested, with purchases and sales taken back out, so it can be fairly compared to an index."
+          />
+          <Stat
+            label={`${benchmarkLabel} return`}
+            value={stats.benchReturn}
+            tone="neutral"
+            loading={!stats.benchAvailable}
+          />
+          <Stat
+            label="Vs benchmark"
+            value={stats.diff}
+            tone={diffTone}
+            loading={!stats.benchAvailable}
+            help={`How your portfolio's return compares to the ${benchmarkLabel} over the selected period.`}
+          />
+        </div>
 
-      {takeaway(stats, benchmarkLabel) && (
-        <div className="px-5 pt-3">
-          <p className="text-[13px]" style={{ color: 'var(--text-primary)' }}>
-            {takeaway(stats, benchmarkLabel)}
-          </p>
-          {explanation && (
-            <p className="mt-1 text-[12px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
-              {explanation}
-            </p>)}
-        </div>)}
-      <div ref={chartContainerRef} className="relative h-[420px] p-5">
-        {chartArea}
-      </div>
+        {takeaway(stats, benchmarkLabel) && (
+          <div className="px-5 pt-3">
+            <p className="text-[13px]" style={{ color: 'var(--text-primary)' }}>
+              {takeaway(stats, benchmarkLabel)}
+            </p>
+            {explanation && (
+              <p
+                className="mt-1 text-[12px] leading-snug"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                {explanation}
+              </p>
+            )}
+          </div>
+        )}
+        <div ref={chartContainerRef} className="relative h-[420px] p-5">
+          {chartArea}
+        </div>
 
-      <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
-        <ContributionsChart series={visibleContributionSeries} />
-      </div>
+        <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
+          <ContributionsChart series={visibleContributionSeries} />
+        </div>
       </GlassPanel>
     </div>
-  );};
+  );
+};
 
 /** @param {{ color: string, label: string, dashed?: boolean }} props */
 const LegendDot = ({ color, label, dashed }) => {
@@ -288,7 +371,12 @@ const LegendDot = ({ color, label, dashed }) => {
   if (dashed) {
     marker = <span className="w-4 border-t-2 border-dashed" style={{ borderColor: color }} />;
   } else {
-    marker = <span className="h-2 w-2 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${color}` }} />;
+    marker = (
+      <span
+        className="h-2 w-2 rounded-full"
+        style={{ background: color, boxShadow: `0 0 6px ${color}` }}
+      />
+    );
   }
 
   return (
@@ -296,6 +384,7 @@ const LegendDot = ({ color, label, dashed }) => {
       {marker}
       {label}
     </div>
-  );};
+  );
+};
 
 export default PerformanceVsBenchmark;

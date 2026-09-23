@@ -42,7 +42,12 @@ def portfolio_daily_returns(priced_holdings: list[dict], period: str = "1y") -> 
     if not per_ticker or covered_value / total_value < 0.6:
         return None
 
-    weights = {t: h["value"] / covered_value for h in priced_holdings for t in [h.get("ticker")] if t in per_ticker}
+    weights = {
+        t: h["value"] / covered_value
+        for h in priced_holdings
+        for t in [h.get("ticker")]
+        if t in per_ticker
+    }
     frame = pd.concat(per_ticker, axis=1, join="inner").dropna()
     if len(frame) < MIN_HISTORY_DAYS:
         return None
