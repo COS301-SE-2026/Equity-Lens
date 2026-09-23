@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.repositories.user_repository import UserRepository
 from app.services.cognito_service import cognito_get_user
-from app.services.token_verifier import TokenVerificationUnavailable, verify_access_token
+from app.services.token_verifier import TokenVerificationUnavailableError, verify_access_token
 
 auth_scheme = HTTPBearer()
 _verified_locally_logged = False
@@ -22,7 +22,7 @@ def get_current_user(
 
     try:
         claims = verify_access_token(token)
-    except TokenVerificationUnavailable:
+    except TokenVerificationUnavailableError:
         user_info = cognito_get_user(token)
         return user_repo.get_or_create_cognito_user(
             cognito_sub=user_info["sub"],
