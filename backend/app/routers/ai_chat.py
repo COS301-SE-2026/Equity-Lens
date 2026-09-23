@@ -26,6 +26,7 @@ class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[UUID] = None
     portfolio_id: Optional[UUID] = None
+    replace_last: bool = False
 
     @field_validator("message")
     @classmethod
@@ -96,14 +97,14 @@ def enforce_limit(
 
 
 @router.post("/", response_model = ChatResponse)
-async def ai_chat(
+def ai_chat(
     request: ChatRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(enforce_limit)
     ):
     try:
-        reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id, request.portfolio_id)
+        reply, conversation_id = chat(request.message, db, current_user.id, request.conversation_id, request.portfolio_id, request.replace_last)
         background_tasks.add_task(run_post_turn, conversation_id, current_user.id, request.message)
         return ChatResponse(reply = reply, conversation_id = conversation_id)
     except HTTPException:

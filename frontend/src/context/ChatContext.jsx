@@ -253,7 +253,7 @@ export const ChatProvider = ({ children }) => {
     if (isThinking || regeneratingId !== null) {
       return;}
     const index = messages.findIndex((m) => m.id === message.id);
-    if (index === -1) {
+    if (index === -1 || index !== messages.length - 1) {
       return;}
     const priorUser = [...messages.slice(0, index)].reverse().find((m) => m.role === 'user');
     if (!priorUser) {
@@ -264,7 +264,9 @@ export const ChatProvider = ({ children }) => {
     setMessages((prev) => prev.slice(0, index + 1));
     setRegeneratingId(message.id);
 
-    return api.post('/ai_chat/', { message: priorUser.text, conversation_id: conversationId, portfolio_id: portfolioId })
+    return api.post('/ai_chat/', {
+      message: priorUser.text, conversation_id: conversationId, portfolio_id: portfolioId,
+      replace_last: !message.failed })
       .then((res) => {
         if (viewKeyRef.current !== key) {return refreshConversations().then(() => 0);}
         showChat(res.data.conversation_id);

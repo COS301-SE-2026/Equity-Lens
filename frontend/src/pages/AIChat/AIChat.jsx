@@ -147,7 +147,6 @@ const ReplyLoader = ({ mode = 'searching' }) => {
     const loop = (now) => {
       if (loaderIcon.current) {
         if (mode === 'beating') {
-          // lub-dub: two quick thumps, then rest for the remainder of the cycle
           const p = ((now - start) % BEAT_MS) / BEAT_MS;
           const thump = Math.exp(-(p ** 2) / 0.0015)
             + 0.6 * Math.exp(-((p - 0.16) ** 2) / 0.0015);
@@ -750,11 +749,13 @@ const AIChat = () => {
                                       </button>)
                                     : (<>
                                         {copyButton(message)}
-                                        <button type="button" onClick={() => retry(message)} disabled={locked}     
-                                          className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
-                                          <RefreshCw size={16} aria-hidden="true"/>
-                                            Regenerate
-                                        </button>
+                                        {message.id === lastMessage?.id && (
+                                          <button type="button" onClick={() => retry(message)} disabled={locked}
+                                            className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
+                                            <RefreshCw size={16} aria-hidden="true"/>
+                                              Regenerate
+                                          </button>
+                                        )}
                                       </>)}
                                   </div>
                                 )}
