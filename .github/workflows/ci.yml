@@ -34,7 +34,6 @@ jobs:
 
       - name: Run lint
         working-directory: frontend
-        continue-on-error: true
         run: npm run lint
 
       - name: Security audit
@@ -43,22 +42,14 @@ jobs:
 
       - name: Format check
         working-directory: frontend
-        continue-on-error: true
         run: npm run format:check
 
       - name: Type check
-        continue-on-error: true
         working-directory: frontend
         run: npm run typecheck
 
-      - name: Dead code scan (knip)
-        continue-on-error: true
-        working-directory: frontend
-        run: npx knip
-
       - name: Unit tests
         working-directory: frontend
-        continue-on-error: true
         run: npm run coverage
 
       - name: Read the installed Playwright version
@@ -85,7 +76,6 @@ jobs:
 
       - name: E2E tests
         working-directory: frontend
-        continue-on-error: true
         run: npm run test:e2e
 
       - name: Upload Playwright report
@@ -195,7 +185,6 @@ jobs:
 
       - name: Lint (ruff)
         working-directory: backend
-        continue-on-error: true
         run: |
           ruff check .
           ruff format --check .
@@ -219,7 +208,6 @@ jobs:
 
       - name: Run tests
         working-directory: backend
-        continue-on-error: true
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/equitylens
           SECRET_KEY: ${{ vars.TEST_SECRET_KEY }}
