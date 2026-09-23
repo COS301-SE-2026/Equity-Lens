@@ -1,5 +1,7 @@
 HISTORY_TOKEN_BUDGET = 10000
-HISTORY_MESSAGE_LIMIT = 60
+HISTORY_TOKEN_TARGET = 7500
+HISTORY_MESSAGE_LIMIT = 80
+HISTORY_MESSAGE_TARGET = 60
 CHARS_PER_TOKEN = 3
 
 
@@ -22,17 +24,16 @@ def fit_to_budget(
     prev_messages,
     user_message: str,
     budget: int = HISTORY_TOKEN_BUDGET,
-    max_messages: int = HISTORY_MESSAGE_LIMIT
+    max_messages: int = HISTORY_MESSAGE_LIMIT,
+    token_target: int = HISTORY_TOKEN_TARGET,
+    message_target: int = HISTORY_MESSAGE_TARGET
     ) -> tuple[list, list]:
-    """Split ORM rows into (kept, dropped), both in chronological order.
-
-    kept is the contiguous suffix that fits under both caps once the current user message has been counted, 
-    trimmed so it opens on a user turn. dropped is everything before it - the rows a summary has to cover.
-
-    Two caps, whichever binds first: max_messages is the intent (roughly the last
-    60 turns), budget is the guard against one oversized message blowing the call.
-    """
     spent = estimate_tokens(user_message)
+
+    total = spent + sum(message_tokens(_to_message(row)) for row in prev_messages)
+    if len(prev_messages) > max_messages or total > budget:
+        budget = min(token_target, budget)
+        max_messages = min(message_target, max_messages)
 
     cut = len(prev_messages)
     for i in range(len(prev_messages) - 1, -1, -1):

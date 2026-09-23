@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from app.services.ai_context import build_history, estimate_tokens, message_tokens, fit_to_budget, HISTORY_MESSAGE_LIMIT
+from app.services.ai_context import build_history, estimate_tokens, message_tokens, fit_to_budget, HISTORY_MESSAGE_LIMIT, HISTORY_MESSAGE_TARGET
 
 
 def row(role, content):
@@ -69,7 +69,7 @@ def test_message_limit():
 
     kept, dropped = fit_to_budget(prev, "a question")
 
-    assert len(kept) == HISTORY_MESSAGE_LIMIT
-    assert len(dropped) == 100 - HISTORY_MESSAGE_LIMIT
+    assert len(kept) == HISTORY_MESSAGE_TARGET
+    assert len(dropped) == 100 - HISTORY_MESSAGE_TARGET
     assert [r.content for r in dropped + kept] == [r.content for r in prev]
     assert kept[0].role == "user"
