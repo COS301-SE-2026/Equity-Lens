@@ -1,9 +1,6 @@
-from unittest.mock import MagicMock, patch
-
 import pandas as pd
 import pytest
-
-from app.models.chat import ChatMessages
+from unittest.mock import MagicMock, patch
 from app.services import ai_service
 from app.services.ai_service import chat, get_market_news_tool, get_stock_data_tool, MAX_NEWS_ARTICLES
 from app.models.chat import ChatMessages
@@ -56,9 +53,13 @@ def test_news_headlines(mock_get):
 
 @patch("app.services.ai_service.get_cached_price_history")
 def test_price_return(mock_h):
-    time_frame = pd.date_range(start="2026-08-10", periods=2, freq="D")
+    time_frame = pd.date_range(start = "2026-08-10", periods = 2, freq = "D")
     mock_h.return_value = pd.DataFrame(
-        {"Close": [10000.00, 11000.00], "Prev Close": [None, 10000.00]}, index=time_frame
+        {
+            "Close": [10000.00, 11000.00],
+            "Prev Close": [None, 10000.00]
+        },
+        index = time_frame
     )
 
     data = get_stock_data_tool("sol.jo")
@@ -69,12 +70,16 @@ def test_price_return(mock_h):
     assert "+10.00%" in data
 
 
-@patch("app.services.ai_service.get_cached_price_history")
+@patch("app.services.ai_service.get_cached_price_history")        
 @patch("app.services.ai_service.get_bedrock_client")
 def test_chat_runs_the_stock_tool(mock_bedrock_client, mock_h, db_session, test_user):
-    time_frame = pd.date_range(start="2026-08-10", periods=2, freq="D")
+    time_frame = pd.date_range(start = "2026-08-10", periods = 2, freq = "D")
     mock_h.return_value = pd.DataFrame(
-        {"Close": [10000.00, 11000.00], "Prev Close": [None, 10000.00]}, index=time_frame
+        {
+            "Close": [10000.00, 11000.00],
+            "Prev Close": [None, 10000.00]
+        },
+        index = time_frame
     )
     mocked_client = MagicMock()
     mocked_client.converse.side_effect = [
@@ -85,15 +90,11 @@ def test_chat_runs_the_stock_tool(mock_bedrock_client, mock_h, db_session, test_
                     {"text": "Let me check that."},
                     {"toolUse":
                         {
-                            "toolUse": {
-                                "toolUseId": "tool-1",
-                                "name": "get_stock_data",
-                                "input": {"ticker": "SOL.JO"},
-                            }
-                        },
-                    ],
-                }
-            },
+                            "toolUseId": "tool-1",
+                            "name": "get_stock_data",
+                            "input": {"ticker": "SOL.JO"}
+                    }}
+                ]}}
         },
 
         { "output": {"message": {"content": [{"text": "Sasol closed at R110.00."}]}}},
@@ -107,11 +108,11 @@ def test_chat_runs_the_stock_tool(mock_bedrock_client, mock_h, db_session, test_
 
     assert mock_h.call_args.args[0] == "SOL.JO"
 
-    history = mocked_client.converse.call_args_list[1].kwargs["messages"]
+    history = mocked_client.converse.call_args_list[1].kwargs["messages"] 
     results = [b for m in history for b in m["content"] if "toolResult" in b]
     assert len(results) == 1
-    assert results[0]["toolResult"]["status"] == "success"
+    assert results[0]["toolResult"]["status"] == "success"        
     assert "R110.00" in results[0]["toolResult"]["content"][0]["text"]
-
-    saved = db_session.query(ChatMessages).filter_by(conversation_id=conversation_id).all()
+    
+    saved = db_session.query(ChatMessages).filter_by(conversation_id = conversation_id).all()
     assert len(saved) == 2

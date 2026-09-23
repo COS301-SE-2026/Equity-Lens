@@ -115,13 +115,13 @@ def test_stream_exhaustion(mock_client, mock_run_tool, db_session, test_user):
 @patch("app.services.ai_service.get_bedrock_client")
 def test_stream_falls_back(mock_client, db_session, test_user):
     mock_client.return_value = stream_client(text_round())
-    _, _, done = drain(chat_stream("a question", db_session, test_user.id))
+    _, text, done = drain(chat_stream("a question", db_session, test_user.id))
 
     row = (db_session.query(ChatMessages)
            .filter(ChatMessages.role == "assistant").first())
     
     assert row.content == "Sorry, I couldn't finish that one. Try asking again."
-    assert len(done) == 1
+    assert text == "Sorry, I couldn't finish that one. Try asking again."
 
 
 @patch("app.services.ai_service.get_bedrock_client")

@@ -219,6 +219,9 @@ export const ChatProvider = ({ children }) => {
             replyText += event.value;
             draw();
           } else if (event.type === 'done') {
+            if (replyStatus === 'streaming') {replyStatus = 'done';}
+            draw();
+            markBusy(streamKey, false);
             if (onScreen()) {
               showChat(event.conversation_id);
               setConversationId(event.conversation_id);
@@ -226,9 +229,6 @@ export const ChatProvider = ({ children }) => {
               scopeByConversation.current[event.conversation_id] = scope;
               persistScopes(scopeByConversation.current);
             }
-            if (replyStatus === 'streaming') {replyStatus = 'done';}
-            markBusy(streamKey, false);
-            draw();
           } else if (event.type === 'error') {
             throw new Error(event.value);
           }
@@ -239,6 +239,7 @@ export const ChatProvider = ({ children }) => {
       await refreshConversations();
       return 0;
     } catch (err) {
+      if (replyStatus === 'done') {return 0;}
       const { text: errorText, retryAfter } = readError(err);
       replyStatus = 'failed';
       replyText = errorText;
