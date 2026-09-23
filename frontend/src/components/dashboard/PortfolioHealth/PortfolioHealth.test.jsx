@@ -1,8 +1,9 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import PortfolioHealth from './PortfolioHealth';
+vi.mock('../../../context/ChatContext', () => ({ useChatContext: () => ({ openDock: vi.fn() }) }));
 
 const getHealthConfig = vi.fn();
 vi.mock('../../../services/portfolioService', () => ({
@@ -17,7 +18,9 @@ const CONFIG_PAYLOAD = {
   preset_key: 'equitylens',
   derived_preset_key: null,
   default_preset_key: 'equitylens',
-  presets: [{ key: 'equitylens', name: 'EquityLens default', description: 'General-purpose.', config: {} },],
+  presets: [
+    { key: 'equitylens', name: 'EquityLens default', description: 'General-purpose.', config: {} },
+  ],
   bounds: {},
 };
 
@@ -101,17 +104,33 @@ describe('PortfolioHealth', () => {
 it('expands a subscore to show its detail, target and improvement copy', () => {
   renderHealth({ health: HEALTH, onScrollTo: vi.fn() });
   const row = screen.getByTestId('health-factor-portfolioBreadth');
-  const expandButton = row.querySelector('button:last-of-type');
-  if (!expandButton) throw new Error('expected the expand button to render');
+  // by name rather than by position - the row now also holds the label button and the tooltip
+  const expandButton = within(row).getByRole('button', { name: 'Why' });
   fireEvent.click(expandButton);
   expect(screen.getByText(/1.9 effective positions/i)).toBeInTheDocument();
   expect(screen.getByText('8+ effective positions')).toBeInTheDocument();
   expect(screen.getByText(/raises effective breadth toward the target/i)).toBeInTheDocument();});
 
-  it('says which yardstick the score was measured against', async () => {
+  it('opens the scoring settings from the header rather than burying them in the card', async () => {
     renderHealth({ health: HEALTH, onScrollTo: vi.fn() });
-    expect(await screen.findByText('EquityLens default')).toBeInTheDocument();
-    expect(screen.getByText(/Measured against/)).toBeInTheDocument();});
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByLabelText('Portfolio health scoring settings'));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Portfolio health scoring' });
+    expect(within(dialog).getByRole('button', { name: /EquityLens default/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+  });
+
+  it('gives every subscore an explanation without making the reader expand it', () => {
+    renderHealth({ health: HEALTH, onScrollTo: vi.fn() });
+    for (const key of ['sectorConcentration', 'singleStockRisk', 'portfolioBreadth']) {
+      const row = screen.getByTestId(`health-factor-${key}`);
+      expect(within(row).getByLabelText('What does this mean?')).toBeInTheDocument();
+    }
+  });
 
   it('shows the empty state when there are no holdings to score', () => {
     renderHealth({ health: { score: null, label: null, subscores: [] }, onScrollTo: vi.fn() });

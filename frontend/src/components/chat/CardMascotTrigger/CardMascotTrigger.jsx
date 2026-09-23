@@ -1,6 +1,7 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import { useChatContext } from '../../../context/ChatContext';
 
 const IDLE_MS = 1800;
 const PRESS_MS = 80;
@@ -13,7 +14,7 @@ const CardMascotTrigger = ({
   label = 'Ask AI about this',
   className = 'right-3 top-3',
 }) => {
-  const navigate = useNavigate();
+  const { openDock } = useChatContext();
   const [open, setOpen] = useState(false);
   /** @type {React.MutableRefObject<HTMLDivElement | null>} */
   const wrapperRef = useRef(null);
@@ -81,7 +82,7 @@ const CardMascotTrigger = ({
   if (!questions.length) return null;
 
   /** @param {string} question */
-  const ask = (question) => navigate(`/ai?q=${encodeURIComponent(question)}`);
+  const ask = (question) => openDock(question);
 
   const handleTriggerClick = () => {
     setPressed(true);
@@ -106,9 +107,8 @@ const CardMascotTrigger = ({
         onBlur={() => setButtonFocused(false)}
         className="flex h-9 items-center gap-1.5 rounded-lg pl-2.5 pr-3 opacity-0 transition-opacity duration-200 focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-light)] group-hover:opacity-100"
         style={{
-          background: 'var(--accent-primary)',
-
-          color: '#FFFFFF',
+          background: 'var(--accent-deep)',
+          color: 'var(--icon-on-accent)',
           boxShadow: '0 6px 18px rgba(var(--accent-primary-rgb), 0.38)',
         }}
         initial={false}
@@ -153,7 +153,7 @@ const CardMascotTrigger = ({
 
         <span
           aria-hidden="true"
-          className="whitespace-nowrap text-[11px] font-semibold leading-none tracking-wide"
+          className="whitespace-nowrap text-[12px] font-semibold leading-none tracking-wide"
         >
           EquityLens Insight
         </span>
@@ -178,7 +178,7 @@ const CardMascotTrigger = ({
                 type="button"
                 role="menuitem"
                 onClick={() => ask(question)}
-                className="block w-full rounded-lg px-2.5 py-1.5 text-left text-[11px] leading-snug transition-colors hover:bg-[var(--surface-hover)]"
+                className="block w-full rounded-lg px-2.5 py-1.5 text-left text-[12px] leading-snug transition-colors hover:bg-[var(--surface-hover)]"
                 style={{ color: 'var(--text-secondary)' }}>
                 {question}
               </button>
