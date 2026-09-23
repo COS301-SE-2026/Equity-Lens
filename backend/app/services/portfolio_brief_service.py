@@ -1,14 +1,122 @@
 import io
+from pathlib import Path
+from xml.sax.saxutils import escape
+
+import matplotlib.pyplot as plt
 import requests
 from PIL import Image as PILImage
-from xml.sax.saxutils import escape
-import matplotlib.pyplot as plt
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
-from reportlab.platypus import (Image,PageBreak,Paragraph,SimpleDocTemplate,Spacer,Table,TableStyle,)
-from pathlib import Path
+from reportlab.platypus import (
+    Image,
+    PageBreak,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+    Table,
+    TableStyle,
+)
+
+
+def add_front_page(canvas, doc):
+    canvas.saveState()
+
+    page_width, page_height = A4
+
+    assets_path = (Path(__file__).resolve().parent.parent / "assets")
+
+    logo_path = assets_path / "Equity_lens_logo.png"
+    background_path = assets_path / "Front_page.avif.avif"
+
+    if background_path.exists():
+        canvas.drawImage(str(background_path),0,0,width=page_width,height=page_height,preserveAspectRatio=False,mask="auto",)
+
+    if logo_path.exists():
+        canvas.drawImage(str(logo_path),15 * mm,page_height - 29 * mm,width=16 * mm,height=16 * mm,preserveAspectRatio=False,mask="auto",)
+
+
+    canvas.setFillColor(colors.HexColor('#111827'))
+    canvas.setFont("Helvetica-Bold",17,)
+    canvas.drawString(34 * mm, page_height - 29 * mm, "EQUITY LENS",)
+
+    canvas.setFillColor(colors.HexColor('#334155'))
+    canvas.setFont("Helvetica",8,)
+    canvas.drawString(34 * mm, page_height - 29 * mm, "I N V E S T   S M A R T E R",)
+
+    canvas.setFont("Helvetica-Bold",9,)
+    canvas.setFillColor(colors.HexColor('#334155'))
+    canvas.drawString(page_width - 15 * mm, page_height - 19 * mm, "Smart Portfolio Snapshot",)
+
+    canvas.setStrokeColor(colors.HexColor('#CBD5E1'))
+    canvas.line(15 * mm, page_height - 34 * mm, page_width - 15 * mm, page_height - 34 * mm,)
+
+    canvas.setFillColor(colors.HexColor('#334155'))
+    canvas.setFont("Helvetica-Bold",34,)
+    canvas.drawString(15 * mm, page_height - 65 * mm, "Smart Portfolio",)
+    canvas.drawString(15 * mm, page_height - 78 * mm, "Snapshot",)
+
+    canvas.setFillColor(colors.HexColor('#334155'))
+    canvas.setFont("Helvetica-Bold",12,)
+    canvas.drawString(15 * mm, page_height - 94 * mm, "Your portfolio. Clear insights",)
+    canvas.drawString(15 * mm, page_height - 103 * mm, "A brighter tomorrow.",)
+
+    canvas.setFillColor(colors.HexColor('#F97316'))
+    canvas.roundRect(15 * mm, page_height - 118 * mm, 24 * mm, 2 * mm, 1 * mm, fill=1, stroke=0)
+
+    start_y = page_height - 145 * mm
+    canvas.setFillColor(colors.HexColor('#F97316'))
+    canvas.circle(21 * mm, start_y, 5 * mm, fill=1,stroke=0,)
+    canvas.setFillColor(colors.HexColor('#111827'))
+    canvas.setFont("Helvetica-Bold",12,)
+    canvas.drawString(32 * mm, start_y + 2 * mm, "Understand",)
+    canvas.setFillColor(colors.HexColor('#334155'))
+    canvas.setFont("Helvetica-Bold",9,)
+    canvas.drawString(32 * mm, start_y - 4 * mm, "See your portfolio performance",) 
+    canvas.drawString(32 * mm, start_y - 9 * mm, "and allocation clearly.",)
+
+
+    second_y = start_y - 28 * mm
+    canvas.setFillColor(colors.HexColor('#3B82F6'))
+    canvas.circle(21 * mm, second_y, 5 * mm, fill=1,stroke=0,)
+    canvas.setFillColor(colors.HexColor('#111827'))
+    canvas.setFont("Helvetica-Bold",12,)
+    canvas.drawString(32 * mm, second_y + 2 * mm, "Discover",)
+    canvas.setFillColor(colors.HexColor('#334155'))
+    canvas.setFont("Helvetica-Bold",9,)
+    canvas.drawString(32 * mm, second_y - 4 * mm, "Identify insights risks",)
+    canvas.drawString(32 * mm, second_y - 9 * mm, "and opportunities.",)
+
+    third_y = second_y - 28 * mm
+    canvas.setFillColor(colors.HexColor('#22C55E'))
+    canvas.circle(21 * mm, third_y, 5 * mm, fill=1,stroke=0,)
+    canvas.setFillColor(colors.HexColor('#111827'))
+    canvas.setFont("Helvetica-Bold",12,)
+    canvas.drawString(32 * mm, third_y + 2 * mm, "Grow",)
+    canvas.setFillColor(colors.HexColor('#64748B'))
+    canvas.setFont("Helvetica-Bold",9,)
+    canvas.drawString(32 * mm, third_y - 4 * mm, "Make more informed decisions",)
+    canvas.drawString(32 * mm, third_y - 9 * mm, "for your financial future.",)
+
+    quote_y = 43 * mm
+    canvas.setFillColor(colors.HexColor('#F8FaFc'))
+    canvas.roundRect(15 * mm, quote_y, 125 * mm, 27 * mm, 4 * mm, fill=1, stroke=0)
+    canvas.setFillColor(colors.HexColor('#475569'))
+    canvas.setFont("Helvetica-Oblique",10,)
+    canvas.drawString(25 * mm, quote_y + 16 * mm, "Investing is not about beating others,",)
+    canvas.drawString(25 * mm, quote_y + 10 * mm, "but about building a better future for yourself",)
+    canvas.setFont("Helvetica-Bold",8,)
+    canvas.drawString(25 * mm, quote_y + 4 * mm, "- EQUITY LENS",)
+
+    canvas.setStrokeColor(colors.HexColor('#CBD5E1'))
+    canvas.line(15 * mm, 15 * mm, page_width - 15 * mm, 15 * mm,)
+    canvas.setFillColor(colors.HexColor('#64748B'))
+    canvas.setFont("Helvetica",7,)
+    canvas.drawString(15 * mm, 10 * mm, "Equity Lens | Smart Portfolio Snapshot",)
+    canvas.drawString(page_width - 15 * mm, 10 * mm, "Page 1",)
+
+    canvas.restoreState()
 
 def add_header_footer(canvas, doc):
 
@@ -95,7 +203,7 @@ def get_news_image(image_url):
 
         return output_buffer
 
-    except Exception as error:
+    except Exception:
         print("The image could not be loaded.")
 
         return None
