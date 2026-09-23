@@ -1,45 +1,40 @@
 from unittest.mock import MagicMock, patch
-
-import pytest
-
 from app.models.chat import ChatConversation, ChatMessages
-
 
 def test_delete_conversation(client, db_session, test_user, auth_headers):
 
-    del_conversation = ChatConversation(user_id=test_user.id, title="Conversation to delete")
+    del_conversation = ChatConversation(user_id = test_user.id, title = "Conversation to delete")
 
     db_session.add(del_conversation)
     db_session.commit()
 
     conv_id = del_conversation.id
-    db_session.add(ChatMessages(conversation_id=conv_id, role="user", content="Question."))
-    db_session.add(ChatMessages(conversation_id=conv_id, role="assistant", content="Answer."))
+    db_session.add(ChatMessages(conversation_id = conv_id, role = "user", content = "Question."))
+    db_session.add(ChatMessages(conversation_id = conv_id, role = "assistant", content = "Answer."))
     db_session.commit()
 
-    output = client.delete(f"/api/ai_chat/conversations/{conv_id}/", headers=auth_headers)
+    output = client.delete(f"/api/ai_chat/conversations/{conv_id}/", headers = auth_headers)
     assert output.status_code == 200
     assert output.json() == {"detail": "Conversation deleted"}
 
-    all_convs = db_session.query(ChatConversation).filter_by(id=conv_id).all()
+    all_convs = db_session.query(ChatConversation).filter_by(id = conv_id).all()
     assert len(all_convs) == 0
 
-    messages_in_conv = db_session.query(ChatMessages).filter_by(conversation_id=conv_id).all()
+    messages_in_conv = db_session.query(ChatMessages).filter_by(conversation_id = conv_id).all()
     assert len(messages_in_conv) == 0
 
-
 def test_get_messages(client, db_session, test_user, auth_headers):
-    conversation = ChatConversation(user_id=test_user.id, title="Conversation")
+    conversation = ChatConversation(user_id = test_user.id, title = "Conversation")
 
     db_session.add(conversation)
     db_session.commit()
 
     conv_id = conversation.id
-    db_session.add(ChatMessages(conversation_id=conv_id, role="user", content="Question."))
-    db_session.add(ChatMessages(conversation_id=conv_id, role="assistant", content="Answer."))
+    db_session.add(ChatMessages(conversation_id = conv_id, role = "user", content = "Question."))
+    db_session.add(ChatMessages(conversation_id = conv_id, role = "assistant", content = "Answer."))
     db_session.commit()
 
-    output = client.get(f"/api/ai_chat/conversations/{conv_id}/messages/", headers=auth_headers)
+    output = client.get(f"/api/ai_chat/conversations/{conv_id}/messages/", headers = auth_headers)
     assert output.status_code == 200
 
     msgs = output.json()
@@ -51,17 +46,15 @@ def test_get_messages(client, db_session, test_user, auth_headers):
 
 
 def test_renaming_conversations(client, db_session, test_user, auth_headers):
-    conversation = ChatConversation(user_id=test_user.id, title="Current")
+    conversation = ChatConversation(user_id = test_user.id, title = "Current")
 
     db_session.add(conversation)
     db_session.commit()
 
     conv_id = conversation.id
 
-    output = client.put(
-        f"/api/ai_chat/conversations/{conv_id}/", json={"title": "Renamed"}, headers=auth_headers
-    )
-    assert output.status_code == 200
+    output = client.put(f"/api/ai_chat/conversations/{conv_id}/", json = {"title": "Renamed"}, headers = auth_headers)
+    assert output.status_code == 200 
     assert output.json() == {"id": str(conv_id), "title": "Renamed"}
 
     db_session.refresh(conversation)
@@ -69,11 +62,11 @@ def test_renaming_conversations(client, db_session, test_user, auth_headers):
 
 
 def test_load_all_converastions(client, db_session, test_user, auth_headers):
-    db_session.add(ChatConversation(user_id=test_user.id, title="1"))
-    db_session.add(ChatConversation(user_id=test_user.id, title="2"))
+    db_session.add(ChatConversation(user_id = test_user.id, title = "1"))
+    db_session.add(ChatConversation(user_id = test_user.id, title = "2"))
     db_session.commit()
 
-    output = client.get("/api/ai_chat/conversations/", headers=auth_headers)
+    output = client.get("/api/ai_chat/conversations/", headers = auth_headers)
     assert output.status_code == 200
 
     all_convs = output.json()
@@ -86,18 +79,46 @@ def test_load_all_converastions(client, db_session, test_user, auth_headers):
     assert "1" in name
     assert "2" in name
 
-@pytest.mark.usefixtures("db_session", "test_user")
+
 @patch("app.services.ai_service.get_bedrock_client")
-def test_send_message(mock_bedrock_client, client, auth_headers):
+def test_send_message(mock_bedrock_client, client, db_session, test_user, auth_headers):
     mocked_client = MagicMock()
-    mocked_client.converse.return_value = {
-        "output": {"message": {"content": [{"text": "A response."}]}}
-    }
+    mocked_client.converse.return_value = {"output": {"message": {"content": [{"text": "A response."}]}}}
     mock_bedrock_client.return_value = mocked_client
 
-    output = client.post("/api/ai_chat/", json={"message": "Question"}, headers=auth_headers)
+    output = client.post("/api/ai_chat/", json = {"message": "Question"}, headers = auth_headers)
     assert output.status_code == 200
 
     msg = output.json()
     assert msg["reply"] == "A response."
     assert msg["conversation_id"] is not None
+
+
+@patch("app.services.ai_service.get_bedrock_client")
+def test_run_post_turn(mock_bedrock_client, db_session, test_user):
+    from app.services.ai_service import run_post_turn
+    from app.models.chat import UserMemory
+
+    def reply(text):
+        return {"output": {"message": {"content": [{"text": text}]}}}
+    
+    mocked_client = MagicMock()
+    mocked_client.converse.side_effect = [
+        reply("Retirement Planning"),
+        reply('["The user wants to retire in 15 years"]'),
+    ]
+    mock_bedrock_client.return_value = mocked_client
+
+    conversation = ChatConversation(user_id = test_user.id)
+
+    db_session.add(conversation)
+    db_session.commit()
+
+    run_post_turn(conversation.id, test_user.id, "I want to retire in 15 years", db_session)
+
+    db_session.refresh(conversation)
+    assert conversation.title == "Retirement Planning"
+
+    facts = db_session.query(UserMemory).filter_by(user_id = test_user.id).all()
+    assert [f.fact for f in facts] == ["The user wants to retire in 15 years"]
+    
