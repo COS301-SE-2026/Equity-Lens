@@ -17,24 +17,24 @@ const mutedStyle = { color: 'var(--text-secondary)' };
 const dimStyle = { color: 'var(--text-dim)' };
 
 const ACCOUNT_TYPES = [
-  { value: "zar", label: "ZAR" },
-  { value: "tfsa", label: "TFSA" },
-  { value: "usd", label: "USD" },
+  { value: 'zar', label: 'ZAR' },
+  { value: 'tfsa', label: 'TFSA' },
+  { value: 'usd', label: 'USD' },
 ];
 
 /** @param {string | null | undefined} value */
 const accountTypeLabel = (value) =>
-  ACCOUNT_TYPES.find((t) => t.value === value)?.label ?? "Not set";
+  ACCOUNT_TYPES.find((t) => t.value === value)?.label ?? 'Not set';
 
 /** @param {{ statement_start_date?: string|null, statement_end_date?: string|null }} portfolio */
 const statementPeriod = (portfolio) => {
   const { statement_start_date: start, statement_end_date: end } = portfolio;
   if (start && end) return `${start} - ${end}`;
   if (end) return `Statement date: ${end}`;
-  return "No statement date";
+  return 'No statement date';
 };
 
-const SECTION_HEADER = "detailed transactions - ";
+const SECTION_HEADER = 'detailed transactions - ';
 
 /**
  * @param {{ page: number, text: string }[]} allRows
@@ -66,9 +66,9 @@ export const sectionRows = (allRows, starting) => {
  * @param {string} text
  */
 export const parsePurchaseRow = (text) => {
-  const splitParts = text.split(" ").filter((item) => item !== "");
+  const splitParts = text.split(' ').filter((item) => item !== '');
 
-  if (!splitParts[0].includes("/")) {
+  if (!splitParts[0].includes('/')) {
     return null;
   }
   const values = splitParts.slice(2);
@@ -87,7 +87,6 @@ export const parsePurchaseRow = (text) => {
     return numbers;
   };
 
-
   const valueZar = getNumber();
   getNumber();
   const quantity = getNumber();
@@ -95,12 +94,13 @@ export const parsePurchaseRow = (text) => {
 
   if (valueZar === undefined || quantity === undefined || priceCents === undefined) {
     return null;
+    return null;
   }
 
   return {
-    transaction_date: splitParts[0].replaceAll("/", "-"),
+    transaction_date: splitParts[0].replaceAll('/', '-'),
     transaction_name: splitParts[1],
-    instrument_name: values.join(" "),
+    instrument_name: values.join(' '),
     price: parseFloat(priceCents) / 100,
     quantity: parseFloat(quantity),
     value_zar: parseFloat(valueZar),
@@ -111,10 +111,10 @@ export const parsePurchaseRow = (text) => {
  * @param {string} text
  */
 export const parseExposureRow = (text) => {
-  const splitParts = text.split(" ").filter((item) => item !== "");
+  const splitParts = text.split(' ').filter((item) => item !== '');
 
   const firstNumberIndex = splitParts.findIndex((item) => {
-    return item.includes(".") && Number.isFinite(Number(item));
+    return item.includes('.') && Number.isFinite(Number(item));
   });
 
   if (firstNumberIndex === -1) {
@@ -126,7 +126,7 @@ export const parseExposureRow = (text) => {
     let numbers = values.pop();
     const check = values.at(-1);
 
-    if (values.length > 0 && check && !check.includes(".")) {
+    if (values.length > 0 && check && !check.includes('.')) {
       const checkSecond = values.pop();
 
       if (checkSecond) {
@@ -157,8 +157,8 @@ export const parseExposureRow = (text) => {
   }
 
   return {
-    instrument_name: splitParts.slice(0, firstNumberIndex).join(" "),
-    quantity: quantity,
+    instrument_name: splitParts.slice(0, firstNumberIndex).join(' '),
+    quantity,
     total_cost: cost,
     statement_price: statementPrice,
     statement_value: statementValue,
@@ -196,8 +196,8 @@ export const buildHoldingsPayload = (rows) => {
   return held.map((row) => ({
     instrument_name: row.instrument_name,
     quantity: row.quantity,
-    ticker: " ",
-    sector: " ",
+    ticker: ' ',
+    sector: ' ',
     total_cost: row.total_cost,
     cost_price: row.total_cost / row.quantity,
     weight_percentage: (row.total_cost / portfolioValue) * 100,
@@ -213,11 +213,11 @@ const describeApiError = (error) => {
   const detail = error?.response?.data?.detail;
   if (Array.isArray(detail) && detail.length > 0) {
     const first = detail[0];
-    const field = Array.isArray(first.loc) ? first.loc[first.loc.length - 1] : "field";
+    const field = Array.isArray(first.loc) ? first.loc[first.loc.length - 1] : 'field';
     return `${field}: ${first.msg}`;
   }
-  if (typeof detail === "string") return detail;
-  return error?.message ?? "Unknown error";
+  if (typeof detail === 'string') return detail;
+  return error?.message ?? 'Unknown error';
 };
 
 /**
@@ -225,7 +225,7 @@ const describeApiError = (error) => {
  */
 const toDateOnly = (value) => {
   if (!(value instanceof Date)) return value;
-  return value.toISOString().split("T")[0];
+  return value.toISOString().split('T')[0];
 };
 
 /**
@@ -276,7 +276,6 @@ const ReadingExcelFile = async (file) => {
     value: item["Value"],
   }));
 
-
   return {
     Portfolio, Holdings, PurchaseandSales, ContributionsandWithdrawals, DividendsandWithholdingTax, Expenses
   }
@@ -296,7 +295,6 @@ const ReadingPDFFile = async (file, password) => {
     data: await file.arrayBuffer(),
     password: password,
   }).promise;
-
 
   const allRows = [];
 
@@ -319,11 +317,12 @@ const ReadingPDFFile = async (file, password) => {
   /**
    * @type {{ y: number, page: number, text: string, items: {text: string, x: number, y: number, page: number}[]}[]}
    */
-  const allRowsTogther = []
+  const allRowsTogther = [];
 
   for (const items of allRows) {
     const ExistRow = allRowsTogther.find((row) => row.y === items.y && row.page === items.page)
 
+    if (ExistRow) {
     if (ExistRow) {
       ExistRow.items.push(items);
     }
@@ -339,15 +338,17 @@ const ReadingPDFFile = async (file, password) => {
   }
 
   /**
-  * @param {string} starting
-  */
-  const getTheTable = (starting) => sectionRows(allRowsTogther, starting)
+   * @param {string} starting
+   */
+  const getTheTable = (starting) => sectionRows(allRowsTogther, starting);
 
-  const HoldingsTable = getTheTable("Instrument Exposure ")
-  const PurchaseAndSalesTable = getTheTable("Detailed Transactions - Instrument Purchases and Sales")
-  const ContributionsTable = getTheTable("Detailed Transactions - Contributions and Withdrawals")
-  const TaxTable = getTheTable("Detailed Transactions - Dividends and withholding Tax")
-  const ExpensesTable = getTheTable("Detailed Transactions - Expenses")
+  const HoldingsTable = getTheTable('Instrument Exposure ');
+  const PurchaseAndSalesTable = getTheTable(
+    'Detailed Transactions - Instrument Purchases and Sales',
+  );
+  const ContributionsTable = getTheTable('Detailed Transactions - Contributions and Withdrawals');
+  const TaxTable = getTheTable('Detailed Transactions - Dividends and withholding Tax');
+  const ExpensesTable = getTheTable('Detailed Transactions - Expenses');
 
   const accountIndex = allRowsTogther.findIndex((row) => { return row.text.trim().startsWith("EE") })
   const statementIndex = allRowsTogther.find((row) => { return row.text.trim().includes(" to ") })
@@ -358,9 +359,8 @@ const ReadingPDFFile = async (file, password) => {
     throw ("error for the statementIndex")
   }
 
-  const gettingthData = statementIndex.text.split("to")[1].trim()
-  const date = new Date(gettingthData).toISOString().split("T")[0]
-
+  const gettingthData = statementIndex.text.split('to')[1].trim();
+  const date = new Date(gettingthData).toISOString().split('T')[0];
 
   const Portfolio = [{
 
@@ -368,10 +368,7 @@ const ReadingPDFFile = async (file, password) => {
     portfolio_name: PortfolioRow,
     statement_date: date,
 
-  }]
-
-
-  let instrumentName = "";
+  let instrumentName = '';
 
   const Holdings = HoldingsTable.map((row) => {
 
@@ -387,11 +384,12 @@ const ReadingPDFFile = async (file, password) => {
     }
 
     const holdings = {
+    const holdings = {
       ...parsed,
-      instrument_name: (instrumentName + " " + parsed.instrument_name).trim(),
-    }
+      instrument_name: (instrumentName + ' ' + parsed.instrument_name).trim(),
+    };
 
-    instrumentName = "";
+    instrumentName = '';
 
     return holdings;
 
@@ -410,10 +408,10 @@ const ReadingPDFFile = async (file, password) => {
       return null
     }
 
-    const last = splitParts.at(-1) || "";
-    const secondLast = splitParts.at(-2) || "";
+    const last = splitParts.at(-1) || '';
+    const secondLast = splitParts.at(-2) || '';
 
-    const chackThousands = !Number.isNaN(Number(secondLast))
+    const chackThousands = !Number.isNaN(Number(secondLast));
 
     return {
       transaction_date: splitParts[0].replaceAll("/", "-"),
@@ -437,8 +435,8 @@ const ReadingPDFFile = async (file, password) => {
       instrument_name: splitParts.slice(1, -4).join(" "),
       gross_dividend: splitParts[splitParts.length - 4],
       tax_rate: splitParts[splitParts.length - 1],
-    }
-  }).filter((item) => item !== null)
+    };
+  }).filter((item) => item !== null);
 
   const Expenses = ExpensesTable.map((row) => {
     const splitParts = row.text.split(" ").filter((item => item !== ""))
@@ -452,14 +450,13 @@ const ReadingPDFFile = async (file, password) => {
       settlement_date: splitParts[1].replaceAll("/", "-"),
       narrative: splitParts.slice(2, -1).join(" "),
       value: splitParts[splitParts.length - 1],
-    }
-  }).filter((item) => item !== null)
+    };
+  }).filter((item) => item !== null);
 
   const results = { Portfolio, Holdings, PurchaseandSales, ContributionsandWithdrawals, DividendsandWithholdingTax, Expenses }
 
   return results;
-
-}
+};
 
 const Portfolio = () => {
 
@@ -471,24 +468,28 @@ const Portfolio = () => {
   /**
    * @type {[any[], function]}
    */
-  const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState(/** @type {any[]}*/[]);
+  const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState(
+    /** @type {any[]}*/ [],
+  );
   /**
    * @type {[any[], function]}
    */
-  const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState(/** @type {any[]}*/[]);
-  const [GetTheLowest, setGetTheLowest] = useState({ name: "", value: 0 });
+  const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState(
+    /** @type {any[]}*/ [],
+  );
+  const [GetTheLowest, setGetTheLowest] = useState({ name: '', value: 0 });
   /**
    * @type {[any[], function]}
    */
-  const [GetTradingActivity, setGetTradingActivity] = useState(/** @type {any[]}*/[]);
+  const [GetTradingActivity, setGetTradingActivity] = useState(/** @type {any[]}*/ []);
   /**
    * @type {[any[], function]}
    */
-  const [GetCashFlow, setGetCashFlow] = useState(/** @type {any[]}*/[]);
+  const [GetCashFlow, setGetCashFlow] = useState(/** @type {any[]}*/ []);
   /**
    * @type {[any[], function]}
    */
-  const [GetDividendIncome, setGetDividendIncome] = useState(/** @type {any[]}*/[]);
+  const [GetDividendIncome, setGetDividendIncome] = useState(/** @type {any[]}*/ []);
   /**
    * @type {[boolean,function]}
    */
@@ -500,18 +501,18 @@ const Portfolio = () => {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
 
   useEffect(() => {
+  useEffect(() => {
     const getInfo = async () => {
-      const responses = await api.get("/portfolio/current");
+      const responses = await api.get('/portfolio/current');
       setPortfolios(responses.data);
     };
 
     getInfo();
-
-  }, [])
+  }, []);
 
   /**
-   * 
-   * @param {*} id 
+   *
+   * @param {*} id
    */
   const ViewSummary = async (id) => {
 
@@ -590,10 +591,10 @@ const Portfolio = () => {
     }
   }
 
-  const colours = ["#8B5CF6", "#3B82F6", "#22C55E", "#F59E0B"];
+  const colours = ['#8B5CF6', '#3B82F6', '#22C55E', '#F59E0B'];
 
   /**
-   * 
+   *
    * @param {any} data
    * @param {File} file
    */
@@ -603,7 +604,6 @@ const Portfolio = () => {
     let createdPortfolioId = null;
 
     try {
-
       const uploadInvestmentStatements = await api.post(
         "/import_pdf/",
 
@@ -642,13 +642,11 @@ const Portfolio = () => {
 
 
       for (const eachItems of data.PurchaseandSales) {
-
         const price = parseFloat(eachItems.price);
         const quantity = parseFloat(eachItems.quantity);
 
-
         const uploadHoldingsRequest = await api.post(
-          "/import_pdf/save_instrument_purchases_and_sales/",
+          '/import_pdf/save_instrument_purchases_and_sales/',
           {
             portfolio_id: savedPortfolio.portfolio_id,
             transaction_date: eachItems.transaction_date,
@@ -669,7 +667,7 @@ const Portfolio = () => {
         const value_zar = parseFloat(eachItems.value);
 
         const uploadHoldingsRequest = await api.post(
-          "/import_pdf/save_contributions_and_withdrawals/",
+          '/import_pdf/save_contributions_and_withdrawals/',
           {
             portfolio_id: savedPortfolio.portfolio_id,
             transaction_date: eachItems.transaction_date,
@@ -686,7 +684,7 @@ const Portfolio = () => {
         const net_dividend = ((gross_dividend - (gross_dividend * (tax_rate / 100))));
 
         const uploadHoldingsRequest = await api.post(
-          "/import_pdf/save_dividends_and_withholding_tax/",
+          '/import_pdf/save_dividends_and_withholding_tax/',
           {
             portfolio_id: savedPortfolio.portfolio_id,
             transaction_date: eachItems.transaction_date,
@@ -719,37 +717,32 @@ const Portfolio = () => {
 
 
       const getSummaryRequest = await api.get(
-        `/import_pdf_summary/summary/${savedPortfolio.portfolio_id}`
-      )
+        `/import_pdf_summary/summary/${savedPortfolio.portfolio_id}`,
+      );
 
       const getSummary = getSummaryRequest.data;
       setSummary(getSummary);
 
       const SummaGetTheTopAllocationImportPDFRequest = await api.get(
         `/import_pdf_summary/top_holdings/${savedPortfolio.portfolio_id}`,
-      )
+      );
 
       const getSummaGetTheTopAllocationImportPDFry = SummaGetTheTopAllocationImportPDFRequest.data;
       setGetTheTopHoldingsImportPDF(getSummaGetTheTopAllocationImportPDFry);
 
-
       const getSummaryGetTheTopHoldingsImportPDFRequest = await api.get(
-        `/import_pdf_summary/portfolio_allocation/${savedPortfolio.portfolio_id}`
-      )
+        `/import_pdf_summary/portfolio_allocation/${savedPortfolio.portfolio_id}`,
+      );
 
       const getSummaryGetTheTopHoldingsImportPDF = getSummaryGetTheTopHoldingsImportPDFRequest.data;
       setGetTheTopAllocationImportPDF(getSummaryGetTheTopHoldingsImportPDF);
 
       const LowestHoldingsRequest = await api.get(
-        `/import_pdf_summary/lowest_holdings/${savedPortfolio.portfolio_id}`
-      )
+        `/import_pdf_summary/lowest_holdings/${savedPortfolio.portfolio_id}`,
+      );
 
       const LowestHoldings = LowestHoldingsRequest.data;
       setGetTheLowest(LowestHoldings);
-
-
-
-
 
       const TradingActivity = await api.get(
         `/import_pdf_summary/trading_activity/${savedPortfolio.portfolio_id}`
@@ -810,9 +803,7 @@ const Portfolio = () => {
 
 
     <div className="p-6">
-
       <div className="max-w-6xl mx-auto p-6 bg-gray-900 border border-gray-700 rounded-3xl">
-
         <div className="text-center mb-10">
           <h2 className="text-4xl font-bold text-white mb-3">
             Upload Portfolio
@@ -881,6 +872,9 @@ const Portfolio = () => {
               <p className="text-sm text-gray-400">
                 Upload your EasyEquities PDF or Complete the Excel template
               </p>
+              <p className="text-sm text-gray-400">
+                Upload your EasyEquities PDF or Complete the Excel template
+              </p>
             </div>
 
             <div className="mb-4">
@@ -892,15 +886,22 @@ const Portfolio = () => {
                 onChange={(event) => setAccountType(event.target.value)}
                 className="w-full bg-gray-800 border border-gray-700 text-white p-3 rounded-xl"
               >
+              <select
+                id="account-type-select"
+                value={accountType}
+                onChange={(event) => setAccountType(event.target.value)}
+                className="w-full bg-gray-800 border border-gray-700 text-white p-3 rounded-xl"
+              >
                 <option value=""> Select account type</option>
                 {ACCOUNT_TYPES.map((type) => (
-                  <option key={type.value} value={type.value}>{type.label}</option>
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
                 ))}
               </select>
             </div>
 
             <label className="block text-center cursor-pointer w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
-
               choose the File
 
               <input
@@ -910,6 +911,9 @@ const Portfolio = () => {
                 onChange={async (event) => {
                   const file = event.target.files?.[0];
 
+                  if (!file) {
+                    return;
+                  }
                   if (!file) {
                     return;
                   }
@@ -967,9 +971,7 @@ const Portfolio = () => {
 
           <div className="border border-gray-700 rounded-2xl p-6">
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Excel Template
-              </h3>
+              <h3 className="text-lg font-semibold text-white mb-2">Excel Template</h3>
 
               <p className="text-sm text-gray-400">
                 Don&apost have a supported PDF? Don&apost worry, You can enter your portfolio
@@ -977,12 +979,13 @@ const Portfolio = () => {
               </p>
             </div>
 
-            <button onClick={DownloadEXCEL} className="w-full border border-orange-500 text-orange-400 hover:bg-orange-500 hover:text-white font-semibold py-3 rounded-xl transition">
+            <button
+              onClick={DownloadEXCEL}
+              className="w-full border border-orange-500 text-orange-400 hover:bg-orange-500 hover:text-white font-semibold py-3 rounded-xl transition"
+            >
               Download Template
             </button>
-            <p className="text-sm text-gray-500 text-center mt-3">
-              EquityLens Excel Template
-            </p>
+            <p className="text-sm text-gray-500 text-center mt-3">EquityLens Excel Template</p>
           </div>
         </div>
 
@@ -1002,6 +1005,7 @@ const Portfolio = () => {
               <button onClick={() => setShowPortfolios(false)} className="text-gray-400 hover:text-white">
                 X
               </button>
+            </div>
             </div>
 
             <div>
@@ -1378,5 +1382,3 @@ const Portfolio = () => {
 };
 
 export default Portfolio;
-
-

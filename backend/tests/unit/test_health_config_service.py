@@ -20,6 +20,7 @@ def _add_goal(db_session, user, goal_type, years):
     db_session.commit()
     return goal
 
+
 @pytest.mark.parametrize(
     ("goal_type", "years", "expected"),
     [
@@ -50,9 +51,7 @@ def test_an_unrecognised_goal_type_derives_nothing_rather_than_guessing(db_sessi
     assert resolved.source == svc.SOURCE_DEFAULT
 
 
-def test_a_derived_preset_is_never_written_back_as_the_users_own_choice(
-    db_session, test_user
-):
+def test_a_derived_preset_is_never_written_back_as_the_users_own_choice(db_session, test_user):
     goal = _add_goal(db_session, test_user, "retirement", 30)
     assert svc.resolve_health_config(db_session, test_user.id).preset_key == "growth"
     assert db_session.query(UserPreference).count() == 0
@@ -140,6 +139,7 @@ def test_a_stored_preset_key_that_no_longer_exists_falls_through(db_session, tes
     db_session.add(UserPreference(user_id=test_user.id, health_preset_key="preset_we_removed"))
     db_session.commit()
     assert svc.resolve_health_config(db_session, test_user.id).source == svc.SOURCE_DEFAULT
+
 
 def test_payload_names_the_derived_alternative_so_a_reset_can_be_labelled(db_session, test_user):
     _add_goal(db_session, test_user, "retirement", 30)

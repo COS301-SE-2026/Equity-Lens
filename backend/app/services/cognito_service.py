@@ -1,10 +1,18 @@
+import contextlib
+import logging
+from functools import lru_cache
+
 import boto3
 from botocore.exceptions import ClientError
 from fastapi import HTTPException
 
 from app.config import settings
+from app.schemas.responses import AppError
+
+logger = logging.getLogger(__name__)
 
 
+@lru_cache(maxsize=1)
 def _get_client():
     return boto3.client(
         "cognito-idp",
@@ -30,13 +38,13 @@ def cognito_register(full_name: str, email: str, password: str) -> dict:
     except ClientError as e:
         code = e.response["Error"]["Code"]
         msg = e.response["Error"]["Message"]
-        
+
         if code == "UsernameExistsException":
-            raise HTTPException(status_code=409, detail="email already registered")
+            raise AppError(409, "EMAIL_ALREADY_REGISTERED", "email already registered") from e
         if code == "InvalidPasswordException":
-            raise HTTPException(status_code=422, detail=msg)
-            
-        raise HTTPException(status_code=400, detail=msg)
+            raise HTTPException(status_code=422, detail=msg) from e
+
+        raise HTTPException(status_code=400, detail=msg) from e
 
 
 def cognito_confirm_registration(email: str, code: str) -> bool:
@@ -49,7 +57,7 @@ def cognito_confirm_registration(email: str, code: str) -> bool:
         )
         return True
     except ClientError as e:
-        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"])
+        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"]) from e
 
 
 def cognito_login(email: str, password: str) -> dict:
@@ -78,12 +86,13 @@ def cognito_login(email: str, password: str) -> dict:
         }
     except ClientError as e:
         if e.response["Error"]["Code"] in ("NotAuthorizedException", "UserNotFoundException"):
-            raise HTTPException(
-                status_code=401,
-                detail="invalid email or password",
+            raise AppError(
+                401,
+                "INVALID_CREDENTIALS",
+                "invalid email or password",
                 headers={"WWW-Authenticate": "Bearer"},
-            )
-        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"])
+            ) from e
+        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"]) from e
 
 
 def cognito_respond_to_mfa(session: str, email: str, totp_code: str) -> dict:
@@ -104,12 +113,13 @@ def cognito_respond_to_mfa(session: str, email: str, totp_code: str) -> dict:
             "id_token": tokens["IdToken"],
             "refresh_token": tokens["RefreshToken"],
         }
-    except ClientError:
-        raise HTTPException(
-            status_code=401,
-            detail="invalid mfa code",
+    except ClientError as e:
+        raise AppError(
+            401,
+            "INVALID_MFA_CODE",
+            "invalid mfa code",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from e
 
 
 def cognito_associate_totp(access_token: str) -> str:
@@ -118,7 +128,7 @@ def cognito_associate_totp(access_token: str) -> str:
         res = client.associate_software_token(AccessToken=access_token)
         return res["SecretCode"]
     except ClientError as e:
-        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"])
+        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"]) from e
 
 
 def cognito_verify_totp(access_token: str, totp_code: str) -> bool:
@@ -135,7 +145,7 @@ def cognito_verify_totp(access_token: str, totp_code: str) -> bool:
         )
         return True
     except ClientError as e:
-        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"])
+        raise HTTPException(status_code=400, detail=e.response["Error"]["Message"]) from e
 
 
 def cognito_get_user(access_token: str) -> dict:
@@ -149,19 +159,29 @@ def cognito_get_user(access_token: str) -> dict:
             "full_name": attrs.get("name", ""),
             "email_verified": attrs.get("email_verified") == "true",
         }
-    except ClientError:
-        raise HTTPException(
-            status_code=401,
-            detail="invalid or expired token",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    except ClientError as e:
+        code = e.response["Error"]["Code"]
+        if code in ("NotAuthorizedException", "UserNotFoundException"):
+            raise AppError(
+                401,
+                "TOKEN_EXPIRED",
+                "invalid or expired token",
+                headers={"WWW-Authenticate": "Bearer"},
+            ) from e
+
+        logger.error("cognito get_user failed with %s", code)
+        raise AppError(
+            503,
+            "AUTH_UNAVAILABLE",
+            "sign-in check is temporarily unavailable, try again",
+        ) from e
+
 
 def cognito_logout(access_token: str) -> bool:
-    try:
+    with contextlib.suppress(ClientError):
         _get_client().global_sign_out(AccessToken=access_token)
-    except ClientError:
-        pass 
     return True
+
 
 def cognito_delete_user(access_token: str) -> None:
     client = _get_client()
@@ -169,6 +189,6 @@ def cognito_delete_user(access_token: str) -> None:
         client.delete_user(AccessToken=access_token)
     except ClientError as e:
         if e.response["Error"]["Code"] == "UserNotFoundException":
-            #Gone already
+            # Gone already
             return
         raise

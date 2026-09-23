@@ -1,19 +1,21 @@
 import sys
 from logging.config import fileConfig
 from pathlib import Path
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+
+from sqlalchemy import engine_from_config, pool
+
 from alembic import context
+
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from app.config import settings
 from app.database import Base
-from app.models import user  # noqa: F401
-from app.models import portfolio
-from app.models import chat
-from app.models import market_data
+from app.models import (
+    user,  # noqa: F401
+)
+
 config = context.config
 
-#Overrides with app's real settings
+# Overrides with app's real settings
 config.set_main_option("sqlalchemy.url", settings.database_url)
 
 # Interpret the config file for Python logging. Sets up loggers basically.
@@ -22,8 +24,9 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
+
 def run_migrations_offline() -> None:
-    #Run migrations in 'offline' mode.
+    # Run migrations in 'offline' mode.
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
@@ -37,7 +40,7 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    #Run migrations in 'online' mode.
+    # Run migrations in 'online' mode.
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
@@ -45,9 +48,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

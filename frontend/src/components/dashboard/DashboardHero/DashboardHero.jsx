@@ -1,10 +1,11 @@
-import { motion, useReducedMotion  } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
-import Money from '../../common/Money/Money';
+
 import { zar, zarFull } from '../../../utils/currency';
 import { buildHeroSummary } from '../../../utils/dashboardInsights';
+import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
+import Money from '../../common/Money/Money';
 
 /** @param {number | null} score */
 const healthTone = (score) => {
@@ -36,11 +37,13 @@ function greet(hour) {
 
 /** @param {Date|null|undefined} fetchedAt */
 function newTime(fetchedAt) {
-  if (!fetchedAt) { return null; }
+  if (!fetchedAt) {
+    return null;
+  }
   const mins = Math.floor((Date.now() - fetchedAt.getTime()) / 60000);
   if (mins < 1) return 'Updated just now';
   if (mins < 60) return `Updated ${mins} minutes ago`;
-  const hours = Math.floor(mins/60);
+  const hours = Math.floor(mins / 60);
   return hours === 1 ? 'Updated 1 hour ago' : `Updated ${hours} hours ago`;
 }
 
@@ -57,9 +60,22 @@ function newTime(fetchedAt) {
  *   size?: 'lg' | 'sm',
  * }} props
  */
-const HeroFigure = ({ label, help, value, pctText, color, icon, marker, markerHelp, size = 'sm' }) => (
+const HeroFigure = ({
+  label,
+  help,
+  value,
+  pctText,
+  color,
+  icon,
+  marker,
+  markerHelp,
+  size = 'sm',
+}) => (
   <div>
-    <div className="flex items-center gap-1 font-mono text-[10px] tracking-widest sm:justify-end" style={{ color: 'var(--text-ghost)' }}>
+    <div
+      className="flex items-center gap-1 font-mono text-[10px] tracking-widest sm:justify-end"
+      style={{ color: 'var(--text-ghost)' }}
+    >
       <span>{label}</span>
       {help && <HelpTooltip text={help} />}
     </div>
@@ -67,7 +83,8 @@ const HeroFigure = ({ label, help, value, pctText, color, icon, marker, markerHe
       className={`mt-1 flex items-center gap-1.5 font-mono font-semibold leading-none sm:justify-end ${
         size === 'lg' ? 'text-[28px] sm:text-[32px]' : 'text-[18px] sm:text-[20px]'
       }`}
-      style={{ color: color ?? 'var(--text-primary)' }}>
+      style={{ color: color ?? 'var(--text-primary)' }}
+    >
       {icon}
       <Money as="span">{value}</Money>
       {pctText && (
@@ -90,7 +107,7 @@ const HeroFigure = ({ label, help, value, pctText, color, icon, marker, markerHe
  * }} props
  */
 const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealth }) => {
-  const slowMo = useReducedMotion ();
+  const slowMo = useReducedMotion();
   const greeting = greet(new Date().getHours());
   const time = newTime(fetchedAt);
 
@@ -107,7 +124,8 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
   const statementDate = portfolioData?.statementDate ?? null;
   const asAt = statementDate ? ` as at ${statementDate}` : '';
   const allUnpriced = holdingsCount > 0 && pricedCount === 0;
-  const partiallyUnpriced = holdingsCount > 0 && pricedLiveCount > 0 && pricedLiveCount < holdingsCount;
+  const partiallyUnpriced =
+    holdingsCount > 0 && pricedLiveCount > 0 && pricedLiveCount < holdingsCount;
   const onStatementPrices = holdingsCount > 0 && pricedLiveCount === 0 && pricedCount > 0;
   const gainKnown = hasHoldings && !allUnpriced;
   const unpricedCount = holdingsCount - pricedLiveCount;
@@ -118,28 +136,36 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
   } else if (onStatementPrices) {
     gainHelp = `Measured against your statement's closing prices${asAt}, not live quotes - no live price was available.`;
   } else {
-    gainHelp = 'Unrealised gain on your currently-held positions only. Realised gains from past sales and dividends received are shown separately.';
+    gainHelp =
+      'Unrealised gain on your currently-held positions only. Realised gains from past sales and dividends received are shown separately.';
   }
   const rawDailyValue = portfolioData?.summary?.daily_change_value;
   const rawDailyPct = portfolioData?.summary?.daily_change_pct;
-  const dailyChangeKnown = rawDailyValue !== null && rawDailyValue !== undefined
-    && rawDailyPct !== null && rawDailyPct !== undefined;
+  const dailyChangeKnown =
+    rawDailyValue !== null &&
+    rawDailyValue !== undefined &&
+    rawDailyPct !== null &&
+    rawDailyPct !== undefined;
   const dailyChangeValue = dailyChangeKnown ? rawDailyValue : 0;
   const dailyChangePct = dailyChangeKnown ? rawDailyPct : 0;
-  const todayIcon = !dailyChangeKnown
-    ? null
-    : dailyChangeValue > 0 ? <TrendingUp size={14} /> : dailyChangeValue < 0 ? <TrendingDown size={14} /> : null;
+  const todayIcon = !dailyChangeKnown ? null : dailyChangeValue > 0 ? (
+    <TrendingUp size={14} />
+  ) : dailyChangeValue < 0 ? (
+    <TrendingDown size={14} />
+  ) : null;
 
-  const summaryText = hasHoldings && dailyChangeKnown
-    ? buildHeroSummary({ dailyChangeValue, dailyChangePct, unrealisedGain, gainKnown })
-    : null;
+  const summaryText =
+    hasHoldings && dailyChangeKnown
+      ? buildHeroSummary({ dailyChangeValue, dailyChangePct, unrealisedGain, gainKnown })
+      : null;
 
   return (
     <motion.div
       initial={slowMo ? { opacity: 0 } : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="glass-surface overflow-hidden rounded-2xl">
+      className="glass-surface overflow-hidden rounded-2xl"
+    >
       <div className="p-5 sm:p-6">
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="sm:max-w-[50%]">
@@ -150,51 +176,94 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
               <span style={{ color: 'var(--accent-primary)' }}>{name}</span>
             </h1>
             {summaryText && (
-              <p className="mt-2 text-[14px] leading-snug sm:text-[15px]" style={{ color: 'var(--text-primary)' }}>
+              <p
+                className="mt-2 text-[14px] leading-snug sm:text-[15px]"
+                style={{ color: 'var(--text-primary)' }}
+              >
                 {summaryText}
-              </p>)}
+              </p>
+            )}
           </div>
 
-          {hasHoldings ? ( <div className="sm:text-right"> <div className="flex items-center gap-1 font-mono text-[10px] tracking-widest sm:justify-end" style={{ color: 'var(--text-ghost)' }}> <span>Portfolio Value</span>
-                <HelpTooltip text={onStatementPrices
-                  ? `Valued at your statement's closing prices${asAt}, not live quotes.`
-                  : "Live value of your holdings, or cost where a live price isn't available."} />
+          {hasHoldings ? (
+            <div className="sm:text-right">
+              {' '}
+              <div
+                className="flex items-center gap-1 font-mono text-[10px] tracking-widest sm:justify-end"
+                style={{ color: 'var(--text-ghost)' }}
+              >
+                {' '}
+                <span>Portfolio Value</span>
+                <HelpTooltip
+                  text={
+                    onStatementPrices
+                      ? `Valued at your statement's closing prices${asAt}, not live quotes.`
+                      : "Live value of your holdings, or cost where a live price isn't available."
+                  }
+                />
               </div>
-              <div className="mt-1 font-mono font-semibold leading-none text-[32px] sm:text-[40px]" style={{ color: 'var(--text-primary)' }}> <Money as="span">{zarFull(portfolioValue)}</Money>
+              <div
+                className="mt-1 font-mono font-semibold leading-none text-[32px] sm:text-[40px]"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                {' '}
+                <Money as="span">{zarFull(portfolioValue)}</Money>
               </div>
-
               <div className="mt-2 sm:flex sm:justify-end">
                 <HeroFigure
                   label="Today"
-                  value={dailyChangeKnown
-                    ? `${signPrefix(dailyChangeValue)}${zar(Math.abs(dailyChangeValue))}`
-                    : '-'}
-                  pctText={dailyChangeKnown ? `(${signPrefix(dailyChangePct)}${Math.abs(dailyChangePct).toFixed(2)}%)`
-                    : undefined}
+                  value={
+                    dailyChangeKnown
+                      ? `${signPrefix(dailyChangeValue)}${zar(Math.abs(dailyChangeValue))}`
+                      : '-'
+                  }
+                  pctText={
+                    dailyChangeKnown
+                      ? `(${signPrefix(dailyChangePct)}${Math.abs(dailyChangePct).toFixed(2)}%)`
+                      : undefined
+                  }
                   color={dailyChangeKnown ? signColor(dailyChangeValue) : 'var(--text-ghost)'}
-                  help={dailyChangeKnown ? undefined
-                    : "None of your holdings could be priced today, there's no daily move to report yet."}
-                  icon={todayIcon}/>
+                  help={
+                    dailyChangeKnown
+                      ? undefined
+                      : "None of your holdings could be priced today, there's no daily move to report yet."
+                  }
+                  icon={todayIcon}
+                />
               </div>
               <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 sm:justify-end">
-                <HeroFigure label="Invested" help="The cost of your currently-held positions, not total money deposited, differs whenever you've sold something or hold uninvested cash."
-                  value={zarFull(investedCapital)}/>
+                <HeroFigure
+                  label="Invested"
+                  help="The cost of your currently-held positions, not total money deposited, differs whenever you've sold something or hold uninvested cash."
+                  value={zarFull(investedCapital)}
+                />
                 <HeroFigure
                   label="Investment Gain"
                   help={gainHelp}
-                  value={gainKnown ? `${signPrefix(unrealisedGain)}${zarFull(Math.abs(unrealisedGain))}` : '-'}
+                  value={
+                    gainKnown
+                      ? `${signPrefix(unrealisedGain)}${zarFull(Math.abs(unrealisedGain))}`
+                      : '-'
+                  }
                   pctText={
-                    gainKnown && gainPct !== null ? `(${signPrefix(gainPct)}${Math.abs(gainPct).toFixed(1)}%)`
-                      : undefined}
+                    gainKnown && gainPct !== null
+                      ? `(${signPrefix(gainPct)}${Math.abs(gainPct).toFixed(1)}%)`
+                      : undefined
+                  }
                   color={gainKnown ? signColor(unrealisedGain) : 'var(--text-ghost)'}
                   marker={partiallyUnpriced}
                   markerHelp={`${unpricedCount} of ${holdingsCount} holding${unpricedCount === 1 ? '' : 's'} ${
                     unpricedCount === 1 ? 'is' : 'are'
-                  } priced at cost`}/>
+                  } priced at cost`}
+                />
               </div>
             </div>
-          ) : ( <div className="sm:text-right">
-              <div className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+          ) : (
+            <div className="sm:text-right">
+              <div
+                className="font-mono text-[10px] tracking-widest"
+                style={{ color: 'var(--text-ghost)' }}
+              >
                 Portfolio Value
               </div>
               <p className="mt-1 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
@@ -204,20 +273,29 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
           )}
         </div>
         {time && (
-          <div className="mt-5 text-right font-mono text-[9px]" style={{ color: 'var(--text-ghost)' }}>
+          <div
+            className="mt-5 text-right font-mono text-[9px]"
+            style={{ color: 'var(--text-ghost)' }}
+          >
             {time}
-          </div>)}
+          </div>
+        )}
         {health.score !== null && (
           <div
             className="mt-5 flex flex-wrap items-center justify-between gap-4 pt-4"
-            style={{ borderTop: '1px solid var(--border-subtle)' }}>
+            style={{ borderTop: '1px solid var(--border-subtle)' }}
+          >
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+              <span
+                className="font-mono text-[10px] tracking-widest"
+                style={{ color: 'var(--text-ghost)' }}
+              >
                 Portfolio Health
               </span>
               <span
                 className="rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold"
-                style={{ background: 'var(--surface-raised)', color: healthTone(health.score) }}>
+                style={{ background: 'var(--surface-raised)', color: healthTone(health.score) }}
+              >
                 {health.label}
               </span>
             </div>
@@ -226,13 +304,15 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
                 type="button"
                 onClick={onScrollToHealth}
                 className="rounded-md px-4 py-2 font-mono text-[11px] font-medium transition-opacity hover:opacity-80"
-                style={{ background: 'var(--accent-primary)', color: 'var(--text-on-accent)' }}>
+                style={{ background: 'var(--accent-primary)', color: 'var(--text-on-accent)' }}
+              >
                 Review Portfolio Health
               </button>
               <Link
                 to="/ai"
                 className="rounded-md px-4 py-2 font-mono text-[11px] font-medium transition-colors"
-                style={{ border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
+                style={{ border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
+              >
                 Ask AI Assistant
               </Link>
             </div>
@@ -240,6 +320,7 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
         )}
       </div>
     </motion.div>
-  );};
+  );
+};
 
 export default DashboardHero;

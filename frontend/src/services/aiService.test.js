@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { normalize, getMockResponse } from './aiService';
 
 describe('normalize', () => {
@@ -32,7 +33,6 @@ describe('normalize', () => {
 });
 
 describe('getMockResponse', () => {
-
   describe('greeting responses', () => {
     it('responds to hi', () => {
       const result = getMockResponse('hi');

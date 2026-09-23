@@ -1,6 +1,7 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
-from uuid import UUID
 from datetime import datetime
+from uuid import UUID
+
+from pydantic import BaseModel, EmailStr, Field, field_validator
 
 
 class RegisterRequest(BaseModel):
@@ -34,8 +35,8 @@ class RegisterRequest(BaseModel):
         if not any(c.islower() for c in v):
             raise ValueError("Password must contain at least one lowercase letter")
         if not any(c.isdigit() for c in v):
-            raise ValueError("Password must contain at least one number")    
-        special_chars = set('!@#$%^&*()_+-=[]{}|;:,.<>?/~`@$!%*?&#.')
+            raise ValueError("Password must contain at least one number")
+        special_chars = set("!@#$%^&*()_+-=[]{}|;:,.<>?/~`@$!%*?&#.")
         if not any(c in special_chars for c in v):
             raise ValueError("Password must contain at least one special character (!@#$%^&*...)")
         return v
@@ -59,7 +60,7 @@ class UserResponse(BaseModel):
     )
     created_at: datetime = Field(
         description="when the EquityLens row was created, which is the first sign-in, not "
-                    "when the Cognito account was registered",
+        "when the Cognito account was registered",
         examples=["2026-07-14T08:32:11Z"],
     )
 
@@ -75,10 +76,12 @@ class AuthResponse(BaseModel):
         examples=["bearer"],
     )
     user: UserResponse
+
+
 class RegisterResponse(BaseModel):
     user_sub: str = Field(
         description="Cognito's id for the new account. The EquityLens user id only exists "
-                    "after the first authenticated request",
+        "after the first authenticated request",
         examples=["a1b2c3d4-5e6f-7081-9abc-def012345678"],
     )
     email: EmailStr = Field(examples=["thabo.mokoena@example.co.za"])
@@ -111,6 +114,6 @@ class TokenResponse(BaseModel):
 class TotpSecretResponse(BaseModel):
     secret: str = Field(
         description="base32 seed to put in the authenticator app, by QR code or by hand. "
-                    "It is shown once and is not retrievable afterwards",
+        "It is shown once and is not retrievable afterwards",
         examples=["JBSWY3DPEHPK3PXP"],
     )

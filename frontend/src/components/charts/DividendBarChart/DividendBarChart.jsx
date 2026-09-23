@@ -1,11 +1,11 @@
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
   Cell,
   ReferenceLine,
 } from 'recharts';
@@ -24,23 +24,41 @@ const MOCK_DATA = [
 ];
 
 /** @param {DividendDatum[]} data*/
-const average = (data) =>
-  Math.round(data.reduce((sum, d) => sum + d.amount, 0) / data.length);
+const average = (data) => Math.round(data.reduce((sum, d) => sum + d.amount, 0) / data.length);
 
 /**@param {{active?: boolean, payload?: {value: number}[], label?: string}} */
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{
-      background: 'var(--chart-tooltip-bg)',
-      border: '1px solid var(--border-mid)',
-      borderRadius: '6px',
-      padding: '10px 14px',
-    }}>
-      <p style={{ fontSize: '10px', color: 'var(--text-secondary)', marginBottom: '4px', fontFamily: 'var(--font-primary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+    <div
+      style={{
+        background: 'var(--chart-tooltip-bg)',
+        border: '1px solid var(--border-mid)',
+        borderRadius: '6px',
+        padding: '10px 14px',
+      }}
+    >
+      <p
+        style={{
+          fontSize: '10px',
+          color: 'var(--text-secondary)',
+          marginBottom: '4px',
+          fontFamily: 'var(--font-primary)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+        }}
+      >
         {label}
       </p>
-      <p style={{ fontSize: '13px', fontWeight: 600, color: 'var(--accent-primary)', fontFamily: 'var(--font-mono)', fontVariantNumeric: 'tabular-nums' }}>
+      <p
+        style={{
+          fontSize: '13px',
+          fontWeight: 600,
+          color: 'var(--accent-primary)',
+          fontFamily: 'var(--font-mono)',
+          fontVariantNumeric: 'tabular-nums',
+        }}
+      >
         R {payload[0].value}
       </p>
     </div>
@@ -50,7 +68,17 @@ const CustomTooltip = ({ active, payload, label }) => {
 const DividendBarChart = ({ data = MOCK_DATA }) => {
   if (!data || data.length === 0) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '160px', color: 'var(--text-secondary)', fontSize: '12px', fontFamily: 'var(--font-primary)' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '160px',
+          color: 'var(--text-secondary)',
+          fontSize: '12px',
+          fontFamily: 'var(--font-primary)',
+        }}
+      >
         No dividend data available
       </div>
     );
@@ -65,13 +93,22 @@ const DividendBarChart = ({ data = MOCK_DATA }) => {
           <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
           <XAxis
             dataKey="month"
-            tick={{ fill: 'var(--chart-axis-text)', fontSize: 10, fontFamily: 'var(--font-primary)' }}
+            tick={{
+              fill: 'var(--chart-axis-text)',
+              fontSize: 10,
+              fontFamily: 'var(--font-primary)',
+            }}
             axisLine={false}
             tickLine={false}
             dy={4}
           />
           <YAxis
-            tick={{ fill: 'var(--chart-axis-text)', fontSize: 10, fontFamily: 'var(--font-mono)', style: {fontVariantNumeric: 'tabular-nums'} }}
+            tick={{
+              fill: 'var(--chart-axis-text)',
+              fontSize: 10,
+              fontFamily: 'var(--font-mono)',
+              style: { fontVariantNumeric: 'tabular-nums' },
+            }}
             axisLine={false}
             tickLine={false}
           />

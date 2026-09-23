@@ -1,47 +1,52 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from app.routers import auth, portfolio
-from app.database import create_tables
-from app.config import settings
-from app.models import user
-from app.models import market_data
-from app.schemas.responses import STATUS_ERROR_CODES
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-import traceback
-from app.routers import news
-from app.routers import import_pdf
-from app.routers import pdf_summary
-from app.routers import watchlist
-from app.routers import indicators
-from app.routers import ai_chat
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.database import create_tables
+from app.routers import (
+    ai_chat,
+    auth,
+    import_pdf,
+    indicators,
+    news,
+    pdf_summary,
+    portfolio,
+    watchlist,
+)
 from app.routers import market_data as market_data_router
+from app.schemas.responses import STATUS_ERROR_CODES
 from app.routers import portfolio_snapshot
 
 
 app = FastAPI(title="EquityLens API")
 
+logger = logging.getLogger(__name__)
 
 class HealthResponse(BaseModel):
     status: str
 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-    "https://www.equitylens.co.za",
-    "https://equitylens.co.za",
-    "http://localhost:5173",
+        "https://www.equitylens.co.za",
+        "https://equitylens.co.za",
+        "http://localhost:5173",
     ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
 @app.exception_handler(StarletteHTTPException)
-async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+async def http_exception_handler(_request: Request, exc: StarletteHTTPException):
     code = getattr(exc, "error_code", None) or STATUS_ERROR_CODES.get(exc.status_code, "ERROR")
     return JSONResponse(
         status_code=exc.status_code,
@@ -49,33 +54,36 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
         headers=exc.headers,
     )
 
+
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(_request: Request, exc: RequestValidationError):
     return JSONResponse(
         status_code=422,
         content={"error_code": "VALIDATION_ERROR", "detail": jsonable_encoder(exc.errors())},
     )
 
+
 @app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
-    tb = traceback.format_exc()
-    print(tb)
+async def general_exception_handler(request: Request, _exc: Exception):
+    logger.exception("unhandled error on %s %s", request.method, request.url.path)
     return JSONResponse(
         status_code=500,
         content={"error_code": "INTERNAL_ERROR", "detail": "Something went wrong"},
     )
 
+
 @app.on_event("startup")
 async def startup():
     create_tables()
 
+
 app.include_router(auth.router)
 app.include_router(portfolio.router)
+
 
 @app.get("/health", response_model=HealthResponse)
 async def health():
     return {"status": "ok"}
-
 
 
 app.include_router(pdf_summary.router)

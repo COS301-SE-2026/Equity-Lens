@@ -1,12 +1,14 @@
 from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     database_url: str = "postgresql://postgres:postgres@localhost:5432/equitylens"
     allow_live_market_fallback: bool = False
     alpha_vantage_api_key: str | None = None
     market_data_refresh_ttl_hours: int = 24
-    secret_key: str = "to-be-changed-later"
+    secret_key: str = "to-be-changed-later" # noqa: S105
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     cors_origins: list[str] = [
@@ -25,8 +27,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     newsdata_api_key: str | None = None
 
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
 
 settings = get_settings()

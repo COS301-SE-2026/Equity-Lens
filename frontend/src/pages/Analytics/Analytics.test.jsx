@@ -1,20 +1,19 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-import useIndicators from "../../hooks/useIndicators";
+import useIndicators from '../../hooks/useIndicators';
 
-import Analytics from "./Analytics";
+import Analytics from './Analytics';
 
+vi.mock('../../hooks/useIndicators');
 
-
-vi.mock("../../hooks/useIndicators");
-
-const renderAnalytics = () => render(
-  <MemoryRouter>
-    <Analytics />
-  </MemoryRouter>
-)
+const renderAnalytics = () =>
+  render(
+    <MemoryRouter>
+      <Analytics />
+    </MemoryRouter>,
+  );
 
 describe('Analytics', () => {
   beforeEach(() => {
@@ -25,52 +24,54 @@ describe('Analytics', () => {
     });
   });
 
-  it("shows the Analytics heading", () => {
+  it('shows the Analytics heading', () => {
     renderAnalytics();
-    expect(screen.getByRole("heading", { name: "Analytics" })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Analytics' })).toBeInTheDocument();
   });
 
-  it("shows the page description", () => {
+  it('shows the page description', () => {
     renderAnalytics();
     expect(
-      screen.getByText("How your holdings are doing - hover a label for a quick explanation, click a value to learn more")
+      screen.getByText(
+        'How your holdings are doing - hover a label for a quick explanation, click a value to learn more',
+      ),
     ).toBeInTheDocument();
   });
 
-  it("shows the holdings count in the badge", () => {
+  it('shows the holdings count in the badge', () => {
     renderAnalytics();
-    expect(screen.getByText("0 holdings")).toBeInTheDocument();
+    expect(screen.getByText('0 holdings')).toBeInTheDocument();
   });
 
-  it("reflects the number of stocks returned by useIndicators", () => {
+  it('reflects the number of stocks returned by useIndicators', () => {
     useIndicators.mockReturnValue({
       stockData: {
-        AAPL: { loading: false, results: { ticker: "AAPL", name: "Apple Inc." } },
-        MSFT: { loading: false, results: { ticker: "MSFT", name: "Microsoft Corp." } },
+        AAPL: { loading: false, results: { ticker: 'AAPL', name: 'Apple Inc.' } },
+        MSFT: { loading: false, results: { ticker: 'MSFT', name: 'Microsoft Corp.' } },
       },
       loading: false,
       error: null,
     });
     renderAnalytics();
-    expect(screen.getByText("2 holdings")).toBeInTheDocument();
+    expect(screen.getByText('2 holdings')).toBeInTheDocument();
   });
 
-  it("shows all indicator column labels for each stock row", () => {
+  it('shows all indicator column labels for each stock row', () => {
     useIndicators.mockReturnValue({
       stockData: {
-        AAPL: { loading: false, results: { ticker: "AAPL", name: "Apple Inc." } },
+        AAPL: { loading: false, results: { ticker: 'AAPL', name: 'Apple Inc.' } },
       },
       loading: false,
       error: null,
     });
     renderAnalytics();
-    expect(screen.getByText("CAPM")).toBeInTheDocument();
-    expect(screen.getByText("P/E Ratio")).toBeInTheDocument();
-    expect(screen.getByText("Altman Z")).toBeInTheDocument();
-    expect(screen.getByText("Sharpe Ratio")).toBeInTheDocument();
-    expect(screen.getByText("Beta")).toBeInTheDocument();
-    expect(screen.getByText("Sortino Ratio")).toBeInTheDocument();
-    expect(screen.getByText("RSI")).toBeInTheDocument();
+    expect(screen.getByText('CAPM')).toBeInTheDocument();
+    expect(screen.getByText('P/E Ratio')).toBeInTheDocument();
+    expect(screen.getByText('Altman Z')).toBeInTheDocument();
+    expect(screen.getByText('Sharpe Ratio')).toBeInTheDocument();
+    expect(screen.getByText('Beta')).toBeInTheDocument();
+    expect(screen.getByText('Sortino Ratio')).toBeInTheDocument();
+    expect(screen.getByText('RSI')).toBeInTheDocument();
   });
 
   it("renders an indicator's value and description when a result is present", () => {
@@ -79,9 +80,9 @@ describe('Analytics', () => {
         AAPL: {
           loading: false,
           results: {
-            ticker: "AAPL",
-            name: "Apple Inc.",
-            capm: { status: "ok", value: 20, unit: "%" },
+            ticker: 'AAPL',
+            name: 'Apple Inc.',
+            capm: { status: 'ok', value: 20, unit: '%' },
           },
         },
       },
@@ -89,8 +90,8 @@ describe('Analytics', () => {
       error: null,
     });
     renderAnalytics();
-    expect(screen.getByText("20.00%")).toBeInTheDocument();
-    expect(screen.getByText("20% expected annual return for this risk level")).toBeInTheDocument();
+    expect(screen.getByText('20.00%')).toBeInTheDocument();
+    expect(screen.getByText('20% expected annual return for this risk level')).toBeInTheDocument();
   });
 
   it("renders the error cell when an indicator result has status 'error'", () => {
@@ -99,9 +100,9 @@ describe('Analytics', () => {
         AAPL: {
           loading: false,
           results: {
-            ticker: "AAPL",
-            name: "Apple Inc.",
-            capm: { status: "error" },
+            ticker: 'AAPL',
+            name: 'Apple Inc.',
+            capm: { status: 'error' },
           },
         },
       },
@@ -109,19 +110,19 @@ describe('Analytics', () => {
       error: null,
     });
     renderAnalytics();
-    expect(screen.getAllByText("Error").length).toBe(7);
-    expect(screen.getAllByText("Calc failed").length).toBe(7);
+    expect(screen.getAllByText('Error').length).toBe(7);
+    expect(screen.getAllByText('Calc failed').length).toBe(7);
   });
 
-  it("renders skeleton placeholders while loading", () => {
+  it('renders skeleton placeholders while loading', () => {
     useIndicators.mockReturnValue({
       stockData: {},
       loading: true,
       error: null,
     });
     const { container } = renderAnalytics();
-    expect(container.querySelectorAll(".animate-pulse").length).toBe(2);
-    expect(screen.queryByText("CAPM")).not.toBeInTheDocument();
+    expect(container.querySelectorAll('.animate-pulse').length).toBe(2);
+    expect(screen.queryByText('CAPM')).not.toBeInTheDocument();
   });
 
   it("renders 'N/A' and the first sentence of the reason for insufficient data", () => {
@@ -130,11 +131,11 @@ describe('Analytics', () => {
         AAPL: {
           loading: false,
           results: {
-            ticker: "AAPL",
-            name: "Apple Inc.",
+            ticker: 'AAPL',
+            name: 'Apple Inc.',
             capm: {
-              status: "insufficient_data",
-              reason: "Not enough history. Need 12 months of data.",
+              status: 'insufficient_data',
+              reason: 'Not enough history. Need 12 months of data.',
             },
           },
         },
@@ -143,8 +144,8 @@ describe('Analytics', () => {
       error: null,
     });
     renderAnalytics();
-    expect(screen.getByText("N/A")).toBeInTheDocument();
-    expect(screen.getByText("Not enough history")).toBeInTheDocument();
+    expect(screen.getByText('N/A')).toBeInTheDocument();
+    expect(screen.getByText('Not enough history')).toBeInTheDocument();
     expect(screen.queryByText(/Need 12 months/)).not.toBeInTheDocument();
   });
 });

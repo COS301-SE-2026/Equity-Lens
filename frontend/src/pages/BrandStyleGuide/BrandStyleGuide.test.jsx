@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect } from 'vitest';
 
 import { ThemeProvider } from '../../context/ThemeContext';
+
 import BrandStyleGuide from './BrandStyleGuide';
 
 const renderPage = () =>
@@ -38,7 +39,9 @@ describe('BrandStyleGuide', () => {
 
   it('discloses known danger-button contrast failure', () => {
     renderPage();
-    expect(screen.getByText(/white text on --color-danger \/ signal-negative bg/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/white text on --color-danger \/ signal-negative bg/i),
+    ).toBeInTheDocument();
     expect(screen.getAllByText('Fails').length).toBeGreaterThan(0);
   });
 

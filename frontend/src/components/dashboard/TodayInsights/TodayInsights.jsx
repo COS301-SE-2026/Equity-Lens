@@ -1,10 +1,10 @@
-import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 
 import AnimatedReveal from '../shared/AnimatedReveal';
 import { GlassPanel, PanelHead } from '../shared/GlassPanel';
-import SecondaryButton from '../shared/SecondaryButton';
 import { SCROLL_LIST_FLEX_CLASS, SCROLL_LIST_STYLE } from '../shared/scrollList';
+import SecondaryButton from '../shared/SecondaryButton';
 
 /** @type {Record<string, { color: string }>} */
 const TONE = {
@@ -74,7 +74,10 @@ const TodayInsights = ({ insights, onScrollTo }) => {
                   trailing={
                     <ChevronDown
                       size={9}
-                      style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}
+                      style={{
+                        transform: isOpen ? 'rotate(180deg)' : 'none',
+                        transition: 'transform 0.2s ease',
+                      }}
                     />
                   }
                 >
@@ -86,7 +89,9 @@ const TodayInsights = ({ insights, onScrollTo }) => {
                     size="sm"
                     to={insight.action.to}
                     className="!px-1.5 !py-0.5 !text-[9px]"
-                    onClick={() => {if (insight.action?.target) onScrollTo?.(insight.action.target);}}
+                    onClick={() => {
+                      if (insight.action?.target) onScrollTo?.(insight.action.target);
+                    }}
                   >
                     {insight.action.label}
                   </SecondaryButton>

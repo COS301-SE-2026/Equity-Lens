@@ -185,7 +185,11 @@ def test_normalize_sector_maps_gics_names_to_dashboard_vocabulary(raw, expected)
 def test_known_stock_sectors_are_already_normalized():
     stock_sectors = {i.sector for i in KNOWN_INSTRUMENTS.values() if i.kind == KIND_STOCK}
     assert stock_sectors == {
-        "Technology", "Financials", "Telecommunications", "Materials", "Healthcare",
+        "Technology",
+        "Financials",
+        "Telecommunications",
+        "Materials",
+        "Healthcare",
     }
 
 

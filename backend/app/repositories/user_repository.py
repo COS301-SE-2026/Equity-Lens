@@ -1,18 +1,22 @@
 from uuid import UUID, uuid4
+
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from app.models.user import User
+
+from app.models.chat import ChatConversation, ChatMessages
 from app.models.portfolio import (
-    Document,
-    Portfolios,
-    PortfolioSnapshot,
-    Holdings,
-    InstrumentPurchasesAndSales,
     ContributionsAndWithdrawals,
     DividendsAndWithholdingTax,
+    Document,
+    Holdings,
+    InstrumentPurchasesAndSales,
+    Portfolios,
+    PortfolioSnapshot,
     TransactionExpenses,
     Watchlist,
 )
-from app.models.chat import ChatConversation, ChatMessages
+from app.models.user import User
+
 
 class UserRepository:
     def __init__(self, db: Session):
@@ -38,7 +42,7 @@ class UserRepository:
         user = self.get_by_cognito_sub(cognito_sub)
         if user:
             return user
-        
+
         # user = self.get_by_email(email)
         # if user:
         #     user.cognito_sub = cognito_sub
@@ -46,9 +50,24 @@ class UserRepository:
         #     self.db.refresh(user)
         #     return user
 
-        user = User(id=uuid4(), email=email, hashed_password=None, full_name=full_name, cognito_sub=cognito_sub)
+        user = User(
+            id=uuid4(),
+            email=email,
+            hashed_password=None,
+            full_name=full_name,
+            cognito_sub=cognito_sub,
+        )
         self.db.add(user)
-        self.db.commit()
+        try:
+            self.db.commit()
+        except IntegrityError:
+            # two first requests from the same new identity raced us to the insert
+            self.db.rollback()
+            existing = self.get_by_cognito_sub(cognito_sub) or self.get_by_email(email)
+            if existing is None:
+                raise
+            return existing
+
         self.db.refresh(user)
         return user
 
@@ -58,31 +77,54 @@ class UserRepository:
     def delete_account(self, user: User) -> None:
         user_id = user.id
         portfolio_ids = [
-            row.id for row in self.db.query(Portfolios.id).filter(Portfolios.user_id == user_id).all()
+            row.id
+            for row in self.db.query(Portfolios.id).filter(Portfolios.user_id == user_id).all()
         ]
         conversation_ids = [
-            row.id for row in self.db.query(ChatConversation.id).filter(ChatConversation.user_id == user_id).all()
+            row.id
+            for row in self.db.query(ChatConversation.id)
+            .filter(ChatConversation.user_id == user_id)
+            .all()
         ]
 
         try:
-  
-            #Backup delete to ensure everything removed incase CASCADE failed
+            self.db.delete(user)
+            self.db.flush()
+            # Backup delete to ensure everything removed incase CASCADE failed
             if portfolio_ids:
-                self.db.query(Holdings).filter(Holdings.portfolio_id.in_(portfolio_ids)).delete(synchronize_session=False)
-                self.db.query(InstrumentPurchasesAndSales).filter(InstrumentPurchasesAndSales.portfolio_id.in_(portfolio_ids)).delete(synchronize_session=False)
-                self.db.query(ContributionsAndWithdrawals).filter(ContributionsAndWithdrawals.portfolio_id.in_(portfolio_ids)).delete(synchronize_session=False)
-                self.db.query(DividendsAndWithholdingTax).filter(DividendsAndWithholdingTax.portfolio_id.in_(portfolio_ids)).delete(synchronize_session=False)
-                self.db.query(TransactionExpenses).filter(TransactionExpenses.portfolio_id.in_(portfolio_ids)).delete(synchronize_session=False)
-                self.db.query(PortfolioSnapshot).filter(PortfolioSnapshot.portfolio_id.in_(portfolio_ids)).delete(synchronize_session=False)
-                self.db.query(Portfolios).filter(Portfolios.id.in_(portfolio_ids)).delete(synchronize_session=False)
+                self.db.query(Holdings).filter(Holdings.portfolio_id.in_(portfolio_ids)).delete(
+                    synchronize_session=False
+                )
+                self.db.query(InstrumentPurchasesAndSales).filter(
+                    InstrumentPurchasesAndSales.portfolio_id.in_(portfolio_ids)
+                ).delete(synchronize_session=False)
+                self.db.query(ContributionsAndWithdrawals).filter(
+                    ContributionsAndWithdrawals.portfolio_id.in_(portfolio_ids)
+                ).delete(synchronize_session=False)
+                self.db.query(DividendsAndWithholdingTax).filter(
+                    DividendsAndWithholdingTax.portfolio_id.in_(portfolio_ids)
+                ).delete(synchronize_session=False)
+                self.db.query(TransactionExpenses).filter(
+                    TransactionExpenses.portfolio_id.in_(portfolio_ids)
+                ).delete(synchronize_session=False)
+                self.db.query(PortfolioSnapshot).filter(
+                    PortfolioSnapshot.portfolio_id.in_(portfolio_ids)
+                ).delete(synchronize_session=False)
+                self.db.query(Portfolios).filter(Portfolios.id.in_(portfolio_ids)).delete(
+                    synchronize_session=False
+                )
 
             if conversation_ids:
-                self.db.query(ChatMessages).filter(ChatMessages.conversation_id.in_(conversation_ids)).delete(synchronize_session=False)
-                self.db.query(ChatConversation).filter(ChatConversation.id.in_(conversation_ids)).delete(synchronize_session=False)
+                self.db.query(ChatMessages).filter(
+                    ChatMessages.conversation_id.in_(conversation_ids)
+                ).delete(synchronize_session=False)
+                self.db.query(ChatConversation).filter(
+                    ChatConversation.id.in_(conversation_ids)
+                ).delete(synchronize_session=False)
 
             self.db.query(Document).filter(Document.user_id == user_id).delete(synchronize_session=False)
             self.db.query(Watchlist).filter(Watchlist.user_id == user_id).delete(synchronize_session=False)
-            self.db.delete(user)
+
             self.db.commit()
                      
         except Exception:

@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+
 import SectorPieChart from './SectorPieChart';
 
 const mockData = [
@@ -24,4 +25,3 @@ describe('SectorPieChart', () => {
     expect(screen.getByText(/no sector data available/i)).toBeInTheDocument();
   });
 });
-
