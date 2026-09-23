@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import WatchlistPanel from './WatchlistPanel';
 
 // new
@@ -26,7 +27,15 @@ describe('WatchlistPanel', () => {
   beforeEach(() => {
     addTicker.mockClear();
     mockState = {
-      watchlist: [{ id: 'w1', ticker: 'ABG', company_name: 'Absa Group', current_price: 182.5, change_percent: 1.2 }],
+      watchlist: [
+        {
+          id: 'w1',
+          ticker: 'ABG',
+          company_name: 'Absa Group',
+          current_price: 182.5,
+          change_percent: 1.2,
+        },
+      ],
       loading: false,
       error: null,
       addTicker,

@@ -1,14 +1,15 @@
 import logging
 
-from fastapi import HTTPException
 import yfinance as yf
+from fastapi import HTTPException
 
-from app.repositories.watchlist import add_watchlist,get_watchlist,remove_watchlist
-from app.services.market_data_service import _cents_to_major, WATCHLIST_QUOTE_TYPES
+from app.repositories.watchlist import add_watchlist, get_watchlist, remove_watchlist
+from app.services.market_data_service import WATCHLIST_QUOTE_TYPES, _cents_to_major
 
 logger = logging.getLogger(__name__)
 
-def add_watchlist_service(database,user_id,data):
+
+def add_watchlist_service(database, user_id, data):
     company_name = None
     sector = None
     stock_info = None
@@ -23,20 +24,18 @@ def add_watchlist_service(database,user_id,data):
             raise HTTPException(
                 status_code=400,
                 detail=f"{data.ticker} is a {quote_type.lower()}, not a stock, ETF, or index, "
-                       "so it can't be priced or displayed here.",
+                "so it can't be priced or displayed here.",
             )
         company_name = stock_info.get("longName")
         sector = stock_info.get("sector")
 
-    add_watchlist(database,user_id,data.ticker,company_name,sector)
+    add_watchlist(database, user_id, data.ticker, company_name, sector)
 
-    return {
-        "success": True,
-        "Message": "Add watchlist successfully"
-    }
+    return {"success": True, "Message": "Add watchlist successfully"}
 
-def get_watchlist_service(database,user_id):
-    watchlist = get_watchlist(database,user_id)
+
+def get_watchlist_service(database, user_id):
+    watchlist = get_watchlist(database, user_id)
 
     AllResults = []
 
@@ -52,22 +51,24 @@ def get_watchlist_service(database,user_id):
         except Exception as exc:
             logger.warning(f"yfinance lookup failed for {items.ticker}: {exc}")
 
-        AllResults.append({
-            "id": items.id,
-            "ticker": items.ticker,
-            "company_name": items.company_name,
-            "sector": items.sector,
-            "current_price": current_price,
-            "change_percent": change_percent,
-        })
+        AllResults.append(
+            {
+                "id": items.id,
+                "ticker": items.ticker,
+                "company_name": items.company_name,
+                "sector": items.sector,
+                "current_price": current_price,
+                "change_percent": change_percent,
+            }
+        )
 
     if len(AllResults) == 0:
-        return{
+        return {
             "success": True,
             "Message": "All the users watchlist",
             "watchlist": [],
             "highest": None,
-            "lowest": None
+            "lowest": None,
         }
 
     Priced = [items for items in AllResults if items["change_percent"] is not None]
@@ -87,13 +88,11 @@ def get_watchlist_service(database,user_id):
         "Message": "All the users watchlist",
         "watchlist": AllResults,
         "highest": TheHighest,
-        "lowest": Thelowest
+        "lowest": Thelowest,
     }
 
-def remove_watchlist_service(database,user_id,WatchListID):
-    remove_watchlist(database,user_id,WatchListID)
 
-    return {
-        "success": True,
-        "Message": "Deleted watchlist successfully"
-    }
+def remove_watchlist_service(database, user_id, WatchListID):
+    remove_watchlist(database, user_id, WatchListID)
+
+    return {"success": True, "Message": "Deleted watchlist successfully"}

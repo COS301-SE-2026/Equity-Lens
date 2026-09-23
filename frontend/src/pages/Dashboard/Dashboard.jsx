@@ -1,23 +1,20 @@
-import { useCallback, useState, useRef, useEffect } from 'react';
 import { Star } from 'lucide-react';
-import useAuth from '../../hooks/useAuth';
-import usePortfolio from '../../hooks/usePortfolio';
-import useDashboardAnalytics from '../../hooks/useDashboardAnalytics';
+import { useCallback, useState, useRef, useEffect } from 'react';
+
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
-import { GlassPanel } from '../../components/dashboard/shared/GlassPanel';
-import FloatingToggle from '../../components/dashboard/shared/FloatingToggle';
-import DashboardHero from '../../components/dashboard/DashboardHero/DashboardHero';
-import PortfolioHealth from '../../components/dashboard/PortfolioHealth/PortfolioHealth';
-import PerformanceVsBenchmark from '../../components/dashboard/PerformanceVsBenchmark/PerformanceVsBenchmark';
-import DashboardHoldingsTable from '../../components/dashboard/DashboardHoldingsTable/DashboardHoldingsTable';
 import ConcentrationRisk from '../../components/dashboard/ConcentrationRisk/ConcentrationRisk';
+import DashboardHero from '../../components/dashboard/DashboardHero/DashboardHero';
+import DashboardHoldingsTable from '../../components/dashboard/DashboardHoldingsTable/DashboardHoldingsTable';
+import PerformanceVsBenchmark from '../../components/dashboard/PerformanceVsBenchmark/PerformanceVsBenchmark';
+import PortfolioHealth from '../../components/dashboard/PortfolioHealth/PortfolioHealth';
+import FloatingToggle from '../../components/dashboard/shared/FloatingToggle';
+import { GlassPanel } from '../../components/dashboard/shared/GlassPanel';
 import TodayInsights from '../../components/dashboard/TodayInsights/TodayInsights';
 import WatchlistPanel from '../../components/dashboard/WatchlistPanel/WatchlistPanel';
-import {
-  buildSectors,
-  buildAttrib,
-  buildInsights,
-} from '../../utils/dashboardInsights';
+import useAuth from '../../hooks/useAuth';
+import useDashboardAnalytics from '../../hooks/useDashboardAnalytics';
+import usePortfolio from '../../hooks/usePortfolio';
+import { buildSectors, buildAttrib, buildInsights } from '../../utils/dashboardInsights';
 
 const FLASH_TIME = 2500;
 
@@ -48,23 +45,30 @@ const Dashboard = () => {
       <div className="flex min-h-screen items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
-    );}
+    );
+  }
 
   if (error) {
     return (
       <div className="flex min-h-screen items-center justify-center px-4">
         <GlassPanel className="max-w-md p-8 text-center">
-          <p className="mb-2 font-mono text-[11px] tracking-widest" style={{ color: 'var(--signal-negative)' }}>
+          <p
+            className="mb-2 font-mono text-[11px] tracking-widest"
+            style={{ color: 'var(--signal-negative)' }}
+          >
             Could Not Load Portfolio
           </p>
-          <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>{error}</p>
+          <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+            {error}
+          </p>
         </GlassPanel>
       </div>
-    );}
+    );
+  }
 
   const firstName = user?.full_name?.split(' ')[0] ?? 'there';
   const holdings = portfolioData?.holdings ?? [];
-  
+
   const perfSeries = (portfolioData?.performanceHistory ?? []).map(
     /** @param {{ date?: string, name?: string, value: number, benchmark?: number,
      *            twr_index?: number }} point
@@ -75,7 +79,8 @@ const Dashboard = () => {
       value: point.value,
       benchmark: point.benchmark,
       twr_index: point.twr_index,
-    }),);
+    }),
+  );
 
   const contributionSeries = portfolioData?.contributionsSeries ?? [];
   const benchmarkLabel = portfolioData?.benchmarkLabel ?? 'JSE ALSI';
@@ -89,33 +94,45 @@ const Dashboard = () => {
     <div
       data-testid="dashboard-visualizations"
       className="min-h-screen"
-      style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-primary)' }} >
-      <main className="mx-auto max-w-[1800px] space-y-10 px-6 py-8 lg:px-12" aria-label="Portfolio dashboard">
+      style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-primary)' }}
+    >
+      <main
+        className="mx-auto max-w-[1800px] space-y-10 px-6 py-8 lg:px-12"
+        aria-label="Portfolio dashboard"
+      >
         <DashboardHero
           name={firstName}
           portfolioData={portfolioData}
           health={health}
           fetchedAt={fetchedAt}
-          onScrollToHealth={() => scrollToSection('portfolio-health')}/>
+          onScrollToHealth={() => scrollToSection('portfolio-health')}
+        />
         <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
           <TodayInsights insights={todayInsights} onScrollTo={scrollToSection} />
 
           <div
             id="portfolio-health"
-            className={`dashboard-highlight rounded-2xl ${flashedTarget === 'portfolio-health' ? 'is-active' : ''}`} >
-            <PortfolioHealth health={health} onScrollTo={scrollToSection} onYardstickChanged={refreshQuietly}/>
+            className={`dashboard-highlight rounded-2xl ${flashedTarget === 'portfolio-health' ? 'is-active' : ''}`}
+          >
+            <PortfolioHealth
+              health={health}
+              onScrollTo={scrollToSection}
+              onYardstickChanged={refreshQuietly}
+            />
           </div>
         </div>
         <ConcentrationRisk />
         <div
           id="performance-vs-benchmark"
-          className={`dashboard-highlight rounded-2xl ${flashedTarget === 'performance-vs-benchmark' ? 'is-active' : ''}`} >
+          className={`dashboard-highlight rounded-2xl ${flashedTarget === 'performance-vs-benchmark' ? 'is-active' : ''}`}
+        >
           <PerformanceVsBenchmark
             series={perfSeries}
             contributionSeries={contributionSeries}
             attribution={attribution}
             benchmarkLabel={benchmarkLabel}
-            historyDays={historyDays}/>
+            historyDays={historyDays}
+          />
         </div>
         <DashboardHoldingsTable
           holdings={holdings}
@@ -133,11 +150,13 @@ const Dashboard = () => {
           open={watchlistOpen}
           onToggle={() => setWatchlistOpen((v) => !v)}
           direction="down"
-          panelMaxHeight="min(60vh, 420px)">
+          panelMaxHeight="min(60vh, 420px)"
+        >
           <WatchlistPanel />
         </FloatingToggle>
       </div>
     </div>
-  );};
+  );
+};
 
 export default Dashboard;

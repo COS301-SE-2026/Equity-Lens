@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+
 import FormInput from './FormInput';
 
 describe('FormInput', () => {
@@ -10,13 +11,7 @@ describe('FormInput', () => {
 
   it('renders error message when error is provided', () => {
     render(
-      <FormInput
-        label="Email"
-        name="email"
-        value=""
-        onChange={() => {}}
-        error="Invalid email"
-      />
+      <FormInput label="Email" name="email" value="" onChange={() => {}} error="Invalid email" />,
     );
     expect(screen.getByRole('alert')).toHaveTextContent('Invalid email');
   });

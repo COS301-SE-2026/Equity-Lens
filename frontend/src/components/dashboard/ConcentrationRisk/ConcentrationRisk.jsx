@@ -46,11 +46,14 @@ const HealthDelta = ({ before, after }) => {
         </span>
         <span
           className="font-mono text-[20px] font-bold"
-          style={{ color: improved ? 'var(--signal-positive)' : 'var(--signal-negative)' }}>
+          style={{ color: improved ? 'var(--signal-positive)' : 'var(--signal-negative)' }}
+        >
           New Portfolio Health: {after.toFixed(1)}
         </span>
       </div>
-    </div>);};
+    </div>
+  );
+};
 
 /** @param {{ open: boolean }} props */
 const ToggleChevron = ({ open }) => (
@@ -69,41 +72,43 @@ const SectorMoves = ({ sectors }) => {
   const sorted = useMemo(() => [...sectors].sort((a, b) => a.percentage - b.percentage), [sectors]);
   const [selectedSector, setSelectedSector] = useState(sorted[0]?.sector ?? null);
   const [investSim, setInvestSim] = useState(
-  /** @type {{ loading: boolean, error: string | null, result: InvestSimResult | null }} */
-  ({ loading: false, error: null, result: null }),);
+    /** @type {{ loading: boolean, error: string | null, result: InvestSimResult | null }} */
+    ({ loading: false, error: null, result: null }),
+  );
   const [rebalanceSim, setRebalanceSim] = useState(
-  /** @type {{ loading: boolean, error: string | null, result: RebalanceSimResult | null }} */
-  ({ loading: false, error: null, result: null }),); 
+    /** @type {{ loading: boolean, error: string | null, result: RebalanceSimResult | null }} */
+    ({ loading: false, error: null, result: null }),
+  );
   const runInvest = async () => {
     if (!selectedSector) return;
     setInvestSim({ loading: true, error: null, result: null });
     try {
       const result = await simulateSectorInvestment(selectedSector);
       setInvestSim({ loading: false, error: null, result });
-    } 
-    catch (err) 
-    {
+    } catch (err) {
       console.warn('sector investment simulation failed:', err);
       setInvestSim({
         loading: false,
         error: "Couldn't run this simulation right now.",
         result: null,
-      });}};
+      });
+    }
+  };
 
   const runRebalance = async () => {
     setRebalanceSim({ loading: true, error: null, result: null });
     try {
       const result = await simulateSectorRebalance();
       setRebalanceSim({ loading: false, error: null, result });
-    } 
-    catch (err) 
-    {
+    } catch (err) {
       console.warn('sector rebalance simulation failed:', err);
       setRebalanceSim({
         loading: false,
         error: "Couldn't run this simulation right now.",
         result: null,
-      });}};
+      });
+    }
+  };
 
   if (sectors.length < 2) return null;
 
@@ -114,7 +119,8 @@ const SectorMoves = ({ sectors }) => {
         onClick={() => setInvestExpanded((o) => !o)}
         expanded={investExpanded}
         className={CARD_BUTTON_CLASS}
-        trailing={<ToggleChevron open={investExpanded} />}>
+        trailing={<ToggleChevron open={investExpanded} />}
+      >
         {investExpanded ? 'Hide sector moves' : 'Show sector moves'}
       </SecondaryButton>
 
@@ -123,7 +129,8 @@ const SectorMoves = ({ sectors }) => {
           <label
             htmlFor="sector-invest-picker"
             className={`block ${SECTION_HEADING_CLASS}`}
-            style={SECTION_HEADING_STYLE}>
+            style={SECTION_HEADING_STYLE}
+          >
             Invest in a sector
           </label>
 
@@ -132,7 +139,8 @@ const SectorMoves = ({ sectors }) => {
             className="max-w-[280px]"
             value={selectedSector}
             onChange={(value) => setSelectedSector(String(value))}
-            options={sorted.map((s) => ({ value: s.sector, label: s.sector }))}/>
+            options={sorted.map((s) => ({ value: s.sector, label: s.sector }))}
+          />
 
           <div className="mt-2">
             <SecondaryButton
@@ -140,7 +148,8 @@ const SectorMoves = ({ sectors }) => {
               onClick={runInvest}
               disabled={investSim.loading || !selectedSector}
               className={CARD_BUTTON_CLASS}
-              icon={investSim.loading ? <LoadingSpinner size="sm" /> : undefined}>
+              icon={investSim.loading ? <LoadingSpinner size="sm" /> : undefined}
+            >
               {investSim.loading ? 'Simulating…' : `Simulate investing in ${selectedSector ?? '…'}`}
             </SecondaryButton>
           </div>
@@ -148,17 +157,20 @@ const SectorMoves = ({ sectors }) => {
           {investSim.error && (
             <p className="mt-2 text-[11px]" style={{ color: 'var(--signal-negative)' }}>
               {investSim.error}
-            </p>)}
+            </p>
+          )}
           {investSim.result?.available === false && (
             <p className="mt-2 text-[11px]" style={{ color: 'var(--signal-negative)' }}>
               Couldn&apos;t simulate that sector - try again after refreshing the page.
-            </p>)}
+            </p>
+          )}
           {investSim.result?.available && (
             <AnimatedReveal show>
               <div className="mt-3 space-y-2">
                 <HealthDelta
                   before={investSim.result.health_score_before}
-                  after={investSim.result.health_score_after}/>
+                  after={investSim.result.health_score_after}
+                />
                 <p className="text-[11px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
                   Illustrative {zar(investSim.result.illustrative_amount)} new position in{' '}
                   {investSim.result.sector} ({investSim.result.current_weight_pct.toFixed(1)}%
@@ -169,7 +181,8 @@ const SectorMoves = ({ sectors }) => {
                   {investSim.result.disclaimer}
                 </p>
               </div>
-            </AnimatedReveal>)}
+            </AnimatedReveal>
+          )}
         </div>
       </AnimatedReveal>
 
@@ -179,7 +192,8 @@ const SectorMoves = ({ sectors }) => {
           onClick={() => setRebalanceExpanded((o) => !o)}
           expanded={rebalanceExpanded}
           className={CARD_BUTTON_CLASS}
-          trailing={<ToggleChevron open={rebalanceExpanded} />}>
+          trailing={<ToggleChevron open={rebalanceExpanded} />}
+        >
           Rebalance most concentrated sector
         </SecondaryButton>
 
@@ -190,7 +204,8 @@ const SectorMoves = ({ sectors }) => {
               onClick={runRebalance}
               disabled={rebalanceSim.loading}
               className={CARD_BUTTON_CLASS}
-              icon={rebalanceSim.loading ? <LoadingSpinner size="sm" /> : undefined}>
+              icon={rebalanceSim.loading ? <LoadingSpinner size="sm" /> : undefined}
+            >
               {rebalanceSim.loading
                 ? 'Simulating…'
                 : `Simulate shifting ${sorted[sorted.length - 1].sector} to ${sorted[0].sector}`}
@@ -199,27 +214,32 @@ const SectorMoves = ({ sectors }) => {
             {rebalanceSim.error && (
               <p className="mt-2 text-[11px]" style={{ color: 'var(--signal-negative)' }}>
                 {rebalanceSim.error}
-              </p>)}
+              </p>
+            )}
             {rebalanceSim.result?.available === false &&
               rebalanceSim.result.reason === 'no_sector_overconcentrated' && (
                 <p className="mt-2 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
                   No sector is over the 45% concentration threshold right now - nothing to
                   rebalance.
-                </p>)}
+                </p>
+              )}
             {rebalanceSim.result?.available === false &&
               rebalanceSim.result.reason !== 'no_sector_overconcentrated' && (
                 <p className="mt-2 text-[11px]" style={{ color: 'var(--signal-negative)' }}>
                   Couldn&apos;t simulate that rebalance.
-                </p>)}
+                </p>
+              )}
             {rebalanceSim.result?.available && (
               <AnimatedReveal show>
                 <div className="mt-3 space-y-2">
                   <HealthDelta
                     before={rebalanceSim.result.health_score_before}
-                    after={rebalanceSim.result.health_score_after}/>
+                    after={rebalanceSim.result.health_score_after}
+                  />
                   <p
                     className="text-[11px] leading-snug"
-                    style={{ color: 'var(--text-secondary)' }}>
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
                     Illustrative {zar(rebalanceSim.result.value_shifted)} shifted from{' '}
                     {rebalanceSim.result.from_sector} (
                     {rebalanceSim.result.from_sector_before_pct.toFixed(1)}%) into{' '}
@@ -229,7 +249,8 @@ const SectorMoves = ({ sectors }) => {
                   </p>
                   <p
                     className="text-[11px] font-semibold"
-                    style={{ color: 'var(--signal-warning)' }}>
+                    style={{ color: 'var(--signal-warning)' }}
+                  >
                     {rebalanceSim.result.disclaimer}
                   </p>
                 </div>
@@ -239,7 +260,8 @@ const SectorMoves = ({ sectors }) => {
         </AnimatedReveal>
       </div>
     </div>
-  );};
+  );
+};
 
 const ConcentrationRisk = () => {
   const [sectors, setSectors] = useState(/** @type {any[]} */ ([]));
@@ -252,16 +274,13 @@ const ConcentrationRisk = () => {
     try {
       const result = await getSectorAllocation();
       setSectors(result ?? []);
-    } 
-    catch (err) 
-    {
+    } catch (err) {
       console.warn('sector allocation fetch failed:', err);
       setLoadError("Couldn't load sector allocation right now.");
-    } 
-    finally 
-    {
+    } finally {
       setLoading(false);
-    }}, []);
+    }
+  }, []);
 
   useEffect(() => {
     load();
@@ -271,24 +290,29 @@ const ConcentrationRisk = () => {
       buildSectorQuestions(
         [...sectors]
           .sort((a, b) => b.percentage - a.percentage)
-          .map((s) => ({ name: s.sector, value: s.percentage })),),
-    [sectors],);
+          .map((s) => ({ name: s.sector, value: s.percentage })),
+      ),
+    [sectors],
+  );
 
   return (
     <div className="group relative">
       <CardMascotTrigger
         questions={!loading && !loadError ? sectorQuestions : []}
         label="Ask AI about sector concentration"
-        className="-right-6 -top-6"/>
+        className="-right-6 -top-6"
+      />
       <GlassPanel className="flex flex-col">
         <PanelHead
           label="Concentration & Rebalancing"
-          help="Sector-level what-ifs: what adding to a sector would do to your Portfolio Health, and what shifting out of your most concentrated sector would do. Simulation only - EquityLens doesn't execute trades."/>
+          help="Sector-level what-ifs: what adding to a sector would do to your Portfolio Health, and what shifting out of your most concentrated sector would do. Simulation only - EquityLens doesn't execute trades."
+        />
 
         {loading && (
           <div className="flex items-center justify-center p-8">
             <LoadingSpinner size="sm" />
-          </div>)}
+          </div>
+        )}
 
         {!loading && loadError && (
           <div className="space-y-2.5 p-4">
@@ -298,7 +322,8 @@ const ConcentrationRisk = () => {
             <SecondaryButton size="sm" onClick={load}>
               Retry
             </SecondaryButton>
-          </div>)}
+          </div>
+        )}
 
         {!loading && !loadError && sectors.length > 1 && <SectorMoves sectors={sectors} />}
 
@@ -307,9 +332,11 @@ const ConcentrationRisk = () => {
             <p className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>
               Sector what-ifs need at least two sectors to compare
             </p>
-          </div>)}
+          </div>
+        )}
       </GlassPanel>
     </div>
-  );};
+  );
+};
 
 export default ConcentrationRisk;

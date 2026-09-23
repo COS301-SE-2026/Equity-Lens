@@ -46,17 +46,21 @@ const upsert = (list, message) => (list.some((m) => m.id === message.id)
  */
 const readError = (err) => {
   if (err?.response?.status !== 429) {
-    return { text: GENERIC_ERROR, retryAfter: 0 };}
+    return { text: GENERIC_ERROR, retryAfter: 0 };
+  }
 
   const detail = err.response.data?.detail;
   const header = Number(err.response.headers?.['retry-after']);
   const retryAfter = Number(detail?.retry_after) || (header > 0 ? header : 60);
 
   return {
-    text: typeof detail?.message === 'string'
-      ? detail.message
-      : `You have been rate limited. Please try again in ${retryAfter} seconds.`,
-    retryAfter,};};
+    text:
+      typeof detail?.message === 'string'
+        ? detail.message
+        : `You have been rate limited. Please try again in ${retryAfter} seconds.`,
+    retryAfter,
+  };
+};
 
 /**
  * @param {Response} response
@@ -114,7 +118,8 @@ export const ChatProvider = ({ children }) => {
 
 
   const refreshConversations = () =>
-    api.get('/ai_chat/conversations/')
+    api
+      .get('/ai_chat/conversations/')
       .then((res) => setConversations(res.data))
       .catch(() => {});
   useEffect(() => {
@@ -251,13 +256,15 @@ export const ChatProvider = ({ children }) => {
   /** @param {ChatMessage} message */
   const regenerate = (message) => {
     if (isThinking || regeneratingId !== null) {
-      return;}
+      return;
+    }
     const index = messages.findIndex((m) => m.id === message.id);
     if (index === -1 || index !== messages.length - 1) {
       return;}
     const priorUser = [...messages.slice(0, index)].reverse().find((m) => m.role === 'user');
     if (!priorUser) {
-      return;}
+      return;
+    }
 
     const key = viewKeyRef.current;
     const droppedTail = messages.slice(index + 1);
@@ -271,11 +278,13 @@ export const ChatProvider = ({ children }) => {
         if (viewKeyRef.current !== key) {return refreshConversations().then(() => 0);}
         showChat(res.data.conversation_id);
         setConversationId(res.data.conversation_id);
-        setMessages((prev) => prev.map((m) =>
-          (m.id === message.id
-            ? { ...m, text: res.data.reply, at: new Date(), failed: false }
-            : m)),);
-        return refreshConversations().then(() => 0);})
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === message.id ? { ...m, text: res.data.reply, at: new Date(), failed: false } : m,
+          ),
+        );
+        return refreshConversations().then(() => 0);
+      })
       .catch((err) => {
         const { text: errorText, retryAfter } = readError(err);
         if (viewKeyRef.current === key) {
@@ -302,8 +311,11 @@ export const ChatProvider = ({ children }) => {
             role: m.role,
             text: m.content,
             at: m.created_at ? new Date(m.created_at) : new Date(),
-          })),);})
-      .catch(() => {});};
+          })),
+        );
+      })
+      .catch(() => {});
+  };
 
   const startNewChat = () => {
     showChat(null);
@@ -315,25 +327,32 @@ export const ChatProvider = ({ children }) => {
   const renameConversation = (convoId, title) => {
     const trimmed = title.trim();
     if (!trimmed) {
-      return Promise.resolve();}
-    return api.put(`/ai_chat/conversations/${convoId}/`, { title: trimmed })
+      return Promise.resolve();
+    }
+    return api
+      .put(`/ai_chat/conversations/${convoId}/`, { title: trimmed })
       .then(() => {
         setConversations((prev) =>
           prev.map((c) => (c.id === convoId ? { ...c, title: trimmed } : c)),
-        );})
-      .catch(() => {});};
+        );
+      })
+      .catch(() => {});
+  };
 
   /** @param {string} convoId */
   const deleteConversation = (convoId) => {
-    return api.delete(`/ai_chat/conversations/${convoId}/`)
+    return api
+      .delete(`/ai_chat/conversations/${convoId}/`)
       .then(() => {
         setConversations((prev) => prev.filter((c) => c.id !== convoId));
         if (viewKeyRef.current === convoId) {
           showChat(null);
           setConversationId(null);
           setMessages([]);
-        }})
-      .catch(() => {});};
+        }
+      })
+      .catch(() => {});
+  };
 
   return (
     <ChatContext.Provider
@@ -357,9 +376,12 @@ export const ChatProvider = ({ children }) => {
         deleteMemory
       }}>
       {children}
-    </ChatContext.Provider>);};
+    </ChatContext.Provider>
+  );
+};
 
 export const useChatContext = () => {
   const context = useContext(ChatContext);
   if (!context) throw new Error('useChatContext must be used within ChatProvider');
-  return context;};
+  return context;
+};

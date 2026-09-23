@@ -23,14 +23,17 @@ Object.defineProperty(window, 'matchMedia', {
 
 Element.prototype.scrollIntoView = vi.fn();
 
-vi.mock('aws-amplify/auth', () => { const defaultSignInState = { isSignedIn: true, nextStep: { signInStep: 'DONE' } };
+vi.mock('aws-amplify/auth', () => {
+  const defaultSignInState = { isSignedIn: true, nextStep: { signInStep: 'DONE' } };
 
   return {
     signUp: vi.fn().mockResolvedValue({ userId: 'mock-user-id', isSignUpComplete: false }),
     confirmSignUp: vi.fn().mockResolvedValue({ isSignUpComplete: true }),
     signIn: vi.fn().mockResolvedValue(defaultSignInState),
     signOut: vi.fn().mockResolvedValue(undefined),
-    getCurrentUser: vi.fn().mockResolvedValue({ userId: 'mock-user-id', username: 'mock@test.com' }),
+    getCurrentUser: vi
+      .fn()
+      .mockResolvedValue({ userId: 'mock-user-id', username: 'mock@test.com' }),
     fetchAuthSession: vi.fn().mockResolvedValue({
       tokens: {
         accessToken: { toString: () => 'mock-access-token' },
@@ -44,7 +47,7 @@ vi.mock('aws-amplify/auth', () => { const defaultSignInState = { isSignedIn: tru
   };
 });
 
-vi.mock('aws-amplify', () => ({Amplify: { configure: vi.fn() },}));
+vi.mock('aws-amplify', () => ({ Amplify: { configure: vi.fn() } }));
 
 Element.prototype.scrollTo = vi.fn();
 class MockIntersectionObserver {

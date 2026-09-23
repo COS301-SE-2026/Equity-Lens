@@ -7,9 +7,7 @@
   "paths": {
     "/api/auth/register": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Register a new user",
         "operationId": "registerUser",
         "requestBody": {
@@ -80,9 +78,7 @@
     },
     "/api/auth/confirm": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Confirm a registration code",
         "operationId": "confirmRegistration",
         "requestBody": {
@@ -135,9 +131,7 @@
     },
     "/api/auth/login": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Log in with email and password",
         "operationId": "login",
         "requestBody": {
@@ -218,9 +212,7 @@
     },
     "/api/auth/mfa/verify-login": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Answer an MFA challenge",
         "operationId": "verifyMfaLogin",
         "requestBody": {
@@ -273,9 +265,7 @@
     },
     "/api/auth/mfa/associate": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Start authenticator app setup",
         "operationId": "associateTotp",
         "responses": {
@@ -299,9 +289,7 @@
     },
     "/api/auth/mfa/confirm-setup": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Finish authenticator app setup",
         "operationId": "confirmTotpSetup",
         "requestBody": {
@@ -345,9 +333,7 @@
     },
     "/api/auth/me": {
       "get": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Get the signed-in user",
         "operationId": "getCurrentUser",
         "responses": {
@@ -383,9 +369,7 @@
         ]
       },
       "delete": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Delete the signed-in account",
         "operationId": "deleteAccount",
         "requestBody": {
@@ -471,9 +455,7 @@
     },
     "/api/auth/logout": {
       "post": {
-        "tags": [
-          "auth"
-        ],
+        "tags": ["auth"],
         "summary": "Sign out of every device",
         "operationId": "logout",
         "responses": {
@@ -511,9 +493,7 @@
     },
     "/api/portfolio": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get the whole dashboard",
         "operationId": "getDashboard",
         "responses": {
@@ -650,9 +630,7 @@
     },
     "/api/portfolio/summary": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get the headline totals",
         "operationId": "getPortfolioSummary",
         "responses": {
@@ -690,9 +668,7 @@
     },
     "/api/portfolio/sectors": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get the sector allocation",
         "operationId": "getSectorAllocation",
         "responses": {
@@ -734,9 +710,7 @@
     },
     "/api/portfolio/performance": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get the value history against its benchmark",
         "operationId": "getPerformanceHistory",
         "responses": {
@@ -778,9 +752,7 @@
     },
     "/api/portfolio/current": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "List the imported portfolios",
         "operationId": "listPortfolios",
         "responses": {
@@ -822,9 +794,7 @@
     },
     "/api/portfolio/returns": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get the three return measures",
         "operationId": "getReturns",
         "responses": {
@@ -862,9 +832,7 @@
     },
     "/api/portfolio/health-score": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get the portfolio health score",
         "operationId": "getHealthScore",
         "responses": {
@@ -902,9 +870,7 @@
     },
     "/api/portfolio/health-config": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get the active health scoring config",
         "operationId": "getHealthConfig",
         "responses": {
@@ -940,9 +906,7 @@
         ]
       },
       "put": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Choose or hand-tune the health scoring config",
         "description": "Change what the health score treats as risky. Send exactly one of the two fields.\n\npreset_key picks one of the presets listed by GET /health-config. config sets the\nseven values by hand, and every one of them must be inside bounds from that same\nresponse - anything outside is a 400, not a clamp. The three weights must also sum\nto 1.\n\nHand-tuned values that happen to match a preset are stored as that preset, so the\nresponse can come back with source preset and a preset_key you did not send. The\nresponse is always the full config payload, so there is no need to re-fetch.",
         "operationId": "updateHealthConfig",
@@ -1002,9 +966,7 @@
         ]
       },
       "delete": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Reset the health scoring config",
         "operationId": "resetHealthConfig",
         "responses": {
@@ -1042,9 +1004,7 @@
     },
     "/api/portfolio/cgt-estimate": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Estimate capital gains tax if everything were sold",
         "operationId": "getCgtEstimate",
         "responses": {
@@ -1082,9 +1042,7 @@
     },
     "/api/portfolio/account-type": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get the account type",
         "operationId": "getAccountType",
         "responses": {
@@ -1120,9 +1078,7 @@
         ]
       },
       "patch": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Set the account type",
         "operationId": "setAccountType",
         "requestBody": {
@@ -1180,9 +1136,7 @@
     },
     "/api/portfolio/tax-analysis": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get position-level unrealised tax detail",
         "operationId": "getTaxAnalysis",
         "responses": {
@@ -1250,9 +1204,7 @@
     },
     "/api/portfolio/tfsa-room": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get remaining TFSA contribution room",
         "operationId": "getTfsaRoom",
         "responses": {
@@ -1309,9 +1261,7 @@
     },
     "/api/portfolio/market-context": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Get today's move by sector held",
         "operationId": "getMarketContext",
         "responses": {
@@ -1330,9 +1280,7 @@
                           "sector": "Global Equity",
                           "weight_pct": 100.0,
                           "daily_change_pct": 0.31,
-                          "tickers": [
-                            "SYG500.JO"
-                          ],
+                          "tickers": ["SYG500.JO"],
                           "summary": "Global Equity is up today"
                         }
                       ]
@@ -1372,9 +1320,7 @@
     },
     "/api/portfolio/concentration": {
       "get": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Flag holdings that are too large a share of the book",
         "operationId": "getConcentration",
         "responses": {
@@ -1412,9 +1358,7 @@
     },
     "/api/portfolio/simulate-sector-investment": {
       "post": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Simulate adding to one sector",
         "operationId": "simulateSectorInvestment",
         "requestBody": {
@@ -1492,9 +1436,7 @@
     },
     "/api/portfolio/simulate-sector-rebalance": {
       "post": {
-        "tags": [
-          "Portfolio"
-        ],
+        "tags": ["Portfolio"],
         "summary": "Simulate an even sector split",
         "operationId": "simulateSectorRebalance",
         "responses": {
@@ -1565,9 +1507,7 @@
     },
     "/api/import_pdf_summary/summary/{portfolioID}": {
       "get": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Import Get Summary Import Pdf",
         "operationId": "import_get_summary_import_PDF_api_import_pdf_summary_summary__portfolioID__get",
         "security": [
@@ -1612,9 +1552,7 @@
     },
     "/api/import_pdf_summary/top_holdings/{portfolioID}": {
       "get": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Import Get The Top Holdings Import Pdf",
         "operationId": "import_get_the_top_holdings_import_PDF_api_import_pdf_summary_top_holdings__portfolioID__get",
         "security": [
@@ -1663,9 +1601,7 @@
     },
     "/api/import_pdf_summary/lowest_holdings/{portfolioID}": {
       "get": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Import Get The Lowest Holdings Import Pdf",
         "operationId": "import_get_the_lowest_holdings_import_PDF_api_import_pdf_summary_lowest_holdings__portfolioID__get",
         "security": [
@@ -1710,9 +1646,7 @@
     },
     "/api/import_pdf_summary/portfolio_allocation/{portfolioID}": {
       "get": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Import Get The Top Allocation Import Pdf",
         "operationId": "import_get_the_top_allocation_import_PDF_api_import_pdf_summary_portfolio_allocation__portfolioID__get",
         "security": [
@@ -1761,9 +1695,7 @@
     },
     "/api/import_pdf_summary/trading_activity/{portfolioID}": {
       "get": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Import Get Trading Activity Import Pdf",
         "operationId": "import_get_trading_activity_import_PDF_api_import_pdf_summary_trading_activity__portfolioID__get",
         "security": [
@@ -1812,9 +1744,7 @@
     },
     "/api/import_pdf_summary/cash_flow/{portfolioID}": {
       "get": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Import Get Cash Flow Import Pdf",
         "operationId": "import_get_cash_flow_import_PDF_api_import_pdf_summary_cash_flow__portfolioID__get",
         "security": [
@@ -1863,9 +1793,7 @@
     },
     "/api/import_pdf_summary/dividend_income/{portfolioID}": {
       "get": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Import Get Dividend Income Import Pdf",
         "operationId": "import_get_dividend_income_import_PDF_api_import_pdf_summary_dividend_income__portfolioID__get",
         "security": [
@@ -1914,9 +1842,7 @@
     },
     "/api/import_pdf_summary/expenses/{portfolioID}": {
       "get": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Import Get Expenses Import Pdf",
         "operationId": "import_get_expenses_import_PDF_api_import_pdf_summary_expenses__portfolioID__get",
         "security": [
@@ -1965,9 +1891,7 @@
     },
     "/api/watchlist/": {
       "get": {
-        "tags": [
-          "watchlist"
-        ],
+        "tags": ["watchlist"],
         "summary": "Get Watchlist",
         "operationId": "get_watchlist_api_watchlist__get",
         "responses": {
@@ -1989,9 +1913,7 @@
         ]
       },
       "post": {
-        "tags": [
-          "watchlist"
-        ],
+        "tags": ["watchlist"],
         "summary": "Add Watchlist",
         "operationId": "add_watchlist_api_watchlist__post",
         "requestBody": {
@@ -2035,9 +1957,7 @@
     },
     "/api/watchlist/{watchlistID}": {
       "delete": {
-        "tags": [
-          "watchlist"
-        ],
+        "tags": ["watchlist"],
         "summary": "Remove Watchlist",
         "operationId": "remove_watchlist_api_watchlist__watchlistID__delete",
         "security": [
@@ -2082,9 +2002,7 @@
     },
     "/api/news/all": {
       "get": {
-        "tags": [
-          "importing news"
-        ],
+        "tags": ["importing news"],
         "summary": "Get News",
         "operationId": "get_news_api_news_all_get",
         "responses": {
@@ -2108,9 +2026,7 @@
     },
     "/api/news/": {
       "get": {
-        "tags": [
-          "importing news"
-        ],
+        "tags": ["importing news"],
         "summary": "Get News",
         "operationId": "get_news_api_news__get",
         "security": [
@@ -2156,9 +2072,7 @@
     },
     "/api/news/portfolio-tickers": {
       "get": {
-        "tags": [
-          "importing news"
-        ],
+        "tags": ["importing news"],
         "summary": "Get Portfolio Tickers",
         "operationId": "get_portfolio_tickers_api_news_portfolio_tickers_get",
         "responses": {
@@ -2182,9 +2096,7 @@
     },
     "/api/news/test-aapl/{ticker}": {
       "get": {
-        "tags": [
-          "importing news"
-        ],
+        "tags": ["importing news"],
         "summary": "Test Aapl News",
         "operationId": "test_aapl_news_api_news_test_aapl__ticker__get",
         "parameters": [
@@ -2224,9 +2136,7 @@
     },
     "/api/ai_chat/": {
       "post": {
-        "tags": [
-          "ai_chat"
-        ],
+        "tags": ["ai_chat"],
         "summary": "Ai Chat",
         "operationId": "ai_chat_api_ai_chat__post",
         "requestBody": {
@@ -2270,9 +2180,7 @@
     },
     "/api/ai_chat/conversations/": {
       "get": {
-        "tags": [
-          "ai_chat"
-        ],
+        "tags": ["ai_chat"],
         "summary": "Get Conversations",
         "operationId": "get_conversations_api_ai_chat_conversations__get",
         "responses": {
@@ -2294,9 +2202,7 @@
     },
     "/api/ai_chat/conversations/{conversation_id}/messages/": {
       "get": {
-        "tags": [
-          "ai_chat"
-        ],
+        "tags": ["ai_chat"],
         "summary": "Get Messages",
         "operationId": "get_messages_api_ai_chat_conversations__conversation_id__messages__get",
         "security": [
@@ -2340,9 +2246,7 @@
     },
     "/api/ai_chat/conversations/{conversation_id}/": {
       "put": {
-        "tags": [
-          "ai_chat"
-        ],
+        "tags": ["ai_chat"],
         "summary": "Update Conversation",
         "operationId": "update_conversation_api_ai_chat_conversations__conversation_id___put",
         "security": [
@@ -2394,9 +2298,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "ai_chat"
-        ],
+        "tags": ["ai_chat"],
         "summary": "Delete Conversation",
         "operationId": "delete_conversation_api_ai_chat_conversations__conversation_id___delete",
         "security": [
@@ -2440,9 +2342,7 @@
     },
     "/api/import_pdf/": {
       "post": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Import Pdf Data Db",
         "operationId": "import_Pdf_data_DB_api_import_pdf__post",
         "requestBody": {
@@ -2486,9 +2386,7 @@
     },
     "/api/import_pdf/my_portfolio": {
       "get": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Get My Portfolio Db",
         "operationId": "get_my_portfolio_DB_api_import_pdf_my_portfolio_get",
         "responses": {
@@ -2512,9 +2410,7 @@
     },
     "/api/import_pdf/save_portfolios": {
       "post": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Save Portfolios Import Db",
         "operationId": "save_portfolios_import_DB_api_import_pdf_save_portfolios_post",
         "requestBody": {
@@ -2558,9 +2454,7 @@
     },
     "/api/import_pdf/save_holdings": {
       "post": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Save Holdings Import Db",
         "operationId": "save_holdings_import_DB_api_import_pdf_save_holdings_post",
         "requestBody": {
@@ -2604,9 +2498,7 @@
     },
     "/api/import_pdf/save_instrument_purchases_and_sales": {
       "post": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Save Instrument Purchases And Sales Import Db",
         "operationId": "save_instrument_purchases_and_sales_import_DB_api_import_pdf_save_instrument_purchases_and_sales_post",
         "requestBody": {
@@ -2650,9 +2542,7 @@
     },
     "/api/import_pdf/save_contributions_and_withdrawals": {
       "post": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Save Contributions And Withdrawals Import Db",
         "operationId": "save_contributions_and_withdrawals_import_DB_api_import_pdf_save_contributions_and_withdrawals_post",
         "requestBody": {
@@ -2696,9 +2586,7 @@
     },
     "/api/import_pdf/save_dividends_and_withholding_tax": {
       "post": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Save Dividends And Withholding Tax Import Db",
         "operationId": "save_dividends_and_withholding_tax_import_DB_api_import_pdf_save_dividends_and_withholding_tax_post",
         "requestBody": {
@@ -2742,9 +2630,7 @@
     },
     "/api/import_pdf/save_transaction_expenses": {
       "post": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Save Transaction Expenses Import Db",
         "operationId": "save_transaction_expenses_import_DB_api_import_pdf_save_transaction_expenses_post",
         "requestBody": {
@@ -2788,9 +2674,7 @@
     },
     "/api/import_pdf/portfolios/{portfolio_id}": {
       "delete": {
-        "tags": [
-          "Import PDF"
-        ],
+        "tags": ["Import PDF"],
         "summary": "Delete Portfolio Import Db",
         "operationId": "delete_portfolio_import_DB_api_import_pdf_portfolios__portfolio_id__delete",
         "security": [
@@ -2834,9 +2718,7 @@
     },
     "/api/indicators": {
       "get": {
-        "tags": [
-          "indicators"
-        ],
+        "tags": ["indicators"],
         "summary": "Get Portfolio Indicators",
         "description": "Calculates live technical and fundamental indicators for all valid holdings across user portfolios.",
         "operationId": "get_indicators_api_indicators_get",
@@ -2865,9 +2747,7 @@
     },
     "/api/stocks/details": {
       "get": {
-        "tags": [
-          "stocks"
-        ],
+        "tags": ["stocks"],
         "summary": "Get Stock Details",
         "description": "Fetch current price, volume, and percentage change for a given stock symbol.",
         "operationId": "stock_details_api_stocks_details_get",
@@ -2913,9 +2793,7 @@
     },
     "/api/stocks/history": {
       "get": {
-        "tags": [
-          "stocks"
-        ],
+        "tags": ["stocks"],
         "summary": "Get Stock Historical Data",
         "description": "Fetch historical OHLCV data for a specific symbol over a defined time range.",
         "operationId": "stock_history_api_stocks_history_get",
@@ -2987,9 +2865,7 @@
     },
     "/api/stocks/search": {
       "get": {
-        "tags": [
-          "stocks"
-        ],
+        "tags": ["stocks"],
         "summary": "Search Stocks",
         "description": "Search for available stocks by symbol or company name.",
         "operationId": "search_stocks_endpoint_api_stocks_search_get",
@@ -3042,37 +2918,27 @@
           "ticker": {
             "type": "string",
             "title": "Ticker",
-            "examples": [
-              "NPN"
-            ]
+            "examples": ["NPN"]
           },
           "total_articles": {
             "type": "integer",
             "title": "Total Articles",
-            "examples": [
-              3
-            ]
+            "examples": [3]
           },
           "positive": {
             "type": "integer",
             "title": "Positive",
-            "examples": [
-              1
-            ]
+            "examples": [1]
           },
           "negative": {
             "type": "integer",
             "title": "Negative",
-            "examples": [
-              0
-            ]
+            "examples": [0]
           },
           "neutral": {
             "type": "integer",
             "title": "Neutral",
-            "examples": [
-              2
-            ]
+            "examples": [2]
           },
           "articles": {
             "items": {
@@ -3107,9 +2973,7 @@
             ],
             "title": "Portfolio Id",
             "description": "null when nothing has been imported yet",
-            "examples": [
-              "6f9619ff-8b86-d011-b42d-00cf4fc964ff"
-            ]
+            "examples": ["6f9619ff-8b86-d011-b42d-00cf4fc964ff"]
           },
           "account_type": {
             "anyOf": [
@@ -3122,9 +2986,7 @@
             ],
             "title": "Account Type",
             "description": "zar, tfsa or usd. Null until the user sets it",
-            "examples": [
-              "tfsa"
-            ]
+            "examples": ["tfsa"]
           }
         },
         "type": "object",
@@ -3143,9 +3005,7 @@
             ],
             "title": "Account Type",
             "description": "zar, tfsa or usd, case-insensitive. Null clears the setting and the TFSA-only figures stop being calculated",
-            "examples": [
-              "tfsa"
-            ]
+            "examples": ["tfsa"]
           }
         },
         "type": "object",
@@ -3157,32 +3017,24 @@
             "type": "string",
             "title": "Tax Year",
             "description": "SARS tax year the figures below come from",
-            "examples": [
-              "2026/27"
-            ]
+            "examples": ["2026/27"]
           },
           "annual_exclusion": {
             "type": "number",
             "title": "Annual Exclusion",
             "description": "rands of capital gain excluded before the inclusion rate applies",
-            "examples": [
-              40000.0
-            ]
+            "examples": [40000.0]
           },
           "inclusion_rate": {
             "type": "number",
             "title": "Inclusion Rate",
             "description": "fraction of the remaining gain added to taxable income, not percentage points",
-            "examples": [
-              0.4
-            ]
+            "examples": [0.4]
           },
           "cost_basis_method": {
             "type": "string",
             "title": "Cost Basis Method",
-            "examples": [
-              "average"
-            ]
+            "examples": ["average"]
           }
         },
         "type": "object",
@@ -3200,9 +3052,7 @@
             "type": "boolean",
             "title": "Available",
             "description": "false when the estimate cannot be made; read reason for why",
-            "examples": [
-              true
-            ]
+            "examples": [true]
           },
           "reason": {
             "anyOf": [
@@ -3215,9 +3065,7 @@
             ],
             "title": "Reason",
             "description": "why the estimate is unavailable. Null when it is available",
-            "examples": [
-              "TFSA growth is not taxed"
-            ]
+            "examples": ["TFSA growth is not taxed"]
           },
           "assumptions": {
             "$ref": "#/components/schemas/CgtAssumptions"
@@ -3233,9 +3081,7 @@
             ],
             "title": "Net Unrealised Gain",
             "description": "rands of gain that would be realised if everything were sold today",
-            "examples": [
-              420.0
-            ]
+            "examples": [420.0]
           },
           "taxable_capital_gain": {
             "anyOf": [
@@ -3248,9 +3094,7 @@
             ],
             "title": "Taxable Capital Gain",
             "description": "rands left after the annual exclusion and the inclusion rate",
-            "examples": [
-              0.0
-            ]
+            "examples": [0.0]
           },
           "assessed_capital_loss": {
             "anyOf": [
@@ -3263,9 +3107,7 @@
             ],
             "title": "Assessed Capital Loss",
             "description": "rands of loss carried forward instead of a gain. Null when the position is a gain",
-            "examples": [
-              0.0
-            ]
+            "examples": [0.0]
           },
           "holdings_from_statement_only": {
             "items": {
@@ -3274,11 +3116,7 @@
             "type": "array",
             "title": "Holdings From Statement Only",
             "description": "tickers priced off the statement rather than live, so their share of the estimate is as stale as the statement",
-            "examples": [
-              [
-                "STX40.JO"
-              ]
-            ]
+            "examples": [["STX40.JO"]]
           }
         },
         "type": "object",
@@ -3298,9 +3136,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "title"
-        ],
+        "required": ["title"],
         "title": "ChangeConversationName"
       },
       "ChatRequest": {
@@ -3323,9 +3159,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "message"
-        ],
+        "required": ["message"],
         "title": "ChatRequest"
       },
       "ChatResponse": {
@@ -3341,10 +3175,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "reply",
-          "conversation_id"
-        ],
+        "required": ["reply", "conversation_id"],
         "title": "ChatResponse"
       },
       "ConcentrationFlag": {
@@ -3352,9 +3183,7 @@
           "ticker": {
             "type": "string",
             "title": "Ticker",
-            "examples": [
-              "SYG500.JO"
-            ]
+            "examples": ["SYG500.JO"]
           },
           "name": {
             "anyOf": [
@@ -3366,48 +3195,36 @@
               }
             ],
             "title": "Name",
-            "examples": [
-              "Sygnia Itrix S&P 500 ETF"
-            ]
+            "examples": ["Sygnia Itrix S&P 500 ETF"]
           },
           "current_allocation_pct": {
             "type": "number",
             "title": "Current Allocation Pct",
             "description": "percentage points of the book in this holding",
-            "examples": [
-              34.7
-            ]
+            "examples": [34.7]
           },
           "target_allocation_pct": {
             "type": "number",
             "title": "Target Allocation Pct",
             "description": "percentage points the active health config treats as the ceiling",
-            "examples": [
-              25.0
-            ]
+            "examples": [25.0]
           },
           "value_to_reduce": {
             "type": "number",
             "title": "Value To Reduce",
             "description": "rands to sell to reach the target",
-            "examples": [
-              1830.0
-            ]
+            "examples": [1830.0]
           },
           "shares_to_sell": {
             "type": "number",
             "title": "Shares To Sell",
             "description": "the same move in units, at the price used to value the holding",
-            "examples": [
-              19.4
-            ]
+            "examples": [19.4]
           },
           "risk_band": {
             "type": "string",
             "title": "Risk Band",
-            "examples": [
-              "High"
-            ]
+            "examples": ["High"]
           },
           "look_through_note": {
             "anyOf": [
@@ -3450,10 +3267,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "flagged",
-          "health_score"
-        ],
+        "required": ["flagged", "health_score"],
         "title": "ConcentrationResponse"
       },
       "ConfirmReq": {
@@ -3469,10 +3283,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "email",
-          "code"
-        ],
+        "required": ["email", "code"],
         "title": "ConfirmReq"
       },
       "ContributionsAndWithdrawalsRequest": {
@@ -3566,13 +3377,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "ticker",
-          "price",
-          "volume",
-          "fetched_at"
-        ],
+        "required": ["id", "ticker", "price", "volume", "fetched_at"],
         "title": "CurrentPriceResponse"
       },
       "DeleteAccountReq": {
@@ -3584,9 +3389,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "email"
-        ],
+        "required": ["email"],
         "title": "DeleteAccountReq"
       },
       "DividendResponse": {
@@ -3594,30 +3397,22 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "example": [
-              "APPLE"
-            ]
+            "example": ["APPLE"]
           },
           "gross_dividend": {
             "type": "number",
             "title": "Gross Dividend",
-            "example": [
-              2.3
-            ]
+            "example": [2.3]
           },
           "withholding_tax": {
             "type": "number",
             "title": "Withholding Tax",
-            "example": [
-              2.3
-            ]
+            "example": [2.3]
           },
           "net_dividend": {
             "type": "number",
             "title": "Net Dividend",
-            "example": [
-              2.3
-            ]
+            "example": [2.3]
           }
         },
         "type": "object",
@@ -3722,24 +3517,17 @@
             "type": "string",
             "title": "Error Code",
             "description": "stable code to branch on - the wording of detail may change, this will not",
-            "examples": [
-              "INVALID_CREDENTIALS"
-            ]
+            "examples": ["INVALID_CREDENTIALS"]
           },
           "detail": {
             "type": "string",
             "title": "Detail",
             "description": "human-readable message, safe to show the user",
-            "examples": [
-              "invalid email or password"
-            ]
+            "examples": ["invalid email or password"]
           }
         },
         "type": "object",
-        "required": [
-          "error_code",
-          "detail"
-        ],
+        "required": ["error_code", "detail"],
         "title": "ErrorResponse"
       },
       "HTTPValidationError": {
@@ -3760,60 +3548,44 @@
           "weight_min": {
             "type": "number",
             "title": "Weight Min",
-            "examples": [
-              0.05
-            ]
+            "examples": [0.05]
           },
           "weight_max": {
             "type": "number",
             "title": "Weight Max",
-            "examples": [
-              0.7
-            ]
+            "examples": [0.7]
           },
           "concentration_pct_min": {
             "type": "number",
             "title": "Concentration Pct Min",
             "description": "percentage points, the floor for both concentration thresholds",
-            "examples": [
-              10.0
-            ]
+            "examples": [10.0]
           },
           "concentration_pct_max": {
             "type": "number",
             "title": "Concentration Pct Max",
             "description": "percentage points, the ceiling for both concentration thresholds",
-            "examples": [
-              70.0
-            ]
+            "examples": [70.0]
           },
           "hhi_target_min": {
             "type": "number",
             "title": "Hhi Target Min",
-            "examples": [
-              0.05
-            ]
+            "examples": [0.05]
           },
           "hhi_target_max": {
             "type": "number",
             "title": "Hhi Target Max",
-            "examples": [
-              0.5
-            ]
+            "examples": [0.5]
           },
           "breadth_target_min": {
             "type": "number",
             "title": "Breadth Target Min",
-            "examples": [
-              3.0
-            ]
+            "examples": [3.0]
           },
           "breadth_target_max": {
             "type": "number",
             "title": "Breadth Target Max",
-            "examples": [
-              20.0
-            ]
+            "examples": [20.0]
           }
         },
         "type": "object",
@@ -3834,36 +3606,25 @@
           "key": {
             "type": "string",
             "title": "Key",
-            "examples": [
-              "capital_preservation"
-            ]
+            "examples": ["capital_preservation"]
           },
           "name": {
             "type": "string",
             "title": "Name",
-            "examples": [
-              "Capital preservation"
-            ]
+            "examples": ["Capital preservation"]
           },
           "description": {
             "type": "string",
             "title": "Description",
             "description": "who the preset is for and what it treats as risky",
-            "examples": [
-              "For a book whose job is not to lose money."
-            ]
+            "examples": ["For a book whose job is not to lose money."]
           },
           "config": {
             "$ref": "#/components/schemas/HealthConfigValues"
           }
         },
         "type": "object",
-        "required": [
-          "key",
-          "name",
-          "description",
-          "config"
-        ],
+        "required": ["key", "name", "description", "config"],
         "title": "HealthConfigPreset"
       },
       "HealthConfigRequest": {
@@ -3879,9 +3640,7 @@
             ],
             "title": "Preset Key",
             "description": "one of the keys from GET /health-config presets",
-            "examples": [
-              "capital_preservation"
-            ]
+            "examples": ["capital_preservation"]
           },
           "config": {
             "anyOf": [
@@ -3925,9 +3684,7 @@
             "type": "string",
             "title": "Source",
             "description": "where the active config came from: the built-in default, a preset the user chose, one derived from their goal, or hand-tuned values",
-            "examples": [
-              "preset"
-            ]
+            "examples": ["preset"]
           },
           "preset_key": {
             "anyOf": [
@@ -3940,9 +3697,7 @@
             ],
             "title": "Preset Key",
             "description": "the preset the user chose. Null when the values are hand-tuned or still the default",
-            "examples": [
-              "capital_preservation"
-            ]
+            "examples": ["capital_preservation"]
           },
           "derived_preset_key": {
             "anyOf": [
@@ -3955,17 +3710,13 @@
             ],
             "title": "Derived Preset Key",
             "description": "the preset their goal implies, offered as a suggestion. Null when there is no goal to derive one from",
-            "examples": [
-              "growth"
-            ]
+            "examples": ["growth"]
           },
           "default_preset_key": {
             "type": "string",
             "title": "Default Preset Key",
             "description": "what a reset falls back to",
-            "examples": [
-              "equitylens"
-            ]
+            "examples": ["equitylens"]
           },
           "presets": {
             "items": {
@@ -3994,57 +3745,43 @@
             "type": "number",
             "title": "Weight Sector Concentration",
             "description": "fraction of the score from sector spread; the three weights sum to 1",
-            "examples": [
-              0.4
-            ]
+            "examples": [0.4]
           },
           "weight_single_position": {
             "type": "number",
             "title": "Weight Single Position",
             "description": "fraction of the score from the largest single holding",
-            "examples": [
-              0.35
-            ]
+            "examples": [0.35]
           },
           "weight_breadth": {
             "type": "number",
             "title": "Weight Breadth",
             "description": "fraction of the score from the effective number of positions",
-            "examples": [
-              0.25
-            ]
+            "examples": [0.25]
           },
           "concentration_low": {
             "type": "number",
             "title": "Concentration Low",
             "description": "percentage points in one holding where concentration starts counting against the score",
-            "examples": [
-              25.0
-            ]
+            "examples": [25.0]
           },
           "concentration_high": {
             "type": "number",
             "title": "Concentration High",
             "description": "percentage points in one holding that scores zero on that factor",
-            "examples": [
-              45.0
-            ]
+            "examples": [45.0]
           },
           "hhi_well_spread": {
             "type": "number",
             "title": "Hhi Well Spread",
             "description": "sector Herfindahl index that earns full marks; 0.15 is roughly seven evenly-weighted sectors, and lower means more spread",
-            "examples": [
-              0.15
-            ]
+            "examples": [0.15]
           },
           "breadth_target_n": {
             "type": "integer",
             "title": "Breadth Target N",
             "description": "effective positions that earn full marks on breadth",
-            "examples": [
-              8
-            ]
+            "examples": [8]
           }
         },
         "type": "object",
@@ -4067,9 +3804,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "status"
-        ],
+        "required": ["status"],
         "title": "HealthResponse"
       },
       "HealthScoreResponse": {
@@ -4085,9 +3820,7 @@
             ],
             "title": "Score",
             "description": "structural risk out of 10, weighted from the subscores. Null for an empty portfolio, where there is nothing to score",
-            "examples": [
-              6.8
-            ]
+            "examples": [6.8]
           },
           "label": {
             "anyOf": [
@@ -4100,9 +3833,7 @@
             ],
             "title": "Label",
             "description": "Excellent, Healthy, Mixed or Needs attention. Null whenever score is",
-            "examples": [
-              "Healthy"
-            ]
+            "examples": ["Healthy"]
           },
           "subscores": {
             "items": {
@@ -4113,9 +3844,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "subscores"
-        ],
+        "required": ["subscores"],
         "title": "HealthScoreResponse"
       },
       "HealthSubscore": {
@@ -4123,32 +3852,24 @@
           "key": {
             "type": "string",
             "title": "Key",
-            "examples": [
-              "sectorConcentration"
-            ]
+            "examples": ["sectorConcentration"]
           },
           "label": {
             "type": "string",
             "title": "Label",
-            "examples": [
-              "Sector Concentration"
-            ]
+            "examples": ["Sector Concentration"]
           },
           "weight": {
             "type": "number",
             "title": "Weight",
             "description": "fraction of the overall score, not percentage points; the three weights sum to 1",
-            "examples": [
-              0.4
-            ]
+            "examples": [0.4]
           },
           "value": {
             "type": "number",
             "title": "Value",
             "description": "this factor scored out of 10",
-            "examples": [
-              6.2
-            ]
+            "examples": [6.2]
           },
           "detail": {
             "type": "string",
@@ -4227,14 +3948,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "date",
-          "open",
-          "high",
-          "low",
-          "close",
-          "volume"
-        ],
+        "required": ["date", "open", "high", "low", "close", "volume"],
         "title": "HistoryDataPoint"
       },
       "HistoryResponse": {
@@ -4258,11 +3972,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "symbol",
-          "period",
-          "data"
-        ],
+        "required": ["symbol", "period", "data"],
         "title": "HistoryResponse"
       },
       "HoldingResponse": {
@@ -4270,23 +3980,16 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "example": [
-              "APPLE"
-            ]
+            "example": ["APPLE"]
           },
           "value": {
             "type": "number",
             "title": "Value",
-            "example": [
-              "68"
-            ]
+            "example": ["68"]
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "value"
-        ],
+        "required": ["name", "value"],
         "title": "HoldingResponse"
       },
       "HoldingsRequest": {
@@ -4405,31 +4108,21 @@
           "Success": {
             "type": "boolean",
             "title": "Success",
-            "examples": [
-              true
-            ]
+            "examples": [true]
           },
           "Message": {
             "type": "string",
             "title": "Message",
-            "examples": [
-              "PDF has been saved successfully"
-            ]
+            "examples": ["PDF has been saved successfully"]
           },
           "document_id": {
             "type": "string",
             "title": "Document Id",
-            "examples": [
-              "123"
-            ]
+            "examples": ["123"]
           }
         },
         "type": "object",
-        "required": [
-          "Success",
-          "Message",
-          "document_id"
-        ],
+        "required": ["Success", "Message", "document_id"],
         "title": "ImportPDFResponse"
       },
       "ImportPdfRequest": {
@@ -4440,9 +4133,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "file_name"
-        ],
+        "required": ["file_name"],
         "title": "ImportPdfRequest"
       },
       "IndicatorRowResponse": {
@@ -4473,12 +4164,7 @@
         },
         "additionalProperties": true,
         "type": "object",
-        "required": [
-          "ticker",
-          "name",
-          "status",
-          "live_fetch"
-        ],
+        "required": ["ticker", "name", "status", "live_fetch"],
         "title": "IndicatorRowResponse"
       },
       "InstrumentPurchasesAndSalesRequest": {
@@ -4566,23 +4252,16 @@
             "type": "string",
             "format": "email",
             "title": "Email",
-            "examples": [
-              "thabo.mokoena@example.co.za"
-            ]
+            "examples": ["thabo.mokoena@example.co.za"]
           },
           "password": {
             "type": "string",
             "title": "Password",
-            "examples": [
-              "Sandton2026!"
-            ]
+            "examples": ["Sandton2026!"]
           }
         },
         "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
+        "required": ["email", "password"],
         "title": "LoginRequest"
       },
       "MFAChallengeReq": {
@@ -4602,11 +4281,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "session",
-          "email",
-          "totp_code"
-        ],
+        "required": ["session", "email", "totp_code"],
         "title": "MFAChallengeReq"
       },
       "MyPortfolioResponse": {
@@ -4614,23 +4289,16 @@
           "Found": {
             "type": "boolean",
             "title": "Found",
-            "examples": [
-              true
-            ]
+            "examples": [true]
           },
           "portfolio_id": {
             "type": "string",
             "title": "Portfolio Id",
-            "examples": [
-              "123"
-            ]
+            "examples": ["123"]
           }
         },
         "type": "object",
-        "required": [
-          "Found",
-          "portfolio_id"
-        ],
+        "required": ["Found", "portfolio_id"],
         "title": "MyPortfolioResponse"
       },
       "NewsResponse": {
@@ -4638,30 +4306,22 @@
           "total_articles": {
             "type": "integer",
             "title": "Total Articles",
-            "examples": [
-              23
-            ]
+            "examples": [23]
           },
           "positive": {
             "type": "integer",
             "title": "Positive",
-            "examples": [
-              33
-            ]
+            "examples": [33]
           },
           "negative": {
             "type": "integer",
             "title": "Negative",
-            "examples": [
-              24
-            ]
+            "examples": [24]
           },
           "neutral": {
             "type": "integer",
             "title": "Neutral",
-            "examples": [
-              23
-            ]
+            "examples": [23]
           },
           "results": {
             "items": {
@@ -4688,25 +4348,19 @@
             "type": "string",
             "title": "Date",
             "description": "ISO date of the snapshot",
-            "examples": [
-              "2026-08-05"
-            ]
+            "examples": ["2026-08-05"]
           },
           "name": {
             "type": "string",
             "title": "Name",
             "description": "short label for the chart axis",
-            "examples": [
-              "Aug 05"
-            ]
+            "examples": ["Aug 05"]
           },
           "value": {
             "type": "number",
             "title": "Value",
             "description": "rand value of the book that day",
-            "examples": [
-              9020.0
-            ]
+            "examples": [9020.0]
           },
           "benchmark": {
             "anyOf": [
@@ -4719,9 +4373,7 @@
             ],
             "title": "Benchmark",
             "description": "the blended benchmark rebased to the same starting rand value. Null on days the benchmark could not be fetched",
-            "examples": [
-              9020.0
-            ]
+            "examples": [9020.0]
           },
           "twr_index": {
             "anyOf": [
@@ -4734,17 +4386,11 @@
             ],
             "title": "Twr Index",
             "description": "time-weighted index starting at 100, so deposits do not read as growth. Null when there are fewer than two snapshots to link",
-            "examples": [
-              100.0
-            ]
+            "examples": [100.0]
           }
         },
         "type": "object",
-        "required": [
-          "date",
-          "name",
-          "value"
-        ],
+        "required": ["date", "name", "value"],
         "title": "PerformancePoint"
       },
       "PortfolioRequest": {
@@ -4803,23 +4449,16 @@
           "name": {
             "type": "string",
             "title": "Name",
-            "example": [
-              "APPLE"
-            ]
+            "example": ["APPLE"]
           },
           "weight_percentage": {
             "type": "number",
             "title": "Weight Percentage",
-            "example": [
-              "56"
-            ]
+            "example": ["56"]
           }
         },
         "type": "object",
-        "required": [
-          "name",
-          "weight_percentage"
-        ],
+        "required": ["name", "weight_percentage"],
         "title": "PortfolioResponse"
       },
       "PortfolioRow": {
@@ -4828,9 +4467,7 @@
             "type": "string",
             "format": "uuid",
             "title": "Id",
-            "examples": [
-              "6f9619ff-8b86-d011-b42d-00cf4fc964ff"
-            ]
+            "examples": ["6f9619ff-8b86-d011-b42d-00cf4fc964ff"]
           },
           "document_id": {
             "anyOf": [
@@ -4844,9 +4481,7 @@
             ],
             "title": "Document Id",
             "description": "the imported statement this portfolio came from. Null if it was not created by an import",
-            "examples": [
-              "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-            ]
+            "examples": ["3fa85f64-5717-4562-b3fc-2c963f66afa6"]
           },
           "portfolio_name": {
             "anyOf": [
@@ -4858,9 +4493,7 @@
               }
             ],
             "title": "Portfolio Name",
-            "examples": [
-              "EasyEquities TFSA"
-            ]
+            "examples": ["EasyEquities TFSA"]
           },
           "account_number": {
             "anyOf": [
@@ -4872,9 +4505,7 @@
               }
             ],
             "title": "Account Number",
-            "examples": [
-              "EE-1234567"
-            ]
+            "examples": ["EE-1234567"]
           },
           "statement_end_date": {
             "anyOf": [
@@ -4887,9 +4518,7 @@
               }
             ],
             "title": "Statement End Date",
-            "examples": [
-              "2026-07-31"
-            ]
+            "examples": ["2026-07-31"]
           },
           "statement_start_date": {
             "anyOf": [
@@ -4902,9 +4531,7 @@
               }
             ],
             "title": "Statement Start Date",
-            "examples": [
-              "2026-07-01"
-            ]
+            "examples": ["2026-07-01"]
           },
           "account_type": {
             "anyOf": [
@@ -4917,15 +4544,11 @@
             ],
             "title": "Account Type",
             "description": "zar, tfsa or usd. Null until the user sets it",
-            "examples": [
-              "tfsa"
-            ]
+            "examples": ["tfsa"]
           }
         },
         "type": "object",
-        "required": [
-          "id"
-        ],
+        "required": ["id"],
         "title": "PortfolioRow"
       },
       "PortfolioSummary": {
@@ -4934,40 +4557,30 @@
             "type": "number",
             "title": "Total Value",
             "description": "rand value of every priced holding at the price the dashboard used",
-            "examples": [
-              9420.0
-            ]
+            "examples": [9420.0]
           },
           "total_cost": {
             "type": "number",
             "title": "Total Cost",
             "description": "what was paid for those holdings, including brokerage",
-            "examples": [
-              9000.0
-            ]
+            "examples": [9000.0]
           },
           "total_gain_loss": {
             "type": "number",
             "title": "Total Gain Loss",
             "description": "total_value minus total_cost, unrealised only",
-            "examples": [
-              420.0
-            ]
+            "examples": [420.0]
           },
           "total_gain_loss_pct": {
             "type": "number",
             "title": "Total Gain Loss Pct",
             "description": "percentage points, so 4.67 means up 4.67%",
-            "examples": [
-              4.67
-            ]
+            "examples": [4.67]
           },
           "num_holdings": {
             "type": "integer",
             "title": "Num Holdings",
-            "examples": [
-              7
-            ]
+            "examples": [7]
           },
           "daily_change_pct": {
             "anyOf": [
@@ -4980,9 +4593,7 @@
             ],
             "title": "Daily Change Pct",
             "description": "percentage points moved since the previous close. Null when no holding has a live price to compare",
-            "examples": [
-              0.31
-            ]
+            "examples": [0.31]
           },
           "daily_change_value": {
             "anyOf": [
@@ -4995,9 +4606,7 @@
             ],
             "title": "Daily Change Value",
             "description": "the same move in rands. Null on the same condition",
-            "examples": [
-              29.1
-            ]
+            "examples": [29.1]
           }
         },
         "type": "object",
@@ -5015,34 +4624,24 @@
           "full_name": {
             "type": "string",
             "title": "Full Name",
-            "examples": [
-              "Thabo Mokoena"
-            ]
+            "examples": ["Thabo Mokoena"]
           },
           "email": {
             "type": "string",
             "format": "email",
             "title": "Email",
             "description": "doubles as the Cognito username, so it cannot be changed later",
-            "examples": [
-              "thabo.mokoena@example.co.za"
-            ]
+            "examples": ["thabo.mokoena@example.co.za"]
           },
           "password": {
             "type": "string",
             "title": "Password",
             "description": "at least 8 characters with an uppercase letter, a lowercase letter, a digit and a special character. Cognito applies its own policy on top of this one",
-            "examples": [
-              "Sandton2026!"
-            ]
+            "examples": ["Sandton2026!"]
           }
         },
         "type": "object",
-        "required": [
-          "full_name",
-          "email",
-          "password"
-        ],
+        "required": ["full_name", "email", "password"],
         "title": "RegisterRequest"
       },
       "RegisterResponse": {
@@ -5051,24 +4650,17 @@
             "type": "string",
             "title": "User Sub",
             "description": "Cognito's id for the new account. The EquityLens user id only exists after the first authenticated request",
-            "examples": [
-              "a1b2c3d4-5e6f-7081-9abc-def012345678"
-            ]
+            "examples": ["a1b2c3d4-5e6f-7081-9abc-def012345678"]
           },
           "email": {
             "type": "string",
             "format": "email",
             "title": "Email",
-            "examples": [
-              "thabo.mokoena@example.co.za"
-            ]
+            "examples": ["thabo.mokoena@example.co.za"]
           }
         },
         "type": "object",
-        "required": [
-          "user_sub",
-          "email"
-        ],
+        "required": ["user_sub", "email"],
         "title": "RegisterResponse"
       },
       "ReturnsResponse": {
@@ -5077,49 +4669,37 @@
             "type": "number",
             "title": "Portfolio Value",
             "description": "rand value of every holding, priced or not",
-            "examples": [
-              9420.0
-            ]
+            "examples": [9420.0]
           },
           "invested_capital": {
             "type": "number",
             "title": "Invested Capital",
             "description": "cost basis of the holdings still held, so it falls when you sell",
-            "examples": [
-              9000.0
-            ]
+            "examples": [9000.0]
           },
           "net_contributions": {
             "type": "number",
             "title": "Net Contributions",
             "description": "deposits less withdrawals from the statement, which can exceed invested_capital when cash is sitting uninvested",
-            "examples": [
-              10000.0
-            ]
+            "examples": [10000.0]
           },
           "unrealised_gain": {
             "type": "number",
             "title": "Unrealised Gain",
             "description": "paper gain on holdings that have a real price; cost-priced holdings are left out so they cannot fake a zero move",
-            "examples": [
-              420.0
-            ]
+            "examples": [420.0]
           },
           "realised_gain": {
             "type": "number",
             "title": "Realised Gain",
             "description": "locked in by sales, on an average-cost basis",
-            "examples": [
-              0.0
-            ]
+            "examples": [0.0]
           },
           "total_costs": {
             "type": "number",
             "title": "Total Costs",
             "description": "brokerage and fees charged over the statement period",
-            "examples": [
-              57.5
-            ]
+            "examples": [57.5]
           },
           "simple_return_pct": {
             "anyOf": [
@@ -5132,9 +4712,7 @@
             ],
             "title": "Simple Return Pct",
             "description": "percentage points: unrealised gain over cost, ignoring when the money went in. Null when nothing is priced above its cost basis",
-            "examples": [
-              4.67
-            ]
+            "examples": [4.67]
           },
           "money_weighted_return_pct": {
             "anyOf": [
@@ -5147,9 +4725,7 @@
             ],
             "title": "Money Weighted Return Pct",
             "description": "percentage points, annualised XIRR over the cash flows, so it also reflects the timing of deposits. Null when XIRR does not converge",
-            "examples": [
-              12.4
-            ]
+            "examples": [12.4]
           },
           "time_weighted_return_pct": {
             "anyOf": [
@@ -5162,17 +4738,13 @@
             ],
             "title": "Time Weighted Return Pct",
             "description": "percentage points, chain-linked between snapshots with deposits and purchases taken out, so it measures the holdings rather than the deposits. This is the one to compare against an index. Null with fewer than two snapshots",
-            "examples": [
-              3.1
-            ]
+            "examples": [3.1]
           },
           "snapshot_count": {
             "type": "integer",
             "title": "Snapshot Count",
             "description": "daily valuations on record; two is the minimum for a time-weighted figure",
-            "examples": [
-              22
-            ]
+            "examples": [22]
           },
           "history_days": {
             "anyOf": [
@@ -5185,32 +4757,24 @@
             ],
             "title": "History Days",
             "description": "days since the earliest snapshot. Null when there are none",
-            "examples": [
-              30
-            ]
+            "examples": [30]
           },
           "holdings_count": {
             "type": "integer",
             "title": "Holdings Count",
-            "examples": [
-              7
-            ]
+            "examples": [7]
           },
           "priced_live_count": {
             "type": "integer",
             "title": "Priced Live Count",
             "description": "holdings priced from a live quote today",
-            "examples": [
-              6
-            ]
+            "examples": [6]
           },
           "priced_count": {
             "type": "integer",
             "title": "Priced Count",
             "description": "holdings priced from anything other than cost, so live plus statement prices",
-            "examples": [
-              7
-            ]
+            "examples": [7]
           }
         },
         "type": "object",
@@ -5233,23 +4797,16 @@
           "Success": {
             "type": "boolean",
             "title": "Success",
-            "examples": [
-              true
-            ]
+            "examples": [true]
           },
           "Message": {
             "type": "string",
             "title": "Message",
-            "examples": [
-              "Saved successfully"
-            ]
+            "examples": ["Saved successfully"]
           }
         },
         "type": "object",
-        "required": [
-          "Success",
-          "Message"
-        ],
+        "required": ["Success", "Message"],
         "title": "SaveActionResponse"
       },
       "SavePortfolioResponse": {
@@ -5257,31 +4814,21 @@
           "Success": {
             "type": "boolean",
             "title": "Success",
-            "examples": [
-              true
-            ]
+            "examples": [true]
           },
           "Message": {
             "type": "string",
             "title": "Message",
-            "examples": [
-              "PDF has been saved successfully"
-            ]
+            "examples": ["PDF has been saved successfully"]
           },
           "portfolio_id": {
             "type": "string",
             "title": "Portfolio Id",
-            "examples": [
-              "123"
-            ]
+            "examples": ["123"]
           }
         },
         "type": "object",
-        "required": [
-          "Success",
-          "Message",
-          "portfolio_id"
-        ],
+        "required": ["Success", "Message", "portfolio_id"],
         "title": "SavePortfolioResponse"
       },
       "SearchResponse": {
@@ -5300,10 +4847,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "query",
-          "results"
-        ],
+        "required": ["query", "results"],
         "title": "SearchResponse"
       },
       "SearchResultItem": {
@@ -5331,10 +4875,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "symbol",
-          "name"
-        ],
+        "required": ["symbol", "name"],
         "title": "SearchResultItem"
       },
       "SectorInvestmentRequest": {
@@ -5342,15 +4883,11 @@
           "sector": {
             "type": "string",
             "title": "Sector",
-            "examples": [
-              "Healthcare"
-            ]
+            "examples": ["Healthcare"]
           }
         },
         "type": "object",
-        "required": [
-          "sector"
-        ],
+        "required": ["sector"],
         "title": "SectorInvestmentRequest"
       },
       "SectorSlice": {
@@ -5358,33 +4895,23 @@
           "sector": {
             "type": "string",
             "title": "Sector",
-            "examples": [
-              "Financials"
-            ]
+            "examples": ["Financials"]
           },
           "value": {
             "type": "number",
             "title": "Value",
             "description": "rand value held in this sector",
-            "examples": [
-              3180.0
-            ]
+            "examples": [3180.0]
           },
           "percentage": {
             "type": "number",
             "title": "Percentage",
             "description": "percentage points of the book, so the slices sum to 100",
-            "examples": [
-              33.8
-            ]
+            "examples": [33.8]
           }
         },
         "type": "object",
-        "required": [
-          "sector",
-          "value",
-          "percentage"
-        ],
+        "required": ["sector", "value", "percentage"],
         "title": "SectorSlice"
       },
       "StatusResponse": {
@@ -5393,18 +4920,11 @@
             "type": "string",
             "title": "Status",
             "description": "what completed, one word per route",
-            "examples": [
-              "confirmed",
-              "mfa_configured",
-              "logged_out",
-              "deleted"
-            ]
+            "examples": ["confirmed", "mfa_configured", "logged_out", "deleted"]
           }
         },
         "type": "object",
-        "required": [
-          "status"
-        ],
+        "required": ["status"],
         "title": "StatusResponse",
         "description": "confirm, mfa/confirm-setup, logout and DELETE /me all answer with just a status."
       },
@@ -5413,58 +4933,42 @@
           "PortfolioValue": {
             "type": "number",
             "title": "Portfoliovalue",
-            "example": [
-              "APPLE"
-            ]
+            "example": ["APPLE"]
           },
           "TotalHoldings": {
             "type": "integer",
             "title": "Totalholdings",
-            "example": [
-              "22"
-            ]
+            "example": ["22"]
           },
           "TotalPurchasesAndSales": {
             "type": "number",
             "title": "Totalpurchasesandsales",
-            "example": [
-              "23"
-            ]
+            "example": ["23"]
           },
           "TotalTransactionCosts": {
             "type": "number",
             "title": "Totaltransactioncosts",
-            "example": [
-              "23"
-            ]
+            "example": ["23"]
           },
           "TotalContributionsAndWithdrawals": {
             "type": "number",
             "title": "Totalcontributionsandwithdrawals",
-            "example": [
-              34.0
-            ]
+            "example": [34.0]
           },
           "TotalDividendsAndWithholdingTax": {
             "type": "number",
             "title": "Totaldividendsandwithholdingtax",
-            "example": [
-              "45"
-            ]
+            "example": ["45"]
           },
           "TotalTransactionInterest": {
             "type": "number",
             "title": "Totaltransactioninterest",
-            "example": [
-              "56"
-            ]
+            "example": ["56"]
           },
           "TotalTransactionExpenses": {
             "type": "number",
             "title": "Totaltransactionexpenses",
-            "example": [
-              "68"
-            ]
+            "example": ["68"]
           }
         },
         "type": "object",
@@ -5488,19 +4992,11 @@
             },
             "type": "array",
             "title": "Tickers",
-            "examples": [
-              [
-                "AAPL",
-                "MFST",
-                "TSLA"
-              ]
-            ]
+            "examples": [["AAPL", "MFST", "TSLA"]]
           }
         },
         "type": "object",
-        "required": [
-          "tickers"
-        ],
+        "required": ["tickers"],
         "title": "TickerResponse"
       },
       "TokenResponse": {
@@ -5509,33 +5005,23 @@
             "type": "string",
             "title": "Access Token",
             "description": "send as the bearer token on every other route",
-            "examples": [
-              "eyJraWQiOiJIS0..."
-            ]
+            "examples": ["eyJraWQiOiJIS0..."]
           },
           "id_token": {
             "type": "string",
             "title": "Id Token",
             "description": "carries the profile claims; not accepted as a bearer token",
-            "examples": [
-              "eyJraWQiOiJ4WjRw..."
-            ]
+            "examples": ["eyJraWQiOiJ4WjRw..."]
           },
           "refresh_token": {
             "type": "string",
             "title": "Refresh Token",
             "description": "outlives the other two and buys a new access_token",
-            "examples": [
-              "eyJjdHkiOiJKV1Qi..."
-            ]
+            "examples": ["eyJjdHkiOiJKV1Qi..."]
           }
         },
         "type": "object",
-        "required": [
-          "access_token",
-          "id_token",
-          "refresh_token"
-        ],
+        "required": ["access_token", "id_token", "refresh_token"],
         "title": "TokenResponse"
       },
       "TotpSecretResponse": {
@@ -5544,15 +5030,11 @@
             "type": "string",
             "title": "Secret",
             "description": "base32 seed to put in the authenticator app, by QR code or by hand. It is shown once and is not retrievable afterwards",
-            "examples": [
-              "JBSWY3DPEHPK3PXP"
-            ]
+            "examples": ["JBSWY3DPEHPK3PXP"]
           }
         },
         "type": "object",
-        "required": [
-          "secret"
-        ],
+        "required": ["secret"],
         "title": "TotpSecretResponse"
       },
       "TransactionExpensesRequest": {
@@ -5606,50 +5088,34 @@
             "format": "uuid",
             "title": "Id",
             "description": "the EquityLens user id, not the Cognito sub",
-            "examples": [
-              "6f9619ff-8b86-d011-b42d-00cf4fc964ff"
-            ]
+            "examples": ["6f9619ff-8b86-d011-b42d-00cf4fc964ff"]
           },
           "email": {
             "type": "string",
             "title": "Email",
-            "examples": [
-              "thabo.mokoena@example.co.za"
-            ]
+            "examples": ["thabo.mokoena@example.co.za"]
           },
           "full_name": {
             "type": "string",
             "title": "Full Name",
-            "examples": [
-              "Thabo Mokoena"
-            ]
+            "examples": ["Thabo Mokoena"]
           },
           "is_active": {
             "type": "boolean",
             "title": "Is Active",
             "description": "false once the account has been deactivated; it can no longer sign in",
-            "examples": [
-              true
-            ]
+            "examples": [true]
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
             "title": "Created At",
             "description": "when the EquityLens row was created, which is the first sign-in, not when the Cognito account was registered",
-            "examples": [
-              "2026-07-14T08:32:11Z"
-            ]
+            "examples": ["2026-07-14T08:32:11Z"]
           }
         },
         "type": "object",
-        "required": [
-          "id",
-          "email",
-          "full_name",
-          "is_active",
-          "created_at"
-        ],
+        "required": ["id", "email", "full_name", "is_active", "created_at"],
         "title": "UserResponse"
       },
       "ValidationError": {
@@ -5685,11 +5151,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
+        "required": ["loc", "msg", "type"],
         "title": "ValidationError"
       },
       "VerifyTOTPReq": {
@@ -5700,9 +5162,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "totp_code"
-        ],
+        "required": ["totp_code"],
         "title": "VerifyTOTPReq"
       },
       "WatchListRequest": {
@@ -5713,9 +5173,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "ticker"
-        ],
+        "required": ["ticker"],
         "title": "WatchListRequest"
       },
       "WatchlisResponse": {
@@ -5723,16 +5181,12 @@
           "success": {
             "type": "boolean",
             "title": "Success",
-            "example": [
-              true
-            ]
+            "example": [true]
           },
           "Message": {
             "type": "string",
             "title": "Message",
-            "example": [
-              "Add watchlist successfully"
-            ]
+            "example": ["Add watchlist successfully"]
           },
           "watchlist": {
             "items": {
@@ -5749,13 +5203,7 @@
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "Message",
-          "watchlist",
-          "highest",
-          "lowest"
-        ],
+        "required": ["success", "Message", "watchlist", "highest", "lowest"],
         "title": "WatchlisResponse"
       },
       "WatchlistActionResponse": {
@@ -5763,23 +5211,16 @@
           "success": {
             "type": "boolean",
             "title": "Success",
-            "example": [
-              true
-            ]
+            "example": [true]
           },
           "Message": {
             "type": "string",
             "title": "Message",
-            "example": [
-              "Deleted watchlist successfully"
-            ]
+            "example": ["Deleted watchlist successfully"]
           }
         },
         "type": "object",
-        "required": [
-          "success",
-          "Message"
-        ],
+        "required": ["success", "Message"],
         "title": "WatchlistActionResponse"
       },
       "WatchlistItemResponse": {
@@ -5787,44 +5228,32 @@
           "id": {
             "type": "integer",
             "title": "Id",
-            "examples": [
-              1
-            ]
+            "examples": [1]
           },
           "ticker": {
             "type": "string",
             "title": "Ticker",
-            "examples": [
-              "AAPL"
-            ]
+            "examples": ["AAPL"]
           },
           "company_name": {
             "type": "string",
             "title": "Company Name",
-            "examples": [
-              "AAPL Inc."
-            ]
+            "examples": ["AAPL Inc."]
           },
           "sector": {
             "type": "string",
             "title": "Sector",
-            "examples": [
-              "Business"
-            ]
+            "examples": ["Business"]
           },
           "current_price": {
             "type": "integer",
             "title": "Current Price",
-            "examples": [
-              24.5
-            ]
+            "examples": [24.5]
           },
           "change_percent": {
             "type": "integer",
             "title": "Change Percent",
-            "examples": [
-              23.5
-            ]
+            "examples": [23.5]
           }
         },
         "type": "object",

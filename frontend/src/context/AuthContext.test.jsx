@@ -1,7 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import * as authService from '../services/authService';
+
 import { AuthProvider, useAuthContext } from './AuthContext';
 
 vi.mock('../services/authService');
@@ -23,7 +25,7 @@ const renderAuth = (onAction) =>
   render(
     <AuthProvider>
       <TestConsumer onAction={onAction} />
-    </AuthProvider>
+    </AuthProvider>,
   );
 
 describe('AuthContext', () => {
@@ -44,7 +46,9 @@ describe('AuthContext', () => {
 
     // Resolves user when authenticated
     vi.mocked(authService.isAuthenticated).mockResolvedValueOnce(true);
-    vi.mocked(authService.getCurrentUserProfile).mockResolvedValueOnce({ email: 'jane@example.com' });
+    vi.mocked(authService.getCurrentUserProfile).mockResolvedValueOnce({
+      email: 'jane@example.com',
+    });
     renderAuth();
 
     await waitFor(() => expect(screen.getByTestId('email')).toHaveTextContent('jane@example.com'));
@@ -92,7 +96,9 @@ describe('AuthContext', () => {
 
     // 2. Sign-in complete
     vi.mocked(authService.login).mockResolvedValueOnce({ nextStep: { signInStep: 'DONE' } });
-    vi.mocked(authService.getCurrentUserProfile).mockResolvedValueOnce({ email: 'jane@example.com' });
+    vi.mocked(authService.getCurrentUserProfile).mockResolvedValueOnce({
+      email: 'jane@example.com',
+    });
     await user.click(screen.getByText('run'));
     await waitFor(() => expect(screen.getByTestId('auth')).toHaveTextContent('true'));
   });

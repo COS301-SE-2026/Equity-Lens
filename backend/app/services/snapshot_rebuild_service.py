@@ -56,8 +56,9 @@ def _closes_by_day(
     db: Session, tickers: set[str], since: date, days: list[date]
 ) -> dict[str, dict[date, float]]:
     rows = db.execute(
-        select(MarketData.ticker, MarketData.date, MarketData.close)
-        .where(MarketData.ticker.in_(tickers), MarketData.date >= since)
+        select(MarketData.ticker, MarketData.date, MarketData.close).where(
+            MarketData.ticker.in_(tickers), MarketData.date >= since
+        )
     ).all()
 
     observed: dict[str, dict[date, float]] = {}
@@ -106,7 +107,9 @@ def _undo(quantities: dict[str, float], txn: dict) -> None:
         logger.warning(
             "buy exceeds the position held after it for %s (buying %s, held %s) - the "
             "transaction ledger and the closing holdings disagree",
-            ticker, bought, held,
+            ticker,
+            bought,
+            held,
         )
         bought = held
     quantities[ticker] = held - bought
@@ -123,11 +126,7 @@ def rebuild_snapshots(db: Session, portfolio_id: UUID, txns: list[dict]) -> int:
 
     today = date.today()
     dated = sorted(
-        (
-            {**txn, "ticker": txn["ticker"].strip().upper()}
-            for txn in txns
-            if _usable(txn, today)
-        ),
+        ({**txn, "ticker": txn["ticker"].strip().upper()} for txn in txns if _usable(txn, today)),
         key=lambda txn: txn["date"],
     )
     if not dated:
