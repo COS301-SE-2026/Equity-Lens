@@ -11,6 +11,7 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.platypus import (
     Image,
+    KeepTogether,
     PageBreak,
     Paragraph,
     SimpleDocTemplate,
@@ -19,8 +20,27 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+def section_heading(number, title, color):
+    data = [[f"{number}.", title]]
 
-def add_front_page(canvas, _doc):
+    table = Table(data, colWidths=[15 * mm, 145 * mm])
+
+    table.setStyle(
+        TableStyle([
+            ("BACKGROUND", (0,0), (-1,-1), colors.HexColor(color),),
+            ("TEXTCOLOR", (0,0), (-1,-1), colors.white),
+            ("FONTNAME", (0,0), (-1,-1), "Helvetica-Bold",),
+            ("FONTSIZE", (0,0), (-1,-1), 13,),
+            ("ALIGN", (0,0), (0,0), "CENTER",),
+            ("VALIGN", (0,0), (-1,-1), "MIDDLE",),
+            ("TOPPADDING", (0,0), (-1,-1), 7,),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 7,),
+        ])
+    )
+
+    return table
+
+def add_front_page(canvas, _doc, user_name):
     canvas.saveState()
 
     page_width, page_height = A4
@@ -28,7 +48,7 @@ def add_front_page(canvas, _doc):
     assets_path = (Path(__file__).resolve().parent.parent / "assets")
 
     logo_path = assets_path / "Equity_lens_logo.png"
-    background_path = assets_path / "Front_page.avif.avif"
+    background_path = assets_path / "front_page.jpg"
 
     if background_path.exists():
         canvas.drawImage(
@@ -41,54 +61,31 @@ def add_front_page(canvas, _doc):
             mask="auto",
         )
 
-    if logo_path.exists():
-        canvas.drawImage(
-            str(logo_path),
-            15 * mm,
-            page_height - 29 * mm,
-            width=16 * mm,
-            height=16 * mm,
-            preserveAspectRatio=False,
-            mask="auto",
-        )
-
-
-    canvas.setFillColor(colors.HexColor('#111827'))
-    canvas.setFont("Helvetica-Bold",17,)
-    canvas.drawString(34 * mm, page_height - 29 * mm, "EQUITY LENS",)
+    canvas.setFillColor(colors.HexColor('#334155'))
+    canvas.setFont("Helvetica-Bold",40,)
+    canvas.drawString(15 * mm, page_height - 48 * mm, "Smart Portfolio",)
+    canvas.drawString(15 * mm, page_height - 63 * mm, "Snapshot",)
 
     canvas.setFillColor(colors.HexColor('#334155'))
-    canvas.setFont("Helvetica",8,)
-    canvas.drawString(34 * mm, page_height - 29 * mm, "I N V E S T   S M A R T E R",)
-
-    canvas.setFont("Helvetica-Bold",9,)
-    canvas.setFillColor(colors.HexColor('#334155'))
-    canvas.drawString(page_width - 15 * mm, page_height - 19 * mm, "Smart Portfolio Snapshot",)
-
-    canvas.setStrokeColor(colors.HexColor('#CBD5E1'))
-    canvas.line(15 * mm, page_height - 34 * mm, page_width - 15 * mm, page_height - 34 * mm,)
+    canvas.setFont("Helvetica-Bold",14,)
+    canvas.drawString(15 * mm, page_height - 78 * mm, "Your portfolio. Clear insights",)
+    canvas.drawString(15 * mm, page_height - 87 * mm, "A brighter tomorrow.",)
 
     canvas.setFillColor(colors.HexColor('#334155'))
-    canvas.setFont("Helvetica-Bold",34,)
-    canvas.drawString(15 * mm, page_height - 65 * mm, "Smart Portfolio",)
-    canvas.drawString(15 * mm, page_height - 78 * mm, "Snapshot",)
-
-    canvas.setFillColor(colors.HexColor('#334155'))
-    canvas.setFont("Helvetica-Bold",12,)
-    canvas.drawString(15 * mm, page_height - 94 * mm, "Your portfolio. Clear insights",)
-    canvas.drawString(15 * mm, page_height - 103 * mm, "A brighter tomorrow.",)
+    canvas.setFont("Helvetica-Bold",16,)
+    canvas.drawCentredString(page_width / 2, page_height - 108 * mm,f"Prepared for: {user_name}")
 
     canvas.setFillColor(colors.HexColor('#F97316'))
-    canvas.roundRect(15 * mm, page_height - 118 * mm, 24 * mm, 2 * mm, 1 * mm, fill=1, stroke=0)
+    canvas.roundRect(15 * mm, page_height - 98 * mm, 24 * mm, 2 * mm, 1 * mm, fill=1, stroke=0)
 
-    start_y = page_height - 145 * mm
+    start_y = page_height - 125 * mm
     canvas.setFillColor(colors.HexColor('#F97316'))
     canvas.circle(21 * mm, start_y, 5 * mm, fill=1,stroke=0,)
     canvas.setFillColor(colors.HexColor('#111827'))
-    canvas.setFont("Helvetica-Bold",12,)
+    canvas.setFont("Helvetica-Bold",16,)
     canvas.drawString(32 * mm, start_y + 2 * mm, "Understand",)
     canvas.setFillColor(colors.HexColor('#334155'))
-    canvas.setFont("Helvetica-Bold",9,)
+    canvas.setFont("Helvetica-Bold",10,)
     canvas.drawString(32 * mm, start_y - 4 * mm, "See your portfolio performance",) 
     canvas.drawString(32 * mm, start_y - 9 * mm, "and allocation clearly.",)
 
@@ -97,10 +94,10 @@ def add_front_page(canvas, _doc):
     canvas.setFillColor(colors.HexColor('#3B82F6'))
     canvas.circle(21 * mm, second_y, 5 * mm, fill=1,stroke=0,)
     canvas.setFillColor(colors.HexColor('#111827'))
-    canvas.setFont("Helvetica-Bold",12,)
+    canvas.setFont("Helvetica-Bold",16,)
     canvas.drawString(32 * mm, second_y + 2 * mm, "Discover",)
     canvas.setFillColor(colors.HexColor('#334155'))
-    canvas.setFont("Helvetica-Bold",9,)
+    canvas.setFont("Helvetica-Bold",10,)
     canvas.drawString(32 * mm, second_y - 4 * mm, "Identify insights risks",)
     canvas.drawString(32 * mm, second_y - 9 * mm, "and opportunities.",)
 
@@ -108,10 +105,10 @@ def add_front_page(canvas, _doc):
     canvas.setFillColor(colors.HexColor('#22C55E'))
     canvas.circle(21 * mm, third_y, 5 * mm, fill=1,stroke=0,)
     canvas.setFillColor(colors.HexColor('#111827'))
-    canvas.setFont("Helvetica-Bold",12,)
+    canvas.setFont("Helvetica-Bold",16,)
     canvas.drawString(32 * mm, third_y + 2 * mm, "Grow",)
     canvas.setFillColor(colors.HexColor('#64748B'))
-    canvas.setFont("Helvetica-Bold",9,)
+    canvas.setFont("Helvetica-Bold",10,)
     canvas.drawString(32 * mm, third_y - 4 * mm, "Make more informed decisions",)
     canvas.drawString(32 * mm, third_y - 9 * mm, "for your financial future.",)
 
@@ -127,13 +124,6 @@ def add_front_page(canvas, _doc):
     )
     canvas.setFont("Helvetica-Bold",8,)
     canvas.drawString(25 * mm, quote_y + 4 * mm, "- EQUITY LENS",)
-
-    canvas.setStrokeColor(colors.HexColor('#CBD5E1'))
-    canvas.line(15 * mm, 15 * mm, page_width - 15 * mm, 15 * mm,)
-    canvas.setFillColor(colors.HexColor('#64748B'))
-    canvas.setFont("Helvetica",7,)
-    canvas.drawString(15 * mm, 10 * mm, "Equity Lens | Smart Portfolio Snapshot",)
-    canvas.drawString(page_width - 15 * mm, 10 * mm, "Page 1",)
 
     canvas.restoreState()
 
@@ -418,8 +408,11 @@ def create_dividend_chart(dividends: list):
 
     return buffer
 
-def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: dict):
+def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: dict, user_name: str,):
     output = io.BytesIO()
+
+    def front_page(canvas, doc):
+        add_front_page(canvas, doc, user_name)
 
     document = SimpleDocTemplate(
         output,
@@ -484,6 +477,48 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
     story.append(PageBreak())
 
+    story.append(Paragraph("Table of Contents", styles["SectionTitle"]))
+    story.append(Spacer(1,12))
+
+    data = [
+        ["1.", "Portfolio Summary"],
+        ["2.", "Portfolio Allocation"],
+        ["3.", "Top Holdings"],
+        ["4.", "Trading Activity"],
+        ["5.", "Dividend Income"],
+        ["6.", "Cash Flow"],
+        ["7.", "My Portfolio News"],
+        ["8.", "All Market News"],
+        ["9.", "Portfolio Analytics"],
+    ]
+
+    table_Content = Table(
+        data,
+        colWidths=[15 * mm, 145 * mm]
+    )
+
+    table_Content.setStyle(TableStyle(
+        [
+            ("FONTNAME", (0,0), (0,-1), 'Helvetica-Bold'),
+            ("FONTNAME", (1,0), (1,-1), 'Helvetica'),
+            ("FONTSIZE", (0,0), (-1,-1),10,),
+            ("TEXTCOLOR", (0,0), (-1,-1), colors.HexColor("#1E293B"),),
+            ("ALIGN", (0,0), (0,-1), "CENTER",),
+            ("ALIGN", (1,0), (1,-1), "LEFT",),
+            ("VALIGN", (0,0), (-1,-1), "MIDDLE",),
+            ("LEFTPADDING", (0,0), (-1,-1), 4,),
+            ("RIGHTPADDING", (0,0), (-1,-1), 4,),
+            ("TOPPADDING", (0,0), (-1,-1), 9,),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 9,),
+
+            ("LINEBELOW", (0,0), (-1,-1), 0.5, colors.HexColor("#CBD5E1")),
+        ]
+        ))
+
+    story.append(table_Content)
+
+    story.append(PageBreak())
+
     summary = snapshot.get("summary", {})
     holdings = snapshot.get("holdings", {})
     activity = snapshot.get("activity", {})
@@ -499,7 +534,7 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
     story.append(Paragraph(f"Verified SHA-256 Snapshot: {snapshot_hash}", styles["BodyText"]))
     story.append(Spacer(1,18))
 
-    story.append(Paragraph("Portfolio Summary", styles["Heading2"],))
+    story.append(Spacer(1,8))
 
     summary_data = [
         [
@@ -543,24 +578,23 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         ]
         ))
 
-    story.append(summary_table)
-    story.append(Spacer(1,20))
+    story.append(KeepTogether([section_heading(1, "Portfolio Summary", '#2563EB'), Spacer(1,8),summary_table]))
+    story.append(Spacer(1,15))
+
 
     allocation = holdings.get(
         "allocation", [],
     )
 
     if allocation:
-        story.append(Paragraph("Portfolio Allocation", styles["Heading2"],))
         allocation_chart = (create_allocation_chart(allocation))
-        story.append(Image(allocation_chart, width=160 * mm, height=90 * mm,))
+        story.append(KeepTogether([section_heading(2, "Portfolio Allocation", '#2563EB'), Spacer(1,8), Image(allocation_chart, width=160 * mm, height=90 * mm,)]))
         story.append(Spacer(1,15))
 
 
 
     top_holdings = holdings.get("top", [],)
     if top_holdings:
-        story.append(Paragraph("Top Holdings", styles["Heading2"],))
         holdings_data = [["Holding", "Value"]]
         for holding in top_holdings:
             holdings_data.append(
@@ -589,48 +623,33 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         ]
         ))
 
-        story.append(holdings_table)
-        story.append(Spacer(1,20))
+        story.append(KeepTogether([section_heading(3, "Top Holdings", '#2563EB'),Spacer(1,8),holdings_table]))
+        story.append(Spacer(1,15))
 
     trading = activity.get("trading", [],)
 
     if trading:
-        story.append(Paragraph("Trading Activity", styles["Heading2"],))
-
         dividend_chart = create_trading_chart(trading)
-
-        story.append(Image(dividend_chart, width=160 * mm, height=90 * mm))
+        story.append(KeepTogether([section_heading(4, "Trading Activity", '#2563EB'),Spacer(1,8),Image(dividend_chart, width=160 * mm, height=90 * mm)]))
         story.append(Spacer(1,15))
 
     dividends = activity.get("dividend_income", [],)
 
     if dividends:
-        story.append(Paragraph("Dividend Income", styles["Heading2"],))
-
         trading_chart = create_dividend_chart(dividends)
-
-        story.append(Image(trading_chart, width=160 * mm, height=90 * mm))
-        story.append(Spacer(1,20))
+        story.append(KeepTogether([section_heading(5, "Dividend Income", '#2563EB'),Spacer(1,8),Image(trading_chart, width=160 * mm, height=90 * mm)]))
+        story.append(Spacer(1,15))
 
     cash_flow = activity.get("cash_flow", [],)
 
     if cash_flow:
-        story.append(Paragraph("Cash Flow", styles["Heading2"],))
-
         cash_flow_chart = create_cash_flow_chart(cash_flow)
-
-        story.append(Image(cash_flow_chart, width=160 * mm, height=90 * mm))
+        story.append(KeepTogether([section_heading(6, "Cash Flow", '#2563EB'),Spacer(1,8),Image(cash_flow_chart, width=160 * mm, height=90 * mm)]))
         story.append(Spacer(1,15))
 
-    story.append(Spacer(1,15))
 
-    story.append(Paragraph("My Portfolio News", styles["SectionTitle"]))
-    story.append(
-        Paragraph("This is the latest news related to holdings in this portfolio", 
-        styles["NewsMeta"]
-        )
-    )
-    story.append(Spacer(1,8,))
+    story.append(section_heading(7, "My Portfolio News", '#2563EB'))
+    story.append(Spacer(1,8))
 
     if portfolio_news:
         for article in portfolio_news[:5]:
@@ -643,8 +662,8 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
     else:
         story.append(Paragraph("No Portfolio news avaiable.", styles["BodyText"],))
 
-    story.append(Paragraph("All Market News", styles["SectionTitle"]))
-    story.append(Paragraph("Latest general market and business news.", styles["NewsMeta"]))
+    story.append(section_heading(8, "All Market News", '#2563EB'))
+
     story.append(Spacer(1,8,))
 
     if market_news:
@@ -659,8 +678,6 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         story.append(Paragraph("No market news avaiable.", styles["BodyText"],))
 
     if analytics:
-        story.append(Paragraph("Portfolio Analytics", styles["SectionTitle"],))
-        story.append(Paragraph("Key financial and risk indicators", styles["NewsMeta"],))
         story.append(Spacer(1,8,))
 
         analytics_data = [ [
@@ -721,7 +738,8 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         ]
         ))
 
-        story.append(analytics_table)
+        story.append(KeepTogether([section_heading(9, "Portfolio Analytics", '#2563EB'), Spacer(1,8),analytics_table]))
+
 
         story.append(Spacer(1,8,))
 
@@ -734,7 +752,7 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
             )
         )
 
-    document.build(story, onFirstPage=add_front_page, onLaterPages=add_header_footer,)
+    document.build(story, onFirstPage=front_page, onLaterPages=add_header_footer,)
 
     output.seek(0)
 

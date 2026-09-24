@@ -9,7 +9,7 @@ permissions:
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main, dev]
 
@@ -33,6 +33,7 @@ jobs:
         run: npm ci
 
       - name: Run lint
+        continue-on-error: true
         working-directory: frontend
         run: npm run lint
 

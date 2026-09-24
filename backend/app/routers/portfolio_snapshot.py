@@ -208,6 +208,7 @@ def download_portfolio_snapshot(
         portfolio_id=str(portfolio_id),
         snapshot_hash=stored_snapshot.snapshot_hash,
         snapshot=stored_snapshot.snapshot_data,
+        user_name=current_user.full_name,
     )
 
     return StreamingResponse(
