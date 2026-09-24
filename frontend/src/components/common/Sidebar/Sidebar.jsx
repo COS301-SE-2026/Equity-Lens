@@ -10,6 +10,7 @@ const navItems = [
   { label: 'Analytics', to: ROUTES.ANALYTICS },
   { label: 'News', to: ROUTES.NEWS },
   { label: 'AI Assistant', to: ROUTES.AI_CHAT },
+  { label: 'Explore', to: ROUTES.EXPLORE},
   { label: 'Settings', to: ROUTES.SETTINGS },
   { label: 'Help', to: ROUTES.HELP },
 ];

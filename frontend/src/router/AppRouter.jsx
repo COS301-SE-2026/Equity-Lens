@@ -23,6 +23,7 @@ import News from '../pages/News/News';
 import NotFound from '../pages/NotFound/NotFound';
 import Portfolio from '../pages/Portfolio/Portfolio';
 import Settings from '../pages/Settings/Settings';
+import Explore from '../pages/Explore/Explore';
 import { ROUTES } from '../utils/constants';
 
 /** @param {{ children: React.ReactNode }} props */
@@ -168,6 +169,14 @@ export const AppRoutes = () => (
       element={
         <ProtectedRoute>
           <Settings />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.EXPLORE}
+      element={
+        <ProtectedRoute>
+          <Explore />
         </ProtectedRoute>
       }
     />

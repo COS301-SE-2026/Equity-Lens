@@ -18,6 +18,7 @@ from app.routers import (
     pdf_summary,
     portfolio,
     watchlist,
+    explore,
 )
 from app.routers import market_data as market_data_router
 from app.schemas.responses import STATUS_ERROR_CODES
@@ -94,3 +95,4 @@ app.include_router(import_pdf.router)
 app.include_router(indicators.router)
 app.include_router(market_data_router.router)
 app.include_router(portfolio_snapshot.router)
+app.include_router(explore.router)

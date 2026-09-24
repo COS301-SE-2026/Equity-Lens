@@ -14,6 +14,7 @@ export const ROUTES = {
   HELP: '/help',
   BRAND_GUIDE: '/brand',
   SETTINGS: '/settings',
+  EXPLORE: '/explore',
 };
 
 export const PASSWORD_MIN_LENGTH = 8;
