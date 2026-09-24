@@ -1,6 +1,6 @@
 import io
 from pathlib import Path
-from xml.sax.saxutils import escape
+from html import escape
 
 import matplotlib.pyplot as plt
 import requests
