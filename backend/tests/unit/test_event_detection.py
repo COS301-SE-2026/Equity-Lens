@@ -7,7 +7,9 @@ from app.services.event_detection import (
     MAX_GAP_DAYS,
     MIN_OBSERVATIONS,
     SEED_OBSERVATIONS,
+    band_for,
     log_returns,
+    rank_in_period,
     score_series,
 )
 
@@ -100,3 +102,33 @@ def test_the_threshold_is_a_parameter_not_a_constant():
 
     assert len(score_series(series, k_sigma=3.0)["events"]) == 1
     assert score_series(series, k_sigma=6.0)["events"] == []
+
+@pytest.mark.parametrize(
+    ("z", "expected"),
+    [
+        (2.99, None),
+        (3.00, "unusual"),
+        (3.99, "unusual"),
+        (4.00, "very_unusual"),
+        (4.99, "very_unusual"),
+        (5.00, "extremely_unusual"),
+    ],
+)
+def test_the_band_changes_exactly_on_each_threshold(z, expected):
+    assert band_for(z) == expected
+    assert band_for(-z) == expected
+
+def test_the_rank_counts_only_bigger_moves_the_same_way():
+    returns = [-0.05, 0.08, -0.03, -0.06, 0.01, -0.04]
+
+    assert rank_in_period(returns, -0.04) == 3
+    assert rank_in_period([*returns, -0.04], -0.04) == 3
+    assert rank_in_period(returns, 0.08) == 1
+
+def test_each_event_carries_its_sigma_rank_and_period():
+    returns = alternating_seed() + [0.0] * 29 + [0.02]
+
+    event = score_series(series_from_returns(returns))["events"][0]
+    assert event["daily_sigma_pct"] == 0.41
+    assert event["rank_in_period"] == 1
+    assert event["period_days"] == 60
