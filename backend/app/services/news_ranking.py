@@ -3,7 +3,9 @@ from __future__ import annotations
 import math
 import re
 from collections import Counter
-from datetime import date
+from datetime import UTC, date, datetime, timedelta
+
+from app.services.ticker_map import listing_country
 
 K1 = 1.5
 B = 0.75
@@ -14,6 +16,8 @@ MAX_DAYS_AFTER = 1
 WEIGHT_BM25 = 0.5
 WEIGHT_PROXIMITY = 0.3
 WEIGHT_ENTITY = 0.2
+MIN_ENTITY_MATCH_SCORE = 25.0
+UTC_OFFSET_HOURS = {"za": 2, "us": -5}
 
 _CORPORATE_SUFFIXES = {"limited", "group", "holdings", "plc", "ltd"}
 
@@ -64,6 +68,9 @@ class Bm25Index:
         df = self.document_frequency.get(term, 0)
         return math.log(1 + (self.document_count - df + 0.5) / (df + 0.5))
 
+    def ceiling(self, terms: list[str]) -> float:
+        return sum(self.idf(term) for term in terms)
+
     def score(self, terms: list[str], document: str) -> float:
         tokens = tokenize(document)
         if not tokens or not self.average_length:
@@ -88,55 +95,66 @@ def date_proximity(published: date, event_day: date) -> float | None:
     return math.exp(-(days_before ** 2) / (2 * PROXIMITY_SIGMA_DAYS ** 2))
 
 
-def entity_match(article: dict, ticker: str, terms: list[str]) -> float:
-    linked = {t.upper() for t in article.get("tickers", []) if t}
-    if ticker.upper() in linked:
-        return 1.0
+def local_date(published: datetime, ticker: str) -> date:
+    aware = published if published.tzinfo else published.replace(tzinfo=UTC)
+    offset = timedelta(hours=UTC_OFFSET_HOURS[listing_country(ticker)])
+    return (aware.astimezone(UTC) + offset).date()
 
-    headline = set(tokenize(article.get("title") or ""))
-    return 0.5 if any(term in headline for term in terms) else 0.0
+
+def named_in_headline(title: str | None, terms: list[str]) -> bool:
+    headline = set(tokenize(title or ""))
+    return any(term in headline for term in terms)
+
+
+def is_relevant(match_score: float | None, named: bool) -> bool:
+    if match_score is None:
+        return False
+    return match_score >= MIN_ENTITY_MATCH_SCORE or named
+
+
+def counts_as_evidence(article: dict, ticker: str, terms: list[str], event_day: date) -> bool:
+    day = local_date(article["published_at"], ticker)
+    if date_proximity(day, event_day) is None:
+        return False
+    return is_relevant(article.get("match_score"), named_in_headline(article.get("title"), terms))
 
 
 def score_articles(
     articles: list[dict], ticker: str, name: str, event_day: date, index: Bm25Index
 ) -> list[dict]:
     terms = query_terms(ticker, name)
-
-    raw: list[tuple[dict, float, float, float]] = []
-    for article in articles:
-        published = article.get("published_at")
-        if published is None:
-            continue
-        day = published.date() if hasattr(published, "date") else published
-        proximity = date_proximity(day, event_day)
-        if proximity is None:
-            continue
-
-        document = f"{article.get('title') or ''} {article.get('description') or ''}"
-        raw.append((
-            article,
-            index.score(terms, document),
-            proximity,
-            entity_match(article, ticker, terms),
-        ))
-
-    best = max((bm25 for _, bm25, _, _ in raw), default=0.0)
+    ceiling = index.ceiling(terms)
 
     scored: list[dict] = []
-    for article, bm25, proximity, entity in raw:
-        normalised = bm25 / best if best > 0 else 0.0
+    for article in articles:
+        if article.get("published_at") is None:
+            continue
+        if not counts_as_evidence(article, ticker, terms, event_day):
+            continue
+
+        day = local_date(article["published_at"], ticker)
+        proximity = date_proximity(day, event_day) or 0.0
+        named = named_in_headline(article.get("title"), terms)
+        entity = 1.0 if named else 0.5
+
+        document = f"{article.get('title') or ''} {article.get('description') or ''}"
+        bm25 = index.score(terms, document)
+        bm25_abs = min(1.0, bm25 / ceiling) if ceiling > 0 else 0.0
+        days_from_event = (day - event_day).days
+
         scored.append({
             "article": article,
             "bm25": round(bm25, 4),
-            "bm25_normalised": round(normalised, 4),
+            "bm25_normalised": round(bm25_abs, 4),
             "date_proximity": round(proximity, 4),
             "entity_match": entity,
             "combined": round(
-                WEIGHT_BM25 * normalised
-                + WEIGHT_PROXIMITY * proximity
-                + WEIGHT_ENTITY * entity,
+                WEIGHT_BM25 * bm25_abs + WEIGHT_PROXIMITY * proximity + WEIGHT_ENTITY * entity,
                 4,
             ),
+            "named_in_headline": named,
+            "days_from_event": days_from_event,
+            "relevance": "close" if named and abs(days_from_event) <= 1 else "related",
         })
 
     scored.sort(key=lambda row: row["combined"], reverse=True)

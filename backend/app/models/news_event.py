@@ -42,6 +42,10 @@ class NewsArticle(Base):
     sentiment_score = Column(Float, nullable=True)
 
     fetched_at = Column(DateTime, default=lambda: datetime.now(UTC))
+    ingest_mode = Column(String(20), nullable=True)
+    first_ingest_run_id = Column(
+        UUID(as_uuid=True), ForeignKey("news_ingest_runs.id", ondelete="SET NULL"), nullable=True
+    )
 
     tickers: Mapped[list["NewsArticleTicker"]] = relationship(
         "NewsArticleTicker", back_populates="article", lazy="selectin",
@@ -65,6 +69,9 @@ class NewsArticleTicker(Base):
     )
     ticker = Column(String(20), nullable=False)
     sentiment_score = Column(Float, nullable=True)
+    match_score = Column(Float, nullable=True)
+    highlight = Column(Text, nullable=True)
+    entity_country = Column(String(4), nullable=True)
 
     article: Mapped["NewsArticle"] = relationship("NewsArticle", back_populates="tickers")
 
@@ -86,3 +93,31 @@ class NewsFetchLog(Base):
 
     def __repr__(self):
         return f"NewsFetchLog(scope={self.scope!r}, fetched_at={self.fetched_at!r})"
+
+
+class NewsIngestRun(Base):
+    __tablename__ = "news_ingest_runs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    mode = Column(String(20), nullable=False)
+    started_at = Column(DateTime(timezone=True), nullable=False,
+                        default=lambda: datetime.now(UTC))
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+    status = Column(String(20), nullable=False)
+
+    requests_made: Mapped[int] = Column(Integer, nullable=False, default=0)
+    articles_received: Mapped[int] = Column(Integer, nullable=False, default=0)
+    articles_new: Mapped[int] = Column(Integer, nullable=False, default=0)
+    articles_duplicate: Mapped[int] = Column(Integer, nullable=False, default=0)
+    articles_malformed: Mapped[int] = Column(Integer, nullable=False, default=0)
+    links_new: Mapped[int] = Column(Integer, nullable=False, default=0)
+    links_rejected: Mapped[int] = Column(Integer, nullable=False, default=0)
+    events_considered: Mapped[int] = Column(Integer, nullable=False, default=0)
+    events_rejected_data: Mapped[int] = Column(Integer, nullable=False, default=0)
+    events_with_candidates: Mapped[int] = Column(Integer, nullable=False, default=0)
+
+    error_summary = Column(Text, nullable=True)
+    details = Column(Text, nullable=True)
+
+    def __repr__(self):
+        return f"NewsIngestRun(mode={self.mode!r}, status={self.status!r})"

@@ -1,5 +1,6 @@
 import logging
 import time
+from collections.abc import Iterable
 from datetime import UTC, datetime
 from typing import Any
 
@@ -16,7 +17,8 @@ from app.models.portfolio import Holdings, Portfolios
 from app.models.user import User
 from app.repositories.news_repository import NewsRepository
 from app.schemas.auth import UserResponse
-from app.services.ticker_map import match_entity, query_symbol, storage_map
+from app.services import news_ingest
+from app.services.ticker_map import canonical_key
 
 logger = logging.getLogger(__name__)
 
@@ -30,9 +32,6 @@ _BREAKER_FAILURE_LIMIT = 3
 _BREAKER_PAUSE_SECONDS = 900
 _breaker_failures = 0
 _breaker_open_until = 0.0
-
-MARKETAUX_URL = "https://api.marketaux.com/v1/news/all"
-MARKETAUX_TIMEOUT_SECONDS = 6
 
 EMPTY_ENVELOPE: dict[str, Any] = {
     "total_articles": 0,
@@ -176,55 +175,13 @@ def get_portfolio_tickers(
   return {"tickers": _user_tickers(db, current_user.id)}
 
 
-def _sentiment_label(score: float | None) -> str:
-    if score is not None and score > 0:
-        return "positive"
-    if score is not None and score < 0:
-        return "negative"
-    return "neutral"
-
-
-def _parse_published(value: object) -> datetime | None:
-    if not value:
-        return None
-    try:
-        parsed = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
-    except ValueError:
-        return None
-    return parsed if parsed.tzinfo else parsed.replace(tzinfo=UTC)
-
-
 def _iso_utc(value: datetime) -> str:
     aware = value if value.tzinfo else value.replace(tzinfo=UTC)
     return aware.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
-def _for_storage(article: dict, wanted: dict[str, str]) -> dict | None:
-    published = _parse_published(article.get("published_at"))
-    if not article.get("uuid") or not article.get("title") or published is None:
-        return None
-    links: dict[str, float | None] = {}
-    for entity in article.get("entities", []):
-        key = match_entity(entity.get("symbol"), wanted)
-        if key and key not in links:
-            links[key] = entity.get("sentiment_score")
-
-    lead = next(iter(links.values()), None)
-    return {
-        "external_id": article["uuid"],
-        "source": "marketaux",
-        "title": article["title"],
-        "description": article.get("description"),
-        "url": article.get("url"),
-        "image_url": article.get("image_url"),
-        "source_name": article.get("source"),
-        "published_at": published,
-        "sentiment": _sentiment_label(lead),
-        "sentiment_score": lead,
-        "tickers": [
-            {"ticker": key, "sentiment_score": score} for key, score in links.items()
-        ],
-    }
+def _for_storage(article: dict, wanted: Iterable[str]) -> dict | None:
+    return news_ingest.normalise_article(article, {canonical_key(t) for t in wanted})
 
 
 def _stored_article(row: NewsArticle) -> dict:
@@ -241,61 +198,46 @@ def _stored_article(row: NewsArticle) -> dict:
     }
 
 
-def _marketaux_articles(
+def _marketaux_result(
     symbols: list[str],
-    limit: int,
     published_after: str | None = None,
     published_before: str | None = None,
-) -> list[dict] | None:
+) -> news_ingest.ProviderResult | None:
     if not settings.market_api_key:
         return None
     if _breaker_open():
         logger.info("skipping marketaux call for %s, circuit breaker open", symbols)
         return None
 
-    params = {
-        "api_token": settings.market_api_key,
-        "symbols": ",".join(symbols),
-        "filter_entities": "true",
-        "language": "en",
-        "limit": limit,
-    }
-    if published_after:
-        params["published_after"] = published_after
-    if published_before:
-        params["published_before"] = published_before
+    result = news_ingest.fetch_articles(
+        symbols, news_ingest.ON_DEMAND_TIMEOUT_SECONDS, published_after, published_before
+    )
+    if not result.ok:
+        logger.warning("marketaux %s for %s (http %s)", result.status, symbols, result.http_status)
+    _record_provider_result(ok=result.ok)
+    return result
 
-    try:
-        response = requests.get(MARKETAUX_URL, params=params, timeout=MARKETAUX_TIMEOUT_SECONDS)
-        payload = response.json()
-    except (requests.RequestException, ValueError) as exc:
-        logger.warning("marketaux fetch failed for %s: %s", symbols, exc)
-        _record_provider_result(ok=False)
-        return None
 
-    if "error" in payload:
-        logger.warning("marketaux returned an error for %s", symbols)
-        _record_provider_result(ok=False)
-        return None
-
-    _record_provider_result(ok=True)
-    return payload.get("data", [])
+def _marketaux_articles(
+    symbols: list[str],
+    published_after: str | None = None,
+    published_before: str | None = None,
+) -> list[dict] | None:
+    result = _marketaux_result(symbols, published_after, published_before)
+    return result.articles if result is not None and result.ok else None
 
 
 def _refresh_from_provider(db: Session, repo: NewsRepository, scope: str,
-                           symbols: list[str], limit: int) -> None:
+                           symbols: list[str]) -> None:
     if not repo.should_fetch(scope, settings.news_refresh_floor_hours):
         return
-    raw = _marketaux_articles([query_symbol(s) for s in symbols], limit)
-    if raw is None:
-        repo.record_fetch(scope, "marketaux", 0, ok=False)
-        db.commit()
+    result = _marketaux_result(symbols)
+    if result is None:
         return
 
-    wanted = storage_map(symbols)
-    rows = [row for row in (_for_storage(a, wanted) for a in raw) if row]
-    repo.upsert_articles(rows)
-    repo.record_fetch(scope, "marketaux", len(rows), ok=True)
+    news_ingest.record_call(repo, scope, result)
+    rows = [row for row in (_for_storage(a, symbols) for a in result.articles) if row]
+    repo.upsert_articles(rows, ingest_mode="on_demand")
     db.commit()
 
 
@@ -324,7 +266,7 @@ def get_portfolio_news(
         return cached
 
     repo = NewsRepository(db)
-    _refresh_from_provider(db, repo, f"portfolio:{','.join(key)}", list(key), limit=50)
+    _refresh_from_provider(db, repo, f"portfolio:{','.join(key)}", list(key))
 
     articles = [_stored_article(row) for row in repo.articles_for_tickers(list(key), limit=50)]
     envelope = _portfolio_envelope(articles)
@@ -355,7 +297,7 @@ def get_ticker_news(
         return cached
 
     repo = NewsRepository(db)
-    _refresh_from_provider(db, repo, f"ticker:{ticker.upper()}", [ticker], limit=20)
+    _refresh_from_provider(db, repo, f"ticker:{ticker.upper()}", [ticker])
 
     articles = [_stored_article(row) for row in repo.articles_for_tickers([ticker], limit=20)]
     envelope = {
