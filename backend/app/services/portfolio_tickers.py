@@ -21,4 +21,5 @@ def get_user_holdings(db: Session, user_id: UUID) -> list[str]:
         .distinct()
         .all()
     )
-    return sorted(t[0] for t in tickers)
+    normalized = {t[0].upper().removesuffix(".JO") for t in tickers}
+    return sorted(normalized)
