@@ -36,6 +36,16 @@ export const ChatProvider = ({ children }) => {
   const [isThinking, setIsThinking] = useState(false);
   const [regeneratingId, setRegeneratingId] = useState(/** @type {number|string|null} */ (null));
   const [conversations, setConversations] = useState(/** @type {Conversation[]} */ ([]));
+  const [dockOpen, setDockOpen] = useState(false);
+  const [pendingQuestion, setPendingQuestion] = useState(/** @type {string|null} */ (null));
+
+  /** @param {string} [question] */
+  const openDock = (question) => {
+    setDockOpen(true);
+    if (question) setPendingQuestion(question);
+  };
+  const closeDock = () => setDockOpen(false);
+  const clearPendingQuestion = () => setPendingQuestion(null);
 
   const refreshConversations = () =>
     api.get('/ai_chat/conversations/')
@@ -159,6 +169,11 @@ export const ChatProvider = ({ children }) => {
         isThinking,
         regeneratingId,
         conversations,
+        dockOpen,
+        pendingQuestion,
+        openDock,
+        closeDock,
+        clearPendingQuestion,
         sendMessage,
         regenerate,
         loadConversation,
