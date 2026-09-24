@@ -10,6 +10,7 @@ MAX_GAP_DAYS = 4
 SEED_OBSERVATIONS = 30
 MIN_OBSERVATIONS = 60
 TRADING_DAYS_PER_YEAR = 252
+UNUSUAL_BANDS = ((5.0, "extremely_unusual"), (4.0, "very_unusual"), (3.0, "unusual"))
 
 
 def annualised_pct(daily_sigma: float) -> float:
@@ -24,6 +25,17 @@ def log_returns(series: list[tuple[date, float]]) -> list[tuple[date, float]]:
             continue
         out.append((day, math.log(price / prev_price)))
     return out
+
+
+def band_for(z: float) -> str | None:
+    for threshold, band in UNUSUAL_BANDS:
+        if abs(z) >= threshold:
+            return band
+    return None
+
+
+def rank_in_period(returns: list[float], r: float) -> int:
+   return 1 + sum(1 for v in returns if v * r > 0 and abs(v) > abs(r))
 
 
 def _seed_variance(returns: list[float]) -> float:
@@ -69,6 +81,9 @@ def score_series(series: list[tuple[date, float]], k_sigma: float = K_SIGMA) -> 
             "return_pct": round((math.exp(r) - 1) * 100, 2),
             "z_score": round(z, 2),
             "sigma": round(sigma, 6),
+            "daily_sigma_pct": round(sigma * 100, 2),
+            "rank_in_period": rank_in_period(values, r),
+            "period_days": observations,
             "annualised_volatility_pct": round(annualised_pct(sigma), 2),
             "variance": variance,
             "direction": "up" if r > 0 else "down",
