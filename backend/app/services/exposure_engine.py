@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import math
 from dataclasses import dataclass
 
@@ -23,7 +21,6 @@ class NormalizedFeature:
     z_local_float: float
     z_div_yield: float
  
- 
 # The sector-mismatch penalty (0.4) was set empirically
 # rather than assumed: measured across the seed universe,
 # same-sector stock pairs had a median feature-space
@@ -34,7 +31,6 @@ class NormalizedFeature:
 # such as Nedbank and Sibanye-Stillwater, which sit at a raw distance
 # of 0.071 despite belonging to Financial Services and Basic Materials respectively.
 SECTOR_MISMATCH_PENALTY = 0.4
- 
  
 def normalize_universe(features: list[Feature]) -> list[NormalizedFeature]:
     log_mcap = np.array([math.log10(f.market_cap) for f in features])
@@ -62,7 +58,13 @@ def _distance(a: NormalizedFeature, b: NormalizedFeature) -> float:
     if a.sector != b.sector:
         euclidean += SECTOR_MISMATCH_PENALTY
     return euclidean
- 
+
+def _gaps(a: NormalizedFeature, b: NormalizedFeature) -> dict[str, float]:
+    return {
+        "size": round(abs(a.z_log_mcap - b.z_log_mcap), 3),
+        "free float": round(abs(a.z_local_float - b.z_local_float), 3),
+        "dividend yield": round(abs(a.z_div_yield - b.z_div_yield), 3),
+    }
  
 def similarity_scores(
     holding: NormalizedFeature,
@@ -80,8 +82,10 @@ def similarity_scores(
     return [
         {
             "ticker": f.ticker,
+            "similar_to": holding.ticker,
             "distance": round(d, 3),
             "closeness": round(1 - (d - d_min) / span, 3),
+            "gaps": _gaps(holding, f),
         }
         for f, d in scored[:k]
     ]

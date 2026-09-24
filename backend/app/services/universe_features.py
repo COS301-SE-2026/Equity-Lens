@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import logging
 
 from app.services.exposure_engine import Feature
