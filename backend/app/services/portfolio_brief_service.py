@@ -20,6 +20,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
+
 def section_heading(number, title, color):
     data = [[f"{number}.", title]]
 
@@ -47,7 +48,6 @@ def add_front_page(canvas, _doc, user_name):
 
     assets_path = (Path(__file__).resolve().parent.parent / "assets")
 
-    logo_path = assets_path / "Equity_lens_logo.png"
     background_path = assets_path / "front_page.jpg"
 
     if background_path.exists():
@@ -408,7 +408,12 @@ def create_dividend_chart(dividends: list):
 
     return buffer
 
-def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: dict, user_name: str,):
+def generate_portfolio_brief(
+        portfolio_id: str, 
+        snapshot_hash: str, 
+        snapshot: dict, 
+        user_name: str,
+    ):
     output = io.BytesIO()
 
     def front_page(canvas, doc):
@@ -492,12 +497,12 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         ["9.", "Portfolio Analytics"],
     ]
 
-    table_Content = Table(
+    table_content = Table(
         data,
         colWidths=[15 * mm, 145 * mm]
     )
 
-    table_Content.setStyle(TableStyle(
+    table_content.setStyle(TableStyle(
         [
             ("FONTNAME", (0,0), (0,-1), 'Helvetica-Bold'),
             ("FONTNAME", (1,0), (1,-1), 'Helvetica'),
@@ -515,7 +520,7 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         ]
         ))
 
-    story.append(table_Content)
+    story.append(table_content)
 
     story.append(PageBreak())
 
@@ -578,7 +583,9 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         ]
         ))
 
-    story.append(KeepTogether([section_heading(1, "Portfolio Summary", '#2563EB'), Spacer(1,8),summary_table]))
+    story.append(KeepTogether([section_heading(
+        1, "Portfolio Summary", '#2563EB'), 
+        Spacer(1,8),summary_table]))
     story.append(Spacer(1,15))
 
 
@@ -588,7 +595,9 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
 
     if allocation:
         allocation_chart = (create_allocation_chart(allocation))
-        story.append(KeepTogether([section_heading(2, "Portfolio Allocation", '#2563EB'), Spacer(1,8), Image(allocation_chart, width=160 * mm, height=90 * mm,)]))
+        story.append(KeepTogether(
+            [section_heading(2, "Portfolio Allocation", '#2563EB'), Spacer(1,8), Image(
+            allocation_chart, width=160 * mm, height=90 * mm,)]))
         story.append(Spacer(1,15))
 
 
@@ -623,28 +632,32 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         ]
         ))
 
-        story.append(KeepTogether([section_heading(3, "Top Holdings", '#2563EB'),Spacer(1,8),holdings_table]))
+        story.append(KeepTogether([section_heading(
+            3, "Top Holdings", '#2563EB'),Spacer(1,8),holdings_table]))
         story.append(Spacer(1,15))
 
     trading = activity.get("trading", [],)
 
     if trading:
         dividend_chart = create_trading_chart(trading)
-        story.append(KeepTogether([section_heading(4, "Trading Activity", '#2563EB'),Spacer(1,8),Image(dividend_chart, width=160 * mm, height=90 * mm)]))
+        story.append(KeepTogether([section_heading(4, "Trading Activity", '#2563EB'),
+        Spacer(1,8),Image(dividend_chart, width=160 * mm, height=90 * mm)]))
         story.append(Spacer(1,15))
 
     dividends = activity.get("dividend_income", [],)
 
     if dividends:
         trading_chart = create_dividend_chart(dividends)
-        story.append(KeepTogether([section_heading(5, "Dividend Income", '#2563EB'),Spacer(1,8),Image(trading_chart, width=160 * mm, height=90 * mm)]))
+        story.append(KeepTogether([section_heading(5, "Dividend Income", '#2563EB'),
+            Spacer(1,8),Image(trading_chart, width=160 * mm, height=90 * mm)]))
         story.append(Spacer(1,15))
 
     cash_flow = activity.get("cash_flow", [],)
 
     if cash_flow:
         cash_flow_chart = create_cash_flow_chart(cash_flow)
-        story.append(KeepTogether([section_heading(6, "Cash Flow", '#2563EB'),Spacer(1,8),Image(cash_flow_chart, width=160 * mm, height=90 * mm)]))
+        story.append(KeepTogether([section_heading(6, "Cash Flow", '#2563EB'),
+            Spacer(1,8),Image(cash_flow_chart, width=160 * mm, height=90 * mm)]))
         story.append(Spacer(1,15))
 
 
@@ -738,7 +751,8 @@ def generate_portfolio_brief(portfolio_id: str, snapshot_hash: str, snapshot: di
         ]
         ))
 
-        story.append(KeepTogether([section_heading(9, "Portfolio Analytics", '#2563EB'), Spacer(1,8),analytics_table]))
+        story.append(KeepTogether([section_heading(
+            9, "Portfolio Analytics", '#2563EB'), Spacer(1,8),analytics_table]))
 
 
         story.append(Spacer(1,8,))
