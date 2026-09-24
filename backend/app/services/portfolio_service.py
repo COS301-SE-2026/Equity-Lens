@@ -80,6 +80,8 @@ MAX_SERIES_TICKERS = 15
 
 
 HEADLINE_TOLERANCE_PCT = 0.05
+MIN_SAME_DAY_SCANNED = 10
+MAX_SAME_DAY_TICKERS = 5
 CHANCE_NOTE = (
     "if daily moves were normally distributed; real returns have fatter tails, so expect more"
 )
@@ -1500,12 +1502,37 @@ class PortfolioService:
             "possible_explanations": self._possible_explanations(
                 ticker, holding.get("name") or "", event_date
             ),
+            "same_day": self._same_day(ticker, event_date, detected),
             "note": (
                 "Articles are listed because they are about this holding and close to this "
                 "date. Nothing here establishes that any of them moved the price."
             ),
         }
         return payload
+
+    def _same_day(self, ticker: str, event_date: date, log_return: float | None) -> dict | None:
+        repo = NewsRepository(self.db)
+        scan = repo.latest_scan()
+        if scan is None or log_return is None:
+            return None
+
+        run, covered = scan
+        day = event_date.isoformat()
+        others = [t for t, (first, last) in covered.items()
+                  if t != ticker.upper() and first <= day <= last]
+        if len(others) < MIN_SAME_DAY_SCANNED:
+            return None
+
+        unusual = repo.unusual_on(event_date, K_SIGMA, others, run.started_at)
+        direction = "up" if log_return > 0 else "down"
+        same_way = [row for row in unusual if row.direction == direction]
+        return {
+            "scanned": len(others),
+            "unusual": len(unusual),
+            "same_direction": len(same_way),
+            "tickers": [row.ticker for row in same_way[:MAX_SAME_DAY_TICKERS]],
+            "expected_by_chance": round(len(others) * math.erfc(K_SIGMA / math.sqrt(2)), 2),
+        }
 
     def _portfolio_impact(
         self,

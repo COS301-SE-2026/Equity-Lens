@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from sqlalchemy import (
     Boolean,
     Column,
+    Date,
     DateTime,
     Float,
     ForeignKey,
@@ -121,3 +122,32 @@ class NewsIngestRun(Base):
 
     def __repr__(self):
         return f"NewsIngestRun(mode={self.mode!r}, status={self.status!r})"
+
+
+class PriceAnomaly(Base):
+    __tablename__ = "price_anomalies"
+    __table_args__ = (
+        UniqueConstraint("ticker", "event_date", "k_sigma", name="uq_price_anomalies_ticker_day_k"),
+        Index("ix_price_anomalies_event_date", "event_date"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    ticker = Column(String(20), nullable=False)
+    event_date = Column(Date, nullable=False)
+    k_sigma = Column(Float, nullable=False)
+    return_pct = Column(Float, nullable=True)
+    z_score = Column(Float, nullable=True)
+    sigma = Column(Float, nullable=True)
+    direction = Column(String(4), nullable=True)
+    band = Column(String(20), nullable=True)
+    validation = Column(String(12), nullable=False)
+    first_seen_at = Column(DateTime(timezone=True), nullable=False,
+                           default=lambda: datetime.now(UTC))
+    last_seen_at = Column(DateTime(timezone=True), nullable=False,
+                          default=lambda: datetime.now(UTC))
+    first_run_id = Column(
+        UUID(as_uuid=True), ForeignKey("news_ingest_runs.id", ondelete="SET NULL"), nullable=True
+    )
+
+    def __repr__(self):
+        return f"PriceAnomaly(ticker={self.ticker!r}, event_date={self.event_date!r})"

@@ -1,11 +1,18 @@
-from datetime import UTC, datetime, timedelta
+import json
+from datetime import UTC, date, datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
 
-from app.models.news_event import NewsArticle, NewsArticleTicker, NewsFetchLog, NewsIngestRun
+from app.models.news_event import (
+    NewsArticle,
+    NewsArticleTicker,
+    NewsFetchLog,
+    NewsIngestRun,
+    PriceAnomaly,
+)
 from app.services.ticker_map import canonical_key
 
 
@@ -183,6 +190,71 @@ class NewsRepository:
             .limit(1)
         )
         return self.db.scalars(stmt).first()
+
+    def upsert_anomalies(self, events: list[dict], run_id=None) -> int:
+        if not events:
+            return 0
+
+        now = datetime.now(UTC)
+        insert = self._insert()
+        stmt = insert(PriceAnomaly).values([
+            {
+                "ticker": e["ticker"],
+                "event_date": e["date"],
+                "k_sigma": e["k_sigma"],
+                "return_pct": e["return_pct"],
+                "z_score": e["z_score"],
+                "sigma": e["sigma"],
+                "direction": e["direction"],
+                "band": e["band"],
+                "validation": e["rejected"] or "ok",
+                "first_seen_at": now,
+                "last_seen_at": now,
+                "first_run_id": run_id,
+            }
+            for e in events
+        ])
+        # a re-sighting keeps when and by which run it was first seen, but takes the latest
+        # scoring: a move on the last day of a series has no next day yet, so it cannot be
+        # called a spike until the night after
+        latest = ("return_pct", "z_score", "sigma", "direction", "band", "validation",
+                  "last_seen_at")
+        stmt = stmt.on_conflict_do_update(
+            index_elements=["ticker", "event_date", "k_sigma"],
+            set_={column: stmt.excluded[column] for column in latest},
+        )
+        return max(int(self.db.execute(stmt).rowcount), 0)
+
+    def latest_scan(self) -> tuple[NewsIngestRun, dict[str, list[str]]] | None:
+        """The newest run that recorded which tickers it scored, and over which dates."""
+        stmt = (
+            select(NewsIngestRun)
+            .where(NewsIngestRun.details.contains('"scanned"'))
+            .order_by(NewsIngestRun.started_at.desc())
+            .limit(1)
+        )
+        run = self.db.scalars(stmt).first()
+        if run is None:
+            return None
+        return run, json.loads(run.details).get("scanned") or {}
+
+    def unusual_on(self, day: date, k_sigma: float, tickers: list[str],
+                   seen_since: datetime) -> list[PriceAnomaly]:
+        if not tickers:
+            return []
+
+        stmt = (
+            select(PriceAnomaly)
+            .where(
+                PriceAnomaly.event_date == day,
+                PriceAnomaly.k_sigma == k_sigma,
+                PriceAnomaly.validation == "ok",
+                PriceAnomaly.ticker.in_(tickers),
+                PriceAnomaly.last_seen_at >= seen_since,
+            )
+            .order_by(func.abs(PriceAnomaly.z_score).desc())
+        )
+        return list(self.db.scalars(stmt).all())
 
     def record_fetch(self, scope: str, source: str, article_count: int, ok: bool) -> None:
         self.db.add(NewsFetchLog(

@@ -916,6 +916,27 @@ class PortfolioImpact(BaseModel):
     )
 
 
+class SameDayBreadth(BaseModel):
+    scanned: int = Field(
+        description="other tickers the latest nightly scan scored on this date",
+        examples=[48],
+    )
+    unusual: int = Field(
+        description="how many of those the detector flagged that day, bad data left out",
+        examples=[6],
+    )
+    same_direction: int = Field(description="of those, the ones that went the same way",
+                                examples=[6])
+    tickers: list[str] = Field(
+        description="up to five of the same-direction moves, largest |z| first",
+        examples=[["SBK.JO", "FSR.JO", "NED.JO"]],
+    )
+    expected_by_chance: float = Field(
+        description="scanned * erfc(k / sqrt 2): the count if moves were independent and normal",
+        examples=[0.13],
+    )
+
+
 class EventDetailResponse(BaseModel):
     available: bool = Field(examples=[True])
     reason: str | None = Field(
@@ -1002,6 +1023,11 @@ class EventDetailResponse(BaseModel):
     )
     portfolio_impact: PortfolioImpact | None = None
     possible_explanations: list[PossibleExplanation] = []
+    same_day: SameDayBreadth | None = Field(
+        default=None,
+        description="null until a scan has recorded its coverage, or when it covered fewer "
+                    "than 10 other tickers on this date",
+    )
     note: str | None = Field(default=None)
 
 
