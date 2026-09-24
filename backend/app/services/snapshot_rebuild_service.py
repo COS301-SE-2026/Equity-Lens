@@ -226,3 +226,33 @@ def rebuild_snapshots(db: Session, portfolio_id: UUID, txns: list[dict]) -> Rebu
         ledger_conflicts=conflicts,
         suspect_dates=suspect_dates,
     )
+
+
+def position_on(
+    db: Session, portfolio_ids: list[UUID], ticker: str, txns: list[dict], day: date
+) -> tuple[float, float | None]:
+    quantities = {
+        ticker: sum(
+            _closing_book(db, portfolio_id).get(ticker, {}).get("quantity", 0.0)
+            for portfolio_id in portfolio_ids
+        )
+    }
+
+    today = date.today()
+    later = sorted(
+        (
+            {**txn, "ticker": txn["ticker"].strip().upper()}
+            for txn in txns
+            if _usable(txn, today) and txn["date"] > day
+        ),
+        key=lambda txn: txn["date"],
+    )
+    for txn in reversed(later):
+        if txn["ticker"] == ticker:
+            _undo(quantities, txn)
+
+    held = quantities[ticker]
+    close = _observed_closes(db, {ticker}, day).get(ticker, {}).get(day)
+    if held <= 0 or close is None:
+        return held, None
+    return held, held * close

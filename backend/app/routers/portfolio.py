@@ -478,6 +478,7 @@ def get_portfolio_events(
             status_code=400, detail=f"k must be between {MIN_K_SIGMA} and {MAX_K_SIGMA}"
         )
 
+    k = round(k * 2) / 2
     return drop_non_finite(
         PortfolioService(db).get_events(current_user.id, period=period, k_sigma=k), "events"
     )

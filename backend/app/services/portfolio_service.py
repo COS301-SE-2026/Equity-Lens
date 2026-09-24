@@ -2,6 +2,7 @@ import math
 import logging
 import threading
 import time
+from bisect import bisect_right
 from datetime import date, datetime, timedelta, timezone
 from itertools import pairwise
 from uuid import UUID
@@ -27,7 +28,7 @@ from app.services.instruments import (
     resolve_known_instrument,
 )
 from app.services.cgt_estimator import estimate_cgt
-from app.services.event_detection import K_SIGMA, score_series
+from app.services.event_detection import K_SIGMA, band_for, log_returns, score_series
 from app.services.event_study import run as run_event_study
 from app.services.health_config_service import resolve_health_config
 from app.services.health_score import (
@@ -41,6 +42,8 @@ from app.services.news_ranking import (
     MAX_DAYS_AFTER,
     MAX_DAYS_BEFORE,
     Bm25Index,
+    counts_as_evidence,
+    query_terms,
     score_articles,
 )
 from app.services.returns import (
@@ -51,7 +54,7 @@ from app.services.returns import (
     xirr,
 )
 from app.services.risk_analytics import closes_for_tickers, single_ticker_closes
-from app.services.snapshot_rebuild_service import rebuild_snapshots
+from app.services.snapshot_rebuild_service import position_on, rebuild_snapshots
 from app.utils.stock_cache import get_cached_price_history, get_latest_close
 
 logger = logging.getLogger(__name__)
@@ -60,10 +63,14 @@ MAX_EVENTS = 20
 MAX_EXPLANATIONS = 5
 
 
-def _event_has_news(event_date: date, article_dates: list[date]) -> bool:
-    start = event_date - timedelta(days=MAX_DAYS_BEFORE)
-    end = event_date + timedelta(days=MAX_DAYS_AFTER)
-    return any(start <= d <= end for d in article_dates)
+def _news_window_utc(first: date, last: date) -> tuple[datetime, datetime]:
+    start = datetime.combine(first - timedelta(days=MAX_DAYS_BEFORE + 1), datetime.min.time(),
+                             tzinfo=timezone.utc)
+    end = datetime.combine(last + timedelta(days=MAX_DAYS_AFTER + 1), datetime.max.time(),
+                           tzinfo=timezone.utc)
+    return start, end
+
+
 TRACKING_R_SQUARED = 0.95
 MARKET_MOVE_ABNORMAL_SHARE = 0.35
 COMPANY_MOVE_ABNORMAL_SHARE = 0.65
@@ -72,15 +79,29 @@ BENCHMARK_LOOKBACK_DAYS = 260
 MAX_SERIES_TICKERS = 15
 
 
-def classify_move(return_pct: float, abnormal_return_pct: float | None) -> str:
-    if abnormal_return_pct is None or not return_pct:
+HEADLINE_TOLERANCE_PCT = 0.05
+CHANCE_NOTE = (
+    "if daily moves were normally distributed; real returns have fatter tails, so expect more"
+)
+
+
+def classify_move(market_pct: float | None, company_pct: float | None) -> str:
+    if market_pct is None or company_pct is None:
+        return "unknown"
+    total = market_pct + company_pct
+    if total == 0:
         return "unknown"
 
-    share = abs(abnormal_return_pct) / abs(return_pct)
-    if share < MARKET_MOVE_ABNORMAL_SHARE:
+    if market_pct != 0 and (market_pct > 0) != (total > 0):
+        return "against_market"
+    if company_pct != 0 and (company_pct > 0) != (total > 0):
         return "market"
-    if share > COMPANY_MOVE_ABNORMAL_SHARE:
+
+    share = company_pct / total
+    if share >= COMPANY_MOVE_ABNORMAL_SHARE:
         return "company"
+    if share <= MARKET_MOVE_ABNORMAL_SHARE:
+        return "market"
     return "mixed"
 
 
@@ -293,21 +314,23 @@ def _history_period(since: date) -> str:
         return "2y"
     return "5y"
 
-def _close_on_or_after(history, when: date) -> float | None:
-    if history is None or history.empty:
-        return None
-
-    for timestamp, row in history.iterrows():
-        if timestamp.date() < when:
-            continue
-        close = row["Close"]
+def _closes_by_day(history) -> tuple[list[date], list[float]]:
+    days = []
+    closes = []
+    for timestamp, close in history["Close"].sort_index().items():
         if close != close:
             continue
-        return float(close)
+        days.append(timestamp.date())
+        closes.append(float(close))
+    return days, closes
 
-    return None
+def _close_on_or_before(days: list[date], closes: list[float], when: date) -> float | None:
+    i = bisect_right(days, when) - 1
+    return closes[i] if i >= 0 else None
 
-def _index_levels(ticker: str, currency: str, since: date) -> dict[date, float] | None:
+def _index_levels(
+    ticker: str, currency: str, since: date, target_currency: str = "ZAR"
+) -> dict[date, float] | None:
     try:
         history = get_cached_price_history(ticker, period=_history_period(since), force_live=True)
     except Exception as exc:
@@ -318,7 +341,10 @@ def _index_levels(ticker: str, currency: str, since: date) -> dict[date, float] 
         return None
 
     fx = None
-    if currency != "ZAR":
+    if currency != target_currency:
+        if target_currency != "ZAR":
+            logger.warning(f"cannot convert {ticker} from {currency} to {target_currency}")
+            return None
         try:
             fx = get_cached_price_history("USDZAR=X", period=_history_period(since), force_live=True)
         except Exception as exc:
@@ -326,6 +352,7 @@ def _index_levels(ticker: str, currency: str, since: date) -> dict[date, float] 
             return None
         if fx is None or fx.empty:
             return None
+        fx_days, fx_closes = _closes_by_day(fx)
 
     levels: dict[date, float] = {}
     for timestamp, row in history.iterrows():
@@ -336,8 +363,7 @@ def _index_levels(ticker: str, currency: str, since: date) -> dict[date, float] 
 
         level = float(close)
         if fx is not None:
-
-            rate = _close_on_or_after(fx, day)
+            rate = _close_on_or_before(fx_days, fx_closes, day)
             if rate is None:
                 continue
             level *= rate
@@ -510,28 +536,23 @@ def _benchmark_series(
 
     return series, components
 
-def benchmark_levels(region: str, since: date) -> tuple[str, dict[date, float]] | None:
+def benchmark_levels(
+    region: str, since: date, target_currency: str = "ZAR"
+) -> tuple[str, dict[date, float]] | None:
     entry = REGION_BENCHMARKS.get(region)
     if not entry:
         return None
 
     ticker, label, currency = entry
-    levels = _index_levels(ticker, currency, since)
+    levels = _index_levels(ticker, currency, since, target_currency)
     if not levels:
         return None
     return label, levels
 
 
-def _nearest_benchmark(series: dict[date, float], when: date) -> float | None:
-    if not series:
-        return None
-    if when in series:
-        return series[when]
-
-    earlier = [day for day in series if day <= when]
-    if not earlier:
-        return None
-    return series[max(earlier)]
+def _nearest_benchmark(series: dict[date, float], days: list[date], when: date) -> float | None:
+    i = bisect_right(days, when) - 1
+    return series[days[i]] if i >= 0 else None
 
 
 def _benchmark_label(components: list[dict]) -> str:
@@ -945,23 +966,18 @@ def _build_tfsa_room(account_type: str | None, contributions: list) -> dict:
         ),
     }
 
-
-#was 5, which is shorter than a single page load, so the three dashboard endpoints each
-#re-priced the same holdings from scratch
 PRICED_HOLDINGS_CACHE_TTL_SECONDS = 90
 
 _priced_holdings_cache: dict[str, tuple[float, list[dict], list[UUID]]] = {}
 _priced_holdings_locks: dict[str, threading.Lock] = {}
 _priced_holdings_guard = threading.Lock()
 
-#(portfolio_id, date) pairs whose snapshot maintenance has already run today
 _snapshot_maintenance_done: set[tuple[UUID, date]] = set()
 EVENTS_CACHE_TTL_SECONDS = 900
 _events_cache: dict[str, tuple[float, dict]] = {}
 
 
 def _remember_snapshot_maintenance(marker: tuple[UUID, date]) -> None:
-    #drop yesterday's entries first so this holds at most one marker per portfolio
     with _priced_holdings_guard:
         for stale in [m for m in _snapshot_maintenance_done if m[1] != marker[1]]:
             _snapshot_maintenance_done.discard(stale)
@@ -1213,13 +1229,14 @@ class PortfolioService:
         twr = dict(time_weighted_index(
             sorted(portfolio_series.items()), _invested_flows(classified_txns or [])
         ))
+        benchmark_days = sorted(benchmark_series)
 
         history = [
             {
                 "date": day.isoformat(),
                 "name": day.strftime("%b %d"),
                 "value": portfolio_series[day],
-                "benchmark": _nearest_benchmark(benchmark_series, day),
+                "benchmark": _nearest_benchmark(benchmark_series, benchmark_days, day),
                 "twr_index": twr.get(day),
             }
             for day in sorted(portfolio_series)
@@ -1241,9 +1258,6 @@ class PortfolioService:
         instrument_txns = self.portfolio_repo.get_instrument_transactions(portfolio_ids)
         classified_txns = classify_instrument_txns(instrument_txns)
 
-        #this used to rebuild snapshots and upsert today's row on EVERY GET, so two open
-        #tabs raced the same (portfolio_id, today) row and a write failure broke a
-        #read-only page. now it runs once per portfolio per day, and never fatally
         rebuild = None
         if portfolio_ids:
             today = date.today()
@@ -1337,6 +1351,7 @@ class PortfolioService:
         events = []
         scanned = []
         skipped = []
+        scored_days_total = 0
         for h in priced:
             ticker = h.get("ticker")
             if not ticker:
@@ -1357,6 +1372,7 @@ class PortfolioService:
                 "observations": scored["observations"],
                 "annualised_volatility_pct": scored["annualised_volatility_pct"],
             })
+            scored_days_total += scored["scored_days"]
             for event in scored["events"]:
                 events.append({
                     "ticker": ticker,
@@ -1367,11 +1383,26 @@ class PortfolioService:
                     "direction": event["direction"],
                     "annualised_volatility_pct": event["annualised_volatility_pct"],
                     "observations": scored["observations"],
+                    "daily_sigma_pct": event["daily_sigma_pct"],
+                    "rank_in_period": event["rank_in_period"],
+                    "period_days": event["period_days"],
+                    "band": band_for(event["z_score"]),
+                    "times_normal": round(abs(event["z_score"]), 1),
                 })
 
         events.sort(key=lambda e: abs(e["z_score"]), reverse=True)
         returned = events[:MAX_EVENTS]
         self._flag_news_presence(returned)
+
+        news_repo = NewsRepository(self.db)
+        last_good = news_repo.last_run(("nightly", "backfill"), ("ok", "partial"))
+        last_run = news_repo.last_run(("nightly", "backfill"), ("ok", "partial", "failed"))
+        collected_at = None
+        if last_good is not None and last_good.finished_at is not None:
+            finished = last_good.finished_at
+            if finished.tzinfo is None:
+                finished = finished.replace(tzinfo=timezone.utc)
+            collected_at = finished.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
         payload = {
             "period": period,
             "k_sigma": k_sigma,
@@ -1385,13 +1416,20 @@ class PortfolioService:
                 "events_found": len(events),
                 "events_returned": min(len(events), MAX_EVENTS),
                 "divergence_scan": divergence_coverage,
+                "scored_days_total": scored_days_total,
+                "expected_by_chance": round(
+                    scored_days_total * math.erfc(k_sigma / math.sqrt(2)), 1
+                ),
+                "chance_note": CHANCE_NOTE,
+                "news_last_collected_at": collected_at,
+                "news_last_run_status": last_run.status if last_run else None,
             },
         }
         _write_events_cache(key, payload)
         return payload
 
     def get_event_detail(self, user_id: UUID, ticker: str, event_date: date) -> dict:
-        priced, _ = self._get_priced_holdings(user_id)
+        priced, portfolio_ids = self._get_priced_holdings(user_id)
         holding = next(
             (h for h in priced if (h.get("ticker") or "").upper() == ticker.upper()), None
         )
@@ -1417,7 +1455,7 @@ class PortfolioService:
             return {"available": False, "reason": "no_price_history", "ticker": ticker}
 
         since = event_date - timedelta(days=BENCHMARK_LOOKBACK_DAYS)
-        benchmark = benchmark_levels(holding["region"], since)
+        benchmark = benchmark_levels(holding["region"], since, quote_currency(ticker, holding["region"]) or "ZAR")
         if benchmark is None:
             return {
                 "available": False,
@@ -1428,20 +1466,37 @@ class PortfolioService:
 
         label, levels = benchmark
         study = run_event_study(stock_series, sorted(levels.items()), event_date)
-        event_day = next(
-            (r for r in study.get("abnormal_returns", []) if r["offset"] == 0), None
-        )
+        detected = dict(log_returns(stock_series)).get(event_date)
+        move_pct = round((math.exp(detected) - 1) * 100, 2) if detected is not None else None
+
+        decomposition = study.get("decomposition")
+        decomposition_reason = None
+        if decomposition and (
+            move_pct is None
+            or abs(decomposition["stock_return_pct"] - move_pct) > HEADLINE_TOLERANCE_PCT
+        ):
+            decomposition = None
+            decomposition_reason = "benchmark_missing_day"
+
+        earlier = [day for day, _ in stock_series if day < event_date]
+        previous_day = max(earlier) if earlier else event_date - timedelta(days=1)
+
         payload = {
             "ticker": ticker,
             "name": holding.get("name"),
             "date": event_date.isoformat(),
             "benchmark_label": label,
             **study,
+            "decomposition": decomposition,
+            "decomposition_reason": decomposition_reason,
+            "portfolio_impact": self._portfolio_impact(
+                holding, priced, portfolio_ids, previous_day, move_pct
+            ),
             "tracks_benchmark": bool(study.get("r_squared") is not None
                                      and study["r_squared"] >= TRACKING_R_SQUARED),
             "move_type": classify_move(
-                event_day["stock_return_pct"], event_day["abnormal_return_pct"]
-            ) if event_day else "unknown",
+                decomposition["market_component_pct"], decomposition["company_component_pct"]
+            ) if decomposition else "unknown",
             "possible_explanations": self._possible_explanations(
                 ticker, holding.get("name") or "", event_date
             ),
@@ -1452,38 +1507,75 @@ class PortfolioService:
         }
         return payload
 
+    def _portfolio_impact(
+        self,
+        holding: dict,
+        priced: list[dict],
+        portfolio_ids: list[UUID],
+        previous_day: date,
+        move_pct: float | None,
+    ) -> dict:
+        ticker = (holding["txn_key"] or "").strip().upper()
+        txns = self.portfolio_repo.get_instrument_transactions(portfolio_ids)
+        held, value = position_on(
+            self.db, portfolio_ids, ticker, classify_instrument_txns(txns), previous_day
+        )
+        if held <= 0:
+            return {
+                "held_on_date": False,
+                "weight_pct": None,
+                "contribution_pct": None,
+                "basis": "not_held",
+            }
+
+        snapshots = [
+            row for row in self.portfolio_repo.get_snapshot_history(portfolio_ids)
+            if row["snapshot_date"] <= previous_day
+        ]
+        if value is not None and snapshots and snapshots[-1]["total_value"] > 0:
+            weight = value / snapshots[-1]["total_value"] * 100
+            basis = "holdings_on_date"
+        else:
+            total = sum(h["value"] for h in priced)
+            weight = holding["value"] / total * 100 if total else None
+            basis = "current_weight"
+
+        contribution = None
+        if weight is not None and move_pct is not None:
+            contribution = round(weight * move_pct / 100, 2)
+        return {
+            "held_on_date": True,
+            "weight_pct": round(weight, 2) if weight is not None else None,
+            "contribution_pct": contribution,
+            "basis": basis,
+        }
+
     def _flag_news_presence(self, events: list[dict]) -> None:
         if not events:
             return
 
         event_dates = [date.fromisoformat(e["date"]) for e in events]
-        start = datetime.combine(min(event_dates) - timedelta(days=MAX_DAYS_BEFORE),
-                                 datetime.min.time(), tzinfo=timezone.utc)
-        end = datetime.combine(max(event_dates) + timedelta(days=MAX_DAYS_AFTER),
-                               datetime.max.time(), tzinfo=timezone.utc)
+        start, end = _news_window_utc(min(event_dates), max(event_dates))
 
         repo = NewsRepository(self.db)
-        dates_by_ticker = repo.linked_article_dates(
+        linked = repo.linked_articles(
             sorted({canonical_key(e["ticker"]) for e in events}), start, end
         )
         for event in events:
-            event["has_news"] = _event_has_news(
-                date.fromisoformat(event["date"]),
-                dates_by_ticker.get(canonical_key(event["ticker"]), []),
+            terms = query_terms(event["ticker"], event.get("name") or "")
+            day = date.fromisoformat(event["date"])
+            event["has_news"] = any(
+                counts_as_evidence(article, event["ticker"], terms, day)
+                for article in linked.get(canonical_key(event["ticker"]), [])
             )
 
     def _possible_explanations(self, ticker: str, name: str, event_date: date) -> list[dict]:
         repo = NewsRepository(self.db)
-        candidates = repo.articles_in_window(
-            ticker,
-            datetime.combine(event_date - timedelta(days=MAX_DAYS_BEFORE), datetime.min.time(),
-                             tzinfo=timezone.utc),
-            datetime.combine(event_date + timedelta(days=MAX_DAYS_AFTER), datetime.max.time(),
-                             tzinfo=timezone.utc),
-        )
+        candidates = repo.articles_in_window(ticker, *_news_window_utc(event_date, event_date))
         if not candidates:
             return []
 
+        key = canonical_key(ticker)
         index = Bm25Index(repo.corpus_for_idf())
         ranked = score_articles(
             [
@@ -1494,9 +1586,14 @@ class PortfolioService:
                     "url": a.url,
                     "source_name": a.source_name,
                     "published_at": a.published_at,
-                    "tickers": [link.ticker for link in a.tickers],
+                    "ingest_mode": a.ingest_mode,
+                    "fetched_at": a.fetched_at,
+                    "match_score": link.match_score,
+                    "highlight": link.highlight,
                 }
                 for a in candidates
+                for link in a.tickers
+                if link.ticker == key
             ],
             ticker, name, event_date, index,
         )
@@ -1514,6 +1611,18 @@ class PortfolioService:
                     "date_proximity": row["date_proximity"],
                     "entity_match": row["entity_match"],
                     "combined": row["combined"],
+                },
+                "relevance": row["relevance"],
+                "evidence": {
+                    "named_in_headline": row["named_in_headline"],
+                    "provider_match_score": row["article"]["match_score"],
+                    "days_from_event": row["days_from_event"],
+                    "highlight": row["article"]["highlight"],
+                    "ingest_mode": row["article"]["ingest_mode"],
+                    "collected_at": (
+                        row["article"]["fetched_at"].isoformat() + "Z"
+                        if row["article"]["fetched_at"] else None
+                    ),
                 },
             }
             for row in ranked[:MAX_EXPLANATIONS]

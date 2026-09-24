@@ -641,6 +641,34 @@ class PortfolioEvent(BaseModel):
         description="daily returns behind that estimate",
         examples=[246],
     )
+    daily_sigma_pct: float = Field(
+        description="one normal day's move for this holding, the sigma the z-score divides by",
+        examples=[1.86],
+    )
+    rank_in_period: int = Field(
+        description="1 is the largest move in this direction in the period. only moves the same "
+                    "way count, so a fall is ranked against falls",
+        examples=[1],
+    )
+    period_days: int = Field(description="daily returns in the period ranked", examples=[246])
+    band: str | None = Field(
+        default=None,
+        description="unusual from 3 sigma, very_unusual from 4, extremely_unusual from 5. null "
+                    "under 3, which only happens when k was set below 3",
+        examples=["extremely_unusual"],
+    )
+    times_normal: float = Field(
+        description="|z| to one decimal, for 'about 5.8 times a normal day'",
+        examples=[5.8],
+    )
+    has_news: bool = Field(
+        default=False,
+        description="true when a stored article passes the same test the event panel uses: "
+                    "tagged by the provider, in the exchange-local [-3, +1] day window, and "
+                    "either a match score of 25+ or the company named in the headline. it was "
+                    "set before but missing here, so the response dropped it",
+        examples=[True],
+    )
 
 
 class ScannedHolding(BaseModel):
@@ -710,6 +738,31 @@ class EventCoverage(BaseModel):
     events_found: int = Field(examples=[31])
     events_returned: int = Field(description="capped at 20", examples=[20])
     divergence_scan: DivergenceScan | None = None
+    scored_days_total: int = Field(
+        description="days actually scored across every scanned holding, seed days excluded",
+        examples=[1080],
+    )
+    expected_by_chance: float = Field(
+        description="how many events that many days would give by chance alone: "
+                    "scored_days_total * erfc(k / sqrt(2))",
+        examples=[2.9],
+    )
+    chance_note: str = Field(
+        examples=["if daily moves were normally distributed; real returns have fatter tails, "
+                  "so expect more"],
+    )
+    news_last_collected_at: str | None = Field(
+        default=None,
+        description="when the last nightly or backfill run that stored news finished, UTC. this "
+                    "response is cached for 15 minutes, so it can lag a run by that much",
+        examples=["2026-09-25T00:41:12Z"],
+    )
+    news_last_run_status: str | None = Field(
+        default=None,
+        description="ok, partial or failed - the most recent nightly or backfill run, which may "
+                    "be newer than the collection date above if it failed",
+        examples=["ok"],
+    )
 
 
 class PortfolioEventsResponse(BaseModel):
@@ -727,10 +780,11 @@ class PortfolioEventsResponse(BaseModel):
 class AbnormalReturn(BaseModel):
     date: str = Field(examples=["2026-08-14"])
     offset: int = Field(description="trading days from the event, 0 is the event", examples=[0])
-    stock_return_pct: float = Field(examples=[-7.42])
+    stock_return_pct: float = Field(description="simple return, P_t / P_t-1 - 1", examples=[-7.42])
     market_return_pct: float = Field(examples=[-0.31])
     abnormal_return_pct: float = Field(
-        description="the day's return less what the fitted market model predicted for it",
+        description="the day's simple return less beta times the market's. alpha is not taken "
+                    "off",
         examples=[-7.05],
     )
     cumulative_abnormal_return_pct: float = Field(examples=[-7.05])
@@ -756,10 +810,52 @@ class EstimationWindow(BaseModel):
 
 class ExplanationScores(BaseModel):
     bm25: float = Field(examples=[4.81])
-    bm25_normalised: float = Field(description="against the best candidate", examples=[1.0])
+    bm25_normalised: float = Field(
+        description="bm25 over the sum of the query terms' idf, capped at 1 - so 1.0 is an "
+                    "average-length article using every query term once, not just the best "
+                    "of whatever was found",
+        examples=[0.62],
+    )
     date_proximity: float = Field(examples=[0.8825])
-    entity_match: float = Field(examples=[1.0])
-    combined: float = Field(examples=[0.9298])
+    entity_match: float = Field(
+        description="1.0 when the headline names the company, 0.5 when only the provider's "
+                    "entity tag does",
+        examples=[1.0],
+    )
+    combined: float = Field(
+        description="0.5 bm25_normalised + 0.3 date_proximity + 0.2 entity_match. orders the "
+                    "list, it is not a probability",
+        examples=[0.8748],
+    )
+
+
+class ExplanationEvidence(BaseModel):
+    named_in_headline: bool = Field(examples=[True])
+    provider_match_score: float | None = Field(
+        default=None,
+        description="marketaux's own match score for this company in this article. unbounded: "
+                    "passing mentions sit in the teens, articles about the company above 30",
+        examples=[50.3],
+    )
+    days_from_event: int = Field(
+        description="in the exchange's own calendar days, negative is before the move",
+        examples=[-1],
+    )
+    highlight: str | None = Field(
+        default=None,
+        description="the sentence the provider marked the company in, as plain text",
+        examples=["MTN shares fell after the group cut its outlook"],
+    )
+    ingest_mode: str | None = Field(
+        default=None,
+        description="on_demand, nightly or backfill. null for articles stored before this was "
+                    "recorded",
+        examples=["backfill"],
+    )
+    collected_at: str | None = Field(
+        default=None, description="when this app first stored the article, UTC",
+        examples=["2026-09-24T06:00:00Z"],
+    )
 
 
 class PossibleExplanation(BaseModel):
@@ -769,6 +865,55 @@ class PossibleExplanation(BaseModel):
     source_name: str | None = Field(default=None, examples=["Moneyweb"])
     published_at: str = Field(examples=["2026-08-13T06:00:00+00:00"])
     scores: ExplanationScores
+    relevance: str = Field(
+        description="close when the headline names the company within a day of the move, "
+                    "otherwise related",
+        examples=["close"],
+    )
+    evidence: ExplanationEvidence
+
+
+class EventDecomposition(BaseModel):
+    stock_return_pct: float = Field(examples=[-10.8])
+    market_return_pct: float = Field(examples=[-0.4])
+    beta: float = Field(examples=[0.48])
+    market_component_pct: float = Field(
+        description="beta times the market's return, rounded before the subtraction below",
+        examples=[-0.19],
+    )
+    company_component_pct: float = Field(
+        description="stock_return_pct - market_component_pct, so the two parts always add up to "
+                    "the move exactly",
+        examples=[-10.61],
+    )
+
+
+class AfterEvent(BaseModel):
+    days: int = Field(description="trading days after the event the last row is", examples=[10])
+    car_pct: float = Field(
+        description="the cumulative abnormal return on that row. it runs from t-5, so the event "
+                    "day itself is in it",
+        examples=[-11.2],
+    )
+    lower_pct: float = Field(examples=[-14.9])
+    upper_pct: float = Field(examples=[-7.5])
+    significant: bool = Field(examples=[True])
+
+
+class PortfolioImpact(BaseModel):
+    held_on_date: bool = Field(examples=[True])
+    weight_pct: float | None = Field(
+        default=None, description="the holding's weight at the close before the event",
+        examples=[25.0],
+    )
+    contribution_pct: float | None = Field(
+        default=None, description="weight_pct * the day's move / 100", examples=[-2.5],
+    )
+    basis: str = Field(
+        description="holdings_on_date, or current_weight when there was no snapshot or close "
+                    "to value the day before with, or not_held",
+        examples=["holdings_on_date"],
+    )
 
 
 class EventDetailResponse(BaseModel):
@@ -795,9 +940,10 @@ class EventDetailResponse(BaseModel):
     )
     move_type: str | None = Field(
         default=None,
-        description="market, company, mixed or unknown - which half of the move dominated, from "
-                    "the abnormal return's share of the day's move. always market when the "
-                    "holding is its own benchmark, by construction",
+        description="market, company, mixed, against_market or unknown. against_market is the "
+                    "stock and the market going opposite ways; otherwise it is the company "
+                    "part's share of the move. always market when the holding is its own "
+                    "benchmark, by construction",
         examples=["company"],
     )
     tracks_benchmark: bool = Field(
@@ -811,9 +957,19 @@ class EventDetailResponse(BaseModel):
         default=0,
         description="days in the estimation window. zero when the model was never fitted, so "
                     "a refusal has the same shape as a result",
-        examples=[99],
+        examples=[100],
     )
-    alpha: float | None = Field(default=None, examples=[0.000214])
+    alpha: float | None = Field(
+        default=None,
+        description="the fitted intercept. reported, never subtracted from the abnormal return",
+        examples=[0.000214],
+    )
+    alpha_se: float | None = Field(default=None, examples=[0.000303])
+    alpha_t: float | None = Field(
+        default=None,
+        description="alpha / alpha_se. null when the fit is exact and the standard error is 0",
+        examples=[0.71],
+    )
     beta: float | None = Field(default=None, examples=[1.1832])
     r_squared: float | None = Field(
         default=None,
@@ -822,10 +978,29 @@ class EventDetailResponse(BaseModel):
                     "being unlike the index",
         examples=[0.4127],
     )
-    residual_sigma: float | None = Field(default=None, examples=[0.0142])
+    residual_sigma: float | None = Field(
+        default=None, description="the regression's s, over L - 2", examples=[0.0142],
+    )
+    sigma_ar: float | None = Field(
+        default=None,
+        description="the spread of the estimation window's abnormal returns, over L - 1. the "
+                    "confidence band is built from this",
+        examples=[0.003015],
+    )
     estimation_window: EstimationWindow | None = None
     event_window: EventWindow | None = None
     abnormal_returns: list[AbnormalReturn] = []
+    decomposition: EventDecomposition | None = None
+    decomposition_reason: str | None = Field(
+        default=None,
+        description="benchmark_missing_day when the aligned return disagrees with the headline "
+                    "move by more than 0.05 points, so no split is shown",
+        examples=[None],
+    )
+    after_event: AfterEvent | None = Field(
+        default=None, description="null until 5 trading days after the event exist",
+    )
+    portfolio_impact: PortfolioImpact | None = None
     possible_explanations: list[PossibleExplanation] = []
     note: str | None = Field(default=None)
 

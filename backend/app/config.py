@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     newsdata_api_key: str | None = None
 
+    news_refresh_floor_hours: int = 6
+    news_daily_request_budget: int = 80
+    news_nightly_request_budget: int = 60
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
