@@ -1,5 +1,12 @@
 from types import SimpleNamespace
-from app.services.ai_context import build_history, estimate_tokens, message_tokens, fit_to_budget, HISTORY_MESSAGE_LIMIT, HISTORY_MESSAGE_TARGET
+
+from app.services.ai_context import (
+    HISTORY_MESSAGE_TARGET,
+    build_history,
+    estimate_tokens,
+    fit_to_budget,
+    message_tokens,
+)
 
 
 def row(role, content):

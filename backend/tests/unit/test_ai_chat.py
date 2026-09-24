@@ -1,5 +1,9 @@
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.models.chat import ChatConversation, ChatMessages
+
 
 def test_delete_conversation(client, db_session, test_user, auth_headers):
 
@@ -53,7 +57,11 @@ def test_renaming_conversations(client, db_session, test_user, auth_headers):
 
     conv_id = conversation.id
 
-    output = client.put(f"/api/ai_chat/conversations/{conv_id}/", json = {"title": "Renamed"}, headers = auth_headers)
+    output = client.put(
+        f"/api/ai_chat/conversations/{conv_id}/",
+        json = {"title": "Renamed"},
+        headers = auth_headers,
+    )
     assert output.status_code == 200 
     assert output.json() == {"id": str(conv_id), "title": "Renamed"}
 
@@ -81,9 +89,12 @@ def test_load_all_converastions(client, db_session, test_user, auth_headers):
 
 
 @patch("app.services.ai_service.get_bedrock_client")
-def test_send_message(mock_bedrock_client, client, db_session, test_user, auth_headers):
+@pytest.mark.usefixtures("db_session", "test_user")
+def test_send_message(mock_bedrock_client, client, auth_headers):
     mocked_client = MagicMock()
-    mocked_client.converse.return_value = {"output": {"message": {"content": [{"text": "A response."}]}}}
+    mocked_client.converse.return_value = {
+        "output": {"message": {"content": [{"text": "A response."}]}}
+    }
     mock_bedrock_client.return_value = mocked_client
 
     output = client.post("/api/ai_chat/", json = {"message": "Question"}, headers = auth_headers)
@@ -96,8 +107,8 @@ def test_send_message(mock_bedrock_client, client, db_session, test_user, auth_h
 
 @patch("app.services.ai_service.get_bedrock_client")
 def test_run_post_turn(mock_bedrock_client, db_session, test_user):
-    from app.services.ai_service import run_post_turn
     from app.models.chat import UserMemory
+    from app.services.ai_service import run_post_turn
 
     def reply(text):
         return {"output": {"message": {"content": [{"text": text}]}}}

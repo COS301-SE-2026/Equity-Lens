@@ -1,10 +1,13 @@
 import copy
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.models.chat import ChatConversation, ChatMessages
 from app.models.user import User
 from app.services.ai_service import chat
 from app.utils.exceptions import ConversationNotFoundException
+
 
 def converse_recorder(captured, reply = "A response."):
     """Records the messages list of every real chat turn, ignoring title_creation calls."""

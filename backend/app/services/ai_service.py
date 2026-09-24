@@ -1,29 +1,34 @@
+import json
+import logging
+import time
+from datetime import UTC, datetime
 from functools import lru_cache
-from sqlalchemy.orm import Session
-from app.config import settings
-from app.models.portfolio import Portfolios, Document, Holdings
-from app.models.chat import ChatConversation, ChatMessages, UserMemory
-from app.utils.stock_cache import get_cached_price_history
-from app.services.market_data_service import _cents_to_major, search_stocks
-from app.services.pdf_summary_service import (get_summary_import_PDF, get_expenses_import_PDF, get_dividend_income_import_PDF, get_trading_activity_import_PDF, get_cash_flow_import_PDF)
-from app.services.health_score import compute_health_score
-from app.services.portfolio_service import _price_holdings
-from datetime import datetime, timezone
-from functools import lru_cache
-from app.services.health_score import compute_health_score
-from app.services.portfolio_service import _price_holdings
+from threading import Lock
+
 import pandas as pd
 import requests
-import time
-from app.services.indicator_service import build_live_indicator_row, serialize_indicator_row
-from app.utils.market_cache import get_market_returns
-from app.utils.exceptions import ConversationNotFoundException
+from sqlalchemy.orm import Session
+
+from app.config import settings
+from app.models.chat import ChatConversation, ChatMessages, UserMemory
+from app.models.portfolio import Document, Holdings, Portfolios
 from app.services.ai_context import build_history, fit_to_budget
-from app.services.ai_memory import summarise_dropped, extract_facts, MAX_FACTS_PER_USER
+from app.services.ai_memory import MAX_FACTS_PER_USER, extract_facts, summarise_dropped
+from app.services.health_score import compute_health_score
+from app.services.indicator_service import build_live_indicator_row, serialize_indicator_row
+from app.services.market_data_service import _cents_to_major, search_stocks
 from app.services.monte_carlo import simulate_goal
-from threading import Lock
-import logging
-import json
+from app.services.pdf_summary_service import (
+    get_cash_flow_import_PDF,
+    get_dividend_income_import_PDF,
+    get_expenses_import_PDF,
+    get_summary_import_PDF,
+    get_trading_activity_import_PDF,
+)
+from app.services.portfolio_service import _price_holdings
+from app.utils.exceptions import ConversationNotFoundException
+from app.utils.market_cache import get_market_returns
+from app.utils.stock_cache import get_cached_price_history
 
 logger = logging.getLogger(__name__)
 
@@ -294,14 +299,13 @@ def get_user_portfolio_context(db: Session, user_id, portfolio_id = None):
 
 
 def title_creation(client, user_message):
-    TITLE_FALLBACK = "New Chat"
 
     def _clean_title(raw: str) -> str:
         first_line = next((line.strip() for line in (raw or "").splitlines() if line.strip()), "")
         first_line = first_line.strip("\"'").strip()
 
         title = " ".join(first_line.split()[:5])
-        return title[:60] or TITLE_FALLBACK
+        return title[:60] or DEFAULT_TITLE
 
     try:
         response = client.converse(
@@ -323,8 +327,8 @@ def title_creation(client, user_message):
         )
         raw = "".join(block["text"] for block in response["output"]["message"]["content"] if "text" in block)
     except Exception as err:
-        print(f"Title generation failed: {err}")
-        return TITLE_FALLBACK
+        logger.warning("Title generation failed: %s", err)
+        return DEFAULT_TITLE
 
     return _clean_title(raw)
 
@@ -893,8 +897,8 @@ def chat(user_message: str, db: Session, logged_in_user_id, conversation_id = No
             try:
                 result_text = run_tool(tool_use["name"], tool_use.get("input") or {}, db, logged_in_user_id, portfolio_id)
                 status = "success"
-            except Exception as exc:
-                print(f"Tool {tool_use['name']} failed: {exc}")
+            except Exception:
+                logger.exception("Tool %s failed", tool_use["name"])
                 result_text = "That lookup failed. Tell the user the data is unavailable right now."
                 status = "error"
 
@@ -939,7 +943,7 @@ def _persist_turn(db: Session, chat_conversation, user_id, user_message: str, re
     db.add(ChatMessages(conversation_id = chat_conversation.id, role = "user", content = user_message))
     db.add(ChatMessages(conversation_id = chat_conversation.id, role = "assistant", content = reply))
 
-    chat_conversation.updated_at = datetime.now(timezone.utc)
+    chat_conversation.updated_at = datetime.now(UTC)
     db.commit()
 
     return chat_conversation.id
