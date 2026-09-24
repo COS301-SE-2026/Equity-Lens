@@ -211,3 +211,41 @@ def test_aapl_news(ticker: str):
         "neutral": neutral,
         "articles": articles,
     }
+
+
+def fetch_market_news(category: str="business"):
+    api_key = os.getenv("NEWSDATA_API_KEY")
+
+    response = requests.get(
+        "https://newsdata.io/api/1/latest",
+        params={
+            "apikey": api_key,
+            "category": category,
+            "language" : "en",
+        },
+        timeout=6,
+    )
+
+    data = response.json()
+
+    return data
+
+def fetch_ticker_news(ticker: str):
+
+    api_key = os.getenv("MARKET_API_KEY")
+
+    response = requests.get(
+        "https://api.marketaux.com/v1/news/all",
+        params={
+            "api_token": api_key,
+            "symbols": ticker,
+            "filter_entities": "true",
+            "language": "en",
+            "limit": 20
+        },
+        timeout=6,
+    )
+
+    data = response.json()
+
+    return data

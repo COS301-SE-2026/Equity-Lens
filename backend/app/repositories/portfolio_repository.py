@@ -7,6 +7,7 @@ from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
 
 from app.models.portfolio import (
+    CanonicalPortfolioSnapshot,
     ContributionsAndWithdrawals,
     DividendsAndWithholdingTax,
     InstrumentPurchasesAndSales,
@@ -153,3 +154,95 @@ class PortfolioRepository:
             .order_by(TransactionExpenses.transaction_date.asc())
         )
         return list(self.db.scalars(stmt).all())
+
+    def get_portfolio_for_user(
+        self,
+        portfolio_id: UUID,
+        user_id: UUID,
+    ):
+        stmt = select(Portfolios).where(
+            Portfolios.id == portfolio_id,
+            Portfolios.user_id == user_id,
+        )
+
+        return self.db.scalars(stmt).first()
+
+    def get_canonical_snapshot(
+        self,
+        portfolio_id: UUID,
+        snapshot_hash: str,
+    ):
+
+        stmt = select(CanonicalPortfolioSnapshot).where(
+            CanonicalPortfolioSnapshot.portfolio_id == portfolio_id,
+            CanonicalPortfolioSnapshot.snapshot_hash == snapshot_hash,
+        )
+
+        return self.db.scalars(stmt).first()
+
+    def save_canonical_snapshot(
+        self,
+        portfolio_id: UUID,
+        snapshot_hash: str,
+        snapshot_data: dict,
+    ):
+
+        existing = self.get_canonical_snapshot(
+            portfolio_id=portfolio_id,
+            snapshot_hash=snapshot_hash,
+        )
+
+        if existing is not None:
+            return existing
+
+        snapshot = CanonicalPortfolioSnapshot(
+            portfolio_id=portfolio_id,
+            snapshot_hash=snapshot_hash,
+            snapshot_data=snapshot_data,
+        )
+
+        self.db.add(snapshot)
+        self.db.commit()
+        self.db.refresh(snapshot)
+
+        return snapshot
+
+    def get_latest_canonical_snapshot(
+        self,
+        portfolio_id: UUID
+    ):
+
+        stmt = (
+            select(
+                CanonicalPortfolioSnapshot
+            )
+            .where(
+                CanonicalPortfolioSnapshot.portfolio_id == portfolio_id
+            )
+            .order_by(
+                CanonicalPortfolioSnapshot.created_at.desc()
+            )
+        )
+
+        return self.db.scalars(stmt).first()
+
+    def get_canonical_snapshot_history(
+        self,
+        portfolio_id: UUID
+    ):
+
+        stmt = (
+            select(
+                CanonicalPortfolioSnapshot
+            )
+            .where(
+                CanonicalPortfolioSnapshot.portfolio_id == portfolio_id
+            )
+            .order_by(
+                CanonicalPortfolioSnapshot.created_at.desc()
+            )
+        )
+
+        return list (
+            self.db.scalars(stmt).all()
+        )

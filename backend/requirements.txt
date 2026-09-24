@@ -18,3 +18,5 @@ pandas==2.2.3
 yfinance==0.2.66
 boto3>=1.37.0
 setuptools>=83.0.0
+matplotlib==3.9.2
+reportlab==4.2.5

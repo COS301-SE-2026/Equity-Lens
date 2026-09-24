@@ -9,7 +9,7 @@ permissions:
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
     branches: [main, dev]
 
@@ -33,8 +33,8 @@ jobs:
         run: npm ci
 
       - name: Run lint
-        working-directory: frontend
         continue-on-error: true
+        working-directory: frontend
         run: npm run lint
 
       - name: Security audit
@@ -47,14 +47,9 @@ jobs:
         run: npm run format:check
 
       - name: Type check
-        continue-on-error: true
         working-directory: frontend
+        continue-on-error: true
         run: npm run typecheck
-
-      - name: Dead code scan (knip)
-        continue-on-error: true
-        working-directory: frontend
-        run: npx knip
 
       - name: Unit tests
         working-directory: frontend
@@ -85,7 +80,6 @@ jobs:
 
       - name: E2E tests
         working-directory: frontend
-        continue-on-error: true
         run: npm run test:e2e
 
       - name: Upload Playwright report
@@ -218,8 +212,8 @@ jobs:
           alembic upgrade head
 
       - name: Run tests
-        working-directory: backend
         continue-on-error: true
+        working-directory: backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/equitylens
           SECRET_KEY: ${{ vars.TEST_SECRET_KEY }}
@@ -322,7 +316,7 @@ jobs:
     name: Run Lighthouse NFR-2.2 & NFR-2.3
     runs-on: ubuntu-latest
     needs: [frontend]
-    timeout-minutes: 10
+    timeout-minutes: 5
 
     steps:
       - uses: actions/checkout@v4

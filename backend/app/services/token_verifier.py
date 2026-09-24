@@ -15,7 +15,7 @@ JWKS_TIMEOUT_SECONDS = 5
 CLOCK_LEEWAY_SECONDS = 60
 
 
-class TokenVerificationUnavailable(Exception):
+class TokenVerificationUnavailableError(Exception):
     """"""
 
 
@@ -61,13 +61,15 @@ def _rejected() -> AppError:
 
 def verify_access_token(token: str) -> dict[str, Any]:
     if not settings.aws_cognito_user_pool_id:
-        raise TokenVerificationUnavailable("AWS_COGNITO_USER_POOL_ID is not set")
+        raise TokenVerificationUnavailableError("AWS_COGNITO_USER_POOL_ID is not set")
 
     try:
         # an unknown kid surfaces here too, and that is the symptom of a wrong pool id
         signing_key = _jwk_client().get_signing_key_from_jwt(token).key
     except jwt.exceptions.PyJWKClientError as exc:
-        raise TokenVerificationUnavailable(f"could not resolve the signing key: {exc}") from exc
+        raise TokenVerificationUnavailableError(
+            f"could not resolve the signing key: {exc}"
+            ) from exc
 
     claims: dict[str, Any]
     try:
@@ -89,6 +91,6 @@ def verify_access_token(token: str) -> dict[str, Any]:
         logger.warning(
             "access token was minted by a different app client than AWS_COGNITO_CLIENT_ID"
         )
-        raise TokenVerificationUnavailable("token was minted by a different app client")
+        raise TokenVerificationUnavailableError("token was minted by a different app client")
 
     return claims

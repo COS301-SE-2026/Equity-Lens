@@ -3,7 +3,7 @@ from unittest.mock import patch
 from fastapi.security import HTTPAuthorizationCredentials
 
 from app.dependencies import get_current_user
-from app.services.token_verifier import TokenVerificationUnavailable
+from app.services.token_verifier import TokenVerificationUnavailableError
 
 CRED = HTTPAuthorizationCredentials(scheme="Bearer", credentials="an.access.token")
 
@@ -21,7 +21,7 @@ def test_a_known_sub_costs_no_aws_call(db_session, test_user):
 def test_the_request_still_succeeds_when_verification_is_unavailable(db_session, test_user):
     # the whole point of the fallback: a misconfigured pool must not lock anyone out
     with patch("app.dependencies.verify_access_token",
-               side_effect=TokenVerificationUnavailable("pool id not set")), \
+               side_effect=TokenVerificationUnavailableError("pool id not set")), \
          patch("app.dependencies.cognito_get_user", return_value={
              "sub": test_user.cognito_sub,
              "email": test_user.email,
