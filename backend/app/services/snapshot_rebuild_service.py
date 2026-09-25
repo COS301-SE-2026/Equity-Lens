@@ -54,8 +54,9 @@ def prices_by_day(observed: dict[date, float], days: list[date]) -> tuple[dict[d
 
 def _observed_closes(db: Session, tickers: set[str], since: date) -> dict[str, dict[date, float]]:
     rows = db.execute(
-        select(MarketData.ticker, MarketData.date, MarketData.close)
-        .where(MarketData.ticker.in_(tickers), MarketData.date >= since)
+        select(MarketData.ticker, MarketData.date, MarketData.close).where(
+            MarketData.ticker.in_(tickers), MarketData.date >= since
+        )
     ).all()
 
     observed: dict[str, dict[date, float]] = {}
@@ -136,7 +137,9 @@ def _undo(quantities: dict[str, float], txn: dict) -> bool:
         logger.warning(
             "buy exceeds the position held after it for %s (buying %s, held %s) - the "
             "transaction ledger and the closing holdings disagree",
-            ticker, bought, held,
+            ticker,
+            bought,
+            held,
         )
         bought = held
     quantities[ticker] = held - bought
@@ -154,11 +157,7 @@ def rebuild_snapshots(db: Session, portfolio_id: UUID, txns: list[dict]) -> Rebu
 
     today = date.today()
     dated = sorted(
-        (
-            {**txn, "ticker": txn["ticker"].strip().upper()}
-            for txn in txns
-            if _usable(txn, today)
-        ),
+        ({**txn, "ticker": txn["ticker"].strip().upper()} for txn in txns if _usable(txn, today)),
         key=lambda txn: txn["date"],
     )
     if not dated:
@@ -172,9 +171,7 @@ def rebuild_snapshots(db: Session, portfolio_id: UUID, txns: list[dict]) -> Rebu
     txns_by_ticker: dict[str, set[date]] = {}
     for txn in dated:
         txns_by_ticker.setdefault(txn["ticker"], set()).add(txn["date"])
-    suspect_dates = _suspect_moves(
-        {t: c for t, c in observed.items() if t in book}, txns_by_ticker
-    )
+    suspect_dates = _suspect_moves({t: c for t, c in observed.items() if t in book}, txns_by_ticker)
 
     partial = RebuildResult(
         priced_value_pct=priced_value_pct,
@@ -185,7 +182,9 @@ def rebuild_snapshots(db: Session, portfolio_id: UUID, txns: list[dict]) -> Rebu
         logger.warning(
             "refusing to rebuild snapshots for %s: only %.1f%% of the book can be priced "
             "(no MarketData for %s)",
-            portfolio_id, priced_value_pct, ", ".join(unpriced) or "-",
+            portfolio_id,
+            priced_value_pct,
+            ", ".join(unpriced) or "-",
         )
         return partial
 

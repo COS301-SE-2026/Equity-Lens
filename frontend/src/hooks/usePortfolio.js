@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+
 import { getPortfolio } from '../services/portfolioService';
 
 const usePortfolio = () => {
@@ -16,7 +17,8 @@ const usePortfolio = () => {
       setFetchedAt(new Date());
     } catch (err) {
       console.warn('portfolio fetch failed:', err);
-      const response = err && typeof err === 'object' ? /** @type {any} */ (err).response : undefined;
+      const response =
+        err && typeof err === 'object' ? /** @type {any} */ (err).response : undefined;
       const reachedServer = Boolean(response);
       const message = reachedServer
         ? response?.data?.detail
@@ -31,7 +33,6 @@ const usePortfolio = () => {
     } finally {
       if (!quiet) setLoading(false);
     }
-
   }, []);
 
   useEffect(() => {

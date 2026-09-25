@@ -41,6 +41,7 @@ EMPTY_ENVELOPE: dict[str, Any] = {
     "results": [],
 }
 
+
 class NewsResponse(BaseModel):
     total_articles: int = Field(examples=[23])
     positive: int = Field(examples=[33])
@@ -48,13 +49,15 @@ class NewsResponse(BaseModel):
     neutral: int = Field(examples=[23])
     results: list[dict[str, Any]]
 
+
 class TickerNewsResponse(BaseModel):
     ticker: str = Field(examples=["NPN"])
     total_articles: int = Field(examples=[3])
     positive: int = Field(examples=[1])
     negative: int = Field(examples=[0])
     neutral: int = Field(examples=[2])
-    articles: list[dict[str,Any]]
+    articles: list[dict[str, Any]]
+
 
 class TickerResponse(BaseModel):
     tickers: list[str] = Field(examples=[["AAPL", "MFST", "TSLA"]])
@@ -90,7 +93,8 @@ def _record_provider_result(ok: bool) -> None:
         _breaker_open_until = time.monotonic() + _BREAKER_PAUSE_SECONDS
         logger.warning(
             "marketaux circuit breaker open for %ss after %s consecutive failures",
-            _BREAKER_PAUSE_SECONDS, _breaker_failures,
+            _BREAKER_PAUSE_SECONDS,
+            _breaker_failures,
         )
 
 
@@ -158,21 +162,29 @@ def get_news_by_category(
 
 
 def _user_tickers(db: Session, user_id) -> list[str]:
-  tickers = (db.query(Holdings.ticker).join(Portfolios, Holdings.portfolio_id == Portfolios.id)
-              .filter(Portfolios.user_id == user_id, Holdings.ticker.isnot(None), Holdings.ticker != "", Holdings.ticker != "None",Holdings.ticker != "none")
-              .distinct()
-              .all()
-            )
+    tickers = (
+        db.query(Holdings.ticker)
+        .join(Portfolios, Holdings.portfolio_id == Portfolios.id)
+        .filter(
+            Portfolios.user_id == user_id,
+            Holdings.ticker.isnot(None),
+            Holdings.ticker != "",
+            Holdings.ticker != "None",
+            Holdings.ticker != "none",
+        )
+        .distinct()
+        .all()
+    )
 
-  return [ticker[0] for ticker in tickers]
+    return [ticker[0] for ticker in tickers]
 
 
 @router.get("/portfolio-tickers", response_model=TickerResponse)
 def get_portfolio_tickers(
-  current_user: UserResponse = Depends(get_current_user),
-  db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
-  return {"tickers": _user_tickers(db, current_user.id)}
+    return {"tickers": _user_tickers(db, current_user.id)}
 
 
 def _iso_utc(value: datetime) -> str:
@@ -227,8 +239,9 @@ def _marketaux_articles(
     return result.articles if result is not None and result.ok else None
 
 
-def _refresh_from_provider(db: Session, repo: NewsRepository, scope: str,
-                           symbols: list[str]) -> None:
+def _refresh_from_provider(
+    db: Session, repo: NewsRepository, scope: str, symbols: list[str]
+) -> None:
     if not repo.should_fetch(scope, settings.news_refresh_floor_hours):
         return
     result = _marketaux_result(symbols)
@@ -275,8 +288,14 @@ def get_portfolio_news(
 
 
 def _empty_ticker_envelope(ticker: str) -> dict:
-    return {"ticker": ticker, "total_articles": 0, "positive": 0, "negative": 0,
-            "neutral": 0, "articles": []}
+    return {
+        "ticker": ticker,
+        "total_articles": 0,
+        "positive": 0,
+        "negative": 0,
+        "neutral": 0,
+        "articles": [],
+    }
 
 
 @router.get(
@@ -310,3 +329,43 @@ def get_ticker_news(
     }
     _cache_put(_TICKER_NEWS_CACHE, ticker, envelope)
     return envelope
+
+
+# used by the portfolio snapshot pdf (routers/portfolio_snapshot.py). the keys come from settings,
+# which reads backend.env as well as the process environment
+def fetch_market_news(category: str = "business"):
+    api_key = settings.newsdata_api_key
+
+    response = requests.get(
+        "https://newsdata.io/api/1/latest",
+        params={
+            "apikey": api_key,
+            "category": category,
+            "language": "en",
+        },
+        timeout=6,
+    )
+
+    data = response.json()
+
+    return data
+
+
+def fetch_ticker_news(ticker: str):
+    api_key = settings.market_api_key
+
+    response = requests.get(
+        "https://api.marketaux.com/v1/news/all",
+        params={
+            "api_token": api_key,
+            "symbols": ticker,
+            "filter_entities": "true",
+            "language": "en",
+            "limit": 20,
+        },
+        timeout=6,
+    )
+
+    data = response.json()
+
+    return data

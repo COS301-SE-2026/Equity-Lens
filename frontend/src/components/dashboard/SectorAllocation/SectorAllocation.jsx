@@ -1,7 +1,8 @@
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
+
+import { getConcRisk } from '../../../utils/dashboardInsights';
 import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
 import SecondaryButton from '../shared/SecondaryButton';
-import { getConcRisk } from '../../../utils/dashboardInsights';
 
 /**
  * @param {{
@@ -21,23 +22,37 @@ const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector, t
     : 'Sector allocation. No sectors to show.';
 
   return (
-    <div id="sector-allocation" className={`dashboard-highlight rounded-xl p-3 ${flashSector ? 'is-active' : ''}`}>
+    <div
+      id="sector-allocation"
+      className={`dashboard-highlight rounded-xl p-3 ${flashSector ? 'is-active' : ''}`}
+    >
       <div className="mb-2.5 flex items-start justify-between gap-2">
         <div>
-          <div className="flex items-center gap-1 font-mono text-[11px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+          <div
+            className="flex items-center gap-1 font-mono text-[11px] tracking-widest"
+            style={{ color: 'var(--text-ghost)' }}
+          >
             Sectors
             <HelpTooltip text="Where your money sits across industries. Too much in one sector means whole-portfolio news can hit harder." />
           </div>
-          <div className="mt-0.5 font-mono text-[16px] font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <div
+            className="mt-0.5 font-mono text-[16px] font-semibold"
+            style={{ color: 'var(--text-primary)' }}
+          >
             {sectorData.length}
           </div>
         </div>
         {selected && (
           <SecondaryButton size="sm" onClick={() => onSelectSector(null)}>
             Filtered to {selected} - Clear
-          </SecondaryButton>)}
+          </SecondaryButton>
+        )}
       </div>
-      <div className="relative mx-auto h-[140px] w-full max-w-[140px]" role="img" aria-label={pieLabel}>
+      <div
+        className="relative mx-auto h-[140px] w-full max-w-[140px]"
+        role="img"
+        aria-label={pieLabel}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -49,7 +64,8 @@ const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector, t
               outerRadius={64}
               paddingAngle={2}
               onClick={(d) => onSelectSector(d.name === selected ? null : d.name)}
-              animationDuration={300}>
+              animationDuration={300}
+            >
               {sectorData.map((s) => (
                 <Cell
                   key={s.name}
@@ -58,7 +74,8 @@ const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector, t
                   strokeWidth={2}
                   opacity={!selected || selected === s.name ? 1 : 0.25}
                   style={{ cursor: 'pointer' }}
-                />))}
+                />
+              ))}
             </Pie>
           </PieChart>
         </ResponsiveContainer>
@@ -66,7 +83,10 @@ const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector, t
 
       {selected && (
         <div className="mx-auto mt-2 max-w-[140px] text-center">
-          <div className="font-mono text-[11px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+          <div
+            className="font-mono text-[11px] tracking-widest"
+            style={{ color: 'var(--text-ghost)' }}
+          >
             {selected}
           </div>
           <div className="font-mono text-[18px] font-bold">
@@ -84,18 +104,24 @@ const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector, t
               type="button"
               onClick={() => onSelectSector(isSelected ? null : s.name)}
               className="w-full rounded px-1.5 py-1 text-left transition-colors hover:bg-[var(--surface-hover)]"
-              style={isSelected ? { background: 'var(--surface-hover)' } : undefined}>
+              style={isSelected ? { background: 'var(--surface-hover)' } : undefined}
+            >
               <div className="grid grid-cols-[10px_1fr_44px] items-center gap-2 font-mono text-[12px]">
                 <span className="h-2.5 w-2.5 rounded" style={{ background: risk.color }} />
                 <span style={{ color: 'var(--text-primary)' }}>{s.name}</span>
-                <span className="text-right" style={{ color: risk.level === 'low' ? 'var(--text-secondary)' : risk.color }}>
+                <span
+                  className="text-right"
+                  style={{ color: risk.level === 'low' ? 'var(--text-secondary)' : risk.color }}
+                >
                   {s.value.toFixed(1)}%
                 </span>
               </div>
             </button>
-          );})}
+          );
+        })}
       </div>
     </div>
-  );};
+  );
+};
 
 export default SectorAllocation;

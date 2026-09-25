@@ -35,10 +35,7 @@ class ErrorBoundary extends Component {
           >
             SOMETHING WENT WRONG
           </p>
-          <h1
-            className="mb-2 text-lg font-semibold"
-            style={{ color: 'var(--text-primary)' }}
-          >
+          <h1 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
             Unexpected error occurred
           </h1>
           <p className="mb-6 text-sm" style={{ color: 'var(--text-secondary)' }}>

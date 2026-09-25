@@ -46,5 +46,4 @@ describe('Sidebar', () => {
     fireEvent.click(screen.getByTestId('nav-overlay'));
     expect(onClose).toHaveBeenCalled();
   });
-
 });

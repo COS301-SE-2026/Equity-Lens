@@ -5,9 +5,9 @@ from app.services.instruments import KIND_ETF
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass(frozen=True)
 class HealthConfig:
-
     weight_sector_concentration: float
     weight_single_position: float
     weight_breadth: float
@@ -15,6 +15,7 @@ class HealthConfig:
     concentration_high: float
     hhi_well_spread: float
     breadth_target_n: float
+
 
 WEIGHT_MIN = 0.05
 WEIGHT_MAX = 0.70
@@ -354,7 +355,8 @@ def _sector_concentration_subscore(
     sector_count = len(sector_weights)
     detail = (
         f"{top_sector} is {top_weight * 100:.0f}% of your book "
-        f"(Herfindahl index {hhi:.2f} across {sector_count} sector{'s' if sector_count != 1 else ''})."
+        f"(Herfindahl index {hhi:.2f} across {sector_count} " 
+        f"sector{'s' if sector_count != 1 else ''})."
     )
     if any(not h["priced_live"] for h in priced_holdings):
         detail += " Weights include holdings priced at cost, so they're partially stale."
@@ -364,7 +366,7 @@ def _sector_concentration_subscore(
         if score >= 7
         else f"Adding exposure outside {top_sector} would bring this HHI down and spread the risk."
     )
-    
+
     equivalent_sectors = round(1 / config.hhi_well_spread)
     return {
         "key": "sectorConcentration",
@@ -446,14 +448,16 @@ def _breadth_subscore(
 
     count = len(priced_holdings)
     detail = (
-        f"{count} position{'s' if count != 1 else ''} in your book, but weighted by size that's only "
-        f"{effective_n:.1f} effective position{'s' if round(effective_n, 1) != 1.0 else ''} - a raw "
+        f"{count} position{'s' if count != 1 else ''} in your book, but "
+        f"weighted by size that's only {effective_n:.1f} effective "
+        "position{'s' if round(effective_n, 1) != 1.0 else ''} - a raw "
         "count hides how much one holding can dominate."
     )
     improvement = (
         "Effective breadth is already in a healthy range."
         if effective_n >= config.breadth_target_n
-        else "Adding positions - or trimming the ones that dominate - raises effective breadth toward the target."
+        else ("Adding positions - or trimming the ones that dominate - " 
+              "raises effective breadth toward the target.")
     )
 
     return {

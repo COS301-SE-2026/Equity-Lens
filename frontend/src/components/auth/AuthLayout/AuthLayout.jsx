@@ -24,7 +24,8 @@ const AuthLayout = ({ children }) => (
             width: '1.05em',
             height: '1.05em',
             verticalAlign: '-0.08em',
-          }}>
+          }}
+        >
           <svg
             viewBox="0 0 25 25"
             fill="none"

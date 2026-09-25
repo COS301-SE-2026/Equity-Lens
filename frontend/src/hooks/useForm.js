@@ -26,9 +26,7 @@ const useForm = (initialValues, validate) => {
 
   const handleSubmit = (onSubmit) => async (e) => {
     e.preventDefault();
-    const allTouched = Object.keys(values).reduce(
-      (acc, key) => ({ ...acc, [key]: true }), {}
-    );
+    const allTouched = Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {});
     setTouched(allTouched);
     if (validate) {
       const validationErrors = validate(values);
@@ -36,11 +34,11 @@ const useForm = (initialValues, validate) => {
       if (Object.keys(validationErrors).length > 0) return;
     }
     setIsSubmitting(true);
-  try {
-    await onSubmit(values);
-  } finally {
-    setIsSubmitting(false);
-  }
+    try {
+      await onSubmit(values);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {

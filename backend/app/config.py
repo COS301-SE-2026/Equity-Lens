@@ -1,12 +1,14 @@
 from functools import lru_cache
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
 
 class Settings(BaseSettings):
     database_url: str = "postgresql://postgres:postgres@localhost:5432/equitylens"
     allow_live_market_fallback: bool = False
     alpha_vantage_api_key: str | None = None
     market_data_refresh_ttl_hours: int = 24
-    secret_key: str = "to-be-changed-later"
+    secret_key: str = "to-be-changed-later"  # noqa: S105
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     cors_origins: list[str] = [
@@ -20,18 +22,22 @@ class Settings(BaseSettings):
     aws_cognito_user_pool_id: str | None = None
     aws_cognito_client_id: str | None = None
     bedrock_model: str = "anthropic.claude-sonnet-4-5-20250929-v1:0"
-    bedrock_title_model: str | None = None
-    market_api_key: str | None = None
+    bedrock_cheap_model: str = "anthropic.claude-haiku-4-5-20251001-v1:0"
+    bedrock_temperature: float = 0.3
     ai_message_limit: int = 5
     ai_window_limit: int = 60
+    ai_daily_limit: int = 50
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     newsdata_api_key: str | None = None
-
+    market_api_key: str | None = None
     news_refresh_floor_hours: int = 6
     news_daily_request_budget: int = 80
     news_nightly_request_budget: int = 60
+
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
 
 settings = get_settings()

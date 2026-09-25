@@ -1,4 +1,5 @@
 import pytest
+
 from app.services import health_score
 from app.services.instruments import KIND_ETF, KIND_STOCK
 
@@ -6,6 +7,7 @@ from app.services.instruments import KIND_ETF, KIND_STOCK
 @pytest.fixture
 def make_holding():
     """Factory fixture to build holding dicts with sensible defaults."""
+
     def _factory(ticker, value, sector, kind=KIND_STOCK, region="South Africa", priced_live=True):
         return {
             "ticker": ticker,
@@ -15,6 +17,7 @@ def make_holding():
             "region": region,
             "priced_live": priced_live,
         }
+
     return _factory
 
 
@@ -27,8 +30,6 @@ def sample_portfolio(make_holding):
         make_holding("SOL.JO", 1500, "Energy"),
         make_holding("CLS.JO", 500, "Consumer"),
     ]
-
-
 
 
 def test_weight_constants_sum_to_one():
@@ -67,21 +68,15 @@ def test_single_asset_portfolio_penalties(make_holding):
 
 def test_well_diversified_portfolio_scores_high(make_holding):
     sectors = ["Technology", "Financials", "Healthcare", "Industrials", "Consumer"]
-    holdings = [
-        make_holding(f"STOCK_{i}", 1000, sectors[i % len(sectors)])
-        for i in range(10)
-    ]
-    
+    holdings = [make_holding(f"STOCK_{i}", 1000, sectors[i % len(sectors)]) for i in range(10)]
+
     res = health_score.compute_health_score(holdings)
     assert res["score"] >= 7.0
 
 
 def test_top_heavy_portfolio_breadth_penalty(make_holding):
     holdings = [make_holding("BIG.JO", 8000, "Technology")]
-    holdings.extend(
-        make_holding(f"SMALL_{i}", 2000 / 19, "Financials") 
-        for i in range(19)
-    )
+    holdings.extend(make_holding(f"SMALL_{i}", 2000 / 19, "Financials") for i in range(19))
 
     res = health_score.compute_health_score(holdings)
     breadth = next(s for s in res["subscores"] if s["key"] == "portfolioBreadth")
@@ -126,8 +121,6 @@ def test_stale_pricing_warning_in_details(make_holding):
     res = health_score.compute_health_score(holdings)
     sector_info = next(s for s in res["subscores"] if s["key"] == "sectorConcentration")
     assert "priced at cost" in sector_info["detail"]
-
-
 
 
 def test_default_config_matches_equitylens_preset():
@@ -274,7 +267,7 @@ def test_matching_preset_detection():
 
 def test_presets_payload_structure():
     payload = health_score.presets_payload()
-    
+
     assert [p["key"] for p in payload] == list(health_score.PRESETS)
     for entry in payload:
         assert entry["name"]
@@ -282,21 +275,32 @@ def test_presets_payload_structure():
         assert set(entry["config"]) == set(health_score.CONFIG_FIELDS)
 
 
-
 @pytest.mark.parametrize(
     ("invalid_config", "error_pattern"),
     [
         (
-            {"weight_breadth": 0.3, "weight_sector_concentration": 0.3, "weight_single_position": 0.3},
+            {
+                "weight_breadth": 0.3,
+                "weight_sector_concentration": 0.3,
+                "weight_single_position": 0.3,
+            },
             "sum to 1.0",
         ),
         ({"weight_breadth": 0.9}, "weight_breadth must be between"),
         (
-            {"weight_breadth": 0.85, "weight_sector_concentration": 0.1, "weight_single_position": 0.05},
+            {
+                "weight_breadth": 0.85,
+                "weight_sector_concentration": 0.1,
+                "weight_single_position": 0.05,
+            },
             "weight_breadth must be between",
         ),
         (
-            {"weight_breadth": 0.01, "weight_sector_concentration": 0.49, "weight_single_position": 0.5},
+            {
+                "weight_breadth": 0.01,
+                "weight_sector_concentration": 0.49,
+                "weight_single_position": 0.5,
+            },
             "weight_breadth must be between",
         ),
         ({"concentration_low": 50, "concentration_high": 40}, "must be below"),

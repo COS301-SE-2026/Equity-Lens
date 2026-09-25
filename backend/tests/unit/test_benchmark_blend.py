@@ -22,7 +22,7 @@ def fake_history(monkeypatch):
 
     series: dict[str, pd.DataFrame] = {}
 
-    def fake_get_cached_price_history(symbol, period="1y", force_live=False):
+    def fake_get_cached_price_history(symbol, period="1y", force_live=False):  # noqa: ARG001
         if symbol not in series:
             raise ValueError(f"no data for {symbol}")
         return series[symbol]
@@ -223,5 +223,3 @@ def test_a_rand_index_cannot_be_asked_for_in_dollars(fake_history):
     fake_history["STX40.JO"] = _history(start, [90000.0, 90000.0])
 
     assert portfolio_service.benchmark_levels(REGION_SA, start, "USD") is None
-
-

@@ -48,9 +48,13 @@ const isFund = (holding) => holding?.kind === 'etf';
  * @param {number} pct
  * @param {{ low: number, high: number }} [thresholds]
  */
-export function getConcRisk(pct, thresholds = { low: CONCENTRATION_LOW, high: CONCENTRATION_HIGH }) {
+export function getConcRisk(
+  pct,
+  thresholds = { low: CONCENTRATION_LOW, high: CONCENTRATION_HIGH },
+) {
   if (pct < thresholds.low) return { level: 'low', label: 'Low', color: 'var(--signal-positive)' };
-  if (pct < thresholds.high) return { level: 'moderate', label: 'Moderate', color: 'var(--signal-warning)' };
+  if (pct < thresholds.high)
+    return { level: 'moderate', label: 'Moderate', color: 'var(--signal-warning)' };
   return { level: 'high', label: 'High', color: 'var(--signal-negative)' };
 }
 
@@ -66,7 +70,8 @@ function getTopHolding(holdings) {
 }
 
 /** @param {number} days */
-export const buildingHistoryLabel = (days) => `Building history - ${days} day${days === 1 ? '' : 's'} so far`;
+export const buildingHistoryLabel = (days) =>
+  `Building history - ${days} day${days === 1 ? '' : 's'} so far`;
 
 /**
  * @typedef {{ region: string, label: string, weight: number }} BenchmarkComponent
@@ -89,9 +94,9 @@ export const benchmarkCompositionLines = (composition) =>
     .map((c) => `${c.label} - ${c.weight}% of your book`);
 
 export const BENCHMARK_METHOD =
-  'Each region\'s index is converted to rand at that day\'s exchange rate, blended by that '
-  + 'region\'s share of your book, then rebased to what your portfolio was worth on the first '
-  + 'day of the series.';
+  "Each region's index is converted to rand at that day's exchange rate, blended by that " +
+  "region's share of your book, then rebased to what your portfolio was worth on the first " +
+  'day of the series.';
 /**
  * @template {{ date: string }} T
  * @param {T[]} series
@@ -115,10 +120,20 @@ export function buildChartStats(series, meta = {}) {
   const { historyDays = 0 } = meta;
 
   if (!series.length) {
-    return { portReturn: '-', portAvailable: false, historyDays, benchReturn: '-', diff: '-', diffPct: 0, bestDay: '-', worstDay: '-', benchAvailable: false };
+    return {
+      portReturn: '-',
+      portAvailable: false,
+      historyDays,
+      benchReturn: '-',
+      diff: '-',
+      diffPct: 0,
+      bestDay: '-',
+      worstDay: '-',
+      benchAvailable: false,
+    };
   }
 
-const portKey = /** @type {'value'|'benchmark'|'twr_index'} */ (seriesKey(series));
+  const portKey = /** @type {'value'|'benchmark'|'twr_index'} */ (seriesKey(series));
 
   /** @param {'value'|'benchmark'|'twr_index'} field @param {number} from */
   const legReturn = (field, from) => {
@@ -263,8 +278,13 @@ function dailyRecords({ holdings, attribution }) {
       text: driver.text,
       why: "Ranked by each holding's Rand contribution to today's move, not long-term gain or sector weight.",
       evidence: [
-        { label: "Today's move", value: `${attribution.todayReturn >= 0 ? '+' : ''}${zar(attribution.todayReturn ?? 0)}` },
-        ...(driver.tickers.length ? [{ label: 'Driven by', value: driver.tickers.join(', ') }] : []),
+        {
+          label: "Today's move",
+          value: `${attribution.todayReturn >= 0 ? '+' : ''}${zar(attribution.todayReturn ?? 0)}`,
+        },
+        ...(driver.tickers.length
+          ? [{ label: 'Driven by', value: driver.tickers.join(', ') }]
+          : []),
       ],
       action: null,
     });
@@ -356,7 +376,15 @@ export const askAiWhy = (question) => ({
  *   signals: { id: string, rank: number, severity: 'risk'|'opportunity'|'neutral', badge: string, text: string, actions: { label: string, to?: string, target?: string, question?: string }[] }[],
  * }}
  */
-export function buildSummary({ holdings, sectorData, attribution, chartStats, dailyChangePct, benchmarkLabel = 'JSE ALSI', thresholds }) {
+export function buildSummary({
+  holdings,
+  sectorData,
+  attribution,
+  chartStats,
+  dailyChangePct,
+  benchmarkLabel = 'JSE ALSI',
+  thresholds,
+}) {
   if (!holdings.length) {
     return {
       headline: 'Import a portfolio to see your executive summary.',
@@ -460,7 +488,11 @@ export function buildSummary({ holdings, sectorData, attribution, chartStats, da
 
   signals.sort((a, b) => a.rank - b.rank);
 
-  const benchmark = { available: Boolean(chartStats.benchAvailable), diffPct, label: benchmarkLabel };
+  const benchmark = {
+    available: Boolean(chartStats.benchAvailable),
+    diffPct,
+    label: benchmarkLabel,
+  };
   const headlineSignals = signals.filter((s) => s.badge !== PERFORMANCE_BADGE);
 
   if (headlineSignals.length === 0) {
@@ -468,7 +500,9 @@ export function buildSummary({ holdings, sectorData, attribution, chartStats, da
       headline: `Your holdings are well diversified, no company is more than ${topPct.toFixed(0)}% of your book.`,
       supportingText:
         chartStats.benchAvailable && signals.length === 0
-          ? [`Performance is tracking the ${benchmarkLabel} closely (${chartStats.diff} this period).`]
+          ? [
+              `Performance is tracking the ${benchmarkLabel} closely (${chartStats.diff} this period).`,
+            ]
           : [],
       severity: 'neutral',
       badge: 'Overview',
@@ -507,14 +541,20 @@ export function buildSummary({ holdings, sectorData, attribution, chartStats, da
  * @returns {{ explanation: string | null }}
  */
 export function buildExplanation({ stats, attribution }) {
-  if (!stats.benchAvailable) { return { explanation: null }; }
+  if (!stats.benchAvailable) {
+    return { explanation: null };
+  }
   const diffPct = stats.diffPct ?? 0;
-  if (Math.abs(diffPct) < 1) { return { explanation: null }; }
+  if (Math.abs(diffPct) < 1) {
+    return { explanation: null };
+  }
 
   const positive = (attribution.todayReturn ?? 0) >= 0;
   const driver = positive ? attribution.contributors[0] : attribution.drags[0];
   if (driver) {
-    return { explanation: `${driver.ticker} was today's biggest ${positive ? 'contributor' : 'drag'}.` };
+    return {
+      explanation: `${driver.ticker} was today's biggest ${positive ? 'contributor' : 'drag'}.`,
+    };
   }
 
   return { explanation: null };
@@ -537,7 +577,9 @@ function classifyContext({ holding, holdings }) {
   }
 
   const direction = Math.sign(changePct);
-  const sectorPeers = holdings.filter((h) => h.sector === holding.sector && h.ticker !== holding.ticker);
+  const sectorPeers = holdings.filter(
+    (h) => h.sector === holding.sector && h.ticker !== holding.ticker,
+  );
   const knownPeers = sectorPeers.filter((h) => num(h.daily_change_pct) !== null);
   const sectorPeersAligned = knownPeers.filter(
     (h) => Math.sign(h.daily_change_pct) === direction && Math.abs(h.daily_change_pct) >= 1,
@@ -577,9 +619,12 @@ function classifyContext({ holding, holdings }) {
 function buildDriver({ holdings, attribution }) {
   if (!holdings.length) return { driver: null };
 
-  const totalAbs = [...attribution.contributors, ...attribution.drags].reduce((s, r) => s + Math.abs(r.contribution), 0);
+  const totalAbs = [...attribution.contributors, ...attribution.drags].reduce(
+    (s, r) => s + Math.abs(r.contribution),
+    0,
+  );
   if (totalAbs === 0) {
-    return { driver: { text: "Your portfolio was flat today.", tickers: [] } };
+    return { driver: { text: 'Your portfolio was flat today.', tickers: [] } };
   }
 
   const positive = attribution.todayReturn >= 0;
@@ -602,8 +647,16 @@ function buildDriver({ holdings, attribution }) {
     const names =
       top.length === 1
         ? top[0].ticker
-        : `${top.slice(0, -1).map((r) => r.ticker).join(', ')} and ${top[top.length - 1].ticker}`;
-    return { driver: { text: `${displayPct}% of today's ${word} came from ${names}.`, tickers: top.map((r) => r.ticker) } };
+        : `${top
+            .slice(0, -1)
+            .map((r) => r.ticker)
+            .join(', ')} and ${top[top.length - 1].ticker}`;
+    return {
+      driver: {
+        text: `${displayPct}% of today's ${word} came from ${names}.`,
+        tickers: top.map((r) => r.ticker),
+      },
+    };
   }
 
   /** @type {Record<string, number>} */
@@ -613,9 +666,12 @@ function buildDriver({ holdings, attribution }) {
     const sector = h.sector || 'Other';
     sectorTotals[sector] = (sectorTotals[sector] ?? 0) + Math.abs(contribution);
   }
-  const [topSector, topSectorAbs] = Object.entries(sectorTotals).sort((a, b) => b[1] - a[1])[0] ?? [];
+  const [topSector, topSectorAbs] =
+    Object.entries(sectorTotals).sort((a, b) => b[1] - a[1])[0] ?? [];
   if (topSector && topSectorAbs / totalAbs >= DRIVER_LIM) {
-    return { driver: { text: `${topSector} accounted for most of today's movement.`, tickers: [] } };
+    return {
+      driver: { text: `${topSector} accounted for most of today's movement.`, tickers: [] },
+    };
   }
 
   return {
@@ -689,7 +745,9 @@ export function buildHealthQuestions(health) {
   const weak = sorted.filter((s) => s.value < 7);
 
   if (weak.length === 0) {
-    questions.push('My score looks healthy across the board - how do I stay this diversified as my portfolio grows?');
+    questions.push(
+      'My score looks healthy across the board - how do I stay this diversified as my portfolio grows?',
+    );
     return questions;
   }
 
@@ -720,8 +778,14 @@ export function buildPerformanceQuestions({ diffPct, benchAvailable, benchmarkLa
   }
 
   return diffPct >= 0
-    ? [`Why am I outperforming the ${benchmarkLabel} by ${pct}%?`, 'Is this outperformance likely to continue?']
-    : [`Why am I underperforming the ${benchmarkLabel} by ${pct}%?`, 'What would it take to catch up to the benchmark?'];
+    ? [
+        `Why am I outperforming the ${benchmarkLabel} by ${pct}%?`,
+        'Is this outperformance likely to continue?',
+      ]
+    : [
+        `Why am I underperforming the ${benchmarkLabel} by ${pct}%?`,
+        'What would it take to catch up to the benchmark?',
+      ];
 }
 
 /**
@@ -753,7 +817,9 @@ export function buildHoldingsQuestions(holdings, thresholds) {
   const { sectors } = buildSectors(holdings);
   const topSector = sectors[0];
   if (topSector && getConcRisk(topSector.value, thresholds).level === 'high') {
-    questions.push(`My ${topSector.name} exposure is ${topSector.value.toFixed(0)}% of my portfolio - is that too concentrated?`);
+    questions.push(
+      `My ${topSector.name} exposure is ${topSector.value.toFixed(0)}% of my portfolio - is that too concentrated?`,
+    );
   }
 
   return questions.slice(0, 4);

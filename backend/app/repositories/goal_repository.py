@@ -11,11 +11,7 @@ class GoalRepository:
         self.db = db
 
     def get_latest(self, user_id: UUID) -> Goal | None:
-        stmt = (
-            select(Goal)
-            .where(Goal.user_id == user_id)
-            .order_by(Goal.created_at.desc())
-        )
+        stmt = select(Goal).where(Goal.user_id == user_id).order_by(Goal.created_at.desc())
         return self.db.scalars(stmt).first()
 
     def create(self, user_id: UUID, **fields) -> Goal:

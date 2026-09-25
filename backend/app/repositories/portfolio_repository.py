@@ -1,18 +1,23 @@
 from datetime import date
 from uuid import UUID
+
 from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
+
 from app.models.portfolio import (
+    CanonicalPortfolioSnapshot,
     ContributionsAndWithdrawals,
     DividendsAndWithholdingTax,
     InstrumentPurchasesAndSales,
-    PortfolioSnapshot,
     Portfolios,
+    PortfolioSnapshot,
     TransactionExpenses,
 )
 from app.schemas.portfolio import ACCOUNT_TYPE_CURRENCY
+
+
 class PortfolioRepository:
     def __init__(self, db: Session):
         self.db = db
@@ -33,7 +38,9 @@ class PortfolioRepository:
         )
         return self.db.scalars(stmt).first()
 
-    def get_current_portfolios(self, user_id: UUID, account_type: str | None = None) -> list[Portfolios]:
+    def get_current_portfolios(
+        self, user_id: UUID, account_type: str | None = None
+    ) -> list[Portfolios]:
         latest = self.get_latest_portfolio(user_id)
         if latest is None:
             return []
@@ -97,12 +104,16 @@ class PortfolioRepository:
             {
                 "snapshot_date": row.snapshot_date,
                 "total_value": float(row.total_value or 0.0),
-                "benchmark_value": float(row.benchmark_value) if row.benchmark_value is not None else None,
+                "benchmark_value": float(row.benchmark_value)
+                if row.benchmark_value is not None
+                else None,
             }
             for row in rows
         ]
 
-    def get_instrument_transactions(self, portfolio_ids: list[UUID]) -> list[InstrumentPurchasesAndSales]:
+    def get_instrument_transactions(
+        self, portfolio_ids: list[UUID]
+    ) -> list[InstrumentPurchasesAndSales]:
         if not portfolio_ids:
             return []
         stmt = (
@@ -112,7 +123,9 @@ class PortfolioRepository:
         )
         return list(self.db.scalars(stmt).all())
 
-    def get_contributions_and_withdrawals(self, portfolio_ids: list[UUID]) -> list[ContributionsAndWithdrawals]:
+    def get_contributions_and_withdrawals(
+        self, portfolio_ids: list[UUID]
+    ) -> list[ContributionsAndWithdrawals]:
         if not portfolio_ids:
             return []
         stmt = (
@@ -141,3 +154,95 @@ class PortfolioRepository:
             .order_by(TransactionExpenses.transaction_date.asc())
         )
         return list(self.db.scalars(stmt).all())
+
+    def get_portfolio_for_user(
+        self,
+        portfolio_id: UUID,
+        user_id: UUID,
+    ):
+        stmt = select(Portfolios).where(
+            Portfolios.id == portfolio_id,
+            Portfolios.user_id == user_id,
+        )
+
+        return self.db.scalars(stmt).first()
+
+    def get_canonical_snapshot(
+        self,
+        portfolio_id: UUID,
+        snapshot_hash: str,
+    ):
+
+        stmt = select(CanonicalPortfolioSnapshot).where(
+            CanonicalPortfolioSnapshot.portfolio_id == portfolio_id,
+            CanonicalPortfolioSnapshot.snapshot_hash == snapshot_hash,
+        )
+
+        return self.db.scalars(stmt).first()
+
+    def save_canonical_snapshot(
+        self,
+        portfolio_id: UUID,
+        snapshot_hash: str,
+        snapshot_data: dict,
+    ):
+
+        existing = self.get_canonical_snapshot(
+            portfolio_id=portfolio_id,
+            snapshot_hash=snapshot_hash,
+        )
+
+        if existing is not None:
+            return existing
+
+        snapshot = CanonicalPortfolioSnapshot(
+            portfolio_id=portfolio_id,
+            snapshot_hash=snapshot_hash,
+            snapshot_data=snapshot_data,
+        )
+
+        self.db.add(snapshot)
+        self.db.commit()
+        self.db.refresh(snapshot)
+
+        return snapshot
+
+    def get_latest_canonical_snapshot(
+        self,
+        portfolio_id: UUID
+    ):
+
+        stmt = (
+            select(
+                CanonicalPortfolioSnapshot
+            )
+            .where(
+                CanonicalPortfolioSnapshot.portfolio_id == portfolio_id
+            )
+            .order_by(
+                CanonicalPortfolioSnapshot.created_at.desc()
+            )
+        )
+
+        return self.db.scalars(stmt).first()
+
+    def get_canonical_snapshot_history(
+        self,
+        portfolio_id: UUID
+    ):
+
+        stmt = (
+            select(
+                CanonicalPortfolioSnapshot
+            )
+            .where(
+                CanonicalPortfolioSnapshot.portfolio_id == portfolio_id
+            )
+            .order_by(
+                CanonicalPortfolioSnapshot.created_at.desc()
+            )
+        )
+
+        return list (
+            self.db.scalars(stmt).all()
+        )

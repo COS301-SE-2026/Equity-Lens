@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
-import {Sparkles, Plus, Pencil, Trash2, MessageSquare, Search, Copy, Check, PanelLeftClose, X, Send, RefreshCw, PanelLeftOpen} from 'lucide-react';
+import {Sparkles, Plus, Pencil, Trash2, MessageSquare, Search, Copy, Check, PanelLeftClose, X, Send, RefreshCw, PanelLeftOpen, Brain, Check as CheckIcon, Briefcase} from 'lucide-react';
 
 import Button from '../../components/common/Button/Button';
 import useAuth from '../../hooks/useAuth';
@@ -9,7 +9,7 @@ import useChat from '../../hooks/useChat';
 import { useThemeContext } from '../../context/ThemeContext';
 
 /**
- * @typedef {{id: number | string, role: 'user' | 'assistant', text: string, at: Date, failed?: boolean}} ChatMessage
+ * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean, savedFacts?: string[], streaming?: boolean}} ChatMessage
  * @typedef {{id: number, title: string, updated_at: string}} Conversation
  * @typedef {{border: string, panelBg: string, bubbleBg: string, bubbleBorder: string, activeBg: string}} Palette
  */
@@ -26,6 +26,7 @@ const HOVER = 'transition-colors duration-150 hover:bg-[var(--surface-hover)]';
 const COMPOSER_MAX_ROWS = 1500;
 const COPIED_LABEL_MS = 3200;
 const SWEEP_MS = 3200;
+const BEAT_MS = 1400;
 
 
 /**
@@ -112,9 +113,25 @@ const stampLabel = (iso) => {
   return `${d.toLocaleDateString('en-ZA',{weekday: 'short'})} ${timeLabel(d)}`;
 };
 
+const CARET_CSS = `
+.ai-streaming > :last-child::after {
+  content: '';
+  display: inline-block;
+  width: 0.45em;
+  height: 1.05em;
+  margin-left: 0.12em;
+  vertical-align: text-bottom;
+  background: var(--accent-primary);
+  border-radius: 1px;
+  animation: ai-caret 1.05s steps(1, end) infinite;
+}
+@keyframes ai-caret { 0%, 50% { opacity: 1 } 50.01%, 100% { opacity: 0 } }
+@media (prefers-reduced-motion: reduce) {
+  .ai-streaming > :last-child::after { animation: none }
+}`;
 
-//loader
-const ReplyLoader = () => {
+/** @param {{mode?: 'searching'|'beating'}} props */
+const ReplyLoader = ({ mode = 'searching' }) => {
   /**@type {React.MutableRefObject<HTMLSpanElement|null>}*/
   const loaderIcon = useRef(null);
 
@@ -128,17 +145,26 @@ const ReplyLoader = () => {
 
     /** @param {number} now */
     const loop = (now) => {
-      const angle = (((now - start) % SWEEP_MS) / SWEEP_MS) * Math.PI * 2;
-      const x = 10 * Math.sin(angle);
-      const y = 4 * Math.sin(angle * 2);
-      if (loaderIcon.current) loaderIcon.current.style.transform = `translate(${x}px, ${y}px)`;
+      if (loaderIcon.current) {
+        if (mode === 'beating') {
+          const p = ((now - start) % BEAT_MS) / BEAT_MS;
+          const thump = Math.exp(-(p ** 2) / 0.0015)
+            + 0.6 * Math.exp(-((p - 0.16) ** 2) / 0.0015);
+          loaderIcon.current.style.transform = `scale(${1 + 0.22 * thump})`;
+        } else {
+          const angle = (((now - start) % SWEEP_MS) / SWEEP_MS) * Math.PI * 2;
+          const x = 10 * Math.sin(angle);
+          const y = 4 * Math.sin(angle * 2);
+          loaderIcon.current.style.transform = `translate(${x}px, ${y}px)`;
+        }
+      }
       frame = requestAnimationFrame(loop);
     };
 
     frame = requestAnimationFrame(loop);
 
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [mode]);
 
   return (
     <div
@@ -207,15 +233,23 @@ const AIChat = () => {
   const [input, setInput] = useState('');
   const {
     messages, isThinking, conversationId, conversations, regeneratingId,
-    sendMessage, regenerate, loadConversation, startNewChat, renameConversation,
-    deleteConversation,
+    sendMessageStreaming, regenerate, loadConversation, startNewChat, renameConversation,
+    deleteConversation, portfolios, portfolioId, setPortfolioId,
   } = /**@type {{messages: ChatMessage[], isThinking: boolean, conversationId: number|null,
-        conversations: Conversation[], regeneratingId: string|number|null, sendMessage: Function,
-        regenerate: Function, loadConversation: Function, startNewChat: Function,
-        renameConversation: Function, deleteConversation: Function}}*/ (useChat());
+        conversations: Conversation[], regeneratingId: string|number|null,
+        sendMessageStreaming: Function, regenerate: Function, loadConversation: Function,
+        startNewChat: Function, renameConversation: Function, deleteConversation: Function,
+        portfolios: {id: string, label: string, portfolio_name: string}[],
+        portfolioId: string|null, setPortfolioId: Function}}*/ (useChat());
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const activePortfolio = portfolios.find((p) => p.id === portfolioId) ?? null;
   const [searchParams, setSearchParams] = useSearchParams();
   /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const bottomRef = useRef(null);
+  /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
+  const scrollRef = useRef(null);
+  const lastMessage = messages[messages.length - 1];
+  const streamingText = lastMessage?.streaming ? lastMessage.text : '';
   const [editingId, setEditingId] = useState(/**@type {number | null}*/(null));
   const [editTitle, setEditTitle] = useState('');
   /**@type {React.MutableRefObject<HTMLInputElement | null>}*/
@@ -242,6 +276,13 @@ const AIChat = () => {
   const cooling = cooldownLeft > 0;
   const busy = isThinking || regeneratingId !== null;
   const locked = busy || cooling;
+  const { memories, refreshMemories, deleteMemory } = useChat();
+  const [memoriesOpen, setMemoriesOpen] = useState(false);
+
+  const openMemories = () => {
+    setMemoriesOpen(true);
+    refreshMemories();
+  };
 
   const fieldStyle = {
     background: 'var(--surface-card)',
@@ -264,8 +305,12 @@ const AIChat = () => {
   });
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages.length, isThinking]);
+    const el = scrollRef.current;
+    if (!el) {return;}
+    if (el.scrollHeight - el.scrollTop - el.clientHeight > 140) {return;}
+    bottomRef.current?.scrollIntoView({
+      behavior: streamingText ? 'auto' : 'smooth', block: 'end' });
+  }, [messages.length, isThinking, streamingText]);
 
   useEffect(() => {
     if (cooldownUntil === 0) 
@@ -319,7 +364,7 @@ const AIChat = () => {
 
   /** @param {string} text */
   const submitMessage = (text) => {
-    const sent = sendMessage(text);
+    const sent = sendMessageStreaming(text);
     if (!sent) return;
 
     setInput('');
@@ -363,9 +408,10 @@ const AIChat = () => {
     });
   };
 
-  /** @param {React.FormEvent<HTMLFormElement>} e */
+  /** @param {React.FormEvent} e */
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (locked) return;
     submitMessage(input);
   };
 
@@ -373,6 +419,7 @@ const AIChat = () => {
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      if (locked) return;
       submitMessage(input);
     }
   };
@@ -396,7 +443,7 @@ const AIChat = () => {
   };
   
   const conversationList = (
-    <div>
+    <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between px-4 py-4" style={{borderBottom: `1px solid ${palette.border}`}}>
         <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-secondary)' }}>
           Conversations
@@ -416,7 +463,7 @@ const AIChat = () => {
         </Button>
       </div>
 
-      <div className = "convo">
+      <div className = "convo flex-1 min-h-0 overflow-y-auto">
         {conversations.length === 0 ? (
           <p className="flex justify-center errMessg">
             No saved chats yet 
@@ -468,8 +515,71 @@ const AIChat = () => {
             })
           )}
         </div>
+      <div className="flex shrink-0 justify-center px-3 py-3" style={{ borderTop: `1px solid ${palette.border}` }}>
+        <button type="button" onClick={openMemories}
+          className={`mx-auto flex w-full max-w-[180px] items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs ${HOVER}`}
+          style={{ color: 'var(--text-secondary)', border: `1px solid ${palette.border}` }}>
+          <Brain size={14} aria-hidden="true" />
+          Memory
+        </button>
       </div>
+    </div>
     );
+
+
+  const memoriesPanel = memoriesOpen && (
+    <div role="presentation" className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0, 0, 0, 0.5)' }}
+      onClick={() => setMemoriesOpen(false)}>
+
+      <div role="presentation" className="max-h-[70vh] w-full max-w-[520px] overflow-hidden rounded-xl"
+        style={{ background: palette.panelBg, border: `1px solid ${palette.border}` }}
+        onClick={(e) => e.stopPropagation()}>
+
+        <div className="flex items-center justify-between px-4 py-3"
+          style={{ borderBottom: `1px solid ${palette.border}` }}>
+          <h2 className="text-xs font-semibold uppercase tracking-widest"
+            style={{ color: 'var(--text-secondary)' }}>
+            What it remembers about you
+          </h2>
+          <button type="button" onClick={() => setMemoriesOpen(false)} aria-label="Close"
+            className={`rounded-lg p-1 ${HOVER}`} style={{ color: 'var(--text-secondary)' }}>
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="overflow-y-auto px-4 py-3" style={{ maxHeight: 'calc(70vh - 96px)' }}>
+          {memories.length === 0 ? (
+            <p className="py-6 text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
+              Nothing remembered yet. Tell the assistant about your goals and it will keep
+              track of them between chats.
+            </p>
+          ) : (
+            memories.map((/** @type {{id: string, fact: string}} */ memory) => (
+              <div key={memory.id} className="group mb-2 flex items-start gap-2 rounded-lg px-3 py-2"
+                style={{ background: palette.bubbleBg, border: `1px solid ${palette.bubbleBorder}` }}>
+                <span className="min-w-0 flex-1 break-words text-sm"
+                  style={{ color: 'var(--text-primary)' }}>
+                  {memory.fact}
+                </span>
+                <button type="button" onClick={() => deleteMemory(memory.id)}
+                  aria-label={`Forget: ${memory.fact}`}
+                  className={`shrink-0 rounded-lg p-1 ${HOVER}`}
+                  style={{ color: 'var(--text-secondary)' }}>
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="px-4 py-3 text-xs"
+          style={{ borderTop: `1px solid ${palette.border}`, color: 'var(--text-secondary)' }}>
+          These carry across all your chats. Deleting one means the assistant forgets it.
+        </div>
+      </div>
+    </div>
+  );
 
     let lastDay = '';
 
@@ -554,7 +664,8 @@ const AIChat = () => {
             )}
           </header>
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <style>{CARET_CSS}</style>
+          <div ref = {scrollRef} className="min-h-0 flex-1 overflow-y-auto">
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center px-4 text-center">
                 <div className={CONTENT_MAX}>
@@ -569,6 +680,7 @@ const AIChat = () => {
                       <button
                         key={prompt}
                         type="button"
+                        disabled={locked}
                         onClick={() => submitMessage(prompt)}
                         className={`rounded-lg ${HOVER}`}
                         style={{background: 'var(--surface-card)', border: `1px solid ${palette.border}`,
@@ -586,6 +698,7 @@ const AIChat = () => {
                   const showDay = day !== lastDay;
 
                   lastDay = day;
+                  const savedFacts = message.savedFacts ?? [];
 
                   return (<div key={message.id}>
                       {showDay && (<p className="mb-6 text-center text-xs" style={{ color: 'var(--text-secondary)' }}>
@@ -608,36 +721,51 @@ const AIChat = () => {
                       ) : (<div>
                           {regeneratingId === message.id ? (
                             <ReplyLoader />) : (<>
+                              {savedFacts.length > 0 && (
+                                <div className="mb-2 flex items-center gap-1.5 text-xs"
+                                  title={savedFacts.join('\n')}
+                                  style={{ color: 'var(--text-secondary)' }}>
+                                  <Brain size={12} aria-hidden="true" />
+                                  <span>
+                                    {savedFacts.length === 1
+                                      ? 'Added to memory'
+                                      : `Added ${savedFacts.length} things to memory`}
+                                  </span>
+                                </div>
+                              )}
                               <div
-                                className="text-base"
+                                className={`text-base${message.streaming ? ' ai-streaming' : ''}`}
                                 style={{color: 'var(--text-primary)', lineHeight: 1.7, overflowWrap: 'break-word'}}>
                                 <ReactMarkdown components={mdComponents}>{message.text}</ReactMarkdown>
                               </div>
+                                {!message.streaming && (
+                                  <div className="mt-2 flex items-center gap-4 text-xs"
+                                    style={{color: 'var(--text-secondary)'}}>
+                                    <span>{timeLabel(message.at)}</span>
 
-                              <div className="mt-2 flex items-center gap-4 text-xs"
-                                style={{color: 'var(--text-secondary)'}}>
-                                <span>{timeLabel(message.at)}</span>
-
-                                {message.failed ? (<button type="button" onClick={() => retry(message)} disabled={locked}
-                                  className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
-                                    <RefreshCw size={16} aria-hidden="true"/>
-                                    {cooling ? `Retry in ${cooldownLeft}s` : 'Retry'}
-                                  </button>) 
-                                : (<>
-                                    {copyButton(message)}
-                                    <button type="button" onClick={() => retry(message)} disabled={locked}
+                                    {message.failed ? (<button type="button" onClick={() => retry(message)} disabled={locked}
                                       className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
-                                      <RefreshCw size={16} aria-hidden="true"/>
-                                        Regenerate
-                                    </button>
-                                  </>)}
-                              </div>
+                                        <RefreshCw size={16} aria-hidden="true"/>
+                                        {cooling ? `Retry in ${cooldownLeft}s` : 'Retry'}
+                                      </button>)
+                                    : (<>
+                                        {copyButton(message)}
+                                        {message.id === lastMessage?.id && (
+                                          <button type="button" onClick={() => retry(message)} disabled={locked}
+                                            className={`rounded-lg ${HOVER}`} style={msgBtnStyle}>
+                                            <RefreshCw size={16} aria-hidden="true"/>
+                                              Regenerate
+                                          </button>
+                                        )}
+                                      </>)}
+                                  </div>
+                                )}
                             </>)}
                         </div>)}
                       </div>);
                 })}
 
-                {isThinking && <ReplyLoader/>}
+                {isThinking && !lastMessage?.streaming && <ReplyLoader/>}
 
                 <div ref={bottomRef}/>
               </div>)}
@@ -645,11 +773,63 @@ const AIChat = () => {
 
           <div className="shrink-0 px-6 pb-4 pt-3" style={{ borderTop: `1px solid ${palette.border}` }}>
             <form className={`mx-auto ${CONTENT_MAX}`} onSubmit={handleSubmit}>
-              <div style={{display: 'flex', alignItems: 'flex-end', gap: 8, background: 'var(--surface-card)',
+              {activePortfolio && (
+                <div className="mb-1 flex justify-end pr-1 text-xs" style={{ color: 'var(--text-secondary)' }}>  
+                  <span>{activePortfolio.label} · {activePortfolio.portfolio_name}</span>
+                </div>
+              )}
+
+              <div style={{position: 'relative', display: 'flex', alignItems: 'flex-end', gap: 8, background: 'var(--surface-card)',
                     border: `1px solid ${composerFocused ? 'var(--accent-primary)' : palette.border}`,
                     boxShadow: composerFocused ? '0 0 0 1px var(--accent-primary)' : 'none',
                    borderRadius: 16,padding: '8px 12px'}}>
-                <textarea ref={composerRef} rows={1} value={input} onChange={(e) => setInput(e.target.value)}
+
+                {pickerOpen && (
+                  <div className="absolute bottom-full left-0 mb-2 w-[280px] overflow-hidden rounded-xl"
+                    style={{ background: palette.panelBg, border: `1px solid ${palette.border}`, zIndex: 40 }}>  
+                    <div className="px-3 py-2 text-xs font-semibold uppercase tracking-widest"
+                      style={{ color: 'var(--text-secondary)', borderBottom: `1px solid ${palette.border}` }}>   
+                      Chat about
+                    </div>
+                    <button type="button" onClick={() => { setPortfolioId(null); setPickerOpen(false); }}        
+                      className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${HOVER}`}
+                      style={{ color: 'var(--text-primary)' }}>
+                      {portfolioId === null
+                        ? <CheckIcon size={14} aria-hidden="true" />
+                        : <span style={{ width: 14 }} />}
+                      All portfolios
+                    </button>
+                    {portfolios.map((p) => (
+                      <button key={p.id} type="button"
+                        onClick={() => { setPortfolioId(p.id); setPickerOpen(false); }}
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${HOVER}`}        
+                        style={{ color: 'var(--text-primary)' }}>
+                        {portfolioId === p.id
+                          ? <CheckIcon size={14} aria-hidden="true" />
+                          : <span style={{ width: 14 }} />}
+                        <span className="min-w-0 flex-1 truncate">
+                          {p.label} · {p.portfolio_name}
+                        </span>
+                      </button>
+                    ))}
+                    {portfolios.length === 0 && (
+                      <div className="px-3 py-3 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                        No portfolios imported yet.
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <button type="button" onClick={() => setPickerOpen((open) => !open)}
+                  aria-label="Choose a portfolio to chat about"
+                  aria-expanded={pickerOpen}
+                  className={`rounded-lg p-1 ${HOVER}`}
+                  style={{ color: activePortfolio ? 'var(--accent-primary)' : 'var(--text-secondary)',
+                           alignSelf: 'center', flexShrink: 0 }}>
+                  {activePortfolio ? <Briefcase size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
+                </button>
+
+                <textarea ref={composerRef} rows={1} value={input} onChange={(e) => setInput(e.target.value)}    
                   onKeyDown={handleKeyDown} onFocus={() => setComposerFocused(true)} onBlur={() => setComposerFocused(false)}
                   placeholder={cooling ? `Rate limited - ${cooldownLeft}s left` : 'Ask the assistant...'}
                   maxLength={500}  aria-label="Message the assistant"
@@ -671,6 +851,7 @@ const AIChat = () => {
             </p>
         </div>
       </div>
+      {memoriesPanel}
     </div>
   );
 };

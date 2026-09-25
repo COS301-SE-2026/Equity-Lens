@@ -7,12 +7,27 @@ import {
 } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
+
 import DashboardHoldingsTable from './DashboardHoldingsTable';
 vi.mock('../../../context/ChatContext', () => ({ useChatContext: () => ({ openDock: vi.fn() }) }));
 
 const HOLDINGS = [
-  { ticker: 'NPN', name: 'Naspers', sector: 'Technology', value: 6767, current_price: 67, daily_change_pct: 6.7 },
-  { ticker: 'SBK', name: 'Standard Bank', sector: 'Financials', value: 4200, current_price: 420, daily_change_pct: 4.2 },
+  {
+    ticker: 'NPN',
+    name: 'Naspers',
+    sector: 'Technology',
+    value: 6767,
+    current_price: 67,
+    daily_change_pct: 6.7,
+  },
+  {
+    ticker: 'SBK',
+    name: 'Standard Bank',
+    sector: 'Financials',
+    value: 4200,
+    current_price: 420,
+    daily_change_pct: 4.2,
+  },
 ];
 
 const SECTOR_DATA = [
@@ -26,7 +41,12 @@ const SECTOR_DATA = [
  * @param {{ available: boolean, label?: string, sectors: { sector: string, weight_pct: number, daily_change_pct: number, tickers: string[], summary: string }[] } | null} [marketContext]
  * @param {{ low: number, high: number }} [thresholds]
  */
-const renderTable = (holdings, sectorData = SECTOR_DATA, marketContext = null, thresholds = undefined) =>
+const renderTable = (
+  holdings,
+  sectorData = SECTOR_DATA,
+  marketContext = null,
+  thresholds = undefined,
+) =>
   render(
     <MemoryRouter>
       <DashboardHoldingsTable
@@ -65,14 +85,25 @@ describe('DashboardHoldingsTable', () => {
     expect(screen.getByText(/\+4\.20%/)).toBeInTheDocument();
   });
 
-  it('marks a foreign holding\'s move as a local-currency move', () => {
+  it("marks a foreign holding's move as a local-currency move", () => {
     renderTable([
-      { ticker: 'AAPL', name: 'Apple Inc', sector: 'Technology', value: 8510, current_price: 4255,
-        daily_change_pct: 1.5, daily_change_is_local: true, quote_currency: 'USD', fx_rate: 18.5 },
+      {
+        ticker: 'AAPL',
+        name: 'Apple Inc',
+        sector: 'Technology',
+        value: 8510,
+        current_price: 4255,
+        daily_change_pct: 1.5,
+        daily_change_is_local: true,
+        quote_currency: 'USD',
+        fx_rate: 18.5,
+      },
     ]);
 
     expect(screen.getByText('USD')).toBeInTheDocument();
-    expect(screen.getByTitle('Move shown in USD, value converted to rand at R18.50.')).toBeInTheDocument();
+    expect(
+      screen.getByTitle('Move shown in USD, value converted to rand at R18.50.'),
+    ).toBeInTheDocument();
   });
 
   it('leaves a JSE holding unmarked', () => {
@@ -92,7 +123,9 @@ describe('DashboardHoldingsTable', () => {
 
   it('has no Ask AI trigger with no holdings or sectors to ask about', () => {
     renderTable([], []);
-    expect(screen.queryByRole('button', { name: 'Ask AI about your positions' })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'Ask AI about your positions' }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows per-sector market context notes when available', () => {
@@ -100,11 +133,19 @@ describe('DashboardHoldingsTable', () => {
       available: true,
       label: 'Illustrative market context',
       sectors: [
-        { sector: 'Technology', weight_pct: 61.7, daily_change_pct: 6.7, tickers: ['NPN'], summary: 'Your Technology holdings (NPN) are up 6.7% today.' },
+        {
+          sector: 'Technology',
+          weight_pct: 61.7,
+          daily_change_pct: 6.7,
+          tickers: ['NPN'],
+          summary: 'Your Technology holdings (NPN) are up 6.7% today.',
+        },
       ],
     });
     expect(screen.getByText(/Illustrative market context/)).toBeInTheDocument();
-    expect(screen.getByText(/Your Technology holdings \(NPN\) are up 6\.7% today\./)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Your Technology holdings \(NPN\) are up 6\.7% today\./),
+    ).toBeInTheDocument();
   });
 
   it('shows no market context section when it is unavailable', () => {
@@ -163,8 +204,20 @@ describe('DashboardHoldingsTable', () => {
         available: true,
         label: 'Illustrative market context',
         sectors: [
-          { sector: 'Technology', weight_pct: 61.7, daily_change_pct: 6.7, tickers: ['NPN'], summary: 'Your Technology holdings (NPN) are up 6.7% today.' },
-          { sector: 'Financials', weight_pct: 38.3, daily_change_pct: 4.2, tickers: ['SBK'], summary: 'Your Financials holdings (SBK) are up 4.2% today.' },
+          {
+            sector: 'Technology',
+            weight_pct: 61.7,
+            daily_change_pct: 6.7,
+            tickers: ['NPN'],
+            summary: 'Your Technology holdings (NPN) are up 6.7% today.',
+          },
+          {
+            sector: 'Financials',
+            weight_pct: 38.3,
+            daily_change_pct: 4.2,
+            tickers: ['SBK'],
+            summary: 'Your Financials holdings (SBK) are up 4.2% today.',
+          },
         ],
       };
       renderTable(HOLDINGS, SECTOR_DATA, marketContext);
@@ -187,7 +240,13 @@ describe('DashboardHoldingsTable', () => {
         available: true,
         label: 'Illustrative market context',
         sectors: [
-          { sector: 'Technology', weight_pct: 61.7, daily_change_pct: 6.7, tickers: ['NPN'], summary: 'Your Technology holdings (NPN) are up 6.7% today.' },
+          {
+            sector: 'Technology',
+            weight_pct: 61.7,
+            daily_change_pct: 6.7,
+            tickers: ['NPN'],
+            summary: 'Your Technology holdings (NPN) are up 6.7% today.',
+          },
         ],
       });
       expect(screen.getAllByText('+6.70%')).toHaveLength(1);
@@ -244,7 +303,14 @@ describe('DashboardHoldingsTable', () => {
     it('filters by sector, not by the individual holding - other holdings sharing that sector stay visible', () => {
       const holdingsSharedSector = [
         ...HOLDINGS,
-        { ticker: 'PRX', name: 'Prosus', sector: 'Technology', value: 3000, current_price: 100, daily_change_pct: 1.2 },
+        {
+          ticker: 'PRX',
+          name: 'Prosus',
+          sector: 'Technology',
+          value: 3000,
+          current_price: 100,
+          daily_change_pct: 1.2,
+        },
       ];
       renderTable(holdingsSharedSector);
       fireEvent.click(screen.getByRole('button', { name: /NPN/i }));
@@ -259,8 +325,20 @@ describe('DashboardHoldingsTable', () => {
         available: true,
         label: 'Illustrative market context',
         sectors: [
-          { sector: 'Technology', weight_pct: 61.7, daily_change_pct: 6.7, tickers: ['NPN'], summary: 'Your Technology holdings (NPN) are up 6.7% today.' },
-          { sector: 'Financials', weight_pct: 38.3, daily_change_pct: 4.2, tickers: ['SBK'], summary: 'Your Financials holdings (SBK) are up 4.2% today.' },
+          {
+            sector: 'Technology',
+            weight_pct: 61.7,
+            daily_change_pct: 6.7,
+            tickers: ['NPN'],
+            summary: 'Your Technology holdings (NPN) are up 6.7% today.',
+          },
+          {
+            sector: 'Financials',
+            weight_pct: 38.3,
+            daily_change_pct: 4.2,
+            tickers: ['SBK'],
+            summary: 'Your Financials holdings (SBK) are up 4.2% today.',
+          },
         ],
       };
       renderTable(HOLDINGS, SECTOR_DATA, marketContext);
@@ -279,13 +357,27 @@ describe('DashboardHoldingsTable', () => {
 
   describe('cost basis / total return / held since (Prompt B)', () => {
     const HOLDING_WITH_HISTORY = {
-      ticker: 'NPN', name: 'Naspers', sector: 'Technology', value: 6767, current_price: 67,
-      daily_change_pct: 6.7, avg_cost: 55.2, gain_loss: 800.5, gain_loss_pct: 13.4,
+      ticker: 'NPN',
+      name: 'Naspers',
+      sector: 'Technology',
+      value: 6767,
+      current_price: 67,
+      daily_change_pct: 6.7,
+      avg_cost: 55.2,
+      gain_loss: 800.5,
+      gain_loss_pct: 13.4,
       first_purchase_date: '2022-03-14',
     };
     const HOLDING_WITHOUT_HISTORY = {
-      ticker: 'SBK', name: 'Standard Bank', sector: 'Financials', value: 4200, current_price: 420,
-      daily_change_pct: 4.2, avg_cost: 410.0, gain_loss: -1200.0, gain_loss_pct: -22.2,
+      ticker: 'SBK',
+      name: 'Standard Bank',
+      sector: 'Financials',
+      value: 4200,
+      current_price: 420,
+      daily_change_pct: 4.2,
+      avg_cost: 410.0,
+      gain_loss: -1200.0,
+      gain_loss_pct: -22.2,
       first_purchase_date: null,
     };
 

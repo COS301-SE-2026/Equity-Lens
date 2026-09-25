@@ -1,5 +1,5 @@
-import math
 import logging
+import math
 import threading
 import time
 from bisect import bisect_right
@@ -12,21 +12,6 @@ from sqlalchemy.orm import Session
 from app.repositories.holdings_repository import HoldingsRepository
 from app.repositories.news_repository import NewsRepository
 from app.repositories.portfolio_repository import PortfolioRepository
-from app.services.instruments import (
-    INVALID_TICKER_MARKERS,
-    KIND_ETF,
-    KIND_STOCK,
-    REGION_BENCHMARKS,
-    REGION_SA,
-    REGION_UNKNOWN,
-    get_look_through_note,
-    is_region_benchmark,
-    is_zar_listed,
-    looks_like_fund,
-    normalize_sector,
-    quote_currency,
-    resolve_known_instrument,
-)
 from app.services.cgt_estimator import estimate_cgt
 from app.services.event_detection import K_SIGMA, band_for, log_returns, score_series
 from app.services.event_study import run as run_event_study
@@ -36,8 +21,21 @@ from app.services.health_score import (
     HealthConfig,
     compute_health_score,
 )
+from app.services.instruments import (
+    INVALID_TICKER_MARKERS,
+    KIND_ETF,
+    KIND_STOCK,
+    REGION_BENCHMARKS,
+    REGION_UNKNOWN,
+    get_look_through_note,
+    is_region_benchmark,
+    is_zar_listed,
+    looks_like_fund,
+    normalize_sector,
+    quote_currency,
+    resolve_known_instrument,
+)
 from app.services.market_data_service import get_current_price
-from app.services.ticker_map import canonical_key
 from app.services.news_ranking import (
     MAX_DAYS_AFTER,
     MAX_DAYS_BEFORE,
@@ -55,6 +53,7 @@ from app.services.returns import (
 )
 from app.services.risk_analytics import closes_for_tickers, single_ticker_closes
 from app.services.snapshot_rebuild_service import position_on, rebuild_snapshots
+from app.services.ticker_map import canonical_key
 from app.utils.stock_cache import get_cached_price_history, get_latest_close
 
 logger = logging.getLogger(__name__)
@@ -64,10 +63,12 @@ MAX_EXPLANATIONS = 5
 
 
 def _news_window_utc(first: date, last: date) -> tuple[datetime, datetime]:
-    start = datetime.combine(first - timedelta(days=MAX_DAYS_BEFORE + 1), datetime.min.time(),
-                             tzinfo=timezone.utc)
-    end = datetime.combine(last + timedelta(days=MAX_DAYS_AFTER + 1), datetime.max.time(),
-                           tzinfo=timezone.utc)
+    start = datetime.combine(
+        first - timedelta(days=MAX_DAYS_BEFORE + 1), datetime.min.time(), tzinfo=timezone.utc
+    )
+    end = datetime.combine(
+        last + timedelta(days=MAX_DAYS_AFTER + 1), datetime.max.time(), tzinfo=timezone.utc
+    )
     return start, end
 
 
@@ -173,12 +174,12 @@ def _price_holding(h, db: Session | None = None, usd_zar: float | None = None) -
 
                 raw_change = live.change_percent
                 daily_change_pct = (
-                    raw_change
-                    if raw_change is not None and not math.isnan(raw_change)
-                    else None
+                    raw_change if raw_change is not None and not math.isnan(raw_change) else None
                 )
             else:
-                logger.warning(f"live price fetch for {ticker} returned a NaN price, treating as unpriced")
+                logger.warning(
+                    f"live price fetch for {ticker} returned a NaN price, treating as unpriced"
+                )
         except Exception as exc:
             logger.warning(f"live price fetch failed for {ticker}: {exc}")
 
@@ -227,6 +228,7 @@ def _price_holding(h, db: Session | None = None, usd_zar: float | None = None) -
         "daily_change_is_local": currency not in (None, "ZAR"),
     }
 
+
 def _price_holdings(holdings: list, db: Session | None = None) -> list[dict]:
     needs_fx = any(not is_zar_listed((h.ticker or "").strip()) for h in holdings)
     usd_zar = _latest_usd_zar(db) if needs_fx else None
@@ -241,6 +243,7 @@ def _price_holdings(holdings: list, db: Session | None = None) -> list[dict]:
 
     priced.sort(key=lambda h: h["value"], reverse=True)
     return priced
+
 
 def _build_summary(priced_holdings: list[dict]) -> dict:
     total_value = sum(h["value"] for h in priced_holdings)
@@ -269,6 +272,7 @@ def _build_summary(priced_holdings: list[dict]) -> dict:
         ),
     }
 
+
 def _build_sector_allocation(priced_holdings: list[dict]) -> list[dict]:
     totals: dict[str, float] = {}
     grand_total = sum(h["value"] for h in priced_holdings)
@@ -286,6 +290,7 @@ def _build_sector_allocation(priced_holdings: list[dict]) -> list[dict]:
         }
         for sector, value in sorted(totals.items(), key=lambda kv: kv[1], reverse=True)
     ]
+
 
 def _benchmark_weights(priced_holdings: list[dict]) -> dict[str, float]:
     total = sum(h["value"] for h in priced_holdings)
@@ -306,6 +311,7 @@ def _benchmark_weights(priced_holdings: list[dict]) -> dict[str, float]:
 
     return {region: weight / covered for region, weight in weights.items()}
 
+
 def _history_period(since: date) -> str:
     days = (date.today() - since).days
     if days <= 30:
@@ -315,6 +321,7 @@ def _history_period(since: date) -> str:
     if days <= 700:
         return "2y"
     return "5y"
+
 
 def _closes_by_day(history) -> tuple[list[date], list[float]]:
     days = []
@@ -326,9 +333,11 @@ def _closes_by_day(history) -> tuple[list[date], list[float]]:
         closes.append(float(close))
     return days, closes
 
+
 def _close_on_or_before(days: list[date], closes: list[float], when: date) -> float | None:
     i = bisect_right(days, when) - 1
     return closes[i] if i >= 0 else None
+
 
 def _index_levels(
     ticker: str, currency: str, since: date, target_currency: str = "ZAR"
@@ -348,7 +357,9 @@ def _index_levels(
             logger.warning(f"cannot convert {ticker} from {currency} to {target_currency}")
             return None
         try:
-            fx = get_cached_price_history("USDZAR=X", period=_history_period(since), force_live=True)
+            fx = get_cached_price_history(
+                "USDZAR=X", period=_history_period(since), force_live=True
+            )
         except Exception as exc:
             logger.warning(f"USDZAR history fetch failed, cannot convert {ticker}: {exc}")
             return None
@@ -374,6 +385,7 @@ def _index_levels(
 
     return levels or None
 
+
 def _history_is_incomplete(snapshot_history: list[dict], classified_txns: list[dict]) -> bool:
     if len(snapshot_history) < 2:
         return True
@@ -384,9 +396,7 @@ def _history_is_incomplete(snapshot_history: list[dict], classified_txns: list[d
     return snapshot_history[0]["snapshot_date"] > min(dates)
 
 
-def _history_quality(
-    rebuild, priced_holdings: list[dict], performance_history: list[dict]
-) -> dict:
+def _history_quality(rebuild, priced_holdings: list[dict], performance_history: list[dict]) -> dict:
     if rebuild is not None:
         return {
             "first_day": rebuild.first_day.isoformat() if rebuild.first_day else None,
@@ -414,9 +424,11 @@ def _portfolio_value_series(snapshot_history: list[dict]) -> dict[date, float]:
         return {}
     return {row["snapshot_date"]: row["total_value"] for row in snapshot_history}
 
+
 def _relative_levels(history: list[dict]) -> list[tuple[date, float]]:
     rows = [
-        r for r in history
+        r
+        for r in history
         if r.get("twr_index") and r.get("benchmark") and r["twr_index"] > 0 and r["benchmark"] > 0
     ]
     if len(rows) < 2:
@@ -424,9 +436,8 @@ def _relative_levels(history: list[dict]) -> list[tuple[date, float]]:
 
     levels = [(date.fromisoformat(rows[0]["date"]), 100.0)]
     for previous, row in pairwise(rows):
-        relative = (
-            math.log(row["twr_index"] / previous["twr_index"])
-            - math.log(row["benchmark"] / previous["benchmark"])
+        relative = math.log(row["twr_index"] / previous["twr_index"]) - math.log(
+            row["benchmark"] / previous["benchmark"]
         )
         levels.append((date.fromisoformat(row["date"]), levels[-1][1] * math.exp(relative)))
     return levels
@@ -450,20 +461,22 @@ def _divergences(history: list[dict], k_sigma: float) -> tuple[list[dict], dict]
         if row is None:
             continue
         previous = history[history.index(row) - 1]
-        out.append({
-            "date": hit["date"],
-            "portfolio_return_pct": round(
-                (row["twr_index"] / previous["twr_index"] - 1) * 100, 2
-            ),
-            "benchmark_return_pct": round(
-                (row["benchmark"] / previous["benchmark"] - 1) * 100, 2
-            ),
-            "relative_return_pct": hit["return_pct"],
-            "z_score": hit["z_score"],
-            "annualised_volatility_pct": hit["annualised_volatility_pct"],
-            "observations": scored["observations"],
-            "direction": "ahead" if hit["log_return"] > 0 else "behind",
-        })
+        out.append(
+            {
+                "date": hit["date"],
+                "portfolio_return_pct": round(
+                    (row["twr_index"] / previous["twr_index"] - 1) * 100, 2
+                ),
+                "benchmark_return_pct": round(
+                    (row["benchmark"] / previous["benchmark"] - 1) * 100, 2
+                ),
+                "relative_return_pct": hit["return_pct"],
+                "z_score": hit["z_score"],
+                "annualised_volatility_pct": hit["annualised_volatility_pct"],
+                "observations": scored["observations"],
+                "direction": "ahead" if hit["log_return"] > 0 else "behind",
+            }
+        )
 
     out.sort(key=lambda d: abs(d["z_score"]), reverse=True)
     return out[:MAX_EVENTS], coverage
@@ -475,7 +488,9 @@ def _build_contributions_series(
     if len(snapshot_history) < 2:
         return []
 
-    flows = [(c.transaction_date, _to_float(c.value_zar)) for c in contributions if c.transaction_date]
+    flows = [
+        (c.transaction_date, _to_float(c.value_zar)) for c in contributions if c.transaction_date
+    ]
 
     recorded = sum(amount for _, amount in flows)
     opening_balance = max(invested_capital - recorded, 0.0)
@@ -489,14 +504,17 @@ def _build_contributions_series(
             running_total += flows[flow_idx][1]
             flow_idx += 1
         value = row["total_value"]
-        series.append({
-            "date": snap_date.isoformat(),
-            "name": snap_date.strftime("%b %d"),
-            "portfolio_value": round(value, 2),
-            "cumulative_net_contributions": round(running_total, 2),
-            "cumulative_market_gain": round(value - running_total, 2),
-        })
+        series.append(
+            {
+                "date": snap_date.isoformat(),
+                "name": snap_date.strftime("%b %d"),
+                "portfolio_value": round(value, 2),
+                "cumulative_net_contributions": round(running_total, 2),
+                "cumulative_market_gain": round(value - running_total, 2),
+            }
+        )
     return series
+
 
 def _benchmark_series(
     priced_holdings: list[dict], since: date, base_value: float
@@ -512,7 +530,9 @@ def _benchmark_series(
         ticker, label, currency = REGION_BENCHMARKS[region]
         levels = _index_levels(ticker, currency, since)
         if not levels:
-            logger.info("benchmark debug: dropping region=%s ticker=%s, no usable levels", region, ticker)
+            logger.info(
+                "benchmark debug: dropping region=%s ticker=%s, no usable levels", region, ticker
+            )
             continue
         per_region_levels[region] = levels
         components.append({"region": region, "label": label, "weight": round(weight * 100, 1)})
@@ -537,6 +557,7 @@ def _benchmark_series(
         series[day] = round(base_value * blended, 2)
 
     return series, components
+
 
 def benchmark_levels(
     region: str, since: date, target_currency: str = "ZAR"
@@ -565,6 +586,7 @@ def _benchmark_label(components: list[dict]) -> str:
     parts = sorted(components, key=lambda c: c["weight"], reverse=True)
     return " + ".join(f"{c['label']} {c['weight']:.0f}%" for c in parts)
 
+
 BUY_MARKERS = ("buy", "purchase")
 SELL_MARKERS = ("sale", "sell")
 
@@ -584,17 +606,20 @@ def classify_instrument_txns(rows: list) -> list[dict]:
         else:
             logger.warning(
                 "unrecognised transaction_name %r for %s, skipped from realised gain",
-                row.transaction_name, row.ticker,
+                row.transaction_name,
+                row.ticker,
             )
             continue
 
-        classified.append({
-            "ticker": row.ticker or row.instrument_name or "UNKNOWN",
-            "date": row.transaction_date,
-            "side": side,
-            "quantity": _to_float(row.quantity),
-            "value_zar": _to_float(row.value_zar),
-        })
+        classified.append(
+            {
+                "ticker": row.ticker or row.instrument_name or "UNKNOWN",
+                "date": row.transaction_date,
+                "side": side,
+                "quantity": _to_float(row.quantity),
+                "value_zar": _to_float(row.value_zar),
+            }
+        )
     return classified
 
 
@@ -628,9 +653,7 @@ def _money_weighted_flows(
     flows += [
         (d.transaction_date, _to_float(d.net_dividend)) for d in dividends if d.transaction_date
     ]
-    flows += [
-        (e.transaction_date, -_to_float(e.value_zar)) for e in expenses if e.transaction_date
-    ]
+    flows += [(e.transaction_date, -_to_float(e.value_zar)) for e in expenses if e.transaction_date]
     flows.append((date.today(), portfolio_value_today))
     return flows
 
@@ -660,23 +683,26 @@ def _build_market_context(priced_holdings: list[dict]) -> dict:
             sector_change = bucket["weighted_change"] / bucket["priced_value"]
             direction = "up" if sector_change > 0 else "down" if sector_change < 0 else "flat"
             summary = (
-                f"Your {sector} holdings ({names}) are {direction} "
-                f"{abs(sector_change):.1f}% today."
+                f"Your {sector} holdings ({names}) are {direction} {abs(sector_change):.1f}% today."
             )
         else:
             sector_change = None
             summary = f"Your {sector} holdings ({names}) have no live price today."
 
-        sectors.append({
-            "sector": sector,
-            "weight_pct": round(bucket["value"] / total * 100, 1),
-            "priced_weight_pct": (
-                round(bucket["priced_value"] / bucket["value"] * 100, 1) if bucket["value"] else 0.0
-            ),
-            "daily_change_pct": round(sector_change, 2) if sector_change is not None else None,
-            "tickers": bucket["tickers"],
-            "summary": summary,
-        })
+        sectors.append(
+            {
+                "sector": sector,
+                "weight_pct": round(bucket["value"] / total * 100, 1),
+                "priced_weight_pct": (
+                    round(bucket["priced_value"] / bucket["value"] * 100, 1)
+                    if bucket["value"]
+                    else 0.0
+                ),
+                "daily_change_pct": round(sector_change, 2) if sector_change is not None else None,
+                "tickers": bucket["tickers"],
+                "summary": summary,
+            }
+        )
 
     return {"available": True, "label": "Illustrative market context", "sectors": sectors}
 
@@ -711,22 +737,25 @@ def _build_concentration_analysis(
         reduce_value = max(0.0, reduce_value)
         shares_to_sell = reduce_value / h["current_price"] if h["current_price"] else None
 
-        flagged.append({
-            "ticker": h["ticker"],
-            "name": h["name"],
-            "current_allocation_pct": round(weight_pct, 1),
-            "target_allocation_pct": target_pct,
-            "value_to_reduce": round(reduce_value, 2),
-            "shares_to_sell": round(shares_to_sell, 2) if shares_to_sell is not None else None,
-            "risk_band": "High",
-            "look_through_note": get_look_through_note(h["ticker"]),
-        })
+        flagged.append(
+            {
+                "ticker": h["ticker"],
+                "name": h["name"],
+                "current_allocation_pct": round(weight_pct, 1),
+                "target_allocation_pct": target_pct,
+                "value_to_reduce": round(reduce_value, 2),
+                "shares_to_sell": round(shares_to_sell, 2) if shares_to_sell is not None else None,
+                "risk_band": "High",
+                "look_through_note": get_look_through_note(h["ticker"]),
+            }
+        )
 
     return {
         "flagged": flagged,
         "health_score": compute_health_score(priced_holdings, config),
         "thresholds": _thresholds_payload(config),
     }
+
 
 SECTOR_INVESTMENT_PCT_OF_PORTFOLIO = 0.05
 
@@ -743,8 +772,13 @@ def _top_up_sector(priced_holdings: list[dict], sector: str, amount: float) -> l
 
 def _subscore_deltas(before_score: dict, after_score: dict) -> list[dict]:
     return [
-        {"key": b["key"], "label": b["label"], "before": b["value"],
-         "after": a["value"], "weight": b["weight"]}
+        {
+            "key": b["key"],
+            "label": b["label"],
+            "before": b["value"],
+            "after": a["value"],
+            "weight": b["weight"],
+        }
         for b, a in zip(before_score["subscores"], after_score["subscores"], strict=True)
     ]
 
@@ -776,8 +810,8 @@ def _investment_explanation(
 
     opening = (
         f"{sector} is currently your smallest sector weight at {weight_pct:.1f}% of your book. "
-        if is_smallest else
-        f"{sector} is {weight_pct:.1f}% of your book, below your most concentrated sector. "
+        if is_smallest
+        else f"{sector} is {weight_pct:.1f}% of your book, below your most concentrated sector. "
     )
     return opening + (
         "Adding here spreads sector risk rather than adding to a sector you already lean on."
@@ -872,10 +906,13 @@ def _simulate_sector_rebalance(
         "health_score_after": after_score["score"],
         "subscore_deltas": _subscore_deltas(before_score, after_score),
         "explanation": (
-            f"{highest['sector']} is your most concentrated sector at {highest['percentage']:.1f}%; "
-            f"{lowest['sector']} is your least at {lowest['percentage']:.1f}%. Shifting the excess above "
-            "a healthy single-sector band into your thinnest sector lowers Herfindahl concentration on "
-            "both ends of the spread at once."
+            f"{highest['sector']} is your most concentrated sector at "
+            f"{highest['percentage']:.1f}%; "
+            f"{lowest['sector']} is your least at {lowest['percentage']:.1f}%. "
+            "Shifting the excess above "
+            "a healthy single-sector band into "
+            "your thinnest sector lowers Herfindahl concentration on both "
+            "ends of the spread at once."
         ),
         "thresholds": _thresholds_payload(config),
         "disclaimer": "Analysis only, not a trade instruction - EquityLens doesn't execute trades.",
@@ -894,7 +931,9 @@ def _warn_on_mismatched_listings(account_type: str | None, priced_holdings: list
         )
 
 
-def _build_tax_analysis(account_type: str | None, priced_holdings: list[dict], instrument_txns: list) -> dict:
+def _build_tax_analysis(
+    account_type: str | None, priced_holdings: list[dict], instrument_txns: list
+) -> dict:
     cgt = estimate_cgt(account_type, priced_holdings, instrument_txns)
     if not cgt["available"]:
         return {**cgt, "holdings": []}
@@ -927,10 +966,12 @@ def _build_tax_analysis(account_type: str | None, priced_holdings: list[dict], i
         "holdings": holdings_breakdown,
         "potential_realised_loss": round(potential_realised_loss, 2),
         "note": (
-            "Realising a loss can offset a capital gain elsewhere in the same tax year, subject to the "
-            "annual exclusion above. This isn't tax advice - consult a tax practitioner before acting on it."
+            "Realising a loss can offset a capital gain elsewhere in the "
+            "same tax year, subject to the annual exclusion above. This "
+            "isn't tax advice - consult a tax practitioner before acting on it."
         ),
     }
+
 
 TFSA_ANNUAL_LIMIT_ZAR = 46_000.0
 TFSA_LIFETIME_LIMIT_ZAR = 500_000.0
@@ -949,7 +990,9 @@ def _build_tfsa_room(account_type: str | None, contributions: list) -> dict:
     this_year_contributed = sum(
         _to_float(c.value_zar)
         for c in contributions
-        if _to_float(c.value_zar) > 0 and c.transaction_date and c.transaction_date >= tax_year_start
+        if _to_float(c.value_zar) > 0
+        and c.transaction_date
+        and c.transaction_date >= tax_year_start
     )
 
     return {
@@ -967,6 +1010,7 @@ def _build_tfsa_room(account_type: str | None, contributions: list) -> dict:
             "contributions made, not the current balance."
         ),
     }
+
 
 PRICED_HOLDINGS_CACHE_TTL_SECONDS = 90
 
@@ -992,7 +1036,8 @@ def _copy_priced(priced: list[dict]) -> list[dict]:
 
 def _evict_expired(now: float) -> None:
     stale = [
-        key for key, (cached_at, _, _) in _priced_holdings_cache.items()
+        key
+        for key, (cached_at, _, _) in _priced_holdings_cache.items()
         if now - cached_at >= PRICED_HOLDINGS_CACHE_TTL_SECONDS
     ]
     for key in stale:
@@ -1021,8 +1066,9 @@ def _lock_for_user(key: str) -> threading.Lock:
 def _read_events_cache(key: str) -> dict | None:
     with _priced_holdings_guard:
         now = time.monotonic()
-        for stale in [k for k, (at, _) in _events_cache.items()
-                      if now - at >= EVENTS_CACHE_TTL_SECONDS]:
+        for stale in [
+            k for k, (at, _) in _events_cache.items() if now - at >= EVENTS_CACHE_TTL_SECONDS
+        ]:
             _events_cache.pop(stale, None)
         entry = _events_cache.get(key)
         return entry[1] if entry else None
@@ -1107,14 +1153,18 @@ class PortfolioService:
         account_type = portfolio.account_type if portfolio else None
         priced_holdings, portfolio_ids = self._get_priced_holdings(user_id)
         instrument_txns = self.portfolio_repo.get_instrument_transactions(portfolio_ids)
-        return estimate_cgt(account_type, priced_holdings, classify_instrument_txns(instrument_txns))
+        return estimate_cgt(
+            account_type, priced_holdings, classify_instrument_txns(instrument_txns)
+        )
 
     def get_tax_analysis(self, user_id: UUID) -> dict:
         portfolio = self.portfolio_repo.get_latest_portfolio(user_id)
         account_type = portfolio.account_type if portfolio else None
         priced_holdings, portfolio_ids = self._get_priced_holdings(user_id)
         instrument_txns = self.portfolio_repo.get_instrument_transactions(portfolio_ids)
-        return _build_tax_analysis(account_type, priced_holdings, classify_instrument_txns(instrument_txns))
+        return _build_tax_analysis(
+            account_type, priced_holdings, classify_instrument_txns(instrument_txns)
+        )
 
     def get_tfsa_room(self, user_id: UUID) -> dict:
         portfolio = self.portfolio_repo.get_latest_portfolio(user_id)
@@ -1157,16 +1207,18 @@ class PortfolioService:
     ) -> dict:
         portfolio_value = sum(h["value"] for h in priced_holdings)
         invested_capital = sum(h["total_cost"] for h in priced_holdings)
-        priced = [h for h in priced_holdings
-                  if h.get("price_source", "cost") != "cost" and h["total_cost"] > 0]
+        priced = [
+            h
+            for h in priced_holdings
+            if h.get("price_source", "cost") != "cost" and h["total_cost"] > 0
+        ]
         live_value = sum(h["value"] for h in priced)
         live_cost = sum(h["total_cost"] for h in priced)
         unrealised_gain = live_value - live_cost
         simple_return = pct_return(unrealised_gain, live_cost)
         holdings_count = len(priced_holdings)
         priced_live_count = sum(1 for h in priced_holdings if h["priced_live"])
-        priced_count = sum(1 for h in priced_holdings
-                           if h.get("price_source", "cost") != "cost")
+        priced_count = sum(1 for h in priced_holdings if h.get("price_source", "cost") != "cost")
 
         if contributions is None:
             contributions = self.portfolio_repo.get_contributions_and_withdrawals(portfolio_ids)
@@ -1200,9 +1252,7 @@ class PortfolioService:
             "unrealised_gain": round(unrealised_gain, 2),
             "realised_gain": round(realised_gain, 2),
             "total_costs": round(total_costs, 2),
-            "simple_return_pct": (
-                None if simple_return is None else round(simple_return, 2)
-            ),
+            "simple_return_pct": (None if simple_return is None else round(simple_return, 2)),
             "money_weighted_return_pct": (
                 None if money_weighted is None else round(money_weighted, 2)
             ),
@@ -1217,7 +1267,9 @@ class PortfolioService:
         }
 
     def _performance_and_benchmark(
-        self, priced_holdings: list[dict], snapshot_history: list[dict],
+        self,
+        priced_holdings: list[dict],
+        snapshot_history: list[dict],
         classified_txns: list[dict] | None = None,
     ) -> tuple[list[dict], list[dict]]:
         portfolio_series = _portfolio_value_series(snapshot_history)
@@ -1228,9 +1280,11 @@ class PortfolioService:
         base_value = portfolio_series[first_day]
         benchmark_series, components = _benchmark_series(priced_holdings, first_day, base_value)
 
-        twr = dict(time_weighted_index(
-            sorted(portfolio_series.items()), _invested_flows(classified_txns or [])
-        ))
+        twr = dict(
+            time_weighted_index(
+                sorted(portfolio_series.items()), _invested_flows(classified_txns or [])
+            )
+        )
         benchmark_days = sorted(benchmark_series)
 
         history = [
@@ -1324,15 +1378,18 @@ class PortfolioService:
             "accountType": account_type,
             "statementDate": (
                 portfolio.statement_end_date.isoformat()
-                if portfolio and portfolio.statement_end_date else None
+                if portfolio and portfolio.statement_end_date
+                else None
             ),
             "importedAt": (
                 portfolio.created_at.date().isoformat()
-                if portfolio and portfolio.created_at else None
+                if portfolio and portfolio.created_at
+                else None
             ),
             "historyStartsAt": (
                 min(row["snapshot_date"] for row in snapshot_history).isoformat()
-                if snapshot_history else None
+                if snapshot_history
+                else None
             ),
             "cgt": cgt,
         }
@@ -1361,36 +1418,42 @@ class PortfolioService:
 
             scored = score_series(series_by_ticker.get(ticker.upper(), []), k_sigma=k_sigma)
             if not scored["available"]:
-                skipped.append({
-                    "ticker": ticker,
-                    "reason": scored["reason"],
-                    "observations": scored["observations"],
-                })
+                skipped.append(
+                    {
+                        "ticker": ticker,
+                        "reason": scored["reason"],
+                        "observations": scored["observations"],
+                    }
+                )
                 continue
 
-            scanned.append({
-                "ticker": ticker,
-                "name": h.get("name"),
-                "observations": scored["observations"],
-                "annualised_volatility_pct": scored["annualised_volatility_pct"],
-            })
-            scored_days_total += scored["scored_days"]
-            for event in scored["events"]:
-                events.append({
+            scanned.append(
+                {
                     "ticker": ticker,
                     "name": h.get("name"),
-                    "date": event["date"],
-                    "return_pct": event["return_pct"],
-                    "z_score": event["z_score"],
-                    "direction": event["direction"],
-                    "annualised_volatility_pct": event["annualised_volatility_pct"],
                     "observations": scored["observations"],
-                    "daily_sigma_pct": event["daily_sigma_pct"],
-                    "rank_in_period": event["rank_in_period"],
-                    "period_days": event["period_days"],
-                    "band": band_for(event["z_score"]),
-                    "times_normal": round(abs(event["z_score"]), 1),
-                })
+                    "annualised_volatility_pct": scored["annualised_volatility_pct"],
+                }
+            )
+            scored_days_total += scored["scored_days"]
+            for event in scored["events"]:
+                events.append(
+                    {
+                        "ticker": ticker,
+                        "name": h.get("name"),
+                        "date": event["date"],
+                        "return_pct": event["return_pct"],
+                        "z_score": event["z_score"],
+                        "direction": event["direction"],
+                        "annualised_volatility_pct": event["annualised_volatility_pct"],
+                        "observations": scored["observations"],
+                        "daily_sigma_pct": event["daily_sigma_pct"],
+                        "rank_in_period": event["rank_in_period"],
+                        "period_days": event["period_days"],
+                        "band": band_for(event["z_score"]),
+                        "times_normal": round(abs(event["z_score"]), 1),
+                    }
+                )
 
         events.sort(key=lambda e: abs(e["z_score"]), reverse=True)
         returned = events[:MAX_EVENTS]
@@ -1457,7 +1520,9 @@ class PortfolioService:
             return {"available": False, "reason": "no_price_history", "ticker": ticker}
 
         since = event_date - timedelta(days=BENCHMARK_LOOKBACK_DAYS)
-        benchmark = benchmark_levels(holding["region"], since, quote_currency(ticker, holding["region"]) or "ZAR")
+        benchmark = benchmark_levels(
+            holding["region"], since, quote_currency(ticker, holding["region"]) or "ZAR"
+        )
         if benchmark is None:
             return {
                 "available": False,
@@ -1494,11 +1559,14 @@ class PortfolioService:
             "portfolio_impact": self._portfolio_impact(
                 holding, priced, portfolio_ids, previous_day, move_pct
             ),
-            "tracks_benchmark": bool(study.get("r_squared") is not None
-                                     and study["r_squared"] >= TRACKING_R_SQUARED),
+            "tracks_benchmark": bool(
+                study.get("r_squared") is not None and study["r_squared"] >= TRACKING_R_SQUARED
+            ),
             "move_type": classify_move(
                 decomposition["market_component_pct"], decomposition["company_component_pct"]
-            ) if decomposition else "unknown",
+            )
+            if decomposition
+            else "unknown",
             "possible_explanations": self._possible_explanations(
                 ticker, holding.get("name") or "", event_date
             ),
@@ -1518,8 +1586,11 @@ class PortfolioService:
 
         run, covered = scan
         day = event_date.isoformat()
-        others = [t for t, (first, last) in covered.items()
-                  if t != ticker.upper() and first <= day <= last]
+        others = [
+            t
+            for t, (first, last) in covered.items()
+            if t != ticker.upper() and first <= day <= last
+        ]
         if len(others) < MIN_SAME_DAY_SCANNED:
             return None
 
@@ -1556,7 +1627,8 @@ class PortfolioService:
             }
 
         snapshots = [
-            row for row in self.portfolio_repo.get_snapshot_history(portfolio_ids)
+            row
+            for row in self.portfolio_repo.get_snapshot_history(portfolio_ids)
             if row["snapshot_date"] <= previous_day
         ]
         if value is not None and snapshots and snapshots[-1]["total_value"] > 0:
@@ -1622,7 +1694,10 @@ class PortfolioService:
                 for link in a.tickers
                 if link.ticker == key
             ],
-            ticker, name, event_date, index,
+            ticker,
+            name,
+            event_date,
+            index,
         )
 
         return [
@@ -1648,7 +1723,8 @@ class PortfolioService:
                     "ingest_mode": row["article"]["ingest_mode"],
                     "collected_at": (
                         row["article"]["fetched_at"].isoformat() + "Z"
-                        if row["article"]["fetched_at"] else None
+                        if row["article"]["fetched_at"]
+                        else None
                     ),
                 },
             }

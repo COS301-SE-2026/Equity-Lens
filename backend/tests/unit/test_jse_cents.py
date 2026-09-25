@@ -25,7 +25,7 @@ def _history(closes: list[float]) -> pd.DataFrame:
 def fake_history(monkeypatch):
     series: dict[str, pd.DataFrame] = {}
 
-    def fake_get_cached_price_history(symbol, period="1y"):
+    def fake_get_cached_price_history(symbol, period="1y"): # noqa: ARG001
         return series.get(symbol, pd.DataFrame())
 
     def fake_get_latest_close(symbol, db=None):

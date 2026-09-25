@@ -1,7 +1,9 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
+
 import { zar, zarFull } from '../../../utils/currency';
+
 import DashboardHero from './DashboardHero';
 
 const NBSP = String.fromCharCode(160);
@@ -158,21 +160,21 @@ describe('DashboardHero', () => {
     expect(screen.queryByText(/\+R\s*0/)).not.toBeInTheDocument();
   });
 
-  it("no longer shows the old Portfolio Summary strip", () => {
+  it('no longer shows the old Portfolio Summary strip', () => {
     renderHero();
     expect(screen.queryByText('Portfolio Summary')).not.toBeInTheDocument();
   });
 
   describe('warm summary sentence', () => {
-  /**
-   * @param {number} daily_change_value
-   * @param {number} daily_change_pct
-   * @param {Partial<typeof DATA.returns>} [returnsOverrides]
-   */
-  const withDaily = (daily_change_value, daily_change_pct, returnsOverrides = {}) => ({
-    holdings: DATA.holdings,
-    summary: { total_value: 77000, daily_change_pct, daily_change_value },
-    returns: { ...DATA.returns, ...returnsOverrides },
+    /**
+     * @param {number} daily_change_value
+     * @param {number} daily_change_pct
+     * @param {Partial<typeof DATA.returns>} [returnsOverrides]
+     */
+    const withDaily = (daily_change_value, daily_change_pct, returnsOverrides = {}) => ({
+      holdings: DATA.holdings,
+      summary: { total_value: 77000, daily_change_pct, daily_change_value },
+      returns: { ...DATA.returns, ...returnsOverrides },
     });
 
     it('reads as a strong-day sentence on a big gain', () => {
@@ -217,10 +219,15 @@ describe('DashboardHero', () => {
 
     it('shows no summary sentence when there are no holdings', () => {
       renderHero({
-        portfolioData: { holdings: [], summary: { total_value: 0, daily_change_pct: 0, daily_change_value: 0 } },
+        portfolioData: {
+          holdings: [],
+          summary: { total_value: 0, daily_change_pct: 0, daily_change_value: 0 },
+        },
         health: { score: null, label: null },
       });
-      expect(screen.queryByText(/quiet day|steady gain|strong day|rough day|small dip/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/quiet day|steady gain|strong day|rough day|small dip/i),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -272,7 +279,10 @@ describe('DashboardHero', () => {
 
   it('prompts import when no holdings, instead of four zeroed-out figures', () => {
     renderHero({
-      portfolioData: { holdings: [], summary: { total_value: 0, daily_change_pct: 0, daily_change_value: 0 } },
+      portfolioData: {
+        holdings: [],
+        summary: { total_value: 0, daily_change_pct: 0, daily_change_value: 0 },
+      },
       health: { score: null, label: null },
     });
     expect(screen.getByText(/import a portfolio to see your figures/i)).toBeInTheDocument();

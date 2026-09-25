@@ -38,7 +38,8 @@ const CardMascotTrigger = ({
     /** @param {MouseEvent} e */
     const handleClick = (e) => {
       if (wrapperRef.current && !wrapperRef.current.contains(/** @type {Node} */ (e.target)))
-        setOpen(false);};
+        setOpen(false);
+    };
     /** @param {KeyboardEvent} e */
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') setOpen(false);
@@ -69,7 +70,8 @@ const CardMascotTrigger = ({
     if (!isRevealed || shouldReduceMotion) {
       setIsIdle(false);
       clearTimeout(dwellTimeoutRef.current);
-      return undefined;}
+      return undefined;
+    }
     dwellTimeoutRef.current = setTimeout(() => {
       setIdleVariant((v) => (v === 0 ? 1 : 0));
       setIsIdle(true);
@@ -171,7 +173,8 @@ const CardMascotTrigger = ({
             style={{
               background: 'var(--surface-raised)',
               border: '1px solid var(--border-subtle)',
-            }}>
+            }}
+          >
             {questions.map((question) => (
               <button
                 key={question}
@@ -179,12 +182,16 @@ const CardMascotTrigger = ({
                 role="menuitem"
                 onClick={() => ask(question)}
                 className="block w-full rounded-lg px-2.5 py-1.5 text-left text-[12px] leading-snug transition-colors hover:bg-[var(--surface-hover)]"
-                style={{ color: 'var(--text-secondary)' }}>
+                style={{ color: 'var(--text-secondary)' }}
+              >
                 {question}
               </button>
             ))}
-          </motion.div>)}
+          </motion.div>
+        )}
       </AnimatePresence>
-    </div>);};
+    </div>
+  );
+};
 
 export default CardMascotTrigger;

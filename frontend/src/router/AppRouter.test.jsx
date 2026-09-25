@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+
 import { ROUTES } from '../utils/constants';
 
 const mockUseAuth = vi.fn();
@@ -23,14 +24,23 @@ vi.mock('../pages/Analytics/Analytics', () => ({ default: () => <div>Analytics P
 vi.mock('../pages/NotFound/NotFound', () => ({ default: () => <div>NotFound Page</div> }));
 vi.mock('../pages/Help/Help', () => ({ default: () => <div>Help Page</div> }));
 
-vi.mock('../components/common/Sidebar/Sidebar', () => ({ default: () => <div data-testid="sidebar">Sidebar</div> }));
-vi.mock('../components/common/Topbar/Topbar', () => ({ default: () => <div data-testid="topbar">Topbar</div> }));
+vi.mock('../components/common/Sidebar/Sidebar', () => ({
+  default: () => <div data-testid="sidebar">Sidebar</div>,
+}));
+vi.mock('../components/common/Topbar/Topbar', () => ({
+  default: () => <div data-testid="topbar">Topbar</div>,
+}));
 vi.mock('../components/common/LoadingSpinner/LoadingSpinner', () => ({
   default: () => <div data-testid="loading-spinner">Loading...</div>,
 }));
 
 vi.mock('../services/api', () => ({
-  default: { get: vi.fn().mockResolvedValue({ data: [] }), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  default: {
+    get: vi.fn().mockResolvedValue({ data: [] }),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
 }));
 
 import { AppRoutes } from './AppRouter';

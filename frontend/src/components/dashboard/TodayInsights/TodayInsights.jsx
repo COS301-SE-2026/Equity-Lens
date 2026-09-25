@@ -48,8 +48,13 @@ const InsightCard = ({ insight, isOpen, onToggle, onScrollTo, onAsk }) => {
   const colorRgb = TONE_RGB[key] ?? DEFAULT_RGB;
   const evidence = insight.evidence ?? [];
   // buildInsights hands over a list; a record built by hand may still carry the single action
-  const actions = (insight.actions ?? (insight.action ? [insight.action] : [])).slice(0, MAX_ACTIONS);
-  const questions = actions.filter((/** @type {any} */ action) => action.question && !action.target);
+  const actions = (insight.actions ?? (insight.action ? [insight.action] : [])).slice(
+    0,
+    MAX_ACTIONS,
+  );
+  const questions = actions.filter(
+    (/** @type {any} */ action) => action.question && !action.target,
+  );
 
   return (
     <div
@@ -78,7 +83,10 @@ const InsightCard = ({ insight, isOpen, onToggle, onScrollTo, onAsk }) => {
           trailing={
             <ChevronDown
               size={9}
-              style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }}
+              style={{
+                transform: isOpen ? 'rotate(180deg)' : 'none',
+                transition: 'transform 0.2s ease',
+              }}
             />
           }
         >
@@ -88,14 +96,24 @@ const InsightCard = ({ insight, isOpen, onToggle, onScrollTo, onAsk }) => {
         {actions.map((/** @type {any} */ action) => {
           if (action.target) {
             return (
-              <SecondaryButton key={action.label} size="sm" className="!px-1.5 !py-0.5 !text-[11px]" onClick={() => onScrollTo?.(action.target)}>
+              <SecondaryButton
+                key={action.label}
+                size="sm"
+                className="!px-1.5 !py-0.5 !text-[11px]"
+                onClick={() => onScrollTo?.(action.target)}
+              >
                 {action.label}
               </SecondaryButton>
             );
           }
           if (action.question) return null;
           return (
-            <SecondaryButton key={action.label} size="sm" to={action.to} className="!px-1.5 !py-0.5 !text-[11px]">
+            <SecondaryButton
+              key={action.label}
+              size="sm"
+              to={action.to}
+              className="!px-1.5 !py-0.5 !text-[11px]"
+            >
               {action.label}
             </SecondaryButton>
           );
@@ -106,7 +124,12 @@ const InsightCard = ({ insight, isOpen, onToggle, onScrollTo, onAsk }) => {
         {questions.length > 0 && (
           <div className="mt-1.5 flex flex-wrap gap-1">
             {questions.map((/** @type {any} */ action) => (
-              <SecondaryButton key={action.label} size="sm" className="!px-1.5 !py-0.5 !text-[11px]" onClick={() => onAsk?.(action.question)}>
+              <SecondaryButton
+                key={action.label}
+                size="sm"
+                className="!px-1.5 !py-0.5 !text-[11px]"
+                onClick={() => onAsk?.(action.question)}
+              >
                 {action.label}
               </SecondaryButton>
             ))}
@@ -151,7 +174,10 @@ const TodayInsights = ({ insights, more = [], onScrollTo, onAsk }) => {
     return (
       <GlassPanel className="flex h-[440px] flex-col">
         <PanelHead label="Portfolio Insights" />
-        <div className="flex flex-1 items-center justify-center p-5 text-center text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+        <div
+          className="flex flex-1 items-center justify-center p-5 text-center text-[13px]"
+          style={{ color: 'var(--text-secondary)' }}
+        >
           Nothing notable moved today.
         </div>
       </GlassPanel>
@@ -177,7 +203,8 @@ const TodayInsights = ({ insights, more = [], onScrollTo, onAsk }) => {
         ref={/** @type {React.RefObject<HTMLDivElement>} */ (scroller.ref)}
         onScroll={scroller.onScroll}
         className={`${SCROLL_LIST_FLEX_CLASS} space-y-2 p-3`}
-        style={SCROLL_LIST_STYLE}>
+        style={SCROLL_LIST_STYLE}
+      >
         {visible.map((insight) => (
           <InsightCard
             key={insight.text}

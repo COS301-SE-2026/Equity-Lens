@@ -1,5 +1,6 @@
-import axios from 'axios';
 import { fetchAuthSession, signOut } from 'aws-amplify/auth';
+import axios from 'axios';
+
 import { API_BASE_URL } from '../utils/constants';
 
 const api = axios.create({
@@ -11,16 +12,17 @@ api.interceptors.request.use(
     try {
       const session = await fetchAuthSession();
       const token = session.tokens?.accessToken?.toString();
-      
+
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
-    } catch (err) {
+    } catch {
       //Fails naturally so this can be empty
+     
     }
     return config;
   },
-  (err) => Promise.reject(err)
+  (err) => Promise.reject(err),
 );
 
 api.interceptors.response.use(
@@ -40,7 +42,7 @@ api.interceptors.response.use(
       window.location.href = '/login';
     }
     return Promise.reject(err);
-  }
+  },
 );
 
 export default api;

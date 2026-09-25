@@ -1,14 +1,15 @@
-import { describe, it, expect} from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+
 import PasswordInput from './PasswordInput';
 
 describe('PasswordInput', () => {
   it('renders as password type by default', () => {
-  render(<PasswordInput label="Password" value="" onChange={() => {}} />);
-  const input = document.querySelector('input[type="password"]');
-  expect(input).not.toBeNull();
-  expect(input.type).toBe('password');
-});
+    render(<PasswordInput label="Password" value="" onChange={() => {}} />);
+    const input = document.querySelector('input[type="password"]');
+    expect(input).not.toBeNull();
+    expect(input.type).toBe('password');
+  });
 
   it('toggles password visibility when eye icon is clicked', () => {
     render(<PasswordInput value="" onChange={() => {}} />);

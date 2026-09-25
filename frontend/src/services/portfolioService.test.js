@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import api from './api';
+
 import {
   getPortfolio,
   getPortfolioSummary,
@@ -12,14 +14,13 @@ vi.mock('./api', () => ({
   },
 }));
 
-import api from './api';
+
 
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
 describe('portfolioService', () => {
-
   describe('getPortfolio', () => {
     it('calls the correct endpoint', async () => {
       api.get.mockResolvedValueOnce({ data: { holdings: [] } });

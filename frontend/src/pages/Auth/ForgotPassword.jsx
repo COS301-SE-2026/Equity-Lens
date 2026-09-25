@@ -31,24 +31,24 @@ const ForgotPassword = () => {
     setStatus({ type: null, message: '' });
     try {
       await requestPasswordReset(formValues.email);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message.toLowerCase() : '';
-        if (msg.includes('limitexceeded') || msg.includes('too many')) {
-          setStatus({
-            type: 'error',
-            message: 'Too many attempts. Please wait a while before trying again.',
-          });
-          return;
-        }
-        if (msg.includes('not confirmed') || msg.includes('unconfirmed')) {
-          setStatus({
-            type: 'error',
-            message:
-              'This account has not verified its email yet - check your inbox for a verification code, or register again.',
-          });
-          return;
-        }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message.toLowerCase() : '';
+      if (msg.includes('limitexceeded') || msg.includes('too many')) {
+        setStatus({
+          type: 'error',
+          message: 'Too many attempts. Please wait a while before trying again.',
+        });
+        return;
       }
+      if (msg.includes('not confirmed') || msg.includes('unconfirmed')) {
+        setStatus({
+          type: 'error',
+          message:
+            'This account has not verified its email yet - check your inbox for a verification code, or register again.',
+        });
+        return;
+      }
+    }
     setStatus({
       type: 'success',
       message: `If an account exists for ${formValues.email}, a reset code has been sent. Redirecting...`,

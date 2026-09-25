@@ -11,22 +11,41 @@ import {
   CartesianGrid,
 } from 'recharts';
 
+import { getHoldingSeries } from '../../../services/portfolioService';
+import { zar } from '../../../utils/currency';
+import {
+  buildChartStats,
+  filterByRange,
+  buildExplanation,
+  buildingHistoryLabel,
+  buildPerformanceQuestions,
+  BENCHMARK_METHOD,
+  benchmarkCompositionLines,
+  shortBenchmarkLabel,
+} from '../../../utils/dashboardInsights';
+import { headlineFor, longDate, rowLabel } from '../../../utils/eventNarrative';
+import {
+  buildGroupSeries,
+  rebaseBenchmarkToSlice,
+  rebaseForRange,
+} from '../../../utils/portfolioStats';
+import CardMascotTrigger from '../../chat/CardMascotTrigger/CardMascotTrigger';
+import CardErrorBoundary from '../../common/ErrorBoundary/CardErrorBoundary';
+import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
+import Money from '../../common/Money/Money';
+import ContributionsChart from '../ContributionsChart/ContributionsChart';
 import AnimatedReveal from '../shared/AnimatedReveal';
 import CollapseToggle from '../shared/CollapseToggle';
 import { GlassPanel } from '../shared/GlassPanel';
-import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
-import Money from '../../common/Money/Money';
 import MoneyAxisTick from '../shared/MoneyAxisTick';
-import CardErrorBoundary from '../../common/ErrorBoundary/CardErrorBoundary';
-import { zar } from '../../../utils/currency';
-import { buildChartStats, filterByRange, buildExplanation, buildingHistoryLabel, buildPerformanceQuestions,
-  BENCHMARK_METHOD, benchmarkCompositionLines, shortBenchmarkLabel,
-} from '../../../utils/dashboardInsights';
-import { buildGroupSeries, rebaseBenchmarkToSlice, rebaseForRange } from '../../../utils/portfolioStats';
-import { headlineFor, longDate, rowLabel } from '../../../utils/eventNarrative';
-import { getHoldingSeries } from '../../../services/portfolioService';
-import ContributionsChart from '../ContributionsChart/ContributionsChart';
-import CardMascotTrigger from '../../chat/CardMascotTrigger/CardMascotTrigger';
+import EventPopover from '../WhyDidItMove/WhyDidItMove';
+
+import { loadGroups, resolveGroups, saveGroups } from './GroupBuilder';
+import HistorySettingsModal, {
+  historyCutoff,
+  loadHistoryPref,
+  saveHistoryPref,
+} from './HistorySettingsModal';
 import HoldingSelector, {
   GROUP_DASH,
   MAX_HOLDINGS,
@@ -34,13 +53,6 @@ import HoldingSelector, {
   colourFor,
   groupColourFor,
 } from './HoldingSelector';
-import { loadGroups, resolveGroups, saveGroups } from './GroupBuilder';
-import HistorySettingsModal, {
-  historyCutoff,
-  loadHistoryPref,
-  saveHistoryPref,
-} from './HistorySettingsModal';
-import EventPopover from '../WhyDidItMove/WhyDidItMove';
 
 /** @typedef {'1D'|'1W'|'1M'|'3M'|'1Y'|'ALL'} RangeKey */
 /** @type {RangeKey[]} */
@@ -50,17 +62,16 @@ const DOT_RADIUS = 5;
 const CHART_PAD = 20;
 const POPOVER_GAP = 12;
 const GROUP_METHOD_HELP =
-  'A group line is a fixed-weight index. Each member\'s weight is what it was worth on the '
-  + 'first day of the range - its quantity times its close that day - and those weights are then '
-  + 'held for the whole range. Three things follow. You bought and sold over the period, so the '
-  + 'quantities you actually held changed from day to day and a holding bought halfway through '
-  + 'contributed nothing before you bought it. Your portfolio line is a time-weighted return, '
-  + 'which chain-links across deposits and withdrawals so they do not read as growth, while a '
-  + 'group line is a price index. And a day where any member has no price is left out of the '
-  + 'group line entirely. A group of every holding will therefore track the portfolio line '
-  + 'closely without sitting on it, and the gap between them is the effect of your buying and '
-  + 'selling over the period.';
-
+  "A group line is a fixed-weight index. Each member's weight is what it was worth on the " +
+  'first day of the range - its quantity times its close that day - and those weights are then ' +
+  'held for the whole range. Three things follow. You bought and sold over the period, so the ' +
+  'quantities you actually held changed from day to day and a holding bought halfway through ' +
+  'contributed nothing before you bought it. Your portfolio line is a time-weighted return, ' +
+  'which chain-links across deposits and withdrawals so they do not read as growth, while a ' +
+  'group line is a price index. And a day where any member has no price is left out of the ' +
+  'group line entirely. A group of every holding will therefore track the portfolio line ' +
+  'closely without sitting on it, and the gap between them is the effect of your buying and ' +
+  'selling over the period.';
 
 /** @param {{ diff: string, diffPct: number, benchAvailable: boolean }} stats
  *  @param {string} benchmarkLabel */
@@ -81,7 +92,8 @@ export const PerfTooltip = ({ active, payload, label, benchmarkLabel }) => {
   return (
     <div
       className="rounded-lg px-3 py-2 font-mono text-[12px]"
-      style={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--border-mid)' }}>
+      style={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--border-mid)' }}
+    >
       <div className="mb-1 text-[11px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
         {rowLabel(label ?? '')}
       </div>
@@ -103,7 +115,8 @@ export const PerfTooltip = ({ active, payload, label, benchmarkLabel }) => {
         );
       })}
     </div>
-  );};
+  );
+};
 
 /**
  * @param {{ active?: boolean, payload?: any[], label?: string, benchmarkLabel: string }} props
@@ -113,7 +126,8 @@ export const IndexTooltip = ({ active, payload, label, benchmarkLabel }) => {
   return (
     <div
       className="rounded-lg px-3 py-2 font-mono text-[12px]"
-      style={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--border-mid)' }}>
+      style={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--border-mid)' }}
+    >
       <div className="mb-1 text-[11px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
         {rowLabel(label ?? '')}
       </div>
@@ -140,11 +154,20 @@ export const IndexTooltip = ({ active, payload, label, benchmarkLabel }) => {
         );
       })}
     </div>
-  );};
+  );
+};
 
 /** @param {{ x?: number, y?: number, payload?: { value: number } }} props */
 export const IndexAxisTick = ({ x, y, payload }) => (
-  <text x={x} y={y} dy={3} textAnchor="end" fontSize={11} fontFamily="monospace" fill="var(--chart-axis-text)">
+  <text
+    x={x}
+    y={y}
+    dy={3}
+    textAnchor="end"
+    fontSize={11}
+    fontFamily="monospace"
+    fill="var(--chart-axis-text)"
+  >
     {payload ? `${(payload.value - 100 >= 0 ? '+' : '') + (payload.value - 100).toFixed(0)}%` : ''}
   </text>
 );
@@ -163,24 +186,32 @@ const Stat = ({ label, value, tone, help, loading }) => {
   let valueDisplay;
   if (loading) {
     valueDisplay = (
-      <div className="mt-1.5 h-[18px] w-14 animate-pulse rounded" style={{ background: 'var(--border-subtle)' }} />
+      <div
+        className="mt-1.5 h-[18px] w-14 animate-pulse rounded"
+        style={{ background: 'var(--border-subtle)' }}
+      />
     );
   } else {
     valueDisplay = (
       <div className="mt-1 font-mono text-[15px] font-semibold" style={{ color }}>
         {value}
       </div>
-    );}
+    );
+  }
 
   return (
     <div>
-      <div className="flex items-center gap-1 font-mono text-[11px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+      <div
+        className="flex items-center gap-1 font-mono text-[11px] tracking-widest"
+        style={{ color: 'var(--text-ghost)' }}
+      >
         {label}
         {help && <HelpTooltip text={help} />}
       </div>
       {valueDisplay}
     </div>
-  );};
+  );
+};
 
 /**
  * @param {{ rows: any[], ticker: string, colour: string, label?: string }} props
@@ -199,7 +230,13 @@ export const endMarker = ({ rows, ticker, colour, label }) => {
       fill={colour}
       stroke="none"
       isFront
-      label={{ value: label ?? ticker, position: 'right', fontSize: 11, fontFamily: 'monospace', fill: colour }}
+      label={{
+        value: label ?? ticker,
+        position: 'right',
+        fontSize: 11,
+        fontFamily: 'monospace',
+        fill: colour,
+      }}
     />
   );
 };
@@ -229,9 +266,7 @@ export function eventDots({ rows, events }) {
       const y = yOn(event.date);
       if (y === null) return null;
 
-      const fill = event.direction === 'down'
-        ? 'var(--signal-negative)'
-        : 'var(--signal-positive)';
+      const fill = event.direction === 'down' ? 'var(--signal-negative)' : 'var(--signal-positive)';
 
       return {
         key: `${event.ticker}:${event.date}`,
@@ -245,8 +280,10 @@ export function eventDots({ rows, events }) {
     .filter(Boolean);
 
   return holdingDots
-    .sort((/** @type {any} */ a, /** @type {any} */ b) =>
-      Math.abs(b.event.z_score ?? 0) - Math.abs(a.event.z_score ?? 0))
+    .sort(
+      (/** @type {any} */ a, /** @type {any} */ b) =>
+        Math.abs(b.event.z_score ?? 0) - Math.abs(a.event.z_score ?? 0),
+    )
     .slice(0, MAX_DOTS);
 }
 
@@ -284,10 +321,12 @@ const RangeButton = ({ range, active, onClick }) => {
       type="button"
       onClick={onClick}
       className="rounded-md px-2.5 py-1 font-mono text-[11px] font-medium transition-colors"
-      style={{ background, color }}>
+      style={{ background, color }}
+    >
       {range}
     </button>
-  );};
+  );
+};
 
 /**
  * @param {{
@@ -311,7 +350,9 @@ const AnchoredPopover = ({ at, containerRef, children }) => {
     const observer = new ResizeObserver(() => {
       const width = card.offsetWidth;
       const height = card.offsetHeight;
-      setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
+      setSize((prev) =>
+        prev.width === width && prev.height === height ? prev : { width, height },
+      );
     });
     observer.observe(card);
     return () => observer.disconnect();
@@ -338,10 +379,13 @@ const AnchoredPopover = ({ at, containerRef, children }) => {
     Math.max(dotY - size.height / 2, CHART_PAD),
     Math.max(CHART_PAD, boxHeight - CHART_PAD - size.height),
   );
-  const connector = side === 'centre' ? null : {
-    left: side === 'right' ? dotX : left + size.width,
-    width: side === 'right' ? left - dotX : dotX - (left + size.width),
-  };
+  const connector =
+    side === 'centre'
+      ? null
+      : {
+          left: side === 'right' ? dotX : left + size.width,
+          width: side === 'right' ? left - dotX : dotX - (left + size.width),
+        };
 
   return (
     <>
@@ -355,7 +399,8 @@ const AnchoredPopover = ({ at, containerRef, children }) => {
             width: connector.width,
             height: 1,
             background: 'var(--border-mid)',
-          }} />
+          }}
+        />
       )}
       <div
         ref={cardRef}
@@ -382,11 +427,21 @@ const AnchoredPopover = ({ at, containerRef, children }) => {
  * }} props
  */
 const PerfChart = ({
-  rows, indexed, drawn, selected, benchmarkLabel, events = null, onSelectEvent, groups = [],
+  rows,
+  indexed,
+  drawn,
+  selected,
+  benchmarkLabel,
+  events = null,
+  onSelectEvent,
+  groups = [],
 }) => {
   if (rows.length === 0) {
     return (
-      <div className="flex h-full items-center justify-center text-[13px]" style={{ color: 'var(--text-ghost)' }}>
+      <div
+        className="flex h-full items-center justify-center text-[13px]"
+        style={{ color: 'var(--text-ghost)' }}
+      >
         Performance history will appear once portfolio has sufficient data.
       </div>
     );
@@ -416,12 +471,22 @@ const PerfChart = ({
         />
         <Tooltip
           content={
-            indexed
-              ? <IndexTooltip benchmarkLabel={benchmarkLabel} />
-              : <PerfTooltip benchmarkLabel={benchmarkLabel} />
+            indexed ? (
+              <IndexTooltip benchmarkLabel={benchmarkLabel} />
+            ) : (
+              <PerfTooltip benchmarkLabel={benchmarkLabel} />
+            )
           }
         />
-        <Line type="monotone" dataKey="benchmark" stroke="var(--text-secondary)" strokeWidth={1.5} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} />
+        <Line
+          type="monotone"
+          dataKey="benchmark"
+          stroke="var(--text-secondary)"
+          strokeWidth={1.5}
+          strokeDasharray="5 5"
+          dot={false}
+          activeDot={{ r: 4 }}
+        />
         <Line
           type="monotone"
           dataKey="value"
@@ -429,20 +494,28 @@ const PerfChart = ({
           strokeWidth={indexed ? 1.5 : 2}
           strokeOpacity={indexed ? 0.45 : 1}
           dot={false}
-          activeDot={{ r: 5, fill: 'var(--accent-primary)', stroke: 'var(--surface-card)', strokeWidth: 2 }} />
-        {indexed && drawn.map((ticker) => (
-          <Line
-            key={ticker}
-            type="monotone"
-            dataKey={ticker}
-            stroke={colourFor(selected, ticker)}
-            strokeWidth={2.5}
-            dot={false}
-            connectNulls
-            activeDot={{ r: 5 }} />
-        ))}
-        {indexed && drawn.map((ticker) =>
-          endMarker({ rows, ticker, colour: colourFor(selected, ticker) }))}
+          activeDot={{
+            r: 5,
+            fill: 'var(--accent-primary)',
+            stroke: 'var(--surface-card)',
+            strokeWidth: 2,
+          }}
+        />
+        {indexed &&
+          drawn.map((ticker) => (
+            <Line
+              key={ticker}
+              type="monotone"
+              dataKey={ticker}
+              stroke={colourFor(selected, ticker)}
+              strokeWidth={2.5}
+              dot={false}
+              connectNulls
+              activeDot={{ r: 5 }}
+            />
+          ))}
+        {indexed &&
+          drawn.map((ticker) => endMarker({ rows, ticker, colour: colourFor(selected, ticker) }))}
         {/* dashed, on a pattern the benchmark does not use - the token palette has no sixth
             hue left, so a group is told apart by its stroke and its end label */}
         {groups.map((group) => (
@@ -455,48 +528,54 @@ const PerfChart = ({
             strokeDasharray={GROUP_DASH}
             dot={false}
             connectNulls
-            activeDot={{ r: 5 }} />
+            activeDot={{ r: 5 }}
+          />
         ))}
         {groups.map((group) =>
-          endMarker({ rows, ticker: group.id, colour: groupColourFor(groups, group.id),
-            label: group.name }))}
+          endMarker({
+            rows,
+            ticker: group.id,
+            colour: groupColourFor(groups, group.id),
+            label: group.name,
+          }),
+        )}
         {dots.map((dot) => {
           const { key, event, y, fill, stroke, strokeWidth } = dot;
           const open = (/** @type {{ cx: number, cy: number }} */ at) =>
             onSelectEvent?.({ ...dot, at });
           const top = headlineFor(event);
           return (
-          <ReferenceDot
-            key={key}
-            x={event.date}
-            y={y}
-            r={DOT_RADIUS}
-            fill={fill}
-            stroke={stroke}
-            strokeWidth={strokeWidth}
-            isFront
-            shape={(/** @type {any} */ props) => (
-              <circle
-                cx={props.cx}
-                cy={props.cy}
-                r={DOT_RADIUS}
-                fill={fill}
-                stroke={stroke}
-                strokeWidth={strokeWidth}
-                role="button"
-                tabIndex={0}
-                aria-label={top ? `${top.headline}, ${top.move} on ${top.date}` : event.ticker}
-                style={{ cursor: 'pointer' }}
-                onClick={() => open({ cx: props.cx, cy: props.cy })}
-                onKeyDown={(/** @type {any} */ e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    open({ cx: props.cx, cy: props.cy });
-                  }
-                }}
-              />
-            )}
-          />
+            <ReferenceDot
+              key={key}
+              x={event.date}
+              y={y}
+              r={DOT_RADIUS}
+              fill={fill}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              isFront
+              shape={(/** @type {any} */ props) => (
+                <circle
+                  cx={props.cx}
+                  cy={props.cy}
+                  r={DOT_RADIUS}
+                  fill={fill}
+                  stroke={stroke}
+                  strokeWidth={strokeWidth}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={top ? `${top.headline}, ${top.move} on ${top.date}` : event.ticker}
+                  style={{ cursor: 'pointer' }}
+                  onClick={() => open({ cx: props.cx, cy: props.cy })}
+                  onKeyDown={(/** @type {any} */ e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      open({ cx: props.cx, cy: props.cy });
+                    }
+                  }}
+                />
+              )}
+            />
           );
         })}
       </LineChart>
@@ -556,25 +635,30 @@ const PerformanceVsBenchmark = ({
   const lastStepAtRef = useRef(0);
   const STEP_COOLDOWN_MS = 250;
   /** @param {WheelEvent} event */
-  const handleWheelZoom = useCallback((/** @type {WheelEvent} */ event) => {
-  if (event.target instanceof Element && event.target.closest('[data-event-popover]')) return;
-  if (!event.ctrlKey && !event.metaKey) return;
-  const idx = RANGES.indexOf(range);
-  const scrollingToShorter = event.deltaY > 0;
-  const atFloor = idx === 0 && scrollingToShorter;
-  const atCeiling = idx === RANGES.length - 1 && !scrollingToShorter;
-  if (atFloor || atCeiling) return;
-  event.preventDefault();
-  const now = Date.now();
-  if (now - lastStepAtRef.current < STEP_COOLDOWN_MS) return;
-  lastStepAtRef.current = now;
-  setRange(RANGES[scrollingToShorter ? idx - 1 : idx + 1]);}, [range]);
+  const handleWheelZoom = useCallback(
+    (/** @type {WheelEvent} */ event) => {
+      if (event.target instanceof Element && event.target.closest('[data-event-popover]')) return;
+      if (!event.ctrlKey && !event.metaKey) return;
+      const idx = RANGES.indexOf(range);
+      const scrollingToShorter = event.deltaY > 0;
+      const atFloor = idx === 0 && scrollingToShorter;
+      const atCeiling = idx === RANGES.length - 1 && !scrollingToShorter;
+      if (atFloor || atCeiling) return;
+      event.preventDefault();
+      const now = Date.now();
+      if (now - lastStepAtRef.current < STEP_COOLDOWN_MS) return;
+      lastStepAtRef.current = now;
+      setRange(RANGES[scrollingToShorter ? idx - 1 : idx + 1]);
+    },
+    [range],
+  );
 
   useEffect(() => {
     const node = chartContainerRef.current;
     if (!node) return undefined;
     node.addEventListener('wheel', handleWheelZoom, { passive: false });
-    return () => node.removeEventListener('wheel', handleWheelZoom);}, [handleWheelZoom]);
+    return () => node.removeEventListener('wheel', handleWheelZoom);
+  }, [handleWheelZoom]);
 
   const seriesPeriod = useMemo(() => {
     if (historyDays > 700) return '5y';
@@ -612,7 +696,9 @@ const PerformanceVsBenchmark = ({
         console.warn('holding series fetch failed:', err);
         if (!cancelled) setHoldingSeries([]);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [wantedKey, seriesPeriod]);
 
   const cutoff = historyCutoff(historyPref, importedAt);
@@ -656,7 +742,8 @@ const PerformanceVsBenchmark = ({
   const undrawnNames = [
     ...rebased.undrawn,
     ...resolvedGroups.flatMap((g) =>
-      (groupLines.undrawn[g.id] ?? []).map((t) => `${t} (${g.name})`)),
+      (groupLines.undrawn[g.id] ?? []).map((t) => `${t} (${g.name})`),
+    ),
   ];
 
   const toggleHolding = useCallback((/** @type {string} */ ticker) => {
@@ -667,10 +754,12 @@ const PerformanceVsBenchmark = ({
   }, []);
 
   const { series: visibleContributionSeries } = useMemo(() => {
-    return filterByRange(contributionSeries, range);}, [contributionSeries, range]);
+    return filterByRange(contributionSeries, range);
+  }, [contributionSeries, range]);
 
   const stats = useMemo(() => {
-    return buildChartStats(visibleSeries, { historyDays });}, [visibleSeries, historyDays]);
+    return buildChartStats(visibleSeries, { historyDays });
+  }, [visibleSeries, historyDays]);
 
   const { explanation } = useMemo(() => {
     return buildExplanation({ stats, attribution });
@@ -679,7 +768,8 @@ const PerformanceVsBenchmark = ({
   /** @type {'good'|'bad'|'neutral'} */
   let portTone;
   if (!stats.portAvailable) {
-    portTone = 'neutral'; } else if (stats.portReturn.startsWith('-')) {
+    portTone = 'neutral';
+  } else if (stats.portReturn.startsWith('-')) {
     portTone = 'bad';
   } else {
     portTone = 'good';
@@ -692,7 +782,6 @@ const PerformanceVsBenchmark = ({
   } else {
     diffTone = 'good';
   }
-
 
   const selectEvent = (/** @type {any} */ dot) => {
     setOpenEvent(dot);
@@ -712,13 +801,13 @@ const PerformanceVsBenchmark = ({
         {historyPref.source === 'imported' ? (
           <>
             You are plotting only what we recorded ourselves
-            {importedAt ? `, which starts on ${longDate(importedAt)}` : ''}. Turn the
-            reconstruction back on in the history settings to see further back.
+            {importedAt ? `, which starts on ${longDate(importedAt)}` : ''}. Turn the reconstruction
+            back on in the history settings to see further back.
           </>
         ) : (
           <>
-            We are still rebuilding your history from your transactions and the closing prices
-            we hold for them. It fills in as more of your holdings can be priced further back.
+            We are still rebuilding your history from your transactions and the closing prices we
+            hold for them. It fills in as more of your holdings can be priced further back.
           </>
         )}
       </p>
@@ -732,11 +821,13 @@ const PerformanceVsBenchmark = ({
       selected={selected}
       benchmarkLabel={benchmarkLabel}
       events={events}
-      onSelectEvent={selectEvent} />
+      onSelectEvent={selectEvent}
+    />
   );
 
-  const benchmarkHelp = [...benchmarkCompositionLines(benchmarkComposition), BENCHMARK_METHOD]
-    .join('\n');
+  const benchmarkHelp = [...benchmarkCompositionLines(benchmarkComposition), BENCHMARK_METHOD].join(
+    '\n',
+  );
 
   const groupWeightCaption = drawnGroups.some((g) => groupLines.weightBasis[g.id] === 'current')
     ? 'Groups are weighted by what each holding is worth today, held constant across the range.'
@@ -745,175 +836,238 @@ const PerformanceVsBenchmark = ({
   const note = markerNote({ events, loading: eventsLoading, failed: eventsFailed });
   const hasDots = eventDots({ rows: indexed ? chartRows : visibleSeries, events }).length > 0;
   const showsReconstructed =
-    historyPref.source === 'reconstructed'
-    && Boolean(importedAt)
-    && visibleSeries.some((point) => point.date < /** @type {string} */ (importedAt));
+    historyPref.source === 'reconstructed' &&
+    Boolean(importedAt) &&
+    visibleSeries.some((point) => point.date < /** @type {string} */ (importedAt));
 
   return (
-      <div className="group relative">
-        {open && (
+    <div className="group relative">
+      {open && (
         <CardMascotTrigger
-        questions={buildPerformanceQuestions({ diffPct: stats.diffPct, benchAvailable: stats.benchAvailable, benchmarkLabel })}
-        label="Ask AI about performance vs benchmark"
-        className="-right-6 top-16"/>
-        )}
+          questions={buildPerformanceQuestions({
+            diffPct: stats.diffPct,
+            benchAvailable: stats.benchAvailable,
+            benchmarkLabel,
+          })}
+          label="Ask AI about performance vs benchmark"
+          className="-right-6 top-16"
+        />
+      )}
       <GlassPanel className="flex flex-col">
-      <div
-        className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
-        style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <div className="font-mono text-[11px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
-          Performance vs Benchmark
-        </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex flex-wrap items-center gap-5 font-mono text-[11px]">
-            <LegendKey color="var(--accent-primary)" label="Portfolio" variant="line" />
-            <span className="flex items-center gap-1">
-              <LegendKey
-                color="var(--text-secondary)"
-                label={shortBenchmarkLabel(benchmarkComposition, benchmarkLabel)}
-                variant="dashed" />
-              <HelpTooltip text={benchmarkHelp} />
-            </span>
-            {hasDots && (
-              <>
-                <LegendKey color="var(--signal-negative)" label="Unusual fall" variant="dot" />
-                <LegendKey color="var(--signal-positive)" label="Unusual rise" variant="dot" />
-              </>
-            )}
-          </div>
-          <span className="font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
-            Ctrl + scroll to zoom
-          </span>
-          <div className="flex items-center gap-0.5 rounded-md p-0.5" style={{ background: 'var(--surface-raised)' }}>
-            {RANGES.map((r) => {
-              return <RangeButton key={r} range={r} active={range === r} onClick={() => setRange(r)} />;
-            })}
-          </div>
-          <button
-            type="button"
-            onClick={() => setSettingsOpen(true)}
-            aria-label="Performance history settings"
-            className="pressable flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--surface-hover)]"
-            style={{ background: 'var(--surface-raised)', border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}>
-            <Settings size={14} />
-          </button>
-          <CollapseToggle
-            open={open}
-            onToggle={() => setOpen((wasOpen) => !wasOpen)}
-            controls={bodyId}
-            label="performance vs benchmark"/>
-        </div>
-      </div>
-
-      <div id={bodyId}>
-      <AnimatedReveal show={open}>
-
-      <div className="flex items-start gap-4 px-5 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <div className="min-w-0 flex-1">
-          <HoldingSelector
-            holdings={holdings}
-            selected={selected}
-            onToggle={toggleHolding}
-            groups={groups}
-            onGroupsChange={(next) => { setGroups(next); saveGroups(next); }}
-            drawnGroups={drawnGroups}
-          />
-        </div>
-
-        <div className="ml-auto flex shrink-0 flex-col items-end gap-1">
-        <AnimatedReveal show={selected.length > 0}>
-          <button
-            type="button"
-            onClick={() => setSelected([])}
-            className="pressable rounded-md px-2 py-1 font-mono text-[11px]"
+        <div
+          className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
+          style={{ borderBottom: '1px solid var(--border-subtle)' }}
+        >
+          <div
+            className="font-mono text-[11px] tracking-widest"
             style={{ color: 'var(--text-ghost)' }}
           >
-            Clear
-          </button>
-        </AnimatedReveal>
-       
-        <AnimatedReveal show={indexed}>
-          <div className="flex items-center gap-1 font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
-            Indexed to 100 at {rebased.baseDate}
-            <HelpTooltip text="Every line starts level at the beginning of the selected range, so what you are comparing is the shape of the move rather than the size of the position. The portfolio line is its time-weighted index, so a deposit does not read as a gain." />
+            Performance vs Benchmark
           </div>
-        </AnimatedReveal>
-        <AnimatedReveal show={indexed && undrawnNames.length > 0}>
-          <span className="font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
-            No cached price history for {undrawnNames.join(', ')}
-          </span>
-        </AnimatedReveal>
-        <AnimatedReveal show={droppedTickers.length > 0}>
-          <span className="font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
-            {droppedTickers.join(', ')} not drawn - {MAX_SERIES_TICKERS} series at a time
-          </span>
-        </AnimatedReveal>
-        <AnimatedReveal show={drawnGroups.length > 0}>
-          <div className="flex items-center gap-1 font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
-            {groupWeightCaption}
-            <HelpTooltip text={GROUP_METHOD_HELP} />
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex flex-wrap items-center gap-5 font-mono text-[11px]">
+              <LegendKey color="var(--accent-primary)" label="Portfolio" variant="line" />
+              <span className="flex items-center gap-1">
+                <LegendKey
+                  color="var(--text-secondary)"
+                  label={shortBenchmarkLabel(benchmarkComposition, benchmarkLabel)}
+                  variant="dashed"
+                />
+                <HelpTooltip text={benchmarkHelp} />
+              </span>
+              {hasDots && (
+                <>
+                  <LegendKey color="var(--signal-negative)" label="Unusual fall" variant="dot" />
+                  <LegendKey color="var(--signal-positive)" label="Unusual rise" variant="dot" />
+                </>
+              )}
+            </div>
+            <span className="font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
+              Ctrl + scroll to zoom
+            </span>
+            <div
+              className="flex items-center gap-0.5 rounded-md p-0.5"
+              style={{ background: 'var(--surface-raised)' }}
+            >
+              {RANGES.map((r) => {
+                return (
+                  <RangeButton key={r} range={r} active={range === r} onClick={() => setRange(r)} />
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              aria-label="Performance history settings"
+              className="pressable flex h-7 w-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--surface-hover)]"
+              style={{
+                background: 'var(--surface-raised)',
+                border: '1px solid var(--border-subtle)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <Settings size={14} />
+            </button>
+            <CollapseToggle
+              open={open}
+              onToggle={() => setOpen((wasOpen) => !wasOpen)}
+              controls={bodyId}
+              label="performance vs benchmark"
+            />
           </div>
-        </AnimatedReveal>
         </div>
-      </div>
 
-      <div className="grid grid-cols-3 gap-4 px-5 py-3" style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-        <Stat label="Portfolio return" value={stats.portAvailable ? stats.portReturn : buildingHistoryLabel(stats.historyDays)} tone={portTone} help="Time-weighted return - how the money grew while it was invested, with purchases and sales taken back out, so it can be fairly compared to an index."/>
-        <Stat label={`${benchmarkLabel} return`} value={stats.benchReturn} tone="neutral" loading={!stats.benchAvailable} />
-        <Stat
-          label="Vs benchmark"
-          value={stats.diff}
-          tone={diffTone}
-          loading={!stats.benchAvailable}
-          help={`How your portfolio's return compares to the ${benchmarkLabel} over the selected period.`}/>
-      </div>
+        <div id={bodyId}>
+          <AnimatedReveal show={open}>
+            <div
+              className="flex items-start gap-4 px-5 py-3"
+              style={{ borderBottom: '1px solid var(--border-subtle)' }}
+            >
+              <div className="min-w-0 flex-1">
+                <HoldingSelector
+                  holdings={holdings}
+                  selected={selected}
+                  onToggle={toggleHolding}
+                  groups={groups}
+                  onGroupsChange={(next) => {
+                    setGroups(next);
+                    saveGroups(next);
+                  }}
+                  drawnGroups={drawnGroups}
+                />
+              </div>
 
-      {takeaway(stats, benchmarkLabel) && (
-        <div className="px-5 pt-3">
-          <p className="text-[13px]" style={{ color: 'var(--text-primary)' }}>
-            {takeaway(stats, benchmarkLabel)}
-          </p>
-          {explanation && (
-            <p className="mt-1 text-[13px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
-              {explanation}
-            </p>)}
-        </div>)}
-      <div ref={chartContainerRef} className="relative h-[420px] p-5">
-        {chartArea}
-        {openEvent && (
-          <AnchoredPopover at={openEvent.at ?? { cx: 0, cy: 0 }} containerRef={chartContainerRef}>
-            <CardErrorBoundary label="Why did my money move?">
-              <EventPopover
-                event={openEvent.event}
-                detail={openKey ? eventDetails[openKey] : null}
-                pending={Boolean(openKey) && eventPendingKey === openKey}
-                scan={events}
-                onClose={() => setOpenEvent(null)}
-                onAsk={onAskAboutEvent}
+              <div className="ml-auto flex shrink-0 flex-col items-end gap-1">
+                <AnimatedReveal show={selected.length > 0}>
+                  <button
+                    type="button"
+                    onClick={() => setSelected([])}
+                    className="pressable rounded-md px-2 py-1 font-mono text-[11px]"
+                    style={{ color: 'var(--text-ghost)' }}
+                  >
+                    Clear
+                  </button>
+                </AnimatedReveal>
+
+                <AnimatedReveal show={indexed}>
+                  <div
+                    className="flex items-center gap-1 font-mono text-[11px]"
+                    style={{ color: 'var(--text-ghost)' }}
+                  >
+                    Indexed to 100 at {rebased.baseDate}
+                    <HelpTooltip text="Every line starts level at the beginning of the selected range, so what you are comparing is the shape of the move rather than the size of the position. The portfolio line is its time-weighted index, so a deposit does not read as a gain." />
+                  </div>
+                </AnimatedReveal>
+                <AnimatedReveal show={indexed && undrawnNames.length > 0}>
+                  <span className="font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
+                    No cached price history for {undrawnNames.join(', ')}
+                  </span>
+                </AnimatedReveal>
+                <AnimatedReveal show={droppedTickers.length > 0}>
+                  <span className="font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
+                    {droppedTickers.join(', ')} not drawn - {MAX_SERIES_TICKERS} series at a time
+                  </span>
+                </AnimatedReveal>
+                <AnimatedReveal show={drawnGroups.length > 0}>
+                  <div
+                    className="flex items-center gap-1 font-mono text-[11px]"
+                    style={{ color: 'var(--text-ghost)' }}
+                  >
+                    {groupWeightCaption}
+                    <HelpTooltip text={GROUP_METHOD_HELP} />
+                  </div>
+                </AnimatedReveal>
+              </div>
+            </div>
+
+            <div
+              className="grid grid-cols-3 gap-4 px-5 py-3"
+              style={{ borderBottom: '1px solid var(--border-subtle)' }}
+            >
+              <Stat
+                label="Portfolio return"
+                value={
+                  stats.portAvailable ? stats.portReturn : buildingHistoryLabel(stats.historyDays)
+                }
+                tone={portTone}
+                help="Time-weighted return - how the money grew while it was invested, with purchases and sales taken back out, so it can be fairly compared to an index."
               />
-            </CardErrorBoundary>
-          </AnchoredPopover>
-        )}
-      </div>
+              <Stat
+                label={`${benchmarkLabel} return`}
+                value={stats.benchReturn}
+                tone="neutral"
+                loading={!stats.benchAvailable}
+              />
+              <Stat
+                label="Vs benchmark"
+                value={stats.diff}
+                tone={diffTone}
+                loading={!stats.benchAvailable}
+                help={`How your portfolio's return compares to the ${benchmarkLabel} over the selected period.`}
+              />
+            </div>
 
-      {showsReconstructed && (
-        <div className="flex items-center gap-1 px-5 pb-1 font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
-          Values before {longDate(/** @type {string} */ (importedAt))} are reconstructed from your statement.
-          <HelpTooltip text="Before you uploaded, your value each day is worked out backwards from the transactions on your statement and the closing prices we have cached. It assumes the statement's transaction list is complete, carries the last known price across days it has no price for, cannot see a position you opened and closed before the statement period, and does not adjust for corporate actions." />
+            {takeaway(stats, benchmarkLabel) && (
+              <div className="px-5 pt-3">
+                <p className="text-[13px]" style={{ color: 'var(--text-primary)' }}>
+                  {takeaway(stats, benchmarkLabel)}
+                </p>
+                {explanation && (
+                  <p
+                    className="mt-1 text-[13px] leading-snug"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    {explanation}
+                  </p>
+                )}
+              </div>
+            )}
+            <div ref={chartContainerRef} className="relative h-[420px] p-5">
+              {chartArea}
+              {openEvent && (
+                <AnchoredPopover
+                  at={openEvent.at ?? { cx: 0, cy: 0 }}
+                  containerRef={chartContainerRef}
+                >
+                  <CardErrorBoundary label="Why did my money move?">
+                    <EventPopover
+                      event={openEvent.event}
+                      detail={openKey ? eventDetails[openKey] : null}
+                      pending={Boolean(openKey) && eventPendingKey === openKey}
+                      scan={events}
+                      onClose={() => setOpenEvent(null)}
+                      onAsk={onAskAboutEvent}
+                    />
+                  </CardErrorBoundary>
+                </AnchoredPopover>
+              )}
+            </div>
+
+            {showsReconstructed && (
+              <div
+                className="flex items-center gap-1 px-5 pb-1 font-mono text-[11px]"
+                style={{ color: 'var(--text-ghost)' }}
+              >
+                Values before {longDate(/** @type {string} */ (importedAt))} are reconstructed from
+                your statement.
+                <HelpTooltip text="Before you uploaded, your value each day is worked out backwards from the transactions on your statement and the closing prices we have cached. It assumes the statement's transaction list is complete, carries the last known price across days it has no price for, cannot see a position you opened and closed before the statement period, and does not adjust for corporate actions." />
+              </div>
+            )}
+
+            {note && (
+              <div
+                className="px-5 pb-3 font-mono text-[11px]"
+                style={{ color: 'var(--text-ghost)' }}
+              >
+                {note}
+              </div>
+            )}
+
+            <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
+              <ContributionsChart series={visibleContributionSeries} />
+            </div>
+          </AnimatedReveal>
         </div>
-      )}
-
-      {note && (
-        <div className="px-5 pb-3 font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
-          {note}
-        </div>
-      )}
-
-      <div style={{ borderTop: '1px solid var(--border-subtle)' }}>
-        <ContributionsChart series={visibleContributionSeries} />
-      </div>
-      </AnimatedReveal>
-      </div>
       </GlassPanel>
 
       <HistorySettingsModal
@@ -928,7 +1082,8 @@ const PerformanceVsBenchmark = ({
         historyQuality={historyQuality}
       />
     </div>
-  );};
+  );
+};
 
 /**
 
@@ -939,7 +1094,12 @@ const LegendKey = ({ color, label, variant = 'line' }) => {
   if (variant === 'dashed') {
     marker = <span className="w-4 border-t-2 border-dashed" style={{ borderColor: color }} />;
   } else if (variant === 'dot') {
-    marker = <span className="h-2 w-2 rounded-full" style={{ background: color, boxShadow: `0 0 6px ${color}` }} />;
+    marker = (
+      <span
+        className="h-2 w-2 rounded-full"
+        style={{ background: color, boxShadow: `0 0 6px ${color}` }}
+      />
+    );
   } else {
     marker = <span className="h-0 w-4 border-t-2" style={{ borderColor: color }} />;
   }
@@ -949,6 +1109,7 @@ const LegendKey = ({ color, label, variant = 'line' }) => {
       {marker}
       {label}
     </div>
-  );};
+  );
+};
 
 export default PerformanceVsBenchmark;

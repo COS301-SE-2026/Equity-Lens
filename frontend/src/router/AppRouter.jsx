@@ -1,22 +1,25 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { lazy, Suspense, useState } from 'react';
-import useAuth from '../hooks/useAuth';
-import { ChatProvider } from '../context/ChatContext';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
+import AuthLayout from '../components/auth/AuthLayout/AuthLayout';
 import ChatDock from '../components/chat/ChatDock/ChatDock';
 import CardErrorBoundary from '../components/common/ErrorBoundary/CardErrorBoundary';
 import LoadingSpinner from '../components/common/LoadingSpinner/LoadingSpinner';
 import Sidebar from '../components/common/Sidebar/Sidebar';
 import Topbar from '../components/common/Topbar/Topbar';
-import AuthLayout from '../components/auth/AuthLayout/AuthLayout';
+import { ChatProvider } from '../context/ChatContext';
+import useAuth from '../hooks/useAuth';
 import { ROUTES } from '../utils/constants';
 /** @param {() => Promise<any>} importer */
 export const lazyWithRetry = (importer) =>
   lazy(() =>
     importer().catch(async () => {
-      await new Promise((resolve) => { setTimeout(resolve, 400); });
+      await new Promise((resolve) => {
+        setTimeout(resolve, 400);
+      });
       return importer().catch(() => {
         window.location.reload();
-        return /** @type {Promise<any>} */ (new Promise(() => {}));   // never settles; the reload takes over
+        return /** @type {Promise<any>} */ (new Promise(() => {})); // never settles; the reload takes over
       });
     }),
   );
@@ -47,7 +50,11 @@ const AppLayout = ({ children }) => {
         <a
           href="#main-content"
           className="sr-only rounded-full px-4 py-2 focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50"
-          style={{ background: 'var(--surface-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-subtle)' }}
+          style={{
+            background: 'var(--surface-elevated)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border-subtle)',
+          }}
         >
           Skip to main content
         </a>
@@ -55,11 +62,13 @@ const AppLayout = ({ children }) => {
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main id="main-content" className="flex-1 overflow-auto p-4">
           <CardErrorBoundary key={pathname} label="This page">
-            <Suspense fallback={
-              <div className="flex items-center justify-center py-24">
-                <LoadingSpinner size="lg" />
-              </div>
-            }>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center py-24">
+                  <LoadingSpinner size="lg" />
+                </div>
+              }
+            >
               {children}
             </Suspense>
           </CardErrorBoundary>
@@ -71,15 +80,16 @@ const AppLayout = ({ children }) => {
 };
 
 /**
-* @param {{ children: React.ReactNode, publicFallback?: React.ReactNode }} props
+ * @param {{ children: React.ReactNode, publicFallback?: React.ReactNode }} props
  */
 const ProtectedRoute = ({ children, publicFallback }) => {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <LoadingSpinner size="lg" />
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
   if (isAuthenticated) return <AppLayout>{children}</AppLayout>;
   return publicFallback ?? <Navigate to={ROUTES.LOGIN} replace />;
 };
@@ -92,30 +102,121 @@ const PublicRoute = ({ children }) => {
 };
 
 export const AppRoutes = () => (
-  <Suspense fallback={
-    <div className="flex items-center justify-center min-h-screen">
-      <LoadingSpinner size="lg" />
-    </div>
-  }>
+  <Suspense
+    fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    }
+  >
     <Routes>
-      <Route path={ROUTES.LOGIN} element={<PublicRoute><AuthLayout><Login /></AuthLayout></PublicRoute>} />
-      <Route path={ROUTES.REGISTER} element={<PublicRoute><AuthLayout><Register /></AuthLayout></PublicRoute>} />
+      <Route
+        path={ROUTES.LOGIN}
+        element={
+          <PublicRoute>
+            <AuthLayout>
+              <Login />
+            </AuthLayout>
+          </PublicRoute>
+        }
+      />
+      <Route
+        path={ROUTES.REGISTER}
+        element={
+          <PublicRoute>
+            <AuthLayout>
+              <Register />
+            </AuthLayout>
+          </PublicRoute>
+        }
+      />
 
-      <Route path={ROUTES.DASHBOARD} element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path={ROUTES.PORTFOLIO} element={<ProtectedRoute><Portfolio /></ProtectedRoute>} />
-      <Route path={ROUTES.NEWS} element={<ProtectedRoute><News /></ProtectedRoute>} />
-      <Route path={ROUTES.AI_CHAT} element={<ProtectedRoute><AIChat /></ProtectedRoute>} />
-      <Route path={ROUTES.ANALYTICS} element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-      <Route path={ROUTES.CONFIRM_EMAIL} element={<PublicRoute><ConfirmEmail /></PublicRoute>} />
-      <Route path={ROUTES.FORGOT_PASSWORD} element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-      <Route path={ROUTES.RESET_PASSWORD} element={<PublicRoute><ResetPassword /></PublicRoute>} />
+      <Route
+        path={ROUTES.DASHBOARD}
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.PORTFOLIO}
+        element={
+          <ProtectedRoute>
+            <Portfolio />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.NEWS}
+        element={
+          <ProtectedRoute>
+            <News />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.AI_CHAT}
+        element={
+          <ProtectedRoute>
+            <AIChat />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.ANALYTICS}
+        element={
+          <ProtectedRoute>
+            <Analytics />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.CONFIRM_EMAIL}
+        element={
+          <PublicRoute>
+            <ConfirmEmail />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path={ROUTES.FORGOT_PASSWORD}
+        element={
+          <PublicRoute>
+            <ForgotPassword />
+          </PublicRoute>
+        }
+      />
+      <Route
+        path={ROUTES.RESET_PASSWORD}
+        element={
+          <PublicRoute>
+            <ResetPassword />
+          </PublicRoute>
+        }
+      />
       <Route
         path={ROUTES.HELP}
         element={
-          <ProtectedRoute publicFallback={<div className="min-h-screen bg-bg-primary p-6"><Help /></div>}>
+          <ProtectedRoute
+            publicFallback={
+              <div className="min-h-screen bg-bg-primary p-6">
+                <Help />
+              </div>
+            }
+          >
             <Help />
-          </ProtectedRoute>}/>
-      <Route path={ROUTES.SETTINGS} element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={ROUTES.SETTINGS}
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        }
+      />
 
       <Route path={ROUTES.HOME} element={<Landing />} />
       <Route path={ROUTES.BRAND_GUIDE} element={<BrandStyleGuide />} />

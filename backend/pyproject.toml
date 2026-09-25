@@ -12,11 +12,34 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["S101", "S105", "S106"]
+"tests/*" = ["S101", "S105", "S106", "PT019","N806", "N802", "N803"]
 "alembic/versions/*" = ["E501", "F401"]
+"app/services/ai_service.py" = ["E501"]
+"app/services/pdf_summary_service.py" = ["N802", "N803", "N806"]
+"app/routers/pdf_summary.py" = ["N802", "N803", "N806"]
+"app/routers/import_pdf.py" = ["N802", "N803", "N806"]
+"app/services/watchlist.py" = ["N802", "N803", "N806"]
+"app/services/import_pdf.py" = ["N802", "N803", "N806"]
+"app/indicators/altman_z_score.py" = ["N802", "N803", "N806"]
+"app/routers/watchlist.py" = ["N802", "N803", "N806"]
+"app/repositories/watchlist.py" = ["N802", "N803", "N806"]
+"app/repositories/import_pdf.py" = ["N802", "N803", "N806"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.Form",
+    "fastapi.File",
+    "fastapi.Security",
+]
 
 [tool.mypy]
 python_version = "3.11"
@@ -33,7 +56,7 @@ exclude = ["alembic/versions/", "venv/", ".venv/"]
 # disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
-module = ["boto3.*", "botocore.*", "yfinance.*"]
+module = ["boto3.*", "botocore.*", "yfinance.*", "sqlalchemy.*"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]

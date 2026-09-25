@@ -43,14 +43,16 @@ const GlassSelect = ({
   const openList = () => {
     if (disabled) return;
     setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
-    setOpen(true);};
+    setOpen(true);
+  };
 
   /** @param {number} index */
   const commit = (index) => {
     const option = options[index];
     setOpen(false);
     triggerRef.current?.focus();
-    if (option && option.value !== value) onChange(option.value);};
+    if (option && option.value !== value) onChange(option.value);
+  };
 
   useLayoutEffect(() => {
     if (!open) return undefined;
@@ -65,7 +67,8 @@ const GlassSelect = ({
     };
   }, [open]);
 
-  useEffect(() => { if (!open) return undefined;
+  useEffect(() => {
+    if (!open) return undefined;
 
     /** @param {MouseEvent} e */
     const handleClick = (e) => {
@@ -86,32 +89,30 @@ const GlassSelect = ({
         e.preventDefault();
         openList();
       }
-      return;}
+      return;
+    }
 
     if (e.key === 'Escape') {
       e.preventDefault();
       setOpen(false);
       triggerRef.current?.focus();
-    } 
-    else if (e.key === 'ArrowDown') {
+    } else if (e.key === 'ArrowDown') {
       e.preventDefault();
       setActiveIndex((i) => (i + 1) % options.length);
-    } 
-    else if (e.key === 'ArrowUp') {
+    } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setActiveIndex((i) => (i <= 0 ? options.length - 1 : i - 1));
-    } 
-    else if (e.key === 'Home') {
+    } else if (e.key === 'Home') {
       e.preventDefault();
       setActiveIndex(0);
-    } 
-    else if (e.key === 'End') {
+    } else if (e.key === 'End') {
       e.preventDefault();
       setActiveIndex(options.length - 1);
-    } 
-    else if (e.key === 'Enter' || e.key === ' ') {
+    } else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      commit(activeIndex);}};
+      commit(activeIndex);
+    }
+  };
 
   const listboxId = `${id}-listbox`;
 
@@ -133,7 +134,9 @@ const GlassSelect = ({
         style={{
           border: '1px solid var(--border-subtle)',
           color: 'var(--text-primary)',
-          background: 'var(--surface-hover)',}}>
+          background: 'var(--surface-hover)',
+        }}
+      >
         <span className="truncate">{selected ? selected.label : placeholder}</span>
         <ChevronDown
           size={12}
@@ -142,7 +145,9 @@ const GlassSelect = ({
             transform: open ? 'rotate(180deg)' : 'none',
             transition: 'transform 0.2s ease',
             color: 'var(--text-ghost)',
-          }}/></button>
+          }}
+        />
+      </button>
 
       {open &&
         anchor &&
@@ -157,8 +162,11 @@ const GlassSelect = ({
             style={{
               left: anchor.left,
               width: anchor.width,
-              ...(direction === 'up' ? { bottom: window.innerHeight - anchor.top + GAP }
-                : { top: anchor.bottom + GAP }),}}>
+              ...(direction === 'up'
+                ? { bottom: window.innerHeight - anchor.top + GAP }
+                : { top: anchor.bottom + GAP }),
+            }}
+          >
             {options.map((option, i) => (
               <li
                 key={option.value}
@@ -168,20 +176,27 @@ const GlassSelect = ({
                 onMouseEnter={() => setActiveIndex(i)}
                 onMouseDown={(e) => {
                   e.preventDefault();
-                  commit(i);}}
+                  commit(i);
+                }}
                 className="cursor-pointer px-3 py-1.5 font-mono text-[13px]"
                 style={{
                   color: 'var(--text-primary)',
                   background:
-                    i === activeIndex ? 'var(--surface-hover)'
-                      : option.value === value ? 'var(--accent-subtle)'
-                        : 'transparent',}}>
+                    i === activeIndex
+                      ? 'var(--surface-hover)'
+                      : option.value === value
+                        ? 'var(--accent-subtle)'
+                        : 'transparent',
+                }}
+              >
                 {option.label}
               </li>
             ))}
           </ul>,
-          document.body,)}
+          document.body,
+        )}
     </div>
-  );};
+  );
+};
 
 export default GlassSelect;

@@ -37,13 +37,18 @@ const Sidebar = ({ open, onClose }) => {
     /** @param {MouseEvent} e */
     const handleClick = (e) => {
       const target = /** @type {HTMLElement} */ (e.target);
-      if (drawerRef.current && !drawerRef.current.contains(target) && !target.closest('[data-nav-trigger]')) {
+      if (
+        drawerRef.current &&
+        !drawerRef.current.contains(target) &&
+        !target.closest('[data-nav-trigger]')
+      ) {
         onClose();
       }
     };
     /** @param {KeyboardEvent} e */
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();};
+      if (e.key === 'Escape') onClose();
+    };
 
     document.addEventListener('mousedown', handleClick);
     document.addEventListener('keydown', handleKeyDown);
@@ -66,7 +71,8 @@ const Sidebar = ({ open, onClose }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}/>
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          />
 
           <motion.nav
             ref={drawerRef}
@@ -83,14 +89,16 @@ const Sidebar = ({ open, onClose }) => {
             initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: '-100%' }}
             animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: '-100%' }}
-            transition={{ duration: 0.24, ease: [0.4, 0, 0.2, 1] }}>
+            transition={{ duration: 0.24, ease: [0.4, 0, 0.2, 1] }}
+          >
             {navItems.map(({ label, to, Icon }) => (
               <NavLink
                 key={to}
                 to={to}
                 onClick={onClose}
                 className={({ isActive }) =>
-                  `sidebar-nav-item pressable flex items-center gap-3 rounded-lg${isActive ? ' is-active' : ''}`}
+                  `sidebar-nav-item pressable flex items-center gap-3 rounded-lg${isActive ? ' is-active' : ''}`
+                }
                 style={({ isActive }) => ({
                   padding: '12px 14px',
                   minHeight: '48px',
@@ -99,7 +107,8 @@ const Sidebar = ({ open, onClose }) => {
                   textDecoration: 'none',
                   // accent rail marks the current page without reshaping the row into a pill
                   boxShadow: isActive ? 'inset 3px 0 0 var(--accent-primary)' : undefined,
-                })}>
+                })}
+              >
                 <Icon size={18} aria-hidden="true" />
                 {label}
               </NavLink>

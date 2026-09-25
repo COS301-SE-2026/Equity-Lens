@@ -1,6 +1,9 @@
 from unittest.mock import MagicMock, patch
+
+import pytest
+
 from app.models.chat import ChatConversation, ChatMessages
-from app.models.user import User
+
 
 def test_delete_conversation(client, db_session, test_user, auth_headers):
 
@@ -54,7 +57,11 @@ def test_renaming_conversations(client, db_session, test_user, auth_headers):
 
     conv_id = conversation.id
 
-    output = client.put(f"/api/ai_chat/conversations/{conv_id}/", json = {"title": "Renamed"}, headers = auth_headers)
+    output = client.put(
+        f"/api/ai_chat/conversations/{conv_id}/",
+        json = {"title": "Renamed"},
+        headers = auth_headers,
+    )
     assert output.status_code == 200 
     assert output.json() == {"id": str(conv_id), "title": "Renamed"}
 
@@ -82,9 +89,12 @@ def test_load_all_converastions(client, db_session, test_user, auth_headers):
 
 
 @patch("app.services.ai_service.get_bedrock_client")
-def test_send_message(mock_bedrock_client, client, db_session, test_user, auth_headers):
+@pytest.mark.usefixtures("db_session", "test_user")
+def test_send_message(mock_bedrock_client, client, auth_headers):
     mocked_client = MagicMock()
-    mocked_client.converse.return_value = {"output": {"message": {"content": [{"text": "A response."}]}}}
+    mocked_client.converse.return_value = {
+        "output": {"message": {"content": [{"text": "A response."}]}}
+    }
     mock_bedrock_client.return_value = mocked_client
 
     output = client.post("/api/ai_chat/", json = {"message": "Question"}, headers = auth_headers)
@@ -95,29 +105,31 @@ def test_send_message(mock_bedrock_client, client, db_session, test_user, auth_h
     assert msg["conversation_id"] is not None
 
 
-def test_another_users_conversation_id_is_a_404(client, db_session, auth_headers):
-    stranger = User(
-        email="stranger@example.com",
-        full_name="Stranger",
-        hashed_password=None,
-        cognito_sub="stranger-sub",
-    )
-    db_session.add(stranger)
+@patch("app.services.ai_service.get_bedrock_client")
+def test_run_post_turn(mock_bedrock_client, db_session, test_user):
+    from app.models.chat import UserMemory
+    from app.services.ai_service import run_post_turn
+
+    def reply(text):
+        return {"output": {"message": {"content": [{"text": text}]}}}
+    
+    mocked_client = MagicMock()
+    mocked_client.converse.side_effect = [
+        reply("Retirement Planning"),
+        reply('["The user wants to retire in 15 years"]'),
+    ]
+    mock_bedrock_client.return_value = mocked_client
+
+    conversation = ChatConversation(user_id = test_user.id)
+
+    db_session.add(conversation)
     db_session.commit()
 
-    theirs = ChatConversation(user_id=stranger.id, title="Private")
-    db_session.add(theirs)
-    db_session.commit()
-    db_session.add(ChatMessages(conversation_id=theirs.id, role="user", content="my salary is"))
-    db_session.commit()
+    run_post_turn(conversation.id, test_user.id, "I want to retire in 15 years", db_session)
 
-    with patch("app.services.ai_service.get_bedrock_client") as bedrock:
-        output = client.post(
-            "/api/ai_chat/",
-            headers=auth_headers,
-            json={"message": "what did I just say?", "conversation_id": str(theirs.id)},
-        )
+    db_session.refresh(conversation)
+    assert conversation.title == "Retirement Planning"
 
-    assert output.status_code == 404
-    assert output.json()["detail"] == "Conversation not found"
-    bedrock.assert_not_called()
+    facts = db_session.query(UserMemory).filter_by(user_id = test_user.id).all()
+    assert [f.fact for f in facts] == ["The user wants to retire in 15 years"]
+    

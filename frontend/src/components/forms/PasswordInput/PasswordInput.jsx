@@ -1,5 +1,6 @@
-import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
+import { useState } from 'react';
+
 import FormInput from '../FormInput/FormInput';
 /**
  *  @param {object} objects

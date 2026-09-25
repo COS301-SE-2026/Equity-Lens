@@ -1,10 +1,11 @@
 import pytest
+
 from app.services.health_score import (
     BUCKET_OTHER,
     CONFIG_FIELDS,
     DEFAULT_CONFIG,
-    PRESETS,
     PRESET_EQUITYLENS,
+    PRESETS,
     HealthConfig,
     _clamp10,
     _health_label,
@@ -17,24 +18,24 @@ from app.services.health_score import (
     config_to_dict,
     matching_preset_key,
     preset_config,
-    presets_payload
+    presets_payload,
 )
 from app.services.instruments import KIND_ETF, KIND_STOCK
 
 
-def _holding(ticker, sector, value, *, kind = KIND_STOCK, priced_live = True, region = "ZA"):
+def _holding(ticker, sector, value, *, kind=KIND_STOCK, priced_live=True, region="ZA"):
     return {
         "ticker": ticker,
         "sector": sector,
         "kind": kind,
         "region": region,
         "priced_live": priced_live,
-        "value": value
+        "value": value,
     }
 
 
 def _sub(result, key):
-  return next(s for s in result["subscores"] if s["key"] == key)
+    return next(s for s in result["subscores"] if s["key"] == key)
 
 
 def _book_with_top(top_pct):
@@ -46,13 +47,13 @@ SPREAD = [
     _holding("A", "Technology", 2500),
     _holding("B", "Financials", 2500),
     _holding("C", "Healthcare", 2500),
-    _holding("D", "Energy", 2500)
+    _holding("D", "Energy", 2500),
 ]
 
 CONCENTRATED = [
     _holding("NPN.JO", "Technology", 7000),
     _holding("SOL.JO", "Energy", 2000),
-    _holding("SBK.JO", "Financials", 1000)
+    _holding("SBK.JO", "Financials", 1000),
 ]
 
 
@@ -88,7 +89,10 @@ def test_score_is_the_weighted_sum_of_its_subscores():
 def test_every_subscore_carries_its_explanatory_copy():
     for sub in compute_health_score(SPREAD)["subscores"]:
         assert 0.0 <= sub["value"] <= 10.0
-        assert sub["label"] and sub["detail"] and sub["target"] and sub["improvement"]
+        assert sub["label"]
+        assert sub["detail"]
+        assert sub["target"]
+        assert sub["improvement"]
 
 
 def test_subscores_clamp_at_ten_for_a_very_broad_book():
@@ -122,10 +126,7 @@ def test_top_holding_without_a_ticker_falls_back_to_a_generic_name():
     assert sub["detail"].startswith("Your largest holding is")
 
 
-@pytest.mark.parametrize(
-    ("top_pct", "risk_word"),
-    [(20, "Low"), (30, "Moderate"), (60, "High")]
-)
+@pytest.mark.parametrize(("top_pct", "risk_word"), [(20, "Low"), (30, "Moderate"), (60, "High")])
 def test_concentration_risk_word_tracks_the_configured_thresholds(top_pct, risk_word):
     sub = _sub(compute_health_score(_book_with_top(top_pct)), "singleStockRisk")
     assert f"{risk_word} concentration." in sub["detail"]
@@ -171,9 +172,14 @@ def test_breadth_detail_reports_effective_positions_not_a_raw_count():
 
 @pytest.mark.parametrize(
     ("score", "expected"),
-    [(10.0, "Excellent"), (8.5, "Excellent"), (7.0, "Healthy"), (5.0, "Mixed"), (4.9, "Needs attention")]
+    [
+        (10.0, "Excellent"),
+        (8.5, "Excellent"),
+        (7.0, "Healthy"),
+        (5.0, "Mixed"),
+        (4.9, "Needs attention"),
+    ],
 )
-
 def test_health_label_thresholds(score, expected):
     assert _health_label(score) == expected
 
@@ -238,10 +244,9 @@ def test_config_from_dict_accepts_an_explicit_base():
         ({"concentration_low": 50, "concentration_high": 45}, "must be below"),
         ({"breadth_target_n": "eight"}, "must be a number"),
         ({"hhi_well_spread": float("inf")}, "must be a finite number"),
-        ({"breadth_target_n": 99}, "must be between")
-    ]
+        ({"breadth_target_n": 99}, "must be between"),
+    ],
 )
-
 def test_config_from_dict_rejects_bad_input(raw, message):
     with pytest.raises(ValueError, match=message):
         config_from_dict(raw)
@@ -265,7 +270,8 @@ def test_presets_payload_exposes_every_preset_with_its_config():
     payload = presets_payload()
     assert [p["key"] for p in payload] == list(PRESETS)
     for entry in payload:
-        assert entry["name"] and entry["description"]
+        assert entry["name"] 
+        assert entry["description"]
         assert set(entry["config"]) == set(CONFIG_FIELDS)
 
 
@@ -286,7 +292,7 @@ def test_health_config_is_frozen():
 @pytest.mark.xfail(
     strict=True,
     reason="compute_health_score raises when every holding is worth 0: _sector_weights "
-    "returns {} and _sector_concentration_subscore then calls max() on it"
+    "returns {} and _sector_concentration_subscore then calls max() on it",
 )
 def test_portfolio_where_every_holding_is_worthless():
     result = compute_health_score([_holding("A", "Technology", 0), _holding("B", "Energy", 0)])

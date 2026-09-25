@@ -30,7 +30,6 @@ export const getMarketContext = async () => {
   return response.data;
 };
 
-
 export const simulateSectorInvestment = async (sector) => {
   const response = await api.post('/portfolio/simulate-sector-investment', { sector });
   return response.data;

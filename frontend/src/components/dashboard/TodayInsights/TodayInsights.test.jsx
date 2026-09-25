@@ -4,8 +4,18 @@ import { describe, it, expect, vi } from 'vitest';
 import TodayInsights from './TodayInsights';
 
 const LEGACY = [
-  { type: 'gain', text: "NPN is today's biggest gainer, up 2.5% (+R 1 125).", why: '2.5% is within typical movement.', action: null },
-  { type: 'driver', text: "77% of today's gain came from NPN.", why: "Ranked by each holding's Rand contribution.", action: null },
+  {
+    type: 'gain',
+    text: "NPN is today's biggest gainer, up 2.5% (+R 1 125).",
+    why: '2.5% is within typical movement.',
+    action: null,
+  },
+  {
+    type: 'driver',
+    text: "77% of today's gain came from NPN.",
+    why: "Ranked by each holding's Rand contribution.",
+    action: null,
+  },
 ];
 
 const REGISTRY = [
@@ -85,7 +95,11 @@ describe('TodayInsights', () => {
       evidence: [{ label: 'Share of book', value: '58.0%' }],
       actions: [
         { label: 'View Holdings', target: 'holdings-table' },
-        { label: 'Ask AI Why', question: 'Why is that a risk?', to: '/ai?q=Why%20is%20that%20a%20risk%3F' },
+        {
+          label: 'Ask AI Why',
+          question: 'Why is that a risk?',
+          to: '/ai?q=Why%20is%20that%20a%20risk%3F',
+        },
       ],
     };
 
@@ -99,7 +113,7 @@ describe('TodayInsights', () => {
     expect(onAsk).toHaveBeenCalledWith('Why is that a risk?');
   });
 
-  it('keeps an insight\'s AI question hidden until Why? is expanded', () => {
+  it("keeps an insight's AI question hidden until Why? is expanded", () => {
     const insight = {
       id: 'conc.top-holding',
       severity: 'risk',

@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.user import User
+from app.repositories.portfolio_repository import PortfolioRepository
 from app.schemas.health_config import HealthConfigRequest
 from app.schemas.portfolio import (
     AccountTypeResponse,
@@ -38,7 +39,6 @@ from app.services.health_config_service import (
     save_health_config,
 )
 from app.services.portfolio_service import PortfolioService
-from app.repositories.portfolio_repository import PortfolioRepository
 
 router = APIRouter(prefix="/api/portfolio", tags=["Portfolio"])
 
@@ -57,56 +57,124 @@ def drop_non_finite(node, path: str = "dashboard"):
 
 
 DASHBOARD_EXAMPLE = {
-    "summary": {"total_value": 9420.0, "total_cost": 9000.0, "total_gain_loss": 420.0,
-                "total_gain_loss_pct": 4.67, "num_holdings": 1,
-                "daily_change_pct": 0.31, "daily_change_value": 29.1},
-    "holdings": [{"ticker": "SYG500.JO", "txn_key": "SYG500.JO", "name": "Satrix S&P 500",
-                  "sector": "Global Equity", "kind": "etf", "region": "us",
-                  "priced_live": True, "price_source": "live", "quantity": 100.0,
-                  "avg_cost": 90.0, "total_cost": 9000.0, "current_price": 94.2,
-                  "value": 9420.0, "gain_loss": 420.0, "gain_loss_pct": 4.67,
-                  "daily_change_pct": 0.31, "first_purchase_date": "2026-08-06",
-                  "quote_currency": "ZAR", "fx_rate": None,
-                  "daily_change_is_local": False}],
+    "summary": {
+        "total_value": 9420.0,
+        "total_cost": 9000.0,
+        "total_gain_loss": 420.0,
+        "total_gain_loss_pct": 4.67,
+        "num_holdings": 1,
+        "daily_change_pct": 0.31,
+        "daily_change_value": 29.1,
+    },
+    "holdings": [
+        {
+            "ticker": "SYG500.JO",
+            "txn_key": "SYG500.JO",
+            "name": "Satrix S&P 500",
+            "sector": "Global Equity",
+            "kind": "etf",
+            "region": "us",
+            "priced_live": True,
+            "price_source": "live",
+            "quantity": 100.0,
+            "avg_cost": 90.0,
+            "total_cost": 9000.0,
+            "current_price": 94.2,
+            "value": 9420.0,
+            "gain_loss": 420.0,
+            "gain_loss_pct": 4.67,
+            "daily_change_pct": 0.31,
+            "first_purchase_date": "2026-08-06",
+            "quote_currency": "ZAR",
+            "fx_rate": None,
+            "daily_change_is_local": False,
+        }
+    ],
     "sectorAllocation": [{"sector": "Global Equity", "value": 9420.0, "percentage": 100.0}],
     "thresholds": {"concentration_low": 25, "concentration_high": 45},
-    "performanceHistory": [{"date": "2026-08-05", "name": "Aug 05", "value": 9020.0,
-                            "benchmark": 9020.0, "twr_index": 100.0}],
-    "historyQuality": {"first_day": "2026-02-04", "priced_value_pct": 94.2,
-                       "unpriced_tickers": ["XYZ.JO"], "ledger_conflicts": 0,
-                       "suspect_dates": []},
+    "performanceHistory": [
+        {
+            "date": "2026-08-05",
+            "name": "Aug 05",
+            "value": 9020.0,
+            "benchmark": 9020.0,
+            "twr_index": 100.0,
+        }
+    ],
+    "historyQuality": {
+        "first_day": "2026-02-04",
+        "priced_value_pct": 94.2,
+        "unpriced_tickers": ["XYZ.JO"],
+        "ledger_conflicts": 0,
+        "suspect_dates": [],
+    },
     "benchmarkLabel": "Satrix 40 (JSE Top 40 proxy) 72% + S&P 500 (SPY ETF proxy) 28%",
     "benchmarkComposition": [
         {"region": "za", "label": "Satrix 40 (JSE Top 40 proxy)", "weight": 72.4},
         {"region": "us", "label": "S&P 500 (SPY ETF proxy)", "weight": 27.6},
     ],
-    "returns": {"portfolio_value": 9420.0, "invested_capital": 9000.0,
-                "net_contributions": 10000.0, "unrealised_gain": 420.0,
-                "realised_gain": 0.0, "total_costs": 0.0, "simple_return_pct": 4.67,
-                "money_weighted_return_pct": 12.4, "time_weighted_return_pct": None,
-                "snapshot_count": 22, "history_days": 30, "holdings_count": 1,
-                "priced_live_count": 1, "priced_count": 1},
-    "health": {"score": 0.3, "label": "Needs attention",
-               "subscores": [{"key": "breadth", "label": "Breadth", "weight": 0.3,
-                              "value": 0.1, "detail": "1 position",
-                              "target": "8+ positions",
-                              "improvement": "Add more positions"}]},
-    "contributionsSeries": [{"date": "2026-08-05", "name": "Aug 05",
-                             "portfolio_value": 9020.0,
-                             "cumulative_net_contributions": 10000.0,
-                             "cumulative_market_gain": -980.0}],
+    "returns": {
+        "portfolio_value": 9420.0,
+        "invested_capital": 9000.0,
+        "net_contributions": 10000.0,
+        "unrealised_gain": 420.0,
+        "realised_gain": 0.0,
+        "total_costs": 0.0,
+        "simple_return_pct": 4.67,
+        "money_weighted_return_pct": 12.4,
+        "time_weighted_return_pct": None,
+        "snapshot_count": 22,
+        "history_days": 30,
+        "holdings_count": 1,
+        "priced_live_count": 1,
+        "priced_count": 1,
+    },
+    "health": {
+        "score": 0.3,
+        "label": "Needs attention",
+        "subscores": [
+            {
+                "key": "breadth",
+                "label": "Breadth",
+                "weight": 0.3,
+                "value": 0.1,
+                "detail": "1 position",
+                "target": "8+ positions",
+                "improvement": "Add more positions",
+            }
+        ],
+    },
+    "contributionsSeries": [
+        {
+            "date": "2026-08-05",
+            "name": "Aug 05",
+            "portfolio_value": 9020.0,
+            "cumulative_net_contributions": 10000.0,
+            "cumulative_market_gain": -980.0,
+        }
+    ],
     "accountType": "tfsa",
     "statementDate": "2026-09-02",
     "importedAt": "2026-07-31",
     "historyStartsAt": "2026-02-04",
-    "cgt": {"available": False, "reason": "TFSA growth is not taxed",
-            "assumptions": {"tax_year": "2026/27", "annual_exclusion": 40000.0,
-                            "inclusion_rate": 0.4, "cost_basis_method": "average"},
-            "net_unrealised_gain": None, "taxable_capital_gain": None,
-            "assessed_capital_loss": None, "holdings_from_statement_only": []},
+    "cgt": {
+        "available": False,
+        "reason": "TFSA growth is not taxed",
+        "assumptions": {
+            "tax_year": "2026/27",
+            "annual_exclusion": 40000.0,
+            "inclusion_rate": 0.4,
+            "cost_basis_method": "average",
+        },
+        "net_unrealised_gain": None,
+        "taxable_capital_gain": None,
+        "assessed_capital_loss": None,
+        "holdings_from_statement_only": [],
+    },
 }
 
 UNAVAILABLE_EXAMPLE = {"available": False, "reason": "No holdings imported yet"}
+
 
 @router.get(
     "",
@@ -174,9 +242,7 @@ def get_current_information(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    portfolios = PortfolioRepository(db).get_current_portfolios(
-        current_user.id
-    )
+    portfolios = PortfolioRepository(db).get_current_portfolios(current_user.id)
 
     return [
         {
@@ -191,6 +257,7 @@ def get_current_information(
         for portfolio in portfolios
     ]
 
+
 @router.get(
     "/returns",
     summary="Get the three return measures",
@@ -204,6 +271,7 @@ def get_returns(
 ):
     return PortfolioService(db).get_returns(current_user.id)
 
+
 @router.get(
     "/health-score",
     summary="Get the portfolio health score",
@@ -216,6 +284,7 @@ def get_health_score(
     current_user: User = Depends(get_current_user),
 ):
     return PortfolioService(db).get_health(current_user.id)
+
 
 @router.get(
     "/health-config",
@@ -255,7 +324,9 @@ def put_health_config(
     response is always the full config payload, so there is no need to re-fetch.
     """
     try:
-        return save_health_config(db, current_user.id, preset_key=body.preset_key, config=body.config)
+        return save_health_config(
+            db, current_user.id, preset_key=body.preset_key, config=body.config
+        )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -324,15 +395,32 @@ def set_account_type(
     response_model=TaxAnalysisResponse,
     responses=two_states(
         "Unrealised position-level tax detail",
-        {"available": True, "reason": None,
-         "assumptions": {"tax_year": "2026/27", "annual_exclusion": 40000.0,
-                         "inclusion_rate": 0.4, "cost_basis_method": "average"},
-         "net_unrealised_gain": 420.0, "taxable_capital_gain": 0.0,
-         "assessed_capital_loss": None, "holdings_from_statement_only": [],
-         "holdings": [{"ticker": "SYG500.JO", "name": "Satrix S&P 500",
-                       "unrealised_gain_loss": 420.0, "unrealised_gain_loss_pct": 4.67}],
-         "potential_realised_loss": 0.0, "note": "Estimate only"},
-        UNAVAILABLE_EXAMPLE),
+        {
+            "available": True,
+            "reason": None,
+            "assumptions": {
+                "tax_year": "2026/27",
+                "annual_exclusion": 40000.0,
+                "inclusion_rate": 0.4,
+                "cost_basis_method": "average",
+            },
+            "net_unrealised_gain": 420.0,
+            "taxable_capital_gain": 0.0,
+            "assessed_capital_loss": None,
+            "holdings_from_statement_only": [],
+            "holdings": [
+                {
+                    "ticker": "SYG500.JO",
+                    "name": "Satrix S&P 500",
+                    "unrealised_gain_loss": 420.0,
+                    "unrealised_gain_loss_pct": 4.67,
+                }
+            ],
+            "potential_realised_loss": 0.0,
+            "note": "Estimate only",
+        },
+        UNAVAILABLE_EXAMPLE,
+    ),
 )
 def get_tax_analysis(
     db: Session = Depends(get_db),
@@ -348,11 +436,19 @@ def get_tax_analysis(
     response_model=TfsaRoomResponse,
     responses=two_states(
         "Annual and lifetime TFSA contribution room",
-        {"available": True, "tax_year_label": "2026/27", "annual_limit": 46000.0,
-         "annual_contributed": 10000.0, "annual_remaining": 36000.0,
-         "lifetime_limit": 500000.0, "lifetime_contributed": 10000.0,
-         "lifetime_remaining": 490000.0, "note": "Counted from imported statements only"},
-        {"available": False, "reason": "This portfolio is not a TFSA"}),
+        {
+            "available": True,
+            "tax_year_label": "2026/27",
+            "annual_limit": 46000.0,
+            "annual_contributed": 10000.0,
+            "annual_remaining": 36000.0,
+            "lifetime_limit": 500000.0,
+            "lifetime_contributed": 10000.0,
+            "lifetime_remaining": 490000.0,
+            "note": "Counted from imported statements only",
+        },
+        {"available": False, "reason": "This portfolio is not a TFSA"},
+    ),
 )
 def get_tfsa_room(
     db: Session = Depends(get_db),
@@ -368,12 +464,22 @@ def get_tfsa_room(
     response_model=MarketContextResponse,
     responses=two_states(
         "How each sector you hold moved today",
-        {"available": True, "label": "Illustrative market context",
-         "sectors": [{"sector": "Global Equity", "weight_pct": 100.0,
-                      "priced_weight_pct": 100.0, "daily_change_pct": 0.31,
-                      "tickers": ["SYG500.JO"],
-                      "summary": "Your Global Equity holdings (SYG500.JO) are up 0.3% today."}]},
-        {"available": False, "sectors": []}),
+        {
+            "available": True,
+            "label": "Illustrative market context",
+            "sectors": [
+                {
+                    "sector": "Global Equity",
+                    "weight_pct": 100.0,
+                    "priced_weight_pct": 100.0,
+                    "daily_change_pct": 0.31,
+                    "tickers": ["SYG500.JO"],
+                    "summary": "Your Global Equity holdings (SYG500.JO) are up 0.3% today.",
+                }
+            ],
+        },
+        {"available": False, "sectors": []},
+    ),
 )
 def get_market_context(
     db: Session = Depends(get_db),
@@ -403,18 +509,31 @@ def get_concentration(
     response_model=SectorInvestmentResponse,
     responses=two_states(
         "What adding to one sector would do to the health score",
-        {"available": True, "sector": "Technology", "illustrative_amount": 8374.8,
-         "current_weight_pct": 62.0, "projected_weight_pct": 63.8,
-         "health_score_before": 4.8, "health_score_after": 4.6,
-         "subscore_deltas": [
-             {"key": "sectorConcentration", "label": "Sector Concentration",
-              "before": 6.8, "after": 6.5, "weight": 0.4}],
-         "is_smallest_sector": False,
-         "explanation": "Technology is already 62.0% of your book, past the 45% your yardstick "
-                        "flags as concentrated.",
-         "thresholds": {"concentration_low": 25.0, "concentration_high": 45.0},
-         "disclaimer": "Illustrative only, not advice"},
-        UNAVAILABLE_EXAMPLE),
+        {
+            "available": True,
+            "sector": "Technology",
+            "illustrative_amount": 8374.8,
+            "current_weight_pct": 62.0,
+            "projected_weight_pct": 63.8,
+            "health_score_before": 4.8,
+            "health_score_after": 4.6,
+            "subscore_deltas": [
+                {
+                    "key": "sectorConcentration",
+                    "label": "Sector Concentration",
+                    "before": 6.8,
+                    "after": 6.5,
+                    "weight": 0.4,
+                }
+            ],
+            "is_smallest_sector": False,
+            "explanation": "Technology is already 62.0% of your book, past the 45% your yardstick "
+            "flags as concentrated.",
+            "thresholds": {"concentration_low": 25.0, "concentration_high": 45.0},
+            "disclaimer": "Illustrative only, not advice",
+        },
+        UNAVAILABLE_EXAMPLE,
+    ),
 )
 def simulate_sector_investment(
     body: SectorInvestmentRequest,
@@ -431,18 +550,34 @@ def simulate_sector_investment(
     response_model=SectorRebalanceResponse,
     responses=two_states(
         "What an even sector split would do to the health score",
-        {"available": True, "from_sector": "Technology", "to_sector": "Healthcare",
-         "value_shifted": 12500.0, "from_sector_before_pct": 58.0,
-         "to_sector_before_pct": 6.0, "health_score_before": 4.5,
-         "health_score_after": 6.8,
-         "subscore_deltas": [
-             {"key": "sectorConcentration", "label": "Sector Concentration",
-              "before": 4.1, "after": 7.4, "weight": 0.4}],
-         "explanation": "Technology is your most concentrated sector",
-         "thresholds": {"concentration_low": 25.0, "concentration_high": 45.0},
-         "disclaimer": "Illustrative only, not advice"},
-        {"available": False, "reason": "no_sector_overconcentrated",
-         "thresholds": {"concentration_low": 25.0, "concentration_high": 45.0}}),
+        {
+            "available": True,
+            "from_sector": "Technology",
+            "to_sector": "Healthcare",
+            "value_shifted": 12500.0,
+            "from_sector_before_pct": 58.0,
+            "to_sector_before_pct": 6.0,
+            "health_score_before": 4.5,
+            "health_score_after": 6.8,
+            "subscore_deltas": [
+                {
+                    "key": "sectorConcentration",
+                    "label": "Sector Concentration",
+                    "before": 4.1,
+                    "after": 7.4,
+                    "weight": 0.4,
+                }
+            ],
+            "explanation": "Technology is your most concentrated sector",
+            "thresholds": {"concentration_low": 25.0, "concentration_high": 45.0},
+            "disclaimer": "Illustrative only, not advice",
+        },
+        {
+            "available": False,
+            "reason": "no_sector_overconcentrated",
+            "thresholds": {"concentration_low": 25.0, "concentration_high": 45.0},
+        },
+    ),
 )
 def simulate_sector_rebalance(
     db: Session = Depends(get_db),

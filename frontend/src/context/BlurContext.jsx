@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+
 import { BLUR_MONEY_KEY } from '../utils/constants';
 
 /**@type {any} */
@@ -9,9 +10,7 @@ const BlurContext = createContext(null);
  * @param {*} object.children
  */
 export const BlurProvider = ({ children }) => {
-  const [blurMoney, setBlurMoney] = useState(
-    () => localStorage.getItem(BLUR_MONEY_KEY) === 'true'
-  );
+  const [blurMoney, setBlurMoney] = useState(() => localStorage.getItem(BLUR_MONEY_KEY) === 'true');
 
   useEffect(() => {
     document.documentElement.classList.toggle('money-blurred', blurMoney);
@@ -23,9 +22,7 @@ export const BlurProvider = ({ children }) => {
   };
 
   return (
-    <BlurContext.Provider value={{ blurMoney, toggleBlurMoney }}>
-      {children}
-    </BlurContext.Provider>
+    <BlurContext.Provider value={{ blurMoney, toggleBlurMoney }}>{children}</BlurContext.Provider>
   );
 };
 
