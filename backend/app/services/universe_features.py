@@ -11,7 +11,7 @@ def _local_float_proxy(info: dict) -> float | None:
     shares_out = info.get("sharesOutstanding")
     if not float_shares or not shares_out:
         return None
-    return round((float_shares / shares_out) * 100, 2)
+    return round(min(float_shares / shares_out, 1.0) * 100, 2)
 
 
 def build_feature(ticker: str) -> Feature | None:
