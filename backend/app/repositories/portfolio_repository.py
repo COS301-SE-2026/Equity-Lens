@@ -41,12 +41,21 @@ class PortfolioRepository:
     def get_current_portfolios(
         self, user_id: UUID, account_type: str | None = None
     ) -> list[Portfolios]:
-        latest = self.get_latest_portfolio(user_id)
-        if latest is None:
-            return []
-        if account_type is not None and latest.account_type != account_type:
-            return []
-        return [latest]
+        stmt = select(Portfolios).where(
+            Portfolios.user_id == user_id
+        )
+
+        if account_type is not None:
+            stmt = stmt.where(
+                Portfolios.account_type == account_type
+            )
+
+        stmt = stmt.order_by(
+            Portfolios.created_at.desc()
+        )
+
+        return list(self.db.scalars(stmt).all())
+
 
     def set_account_type(self, portfolio_id: UUID, account_type: str | None) -> Portfolios | None:
         portfolio = self.db.get(Portfolios, portfolio_id)
