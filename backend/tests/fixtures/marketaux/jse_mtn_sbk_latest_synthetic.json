@@ -1,0 +1,110 @@
+{
+  "_note": "SYNTHETIC stand-in, not a provider response. Built from the entity shapes Josh's probe recorded on 2026-09-24 (symbol, name, exchange null, country, type, match_score, highlights with <em> and a [+N characters] tail). Replace by running app.scripts.record_marketaux_fixtures, which writes the file without _synthetic.",
+  "request": {
+    "symbols": "MTN.JO,SBK.JO",
+    "filter_entities": "true",
+    "language": "en",
+    "limit": 3
+  },
+  "http_status": 200,
+  "meta": {
+    "found": 2,
+    "returned": 2,
+    "limit": 3,
+    "page": 1
+  },
+  "data": [
+    {
+      "uuid": "synthetic-jse-1",
+      "title": "Synthetic: MTN Group trading update",
+      "description": "synthetic description",
+      "keywords": "",
+      "snippet": "",
+      "url": "https://example.com/synthetic-jse-1",
+      "image_url": null,
+      "language": "en",
+      "published_at": "2026-09-23T06:30:00.000000Z",
+      "source": "example.co.za",
+      "relevance_score": null,
+      "entities": [
+        {
+          "symbol": "MTN.JO",
+          "name": "MTN Group Limited",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "za",
+          "type": "equity",
+          "industry": "N/A",
+          "match_score": 44.1,
+          "sentiment_score": 0.3,
+          "highlights": [
+            {
+              "highlight": "A warm welcome to everybody on the call.",
+              "sentiment": 0.0,
+              "highlighted_in": "main_text"
+            },
+            {
+              "highlight": "<em>MTN Group</em> said data revenue grew in Nigeria [+212 characters]",
+              "sentiment": 0.0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        }
+      ],
+      "similar": []
+    },
+    {
+      "uuid": "synthetic-jse-2",
+      "title": "Synthetic: Standard Bank and the rand",
+      "description": "synthetic description",
+      "keywords": "",
+      "snippet": "",
+      "url": "https://example.com/synthetic-jse-2",
+      "image_url": null,
+      "language": "en",
+      "published_at": "2026-09-22T21:40:00.000000Z",
+      "source": "example.co.za",
+      "relevance_score": null,
+      "entities": [
+        {
+          "symbol": "SBK.JO",
+          "name": "Standard Bank Group Limited",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "za",
+          "type": "equity",
+          "industry": "N/A",
+          "match_score": 31.4,
+          "sentiment_score": 0.1,
+          "highlights": [
+            {
+              "highlight": "<em>Standard Bank</em> economists expect the rand to firm [+95 characters]",
+              "sentiment": 0.0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        },
+        {
+          "symbol": "^JI0045.JO",
+          "name": "Consumer Staples Index",
+          "exchange": null,
+          "exchange_long": null,
+          "country": "za",
+          "type": "index",
+          "industry": "N/A",
+          "match_score": 29.2,
+          "sentiment_score": 0.0,
+          "highlights": [
+            {
+              "highlight": "the <em>consumer staples index</em> fell",
+              "sentiment": 0.0,
+              "highlighted_in": "main_text"
+            }
+          ]
+        }
+      ],
+      "similar": []
+    }
+  ],
+  "error": null
+}
