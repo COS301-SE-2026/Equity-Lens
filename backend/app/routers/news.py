@@ -165,17 +165,42 @@ def get_portfolio_tickers(
 def test_aapl_news(ticker: str):
     api_key = os.getenv("MARKET_API_KEY")
 
-    response = requests.get(
-        "https://api.marketaux.com/v1/news/all",
-        params={
-            "api_token": api_key,
-            "symbols": ticker,
-            "filter_entities": "true",
-            "language": "en",
-            "limit": 20,
-        },
-        timeout=6,
-    )
+    try:
+        response = requests.get(
+            "https://api.marketaux.com/v1/news/all",
+            params={
+                "api_token": api_key,
+                "symbols": ticker,
+                "filter_entities": "true",
+                "language": "en",
+                "limit": 20,
+            },
+            timeout=15,
+        )
+
+        response.raise_for_status()
+
+    except requests.exceptions.Timeout:
+        logger.error("MarketAux timed out for ticker %s", ticker)
+        return {
+            "ticker": ticker,
+            "total_articles": 0,
+            "positive": 0,
+            "negative": 0,
+            "neutral": 0,
+            "articles": [],
+        }
+
+    except requests.exceptions.RequestException as exc:
+        logger.error("MarketAux request failed for %s: %s", ticker, exc)
+        return {
+            "ticker": ticker,
+            "total_articles": 0,
+            "positive": 0,
+            "negative": 0,
+            "neutral": 0,
+            "articles": [],
+        }
 
     data = response.json()
 
