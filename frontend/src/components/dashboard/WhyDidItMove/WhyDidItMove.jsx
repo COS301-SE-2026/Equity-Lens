@@ -1,43 +1,31 @@
-import { ChevronDown, ExternalLink, X } from 'lucide-react';
+import { AlertTriangle, ChevronDown, ExternalLink, X } from 'lucide-react';
 import { useState } from 'react';
 
 import {
-  articleConfidence,
-  buildEventNarrative,
+  afterEventFor,
+  breadthFor,
   buildEventQuestion,
+  carSentence,
+  chanceFor,
+  collectedFor,
+  detailRowsFor,
+  headlineFor,
+  impactFor,
+  marketFor,
+  newsFor,
+  provenanceFor,
+  unusualnessFor,
 } from '../../../utils/eventNarrative';
 import AnimatedReveal from '../shared/AnimatedReveal';
 import SecondaryButton from '../shared/SecondaryButton';
 
 import EventStudyChart from './EventStudyChart';
 
-const RANKING_CAPTION =
-  'Ranked by relevance to the event window. These are possible explanations, not established causes.';
-
 const ASK_BUTTON_CLASS =
   'pressable mt-3 flex w-full items-center justify-center gap-1.5 rounded-md px-4 py-2 font-mono text-[12px] font-medium transition-opacity hover:opacity-80';
 const ASK_BUTTON_STYLE = {
   background: 'var(--cta-emphasis)',
   color: 'var(--cta-emphasis-text)',
-};
-
-const CONFIDENCE = {
-  strong: { label: 'strong match', color: 'var(--signal-positive)', bg: 'var(--accent-subtle)' },
-  moderate: { label: 'possible match', color: 'var(--accent-primary)', bg: 'var(--surface-hover)' },
-  weak: { label: 'weak match', color: 'var(--text-ghost)', bg: 'var(--surface-hover)' },
-};
-
-/** @param {any} v */
-const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
-
-/** @param {number} n */
-const signedPct = (n) => `${n >= 0 ? '+' : ''}${n.toFixed(1)}%`;
-
-/** @param {string} iso */
-const shortDate = (iso) => {
-  const parsed = new Date(iso);
-  if (Number.isNaN(parsed.getTime())) return iso;
-  return parsed.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 /** @param {{ children: any }} props */
@@ -49,111 +37,80 @@ const SectionLabel = ({ children }) => (
   </p>
 );
 
-/** @param {{ label: string, value: string, tone?: 'up'|'down'|'flat' }} props */
-const Stat = ({ label, value, tone = 'flat' }) => {
-  const color =
-    tone === 'up'
-      ? 'var(--signal-positive)'
-      : tone === 'down'
-        ? 'var(--signal-negative)'
-        : 'var(--text-primary)';
+/** @param {{ title: string, children: any }} props */
+const Section = ({ title, children }) => (
+  <section className="mt-3 border-t pt-3" style={{ borderColor: 'var(--border-subtle)' }}>
+    <SectionLabel>{title}</SectionLabel>
+    {children}
+  </section>
+);
+
+/** @param {{ children: any }} props */
+const Body = ({ children }) => (
+  <p className="text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+    {children}
+  </p>
+);
+
+/** @param {{ children: any }} props */
+const Chip = ({ children }) => (
+  <span
+    className="shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 font-mono text-[11px]"
+    style={{ background: 'var(--accent-subtle)', color: 'var(--accent-primary)' }}>
+    {children}
+  </span>
+);
+
+/** @param {{ market: { lines: string[], why: string|null } | null }} props */
+const MarketPart = ({ market }) => {
+  const [open, setOpen] = useState(false);
+  if (!market) return null;
+
   return (
-    <div className="flex flex-col gap-0.5">
-      <span
-        className="font-mono text-[11px] uppercase tracking-widest"
-        style={{ color: 'var(--text-ghost)' }}
-      >
-        {label}
-      </span>
-      <span className="font-mono text-[13px] font-semibold" style={{ color }}>
-        {value}
-      </span>
+    <div className="mt-2 space-y-1">
+      {market.lines.map((line) => <Body key={line}>{line}</Body>)}
+      {market.why && (
+        <>
+          <SecondaryButton
+            size="sm"
+            onClick={() => setOpen((wasOpen) => !wasOpen)}
+            expanded={open}
+            className="!px-1.5 !py-0.5 !text-[11px]">
+            Why we say this
+          </SecondaryButton>
+          <AnimatedReveal show={open}>
+            <p className="mt-1 text-[12px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+              {market.why}
+            </p>
+          </AnimatedReveal>
+        </>
+      )}
     </div>
   );
 };
 
-/**
- * @param {{ event: any, detail: any, narrative: any, weightPct: number|null }} props
- */
-const KeyNumbers = ({ event, detail, narrative, weightPct }) => {
-  const move = num(event?.return_pct);
-  const fell = event?.direction === 'down';
-  const z = Math.abs(num(event?.z_score) ?? 0).toFixed(1);
-
-  const eventDay = detail?.available
-    ? (detail.abnormal_returns ?? []).find((/** @type {any} */ r) => r.offset === 0)
-    : null;
-  const abnormal = eventDay ? num(eventDay.abnormal_return_pct) : null;
-  const moveTypeLabel =
-    narrative.moveType === 'market'
-      ? 'Market-wide'
-      : narrative.moveType === 'company'
-        ? 'Company-specific'
-        : null;
-
-  const weight = typeof weightPct === 'number' && Number.isFinite(weightPct) ? weightPct : null;
-  const contribution = weight !== null && move !== null ? (weight / 100) * move : null;
-
-  return (
-    <div className="mt-2">
-      <div className="flex flex-wrap gap-x-6 gap-y-2">
-        <Stat label="Move" value={move === null ? '-' : signedPct(move)} tone={fell ? 'down' : 'up'} />
-        <Stat label="Vs its own swing" value={`${z}σ`} />
-        {moveTypeLabel && (
-          <Stat
-            label="Move type"
-            value={abnormal === null ? moveTypeLabel : `${moveTypeLabel} · ${signedPct(abnormal)} abnormal`}
-          />)}
-      </div>
-
-      {contribution !== null && weight !== null && move !== null && (
-        <p className="mt-2 text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
-          &asymp; {weight.toFixed(1)}% weight &times; {move.toFixed(1)}% move ={' '}
-          {`${contribution >= 0 ? '+' : ''}${contribution.toFixed(2)}%`} estimated contribution
-          to the portfolio that day.
+/** @param {{ news: NonNullable<ReturnType<typeof newsFor>> }} props */
+const News = ({ news }) => {
+  if (news.warning) {
+    return (
+      <div>
+        <p
+          className="flex items-center gap-1.5 text-[12px] font-medium"
+          style={{ color: 'var(--signal-warning)' }}>
+          <AlertTriangle size={12} aria-hidden="true" />
+          {news.warning}
         </p>
-      )}
-    </div>
-  );};
-
-/** @param {{ level: 'strong'|'moderate'|'weak' }} props */
-const ConfidenceBadge = ({ level }) => {
-  const c = CONFIDENCE[level];
-  return (
-    <span
-      className="shrink-0 rounded px-1.5 py-0.5 font-mono text-[11px]"
-      style={{ background: c.bg, color: c.color }}>
-      {c.label}
-    </span>
-  );};
-
-/** @param {{ ticker: string }} props */
-const NoNews = ({ ticker }) => (
-  <div className="mt-3">
-    <SectionLabel>What likely drove it</SectionLabel>
-    <p className="text-[12px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
-      We have no stored news about {ticker} within three days of this date.
-    </p>
-    <p className="mt-1 text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
-      The move is still described above by its size and whether it was market- or company-wide -
-      there is just no stored catalyst to point at.
-    </p>
-  </div>);
-
-/** @param {{ articles: any[], ticker: string }} props */
-const LikelyDriver = ({ articles, ticker }) => {
-  if (articles.length === 0) return <NoNews ticker={ticker} />;
-
-  const ranked = [...articles].sort(
-    (a, b) => (b.scores?.combined ?? 0) - (a.scores?.combined ?? 0),
-  );
+        <p className="mt-1 text-[12px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
+          {news.body}
+        </p>
+      </div>
+  );}
 
   return (
-    <div className="mt-3">
-      <SectionLabel>What likely drove it</SectionLabel>
-      <ol className="space-y-2.5">
-        {ranked.map((/** @type {any} */ article) => (
-          <li key={article.article_id} className="min-w-0">
+    <div>
+      <ol className="space-y-3">
+        {news.articles.map((article) => (
+          <li key={article.id} className="min-w-0">
             <div className="flex items-start justify-between gap-2">
               <span
                 className="min-w-0 break-words text-[12px] leading-snug"
@@ -171,27 +128,40 @@ const LikelyDriver = ({ articles, ticker }) => {
                   </a>
                 )}
               </span>
-              <ConfidenceBadge level={articleConfidence(article.scores)} />
+              {article.relevance && <Chip>{article.relevance}</Chip>}
             </div>
             <div className="font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
-              {article.source_name ?? 'Unknown source'} &middot; {shortDate(article.published_at)}
+              {article.source} &middot; {article.published}
             </div>
+            {article.reasons.length > 0 && (
+              <ul className="mt-0.5 text-[11px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
+                {article.reasons.map((reason) => <li key={reason}>{reason}</li>)}
+              </ul>
+            )}
+            {article.quote && (
+              <blockquote
+                className="mt-1 border-l-2 pl-2 text-[11px] italic leading-snug"
+                style={{ borderColor: 'var(--border-mid)', color: 'var(--text-secondary)' }}>
+                {article.quote}
+              </blockquote>
+            )}
           </li>
         ))}
       </ol>
       <p className="mt-2 text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
-        {RANKING_CAPTION}
+        {news.caption}
       </p>
     </div>
   );};
 
 /**
- * @param {{ event: any, detail: any }} props
+ * @param {{ event: any, detail: any, scan: any }} props
  */
-const Details = ({ event, detail }) => {
+const Details = ({ event, detail, scan }) => {
   const [open, setOpen] = useState(false);
-  const z = Math.abs(num(event?.z_score) ?? 0).toFixed(1);
-  const vol = (num(event?.annualised_volatility_pct) ?? 0).toFixed(1);
+  const rows = detailRowsFor(event, detail, scan);
+  const articles = detail?.possible_explanations ?? [];
+  const notes = [carSentence(detail), chanceFor(scan), collectedFor(scan)].filter(Boolean);
 
   return (
     <div className="mt-3 border-t pt-2" style={{ borderColor: 'var(--border-subtle)' }}>
@@ -209,18 +179,44 @@ const Details = ({ event, detail }) => {
       </SecondaryButton>
 
       <AnimatedReveal show={open}>
-        <p className="mt-2 text-[12px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
-          Flagged by an EWMA volatility model (RiskMetrics, &lambda; 0.94): a {z}&sigma; move
-          against {vol}% annualised volatility over {event?.observations} trading days.
-        </p>
+        <dl className="mt-2 space-y-0.5">
+          {rows.map((row) => (
+            <div key={row.label} className="flex items-baseline justify-between gap-3 font-mono text-[11px]">
+              <dt style={{ color: 'var(--text-ghost)' }}>{row.label}</dt>
+              <dd className="text-right" style={{ color: 'var(--text-primary)' }}>{row.value}</dd>
+            </div>
+          ))}
+        </dl>
 
-        <div className="mt-2">
-          <EventStudyChart detail={detail} initialWorkingOpen />
-        </div>
+        {detail?.available && (
+          <div className="mt-2">
+            <EventStudyChart detail={detail} initialWorkingOpen />
+          </div>
+        )}
+
+        {notes.map((note) => (
+          <p key={note} className="mt-2 text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+            {note}
+          </p>
+        ))}
+
+        {articles.length > 0 && (
+          <ul className="mt-2 space-y-1">
+            {articles.map((/** @type {any} */ article) => (
+              <li key={article.article_id} className="text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>{article.title}</span>
+                {' '}&middot; bm25 {article.scores?.bm25_normalised?.toFixed(2)}, proximity{' '}
+                {article.scores?.date_proximity?.toFixed(2)}, entity {article.scores?.entity_match?.toFixed(1)},
+                combined {article.scores?.combined?.toFixed(2)}.
+                {provenanceFor(article) && ` ${provenanceFor(article)}`}
+              </li>
+            ))}
+          </ul>
+        )}
 
         <p className="mt-2 text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
-          News is matched by BM25 term overlap, how close the article sits to the event date, and
-          whether the holding is named as an entity
+          Articles are ordered by BM25 term overlap against a fixed ceiling, how close they sit to
+          the move in the exchange&apos;s own dates, and whether the headline names the company.
         </p>
       </AnimatedReveal>
     </div>
@@ -229,9 +225,9 @@ const Details = ({ event, detail }) => {
 /** @param {{ headline: string, onClose?: () => void, children: any }} props */
 const Shell = ({ headline, onClose, children }) => (
   <div
-    className="glass-surface flex max-h-[calc(100vh-8rem)] w-[420px] max-w-[calc(100vw-2rem)] flex-col rounded-xl shadow-lg"
+    className="glass-surface flex min-h-0 w-[420px] max-w-[calc(100vw-2rem)] flex-col rounded-xl shadow-lg"
     style={{ background: 'var(--surface-card)', border: '1px solid var(--border-mid)' }}>
-    <div className="flex items-start gap-2 p-4 pb-2">
+    <div className="flex shrink-0 items-start gap-2 p-4 pb-2">
       <p className="flex-1 text-[15px] font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
         {headline}
       </p>
@@ -244,7 +240,7 @@ const Shell = ({ headline, onClose, children }) => (
         <X size={16} />
       </button>
     </div>
-    <div className="overflow-y-auto px-4 pb-4">{children}</div>
+    <div className="min-h-0 overflow-y-auto overscroll-contain px-4 pb-4">{children}</div>
   </div>
 );
 
@@ -253,75 +249,84 @@ const Shell = ({ headline, onClose, children }) => (
  *   event: any,
  *   detail?: any,
  *   pending?: boolean,
- *   weightPct?: number|null,
+ *   scan?: any,
  *   onClose?: () => void,
  *   onAsk?: (question: string) => void,
  * }} props
  */
-const EventPopover = ({ event, detail = null, pending = false, weightPct = null, onClose, onAsk }) => {
-  if (!event) return null;
+const EventPopover = ({ event, detail = null, pending = false, scan = null, onClose, onAsk }) => {
+  const top = headlineFor(event);
+  if (!event || !top) return null;
 
   const usable = detail?.error ? null : detail;
-  const narrative = buildEventNarrative(event, usable);
-  const articles = usable?.possible_explanations ?? [];
-  const topArticle = articles.find((/** @type {any} */ a) => a.url);
-  const paragraph = [
-    narrative.marketPart,
-    narrative.companyPart,
-    narrative.abnormalPart,
-    narrative.confidence,
-  ].filter(Boolean).join(' ');
+  const fell = event.return_pct < 0;
+  const impact = impactFor(usable);
+  const unusual = unusualnessFor(event);
+  const after = afterEventFor(usable);
+  const breadth = breadthFor(event, usable);
+  const news = newsFor(usable);
 
   return (
-    <Shell headline={narrative.headline} onClose={onClose}>
-      <KeyNumbers event={event} detail={usable} narrative={narrative} weightPct={weightPct} />
-
-      <p className="mt-2 text-[13px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-        {paragraph}
-      </p>
-
-      <button
-        type="button"
-        onClick={() => onAsk?.(buildEventQuestion(event, usable))}
-        className={ASK_BUTTON_CLASS}
-        style={ASK_BUTTON_STYLE}
-      >
-        Ask AI about this move
-      </button>
+    <Shell headline={top.headline} onClose={onClose}>
+      <div className="flex items-baseline gap-3">
+        <span
+          className="font-mono text-[22px] font-semibold"
+          style={{ color: fell ? 'var(--signal-negative)' : 'var(--signal-positive)' }}>
+          {top.move}
+        </span>
+        <span className="text-[12px]" style={{ color: 'var(--text-secondary)' }}>{top.date}</span>
+      </div>
 
       {pending && (
         <p className="mt-2 font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
           Looking...
         </p>
       )}
-
       <AnimatedReveal show={Boolean(detail?.error)}>
         <p className="mt-2 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
           Could not load the detail for this move.
         </p>
       </AnimatedReveal>
 
-      <AnimatedReveal show={Boolean(usable) && !usable?.available && narrative.moveType !== 'market'}>
-        <p className="mt-2 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
-          Not enough price history for {event.ticker} to separate the market from the company.
-        </p>
-      </AnimatedReveal>
-
-      {usable && <LikelyDriver articles={articles} ticker={event.ticker} />}
-
-      {topArticle && (
-        <div className="mt-2.5">
-          <SecondaryButton
-            size="sm"
-            className="!text-[11px]"
-            onClick={() => window.open(topArticle.url, '_blank', 'noopener,noreferrer')}
-          >
-            Read the article
-          </SecondaryButton>
-        </div>
+      {impact && (
+        <Section title="Impact on your portfolio">
+          <Body>{impact}</Body>
+        </Section>
       )}
 
-      {usable?.available && <Details event={event} detail={usable} />}
+      <Section title="How unusual was this?">
+        {unusual?.label && <Chip>{unusual.label}</Chip>}
+        <div className="mt-1.5 space-y-1">
+          {(unusual?.lines ?? []).map((line) => <Body key={line}>{line}</Body>)}
+        </div>
+        <MarketPart market={marketFor(usable)} />
+        {breadth && (
+          <p className="mt-2 text-[12px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
+            {breadth}
+          </p>
+        )}
+        {after && (
+          <p className="mt-2 text-[12px] leading-snug" style={{ color: 'var(--text-secondary)' }}>
+            {after}
+          </p>
+        )}
+      </Section>
+
+      {news && (
+        <Section title="What might explain it?">
+          <News news={news} />
+        </Section>
+      )}
+
+      <button
+        type="button"
+        onClick={() => onAsk?.(buildEventQuestion(event, usable))}
+        className={ASK_BUTTON_CLASS}
+        style={ASK_BUTTON_STYLE}>
+        Explore possible causes
+      </button>
+
+      {usable && <Details event={event} detail={usable} scan={scan} />}
     </Shell>
   );
 };
