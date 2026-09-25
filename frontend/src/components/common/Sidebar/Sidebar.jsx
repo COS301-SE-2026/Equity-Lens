@@ -1,26 +1,18 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import {
-  LayoutDashboard,
-  Briefcase,
-  BarChart2,
-  Newspaper,
-  Sparkles,
-  Settings,
-  HelpCircle,
-} from 'lucide-react';
+
 import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { ROUTES } from '../../../utils/constants';
 
 const navItems = [
-  { label: 'Dashboard', to: ROUTES.DASHBOARD, Icon: LayoutDashboard },
-  { label: 'Portfolio', to: ROUTES.PORTFOLIO, Icon: Briefcase },
-  { label: 'Analytics', to: ROUTES.ANALYTICS, Icon: BarChart2 },
-  { label: 'News', to: ROUTES.NEWS, Icon: Newspaper },
-  { label: 'AI Assistant', to: ROUTES.AI_CHAT, Icon: Sparkles },
-  { label: 'Settings', to: ROUTES.SETTINGS, Icon: Settings },
-  { label: 'Help', to: ROUTES.HELP, Icon: HelpCircle },
+  { label: 'Dashboard', to: ROUTES.DASHBOARD},
+  { label: 'Portfolio', to: ROUTES.PORTFOLIO},
+  { label: 'Analytics', to: ROUTES.ANALYTICS},
+  { label: 'News', to: ROUTES.NEWS },
+  { label: 'AI Assistant', to: ROUTES.AI_CHAT },
+  { label: 'Settings', to: ROUTES.SETTINGS},
+  { label: 'Help', to: ROUTES.HELP },
 ];
 
 /**
@@ -91,7 +83,7 @@ const Sidebar = ({ open, onClose }) => {
             exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: '-100%' }}
             transition={{ duration: 0.24, ease: [0.4, 0, 0.2, 1] }}
           >
-            {navItems.map(({ label, to, Icon }) => (
+            {navItems.map(({ label, to }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -109,7 +101,6 @@ const Sidebar = ({ open, onClose }) => {
                   boxShadow: isActive ? 'inset 3px 0 0 var(--accent-primary)' : undefined,
                 })}
               >
-                <Icon size={18} aria-hidden="true" />
                 {label}
               </NavLink>
             ))}
