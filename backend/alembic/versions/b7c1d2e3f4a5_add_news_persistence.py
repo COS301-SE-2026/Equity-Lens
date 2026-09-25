@@ -5,7 +5,10 @@ import sqlalchemy as sa
 
 
 revision: str = "b7c1d2e3f4a5"
-down_revision: Union[str, None] = "a7b8c9d0e1f2"
+# originally a7b8c9d0e1f2. dev added eb52067672a7 (chat memory) on the same parent, and two
+# heads stop `alembic upgrade head` from running, so the news chain now follows it. production
+# is still at a7b8c9d0e1f2 and applies all of them in order.
+down_revision: Union[str, None] = "eb52067672a7"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

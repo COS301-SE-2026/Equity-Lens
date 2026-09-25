@@ -287,7 +287,7 @@ class TaxAnalysisHolding(BaseModel):
         description="rands of gain or loss on this position at today's price",
         examples=[420.0],
     )
-    unrealised_gain_loss_pct: Optional[float] = Field(
+    unrealised_gain_loss_pct: float | None = Field(
         default=None,
         description="the same figure against cost. Null when there is no cost to divide into",
         examples=[4.67],
@@ -295,16 +295,16 @@ class TaxAnalysisHolding(BaseModel):
 
 
 class TaxAnalysisResponse(CgtEstimateResponse):
-    holdings: List[TaxAnalysisHolding] = Field(
+    holdings: list[TaxAnalysisHolding] = Field(
         description="one row per priced holding. Empty when the estimate is unavailable",
     )
-    potential_realised_loss: Optional[float] = Field(
+    potential_realised_loss: float | None = Field(
         default=None,
         description="rands sitting in positions currently under water, as a negative number. "
                     "Null when the estimate is unavailable",
         examples=[0.0],
     )
-    note: Optional[str] = Field(
+    note: str | None = Field(
         default=None,
         description="the loss-offset caveat. Null when the estimate is unavailable",
         examples=["Realising a loss can offset a capital gain elsewhere in the same tax year"],
@@ -316,23 +316,23 @@ class TfsaRoomResponse(BaseModel):
         description="false when the portfolio is not a TFSA; read reason for why",
         examples=[True],
     )
-    reason: Optional[str] = Field(
+    reason: str | None = Field(
         default=None,
         description="why the room cannot be reported. Null when it can",
         examples=["not_a_tfsa"],
     )
-    tax_year_label: Optional[str] = Field(default=None, examples=["2026/2027"])
-    annual_limit: Optional[float] = Field(default=None, examples=[46000.0])
-    annual_contributed: Optional[float] = Field(
+    tax_year_label: str | None = Field(default=None, examples=["2026/2027"])
+    annual_limit: float | None = Field(default=None, examples=[46000.0])
+    annual_contributed: float | None = Field(
         default=None,
         description="rands contributed since 1 March, counted from imported statements only",
         examples=[10000.0],
     )
-    annual_remaining: Optional[float] = Field(default=None, examples=[36000.0])
-    lifetime_limit: Optional[float] = Field(default=None, examples=[500000.0])
-    lifetime_contributed: Optional[float] = Field(default=None, examples=[10000.0])
-    lifetime_remaining: Optional[float] = Field(default=None, examples=[490000.0])
-    note: Optional[str] = Field(
+    annual_remaining: float | None = Field(default=None, examples=[36000.0])
+    lifetime_limit: float | None = Field(default=None, examples=[500000.0])
+    lifetime_contributed: float | None = Field(default=None, examples=[10000.0])
+    lifetime_remaining: float | None = Field(default=None, examples=[490000.0])
+    note: str | None = Field(
         default=None,
         description="the no-carry-over and no-room-restored caveat",
         examples=["Unused annual room does not carry over to the next tax year"],
@@ -454,7 +454,7 @@ class HistoryQuality(BaseModel):
                     "the portfolio",
         examples=[94.2],
     )
-    unpriced_tickers: List[str] = Field(
+    unpriced_tickers: list[str] = Field(
         default_factory=list,
         description="held tickers with no cached prices, named so the gap is attributable",
         examples=[["XYZ.JO"]],
@@ -466,7 +466,7 @@ class HistoryQuality(BaseModel):
                     "did not run a reconstruction, not that there were none",
         examples=[2],
     )
-    suspect_dates: List[str] | None = Field(
+    suspect_dates: list[str] | None = Field(
         default=None,
         description="days a held price moved more than 35% with no transaction to explain it, "
                     "which is usually a share split. Flagged, never adjusted - there is no "
@@ -506,7 +506,7 @@ class SectorInvestmentResponse(BaseModel):
     projected_weight_pct: float | None = Field(default=None, examples=[19.4])
     health_score_before: float | None = Field(default=None, examples=[4.8])
     health_score_after: float | None = Field(default=None, examples=[5.0])
-    subscore_deltas: List[SubscoreDelta] = []
+    subscore_deltas: list[SubscoreDelta] = []
     is_smallest_sector: bool | None = Field(default=None, examples=[False])
     explanation: str | None = Field(default=None)
     thresholds: ConcentrationThresholds | None = None
@@ -523,7 +523,7 @@ class SectorRebalanceResponse(BaseModel):
     to_sector_before_pct: float | None = Field(default=None, examples=[5.2])
     health_score_before: float | None = Field(default=None, examples=[4.8])
     health_score_after: float | None = Field(default=None, examples=[6.1])
-    subscore_deltas: List[SubscoreDelta] = []
+    subscore_deltas: list[SubscoreDelta] = []
     explanation: str | None = Field(default=None)
     thresholds: ConcentrationThresholds | None = None
     disclaimer: str | None = Field(default=None)

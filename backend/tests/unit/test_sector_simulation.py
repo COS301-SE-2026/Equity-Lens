@@ -1,7 +1,7 @@
 import pytest
 
 from app.services.health_score import PRESETS, preset_config
-from app.services.sim import (
+from app.services.portfolio_service import (
     SECTOR_INVESTMENT_PCT_OF_PORTFOLIO,
     _simulate_sector_investment,
     _simulate_sector_rebalance,

@@ -1,10 +1,11 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { cloneElement } from 'react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-import { zar } from '../../../utils/currency';
 import { getHoldingSeries } from '../../../services/portfolioService';
+import { zar } from '../../../utils/currency';
 
 import PerformanceVsBenchmark, {
   PerfTooltip,
@@ -20,13 +21,18 @@ vi.mock('../../../context/ChatContext', () => ({ useChatContext: () => ({ openDo
 const NBSP = String.fromCharCode(160);
 /** @param {number} n */
 const rand = (n) => zar(n).split(NBSP).join(' ');
+const chartSize = vi.hoisted(() => ({
+  current: /** @type {{ width: number, height: number } | null} */ (null),
+}));
 
 vi.mock('recharts', async () => {
   const actual = await vi.importActual('recharts');
   return {
     ...actual,
-    /** @param {{ children?: import('react').ReactNode }} props */
-    ResponsiveContainer: ({ children }) => <div>{children}</div>,
+    /** @param {{ children?: any }} props */
+    ResponsiveContainer: ({ children }) => (
+      <div>{chartSize.current ? cloneElement(children, chartSize.current) : children}</div>
+    ),
   };
 });
 
@@ -51,7 +57,6 @@ describe('PerformanceVsBenchmark', () => {
   });
 
   it('does not report a deposit as a return', () => {
-
     const withPurchase = [
       { date: '2026-07-01', name: 'Jul 01', value: 100000, benchmark: 100000, twr_index: 100 },
       { date: '2026-08-01', name: 'Aug 01', value: 201000, benchmark: 104000, twr_index: 100.5 },
@@ -63,7 +68,8 @@ describe('PerformanceVsBenchmark', () => {
 
   it('shows a building-history message instead of a number with fewer than two data points', () => {
     renderChart({ series: [SERIES[0]], historyDays: 1 });
-    expect(screen.getByText('Building history - 1 day so far')).toBeInTheDocument();
+    // the label shows in the chart body and in the return stat, so there is more than one
+    expect(screen.getAllByText('Building history - 1 day so far').length).toBeGreaterThan(0);
     expect(screen.queryByText('+10.0%')).not.toBeInTheDocument();
   });
 
@@ -81,7 +87,8 @@ describe('PerformanceVsBenchmark', () => {
 
   it('distinguishes "nothing unusual happened" from "we could not look"', () => {
     const { rerender } = renderChart({
-      series: SERIES, historyDays: 31,
+      series: SERIES,
+      historyDays: 31,
       events: { events: [], coverage: { holdings_scanned: 3 } },
     });
     expect(screen.getByText(/No unusual moves across 3 holdings/)).toBeInTheDocument();
@@ -152,12 +159,31 @@ describe('PerformanceVsBenchmark holding comparison', () => {
     await userEvent.click(toggle);
     const collapsed = screen.getByRole('button', { name: /expand performance vs benchmark/i });
     expect(collapsed).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.getByRole('button', { name: 'Performance history settings' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Performance history settings' }),
+    ).toBeInTheDocument();
     expect(screen.getByText('Portfolio')).toBeInTheDocument();
   });
 
-  it('keeps the header legend the same size however many holdings are picked', async () => {
+  it('offers the EquityLens Insight trigger only while the card is open', async () => {
+    renderChart({ series: SERIES, historyDays: 31, holdings: HOLDINGS });
+    const trigger = () =>
+      screen.queryByRole('button', { name: 'Ask AI about performance vs benchmark' });
 
+    expect(trigger()).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: /collapse performance vs benchmark/i }),
+    );
+    expect(trigger()).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: /expand performance vs benchmark/i }));
+    expect(trigger()).toBeInTheDocument();
+    await userEvent.click(
+      screen.getByRole('button', { name: /collapse performance vs benchmark/i }),
+    );
+    expect(trigger()).toBeNull();
+  });
+
+  it('keeps the header legend the same size however many holdings are picked', async () => {
     renderChart({ series: SERIES, historyDays: 31, holdings: HOLDINGS });
 
     const keys = () => screen.getAllByText(/^(Portfolio|JSE ALSI)$/).length;
@@ -262,7 +288,11 @@ describe('eventDots', () => {
 
   /** @param {string} date @param {number} z @param {string} direction */
   const event = (date, z, direction) => ({
-    ticker: 'NPN.JO', date, z_score: z, direction, return_pct: z * 2,
+    ticker: 'NPN.JO',
+    date,
+    z_score: z,
+    direction,
+    return_pct: z * 2,
   });
 
   it('sits each dot on the portfolio value for that day', () => {
@@ -396,7 +426,6 @@ describe('performance history settings', () => {
 });
 
 describe('holding groups', () => {
-
   const HOLDINGS = [
     { ticker: 'NPN.JO', name: 'Naspers', value: 60000, current_price: 110 },
     { ticker: 'SBK.JO', name: 'Standard Bank', value: 40000, current_price: 110 },
@@ -443,8 +472,7 @@ describe('holding groups', () => {
     ).toBeInTheDocument();
   });
 
-  it('falls back to today\'s values, and says so, when a member has no price', async () => {
-   
+  it("falls back to today's values, and says so, when a member has no price", async () => {
     const noPrice = [
       { ticker: 'NPN.JO', name: 'Naspers', value: 60000, current_price: 120 },
       { ticker: 'AGL.JO', name: 'Anglo', value: 40000 },
@@ -470,13 +498,12 @@ describe('holding groups', () => {
     await waitFor(() => {
       expect(screen.getByText('Banks')).toBeInTheDocument();
     });
-    
+
     expect(within(chipRow()).queryByText('NPN.JO')).not.toBeInTheDocument();
     expect(within(chipRow()).queryByText('SBK.JO')).not.toBeInTheDocument();
   });
 
   it('still draws a holding individually when it is also in a group', async () => {
-    
     withGroups([{ id: 'g1', name: 'Banks', members: ['NPN.JO', 'SBK.JO'] }]);
 
     const trigger = screen.getByRole('button', { name: /compare holdings/i });
@@ -534,14 +561,17 @@ describe('event markers', () => {
   it('marks a fall red and a rise green, and nothing any other way', () => {
     const dots = eventDots({
       rows: SPANNING,
-      events: payload({ events: [
-        { ticker: 'STX40.JO', date: '2026-01-30', z_score: -4.2, direction: 'down' },
-        { ticker: 'NPN.JO', date: '2026-01-30', z_score: 3.2, direction: 'up' },
-      ] }),
+      events: payload({
+        events: [
+          { ticker: 'STX40.JO', date: '2026-01-30', z_score: -4.2, direction: 'down' },
+          { ticker: 'NPN.JO', date: '2026-01-30', z_score: 3.2, direction: 'up' },
+        ],
+      }),
     });
 
     expect(dots.map((d) => d.fill).sort()).toEqual([
-      'var(--signal-negative)', 'var(--signal-positive)',
+      'var(--signal-negative)',
+      'var(--signal-positive)',
     ]);
     expect(dots.every((d) => d.stroke === 'var(--surface-card)')).toBe(true);
     expect(dots.every((d) => d.strokeWidth === 1.5)).toBe(true);
@@ -549,5 +579,122 @@ describe('event markers', () => {
 
   it('has no markers when the scan found nothing', () => {
     expect(eventDots({ rows: SPANNING, events: payload({}) })).toEqual([]);
+  });
+
+  it('says what a dot means for the person looking at it', () => {
+    renderChart({
+      series: SPANNING,
+      historyDays: 2,
+      events: payload({
+        events: [
+          {
+            ticker: 'NPN.JO',
+            date: '2026-01-30',
+            z_score: -4.2,
+            direction: 'down',
+            return_pct: -4.0,
+          },
+        ],
+      }),
+    });
+
+    expect(
+      screen.getByText(
+        'Each dot is a day one of your holdings moved unusually far for itself. Click one to see what it meant for you.',
+      ),
+    ).toBeInTheDocument();
+  });
+});
+
+describe('the open event card', () => {
+  const ROWS = [
+    { date: '2026-01-29', name: 'Jan 29', value: 100000, benchmark: 100000, twr_index: 100 },
+    { date: '2026-01-30', name: 'Jan 30', value: 96000, benchmark: 96000, twr_index: 96 },
+  ];
+  const EVENTS = {
+    coverage: { holdings_scanned: 3 },
+    events: [
+      { ticker: 'NPN.JO', date: '2026-01-30', z_score: -4.2, direction: 'down', return_pct: -4.0 },
+    ],
+  };
+  const realResizeObserver = globalThis.ResizeObserver;
+
+  beforeEach(() => {
+    chartSize.current = { width: 800, height: 400 };
+  });
+
+  afterEach(() => {
+    chartSize.current = null;
+    globalThis.ResizeObserver = realResizeObserver;
+  });
+
+  const openCard = () => {
+    const view = renderChart({ series: ROWS, historyDays: 2, events: EVENTS });
+    fireEvent.click(screen.getByRole('button', { name: /NPN\.JO had an unusual fall/ }));
+    const card = /** @type {HTMLElement} */ (document.querySelector('[data-event-popover]'));
+    return { view, card };
+  };
+
+  /** @param {string} r */
+  const rangeButton = (r) => screen.getByRole('button', { name: r });
+
+  it('has one scroll area, and it is the card body', () => {
+    const { card } = openCard();
+
+    const everything = /** @type {HTMLElement[]} */ ([card, ...card.querySelectorAll('*')]);
+    const scrollers = everything.filter((el) => el.classList.contains('overflow-y-auto'));
+    expect(scrollers).toHaveLength(1);
+    expect(scrollers[0]).toHaveClass('min-h-0', 'overscroll-contain');
+    expect(within(scrollers[0]).getByText('How unusual was this?')).toBeInTheDocument();
+    expect(
+      within(scrollers[0]).queryByRole('button', { name: 'Close this explanation' }),
+    ).toBeNull();
+    expect(card.className).not.toMatch(/overflow/);
+  });
+
+  it('leaves the range alone when ctrl+wheel happens over the card', () => {
+    const { card } = openCard();
+    const inside = within(card).getByText('How unusual was this?');
+
+    const passedOn = fireEvent.wheel(inside, { ctrlKey: true, deltaY: 100 });
+
+    expect(passedOn).toBe(true);
+    expect(rangeButton('ALL').style.background).toBe('var(--accent-primary)');
+    expect(rangeButton('1Y').style.background).toBe('transparent');
+  });
+
+  it('still steps the range when ctrl+wheel happens over the chart', () => {
+    const { card } = openCard();
+    const surface = /** @type {HTMLElement} */ (card.parentElement);
+
+    const passedOn = fireEvent.wheel(surface, { ctrlKey: true, deltaY: 100 });
+
+    expect(passedOn).toBe(false);
+    expect(rangeButton('1Y').style.background).toBe('var(--accent-primary)');
+  });
+
+  it('opens without ResizeObserver, as older browsers and jsdom have none', () => {
+    // @ts-ignore
+    delete globalThis.ResizeObserver;
+
+    expect(() => openCard()).not.toThrow();
+    expect(document.querySelector('[data-event-popover]')).not.toBeNull();
+  });
+
+  it('watches the card for size changes and stops when it goes', () => {
+    const observe = vi.fn();
+    const disconnect = vi.fn();
+    globalThis.ResizeObserver = class {
+      observe = observe;
+      unobserve = vi.fn();
+      disconnect = disconnect;
+    };
+
+    const { view, card } = openCard();
+    expect(observe).toHaveBeenCalledWith(card);
+    expect(disconnect).not.toHaveBeenCalled();
+
+    view.unmount();
+    expect(disconnect).toHaveBeenCalledTimes(1);
   });
 });

@@ -161,7 +161,7 @@ describe('HealthSettingsModal', () => {
   it('says presets move the yardstick, not the risk', async () => {
     await open();
     expect(
-      await screen.findByText(/change what your portfolio is compared to, not how much risk it carries/i),
+      await screen.findByText(/presets change what your portfolio is compared to/i),
     ).toBeInTheDocument();
   });
 
@@ -206,7 +206,7 @@ describe('HealthSettingsModal', () => {
 
     fireEvent.click(card('Growth'));
 
-    expect(await screen.findByText(/Your settings are unchanged/)).toBeInTheDocument();
+    expect(await screen.findByText(/Settings are unchanged/)).toBeInTheDocument();
     expect(onChanged).not.toHaveBeenCalled();
     expect(card('Income / dividend')).toHaveAttribute('aria-pressed', 'true');
   });

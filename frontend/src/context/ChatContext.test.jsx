@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -11,6 +11,33 @@ import { ThemeProvider } from './ThemeContext';
 
 vi.mock('../hooks/useAuth');
 vi.mock('../services/api');
+vi.mock('aws-amplify/auth', () => ({
+  fetchAuthSession: vi.fn().mockResolvedValue({
+    tokens: { accessToken: { toString: () => 'test-token' } },
+  }),
+}));
+
+// the chat page streams its reply over fetch as server-sent events, one frame per event
+/** @param {...object} events */
+const sseResponse = (...events) => {
+  const encoder = new TextEncoder();
+  const frames = events.map((e) => encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
+  let i = 0;
+  return {
+    ok: true,
+    body: {
+      getReader: () => ({
+        read: async () =>
+          i < frames.length
+            ? { done: false, value: frames[i++] }
+            : { done: true, value: undefined },
+      }),
+    },
+  };
+};
+
+/** @param {number} n which fetch call, 0-based */
+const sentBody = (n) => JSON.parse(/** @type {any} */ (global.fetch).mock.calls[n][1].body);
 
 const mockUseAuth = /** @type {any} */ (useAuth);
 
@@ -22,7 +49,9 @@ const NavStub = () => {
     <nav>
       <button onClick={() => navigate('/dashboard')}>Go to dashboard</button>
       <button onClick={() => navigate('/ai')}>Go to AI page</button>
-    </nav>);};
+    </nav>
+  );
+};
 
 const Harness = ({ initialPath = '/dashboard' }) => (
   <MemoryRouter initialEntries={[initialPath]}>
@@ -42,9 +71,15 @@ describe('shared conversation across navigation', () => {
   beforeEach(() => {
     mockUseAuth.mockReturnValue({ user: { full_name: 'Josh Heath' } });
     /** @type {any} */ (api.get).mockResolvedValue({ data: [] });
-    /** @type {any} */ (api.post).mockResolvedValue({
-      data: { reply: 'Technology is your largest sector.', conversation_id: 'convo-42' },
-    });
+    // a fresh stream per call, so the second send gets its own reply
+    global.fetch = vi
+      .fn()
+      .mockImplementation(async () =>
+        sseResponse(
+          { type: 'text', value: 'Technology is your largest sector.' },
+          { type: 'done', conversation_id: 'convo-42' },
+        ),
+      );
   });
 
   it('a follow-up message on /ai reuses the conversation_id the first reply returned', async () => {
@@ -56,7 +91,11 @@ describe('shared conversation across navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
 
     expect(await screen.findByText('Technology is your largest sector.')).toBeInTheDocument();
-    expect(api.post).toHaveBeenCalledWith('/ai_chat/', {
+    expect(global.fetch).toHaveBeenCalledWith(
+      expect.stringContaining('/ai_chat/stream/'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(sentBody(0)).toMatchObject({
       message: 'Why is Technology so big?',
       conversation_id: null,
     });
@@ -66,10 +105,8 @@ describe('shared conversation across navigation', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
 
-    expect(api.post).toHaveBeenLastCalledWith('/ai_chat/', {
-      message: 'follow up',
-      conversation_id: 'convo-42',
-    });
+    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(2));
+    expect(sentBody(1)).toMatchObject({ message: 'follow up', conversation_id: 'convo-42' });
   });
 
   it('conversationId and its messages survive navigating from /ai to /dashboard and back', async () => {

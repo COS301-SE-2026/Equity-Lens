@@ -88,7 +88,7 @@ def test_an_expired_token_is_rejected():
 
 def test_an_unset_pool_id_falls_back():
     with patch.object(settings, "aws_cognito_user_pool_id", None), \
-         pytest.raises(token_verifier.TokenVerificationUnavailable):
+         pytest.raises(token_verifier.TokenVerificationUnavailableError):
         token_verifier.verify_access_token("any.token.here")
 
 
@@ -102,13 +102,13 @@ def test_an_unreachable_jwks_falls_back():
     })()
 
     with patch.object(token_verifier, "_jwk_client", return_value=stub), \
-         pytest.raises(token_verifier.TokenVerificationUnavailable):
+         pytest.raises(token_verifier.TokenVerificationUnavailableError):
         token_verifier.verify_access_token(make_token())
 
 
 def test_a_mismatched_client_id_falls_back():
     with signing_key_is(_key), \
-         pytest.raises(token_verifier.TokenVerificationUnavailable):
+         pytest.raises(token_verifier.TokenVerificationUnavailableError):
         token_verifier.verify_access_token(make_token(client_id="some-other-client"))
 
 

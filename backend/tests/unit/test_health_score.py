@@ -200,6 +200,8 @@ def test_top_weight_curve_on_the_default_thresholds(top_pct, expected):
     ],
 )
 def test_top_weight_curve_compresses_under_a_tighter_yardstick(top_pct, expected):
+    # low 10, high 20: 5% -> 10 - 3*(5/10) = 8.5; 15% -> 7 - 3*((15-10)/(20-10)) = 5.5
+    config = health_score.config_from_dict({"concentration_low": 10, "concentration_high": 20})
     assert health_score._top_weight_score(top_pct, config) == pytest.approx(expected)
 
 
