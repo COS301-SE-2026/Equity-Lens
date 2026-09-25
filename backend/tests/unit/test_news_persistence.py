@@ -22,8 +22,6 @@ def _reset_module_state():
 
 @pytest.fixture(autouse=True)
 def _provider_key(monkeypatch):
-    # the routes skip marketaux entirely without a key, and CI has none - these tests are
-    # about what happens once a call is made, so they get a placeholder key
     monkeypatch.setattr(news.settings, "market_api_key", "test-key-not-real")
 
 
@@ -68,8 +66,6 @@ def test_the_refresh_floor_survives_the_in_process_cache_being_dropped(
     auth_headers,
     db_session,
 ):
-    # this is the difference the database makes. clearing the L1 cache used to mean another
-    # request to a metered free tier; now the fetch log says the corpus is still fresh
     with patch.object(news_ingest.requests, "get", return_value=marketaux_response()) as upstream:
         client.get("/api/news/portfolio", headers=auth_headers)
         news._PORTFOLIO_NEWS_CACHE.clear()
@@ -104,8 +100,6 @@ def test_the_article_shape_the_page_renders_is_unchanged(client, auth_headers):
         "article_id", "title", "description", "image_url", "pubDate",
         "source_name", "category", "sentiment", "sentiment_score",
     }
-    # the wire format has always been ...Z, and the column is a timestamp - the round trip
-    # through the database must not turn it into +00:00
     assert article["pubDate"] == "2026-09-01T00:00:00Z"
     assert article["category"] == ["NPN.JO"]
     assert body["positive"] == 1
@@ -113,7 +107,6 @@ def test_the_article_shape_the_page_renders_is_unchanged(client, auth_headers):
 
 @pytest.mark.usefixtures("holding")
 def test_the_breaker_opens_after_three_failures_and_stops_calling(client, auth_headers):
-    # a marketaux outage otherwise costs every single request a six-second timeout
     failing = news.requests.RequestException("upstream down")
 
     with patch.object(news_ingest.requests, "get", side_effect=failing) as upstream:
@@ -144,14 +137,11 @@ def test_one_success_closes_the_breaker_again(client, auth_headers):
 
 
 def test_the_l1_cache_is_bounded():
-    # the key is the portfolio's ticker tuple, so every distinct book that has ever been
-    # served used to leave an entry behind for the life of the process
     cache = {}
     for i in range(news._NEWS_CACHE_MAX_KEYS + 50):
         news._cache_put(cache, (f"T{i}.JO",), {"total_articles": i})
 
     assert len(cache) == news._NEWS_CACHE_MAX_KEYS
-    # the oldest keys are the ones that went
     assert ("T0.JO",) not in cache
     assert (f"T{news._NEWS_CACHE_MAX_KEYS + 49}.JO",) in cache
 

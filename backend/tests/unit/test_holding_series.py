@@ -1,9 +1,3 @@
-"""The per-holding series endpoint's two jobs: serve enough tickers, refuse the wrong ones.
-
-The cap moved from 5 to 15 so the chart can draw four user-built groups alongside five
-individually selected holdings. The interesting part of that change is what did NOT move - a
-higher cap must not turn a portfolio endpoint into a general price proxy sitting behind a login.
-"""
 from unittest.mock import patch
 
 import pytest
@@ -33,7 +27,6 @@ def book(db_session, test_user):
 
 
 def test_it_serves_a_full_fifteen(db_session, test_user, book):
-    # four groups plus five individual lines is the case the cap was raised for
     with patch.object(portfolio_service, "closes_for_tickers", return_value={}):
         result = PortfolioService(db_session).get_holding_series(test_user.id, book[:15])
 
@@ -48,7 +41,6 @@ def test_it_stops_at_the_cap_rather_than_fetching_the_whole_book(db_session, tes
 
 
 def test_a_ticker_the_user_does_not_hold_is_still_refused(db_session, test_user, book):
-    # raising the cap must not turn this into a price proxy for anything behind the login
     with patch.object(portfolio_service, "closes_for_tickers", return_value={}) as closes:
         result = PortfolioService(db_session).get_holding_series(
             test_user.id, [book[0], "AAPL", "TSLA"],

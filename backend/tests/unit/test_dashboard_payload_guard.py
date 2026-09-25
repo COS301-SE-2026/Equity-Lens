@@ -1,22 +1,9 @@
-"""The GET /api/portfolio payload contract, as a test rather than as a docstring.
-
-There is deliberately no response_model on that route. FastAPI filters a response down to the
-fields its model declares, so a model that forgot a key would drop it from the payload silently
-- on the one endpoint the whole Dashboard reads. The trade is that nothing then checks the
-shape at all, which is what this file is for.
-
-Every entry in REQUIRED_KEYS was read off frontend/src/pages/Dashboard/Dashboard.jsx and the
-components it hands data to. If a key here stops being produced, the card named in the comment
-is the one that breaks.
-"""
 from datetime import date
 
 import pytest
 
 from app.models.portfolio import Holdings, Portfolios
 from app.services.portfolio_service import PortfolioService, invalidate_priced_holdings
-
-# key -> (accepted types, may it be null, where the frontend reads it)
 REQUIRED_KEYS = {
     "summary": (dict, False, "Dashboard.jsx:110 summary.daily_change_pct, and DashboardHero"),
     "holdings": (list, False, "Dashboard.jsx:68, then TodayInsights / DashboardHoldingsTable"),
@@ -34,8 +21,6 @@ REQUIRED_KEYS = {
     "importedAt": (str, True, "Dashboard.jsx:232, which chart points are reconstructed"),
     "cgt": (dict, True, "Dashboard.jsx:131, the CGT insight template"),
 }
-
-# the three the frontend reads out of nested objects rather than off the top level
 REQUIRED_NESTED = {
     "thresholds": ("concentration_low", "concentration_high"),
     "health": ("score", "label", "subscores"),
@@ -100,9 +85,6 @@ def test_the_nested_fields_the_cards_destructure_are_there(db_session, test_user
 
 
 def test_a_holding_row_carries_what_the_table_renders(db_session, test_user, imported_portfolio):
-    # DashboardHoldingsTable reads value and daily_change_pct per row, and buildSectors reads
-    # sector. daily_change_pct is allowed to be null - it usually is, because the live-price
-    # fallback is off in production - but the key itself has to exist
     payload = PortfolioService(db_session).get_dashboard(test_user.id)
     row = payload["holdings"][0]
 
@@ -114,8 +96,6 @@ def test_a_holding_row_carries_what_the_table_renders(db_session, test_user, imp
 def test_thresholds_are_numbers_the_badges_can_compare_against(
     db_session, test_user, imported_portfolio
 ):
-    # these drive the concentration badge colours. a string here renders a badge that is
-    # always "low", because "25" > 40 is false in JS
     payload = PortfolioService(db_session).get_dashboard(test_user.id)
 
     assert isinstance(payload["thresholds"]["concentration_low"], (int, float))
@@ -124,9 +104,6 @@ def test_thresholds_are_numbers_the_badges_can_compare_against(
 
 
 def test_the_payload_has_not_grown_keys_nobody_reads(db_session, test_user, imported_portfolio):
-    # not a failure on its own - historyStartsAt is produced and Dashboard.jsx does not read it -
-    # but a payload that keeps growing on the one endpoint that was optimised for speed is worth
-    # noticing. update REQUIRED_KEYS or KNOWN_UNREAD when this fires
     known_unread = {"historyStartsAt"}
     payload = PortfolioService(db_session).get_dashboard(test_user.id)
 

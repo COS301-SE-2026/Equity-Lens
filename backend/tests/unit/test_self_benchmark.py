@@ -1,9 +1,3 @@
-"""The holding that is its own benchmark, and what kind of move each event was.
-
-STX40.JO is both the SA region benchmark and a held instrument, so an event on it used to be
-regressed against itself. That is not a presentation bug: it produces a real-looking payload
-whose every company-specific figure is exactly zero.
-"""
 from datetime import date, timedelta
 from unittest.mock import patch
 
@@ -18,16 +12,10 @@ from app.services.portfolio_service import PortfolioService, classify_move
 
 def _series(days: int = 200) -> list[tuple[date, float]]:
     start = date(2026, 1, 1)
-    # a deterministic wobble - the shape does not matter, only that it is not a straight line
     return [(start + timedelta(days=i), 100 + (i % 7) - (i % 3) * 0.5) for i in range(days)]
 
 
 def test_regressing_a_series_on_itself_produces_a_result_that_contains_nothing():
-    """Characterisation test for the bug. This documents what the degenerate case does.
-
-    cov(x, x) / var(x) is 1 exactly, so alpha is mean(x) - 1*mean(x) = 0, every residual is 0,
-    sigma is 0 and the confidence band is 1.96 * 0 * sqrt(k). Nobody should reintroduce this.
-    """
     series = _series()
     study = run_event_study(series, series, series[150][0])
 
@@ -43,7 +31,6 @@ def test_regressing_a_series_on_itself_produces_a_result_that_contains_nothing()
 def test_is_region_benchmark_only_matches_its_own_region():
     assert is_region_benchmark("STX40.JO", REGION_SA) is True
     assert is_region_benchmark("stx40.jo", REGION_SA) is True
-    # the same ticker measured against a different region's index is a normal study
     assert is_region_benchmark("STX40.JO", REGION_US) is False
     assert is_region_benchmark("NPN.JO", REGION_SA) is False
     assert is_region_benchmark(None, REGION_SA) is False
@@ -76,16 +63,13 @@ def test_the_study_refuses_before_it_fetches_a_single_price(db_session, test_use
     assert detail["available"] is False
     assert detail["reason"] == "benchmark_is_self"
     assert detail["benchmark_label"] == "Satrix 40 (JSE Top 40 proxy)"
-    # by construction the holding IS the market, so there is no other half to attribute to
     assert detail["move_type"] == "market"
-    # the benchmark series fetch is the expensive half of this endpoint, and neither ran
     closes.assert_not_called()
     benchmark.assert_not_called()
 
 
 @pytest.mark.usefixtures("holds_the_benchmark")
 def test_the_refusal_still_carries_its_articles(db_session, test_user):
-    # a market-wide fall is exactly the kind of day there is news about
     with patch.object(PortfolioService, "_possible_explanations", return_value=[{"x": 1}]):
         detail = PortfolioService(db_session).get_event_detail(
             test_user.id, "STX40.JO", date(2026, 1, 30),
@@ -95,22 +79,15 @@ def test_the_refusal_still_carries_its_articles(db_session, test_user):
 
 
 class TestClassifyMove:
-    # classify_move(market part, company part), and the move itself is R = m + c
 
     @pytest.mark.parametrize(
         ("market", "company", "expected"),
         [
-            # R = -10: 6.5 / 10 = 0.65, exactly on the company line
             (-3.5, -6.5, "company"),
-            # R = -10: 3.5 / 10 = 0.35, exactly on the market line
             (-6.5, -3.5, "market"),
-            # R = -10: 5 / 10 = 0.5, between the two
             (-5.0, -5.0, "mixed"),
-            # R = -10.8 while the market rose 0.4: the stock went the other way
             (0.4, -11.2, "against_market"),
-            # R = -2 with the market part -3: the market explains more than all of the fall
             (-3.0, 1.0, "market"),
-            # the client's MTN day: R = -10.8, 10.61 / 10.8 = 0.98
             (-0.19, -10.61, "company"),
         ],
     )
@@ -118,6 +95,5 @@ class TestClassifyMove:
         assert classify_move(market, company) == expected
 
     def test_it_refuses_rather_than_dividing_by_zero(self):
-        # R = 0 has no share to take, and no decomposition has nothing to classify
         assert classify_move(-1.0, 1.0) == "unknown"
         assert classify_move(None, None) == "unknown"

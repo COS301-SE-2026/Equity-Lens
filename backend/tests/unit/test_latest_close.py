@@ -40,8 +40,6 @@ def test_returns_none_for_an_unknown_ticker(db_session):
 
 
 def test_leaves_a_session_it_was_handed_open(db_session):
-    # this is the point of the db parameter: a request thread must not need a second
-    # connection per holding, and the caller still owns the session afterwards
     add_row(db_session, date(2026, 7, 1), 100.0)
 
     get_latest_close("NPN.JO", db_session)

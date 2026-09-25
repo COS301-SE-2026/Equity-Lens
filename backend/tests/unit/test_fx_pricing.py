@@ -32,12 +32,6 @@ def _stub_price(monkeypatch, price, change=1.5):
 
 
 def _as_us_stock(monkeypatch, ticker="AAPL"):
-    """Make the instrument table resolve this holding to a US-listed share.
-
-    KNOWN_INSTRUMENTS is JSE-only today, so nothing in it produces REGION_US on a non-.JO
-    ticker. The table is data rather than logic, so faking the lookup is the honest seam -
-    everything downstream of it, including quote_currency, still runs for real.
-    """
     instrument = Instrument(
         ticker=ticker, sector="Technology", kind=KIND_STOCK, region=REGION_US,
         display_name="Apple Inc",
@@ -48,8 +42,6 @@ def _as_us_stock(monkeypatch, ticker="AAPL"):
 
 
 def test_quote_currency_reads_the_listing_before_the_region():
-    # a JSE-listed S&P 500 feeder is REGION_US but quotes in rand cents, so the .JO test has
-    # to win or its price would be converted a second time
     assert quote_currency("STX500.JO", REGION_US) == "ZAR"
     assert quote_currency("MTN.JO", REGION_SA) == "ZAR"
     assert quote_currency("AAPL", REGION_US) == "USD"
@@ -74,15 +66,12 @@ def test_a_us_holding_is_converted_to_rand_at_the_supplied_rate(monkeypatch):
 
     priced = portfolio_service._price_holding(_holding(ticker="AAPL"), usd_zar=RATE)
 
-    # by hand: 230.00 x 18.50 = 4255.00 a share, and 2 shares is 8510.00
     assert priced["current_price"] == 4255.00
     assert priced["value"] == 8510.00
     assert priced["priced_live"] is True
     assert priced["fx_rate"] == RATE
     assert priced["quote_currency"] == "USD"
     assert priced["daily_change_is_local"] is True
-    # the move is a ratio of two dollar prices, so it is the same number in any currency.
-    # scaling it by the rate would report an FX move as a price move
     assert priced["daily_change_pct"] == 1.5
 
 
@@ -97,14 +86,11 @@ def test_a_us_holding_with_no_rate_stays_unpriced_rather_than_counting_dollars_a
     assert priced["priced_live"] is False
     assert priced["fx_rate"] is None
     assert priced["daily_change_pct"] is None
-    # falls back to cost, which is 1000 for the two shares - not 460, and not 8510
     assert priced["price_source"] == "cost"
     assert priced["value"] == 1000.0
 
 
 def test_an_unclassified_holding_is_never_priced_live(monkeypatch):
-    # no region means no currency, and a foreign price added to a rand total is worse than a
-    # missing one. this is also the reason the whole feature is inert today - see the report
     _stub_price(monkeypatch, 230.0)
 
     priced = portfolio_service._price_holding(

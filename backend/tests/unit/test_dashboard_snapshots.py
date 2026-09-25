@@ -47,8 +47,6 @@ def test_a_failed_snapshot_write_does_not_break_the_read(
 
 @pytest.mark.usefixtures("portfolio_with_a_holding")
 def test_the_dashboard_reads_the_transaction_tables_once_each(mocker, db_session, test_user):
-    # get_dashboard built classified_txns and then handed _compute_returns nothing, so the
-    # same two tables were read twice and the same rows classified three times per request
     service = PortfolioService(db_session)
     txns = mocker.spy(service.portfolio_repo, "get_instrument_transactions")
     contributions = mocker.spy(service.portfolio_repo, "get_contributions_and_withdrawals")
@@ -63,7 +61,6 @@ def test_the_dashboard_reads_the_transaction_tables_once_each(mocker, db_session
 
 @pytest.mark.usefixtures("portfolio_with_a_holding")
 def test_get_returns_still_fetches_for_itself(db_session, test_user):
-    # the two new arguments are optional precisely so this caller keeps working unchanged
     returns = PortfolioService(db_session).get_returns(test_user.id)
 
     assert returns["invested_capital"] == 4000.0
@@ -86,8 +83,6 @@ def test_the_snapshot_write_runs_once_a_day_not_once_a_request(
 def test_the_dashboard_names_both_ends_of_the_reconstruction(
     db_session, test_user, portfolio_with_a_holding
 ):
-    # the card has to distinguish reconstructed days from observed ones, and it cannot do
-    # that from performanceHistory alone - every point in it looks the same
     portfolio_with_a_holding.created_at = datetime(2026, 7, 31, 9, 15)
     for day in (date(2026, 2, 4), date(2026, 3, 4)):
         db_session.add(PortfolioSnapshot(
