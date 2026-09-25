@@ -1,10 +1,11 @@
-from datetime import date
+from datetime import date, datetime, timezone
 from unittest.mock import patch
 
 import pandas as pd
 import pytest
 
 from app.models.portfolio import Holdings, Portfolios
+from app.utils.stock_cache import LatestClose
 
 NASPERS = "Naspers Limited"
 TICKER_VALUES = {
@@ -30,12 +31,34 @@ def stub_data():
     for ticker, closed_values in TICKER_VALUES.items():
         history[ticker] = frame_data_builder(closed_values)
 
-    def mock_history(ticker, period="1y"): # noqa: ARG001
+    def mock_history(ticker, period="1y"):  # noqa: ARG001
         return history.get(ticker.upper(), pd.DataFrame())
+
+    def mock_latest_close(ticker, db=None):
+        frame = history.get(ticker.upper())
+        if frame is None or frame.empty:
+            return None
+        row = frame.iloc[-1]
+        return LatestClose(
+            date=frame.index[-1].date(),
+            close=float(row["Close"]),
+            prev_close=row.get("Prev Close"),
+            volume=int(row["Volume"]),
+            fetched_at=datetime.now(timezone.utc),
+        )
+
+    def mock_second_last_close(ticker, db=None):
+        frame = history.get(ticker.upper())
+        if frame is None or len(frame) < 2:
+            return None
+        return float(frame.iloc[-2]["Close"])
 
     with (
         patch("app.services.market_data_service.get_cached_price_history", mock_history),
         patch("app.services.portfolio_service.get_cached_price_history", mock_history),
+        patch("app.services.market_data_service.get_latest_close", mock_latest_close),
+        patch("app.services.market_data_service.is_stale", lambda row: False),
+        patch("app.services.market_data_service._second_last_close", mock_second_last_close),
     ):
         yield
 
@@ -65,6 +88,7 @@ def importe_portfolio(db_session, test_user):
         )
     )
     db_session.commit()
+
 
 @pytest.mark.usefixtures("importe_portfolio", "stub_data")
 def test_import_to_dashboard(client, auth_headers):
@@ -114,10 +138,9 @@ def test_import_to_dashboard(client, auth_headers):
     assert body["cgt"]["available"] is False
     assert body["cgt"]["reason"] == "account_type_unknown"
 
+
 @pytest.mark.usefixtures("importe_portfolio", "stub_data")
-def test_tagging_a_portfolio_tfsa_suppresses_the_cgt_estimate(
-    client, auth_headers
-):
+def test_tagging_a_portfolio_tfsa_suppresses_the_cgt_estimate(client, auth_headers):
     patch_response = client.patch(
         "/api/portfolio/account-type", json={"account_type": "tfsa"}, headers=auth_headers
     )
@@ -131,10 +154,9 @@ def test_tagging_a_portfolio_tfsa_suppresses_the_cgt_estimate(
     assert body["cgt"]["available"] is False
     assert body["cgt"]["reason"] == "tfsa_exempt"
 
+
 @pytest.mark.usefixtures("importe_portfolio", "stub_data")
-def test_tagging_a_portfolio_zar_with_a_priced_gain_produces_a_real_estimate(
-    client, auth_headers
-):
+def test_tagging_a_portfolio_zar_with_a_priced_gain_produces_a_real_estimate(client, auth_headers):
     patch_response = client.patch(
         "/api/portfolio/account-type", json={"account_type": "zar"}, headers=auth_headers
     )
@@ -148,6 +170,7 @@ def test_tagging_a_portfolio_zar_with_a_priced_gain_produces_a_real_estimate(
     assert cgt["net_unrealised_gain"] == pytest.approx(1000.0)
     assert cgt["taxable_capital_gain"] == 0.0
     assert cgt["holdings_from_statement_only"] == ["NPN.JO"]
+
 
 @pytest.mark.usefixtures("importe_portfolio")
 def test_rejects_an_unknown_account_type(client, auth_headers):

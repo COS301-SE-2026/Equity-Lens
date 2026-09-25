@@ -109,7 +109,7 @@ const NewsInvestment = () => {
     setNegative(response.data.negative || 0);
     setNeutral(response.data.neutral || 0);
     setTotalArticles(response.data.total_articles || 0);
-
+    setActiveCategory('all');
     setSentimentFilter('all');
   };
 
@@ -207,6 +207,10 @@ const NewsInvestment = () => {
   };
 
   const filteredArticles = articles.filter((article) => {
+    if (activeCategory !== 'all' && !(article.category || []).includes(activeCategory)) {
+      return false;
+    }
+
     if (sentimentFilter === 'all') {
       return true;
     }
@@ -341,6 +345,16 @@ const NewsInvestment = () => {
               </p>
               <div className="flex items-center justify-between w-full mb-4">
                 <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setActiveCategory('all')}
+                    className={`px-3 py-1 rounded-full ${
+                      activeCategory === 'all'
+                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/40'
+                        : 'bg-[var(--surface-card)] text-[var(--text-secdonary)] border-transparent'
+                    }`}
+                  >
+                    All
+                  </button>
                   {portfoliosTickers.map((ticker) => (
                     <button
                       key={ticker}

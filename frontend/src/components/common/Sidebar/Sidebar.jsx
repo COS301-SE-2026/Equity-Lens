@@ -1,16 +1,17 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+
 import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { ROUTES } from '../../../utils/constants';
 
 const navItems = [
-  { label: 'Dashboard', to: ROUTES.DASHBOARD },
-  { label: 'Portfolio', to: ROUTES.PORTFOLIO },
-  { label: 'Analytics', to: ROUTES.ANALYTICS },
+  { label: 'Dashboard', to: ROUTES.DASHBOARD},
+  { label: 'Portfolio', to: ROUTES.PORTFOLIO},
+  { label: 'Analytics', to: ROUTES.ANALYTICS},
   { label: 'News', to: ROUTES.NEWS },
   { label: 'AI Assistant', to: ROUTES.AI_CHAT },
-  { label: 'Settings', to: ROUTES.SETTINGS },
+  { label: 'Settings', to: ROUTES.SETTINGS},
   { label: 'Help', to: ROUTES.HELP },
 ];
 
@@ -18,8 +19,8 @@ const navItems = [
  * @param {{ open: boolean, onClose: () => void }} props
  */
 const Sidebar = ({ open, onClose }) => {
-  /** @type {React.MutableRefObject<HTMLDivElement | null>} */
-  const wrapperRef = useRef(null);
+  /** @type {React.MutableRefObject<HTMLElement | null>} */
+  const drawerRef = useRef(null);
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -29,8 +30,8 @@ const Sidebar = ({ open, onClose }) => {
     const handleClick = (e) => {
       const target = /** @type {HTMLElement} */ (e.target);
       if (
-        wrapperRef.current &&
-        !wrapperRef.current.contains(target) &&
+        drawerRef.current &&
+        !drawerRef.current.contains(target) &&
         !target.closest('[data-nav-trigger]')
       ) {
         onClose();
@@ -50,50 +51,63 @@ const Sidebar = ({ open, onClose }) => {
   }, [open, onClose]);
 
   return (
-    <div ref={wrapperRef}>
-      <AnimatePresence>
-        {open && (
-          <nav
+    <AnimatePresence>
+      {open && (
+        <>
+          <motion.div
+            data-testid="nav-overlay"
+            className="fixed inset-0 z-30"
+            style={{ background: 'var(--scrim)', backdropFilter: 'blur(2px)' }}
+            onClick={onClose}
+            aria-hidden="true"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+          />
+
+          <motion.nav
+            ref={drawerRef}
             aria-label="Main navigation"
-            className="fixed z-30 flex flex-col gap-2.5"
-            style={{ top: '84px', left: '24px' }}
+            className="fixed left-0 z-40 flex flex-col gap-1 overflow-y-auto px-3 py-4"
+            style={{
+              top: '72px',
+              bottom: 0,
+              width: 'min(84vw, 268px)',
+              background: 'var(--surface-raised)',
+              borderRight: '1px solid var(--border-subtle)',
+              boxShadow: 'var(--shadow-card)',
+            }}
+            initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: '-100%' }}
+            animate={shouldReduceMotion ? { opacity: 1 } : { opacity: 1, x: 0 }}
+            exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: '-100%' }}
+            transition={{ duration: 0.24, ease: [0.4, 0, 0.2, 1] }}
           >
-            {navItems.map(({ label, to }, i) => (
-              <motion.div
+            {navItems.map(({ label, to }) => (
+              <NavLink
                 key={to}
-                initial={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -18, scale: 0.9 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={shouldReduceMotion ? { opacity: 0 } : { opacity: 0, x: -18, scale: 0.9 }}
-                transition={{
-                  duration: 0.22,
-                  delay: shouldReduceMotion ? 0 : i * 0.045,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
+                to={to}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `sidebar-nav-item pressable flex items-center gap-3 rounded-lg${isActive ? ' is-active' : ''}`
+                }
+                style={({ isActive }) => ({
+                  padding: '12px 14px',
+                  minHeight: '48px',
+                  fontSize: '14px',
+                  fontWeight: isActive ? 600 : 500,
+                  textDecoration: 'none',
+                  // accent rail marks the current page without reshaping the row into a pill
+                  boxShadow: isActive ? 'inset 3px 0 0 var(--accent-primary)' : undefined,
+                })}
               >
-                <NavLink
-                  to={to}
-                  onClick={onClose}
-                  className="pressable glass-surface glass-control flex items-center rounded-full"
-                  style={({ isActive }) => ({
-                    padding: '11px 22px',
-                    fontSize: '13px',
-                    fontWeight: isActive ? 600 : 500,
-                    color: 'var(--text-primary)',
-                    textDecoration: 'none',
-                    whiteSpace: 'nowrap',
-                    boxShadow: isActive
-                      ? 'var(--shadow-card), inset 0 1px 0 var(--glass-highlight), inset 0 0 0 1.5px var(--accent-primary)'
-                      : undefined,
-                  })}
-                >
-                  {label}
-                </NavLink>
-              </motion.div>
+                {label}
+              </NavLink>
             ))}
-          </nav>
-        )}
-      </AnimatePresence>
-    </div>
+          </motion.nav>
+        </>
+      )}
+    </AnimatePresence>
   );
 };
 

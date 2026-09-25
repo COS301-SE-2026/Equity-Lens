@@ -40,10 +40,10 @@ export const ContribTooltip = ({ active, payload, label }) => {
     row.cumulative_market_gain >= 0 ? 'var(--signal-positive)' : 'var(--signal-negative)';
   return (
     <div
-      className="rounded-lg px-3 py-2 font-mono text-[11px]"
+      className="rounded-lg px-3 py-2 font-mono text-[12px]"
       style={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--border-mid)' }}
     >
-      <div className="mb-1 text-[9px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+      <div className="mb-1 text-[11px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
         {label}
       </div>
       <div className="flex items-center gap-3 py-0.5">
@@ -86,7 +86,7 @@ const ContributionsChart = ({ series }) => {
   if (series.length < 2) {
     return (
       <div
-        className="flex h-[300px] items-center justify-center px-5 text-[12px]"
+        className="flex h-[300px] items-center justify-center px-5 text-[13px]"
         style={{ color: 'var(--chart-axis-text)' }}
       >
         Not enough history yet to chart contributions vs market gain.
@@ -113,13 +113,13 @@ const ContributionsChart = ({ series }) => {
     <div aria-label="Contributions vs market gain chart">
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-4">
         <div
-          className="flex items-center gap-1 font-mono text-[10px] tracking-widest"
+          className="flex items-center gap-1 font-mono text-[11px] tracking-widest"
           style={{ color: 'var(--chart-axis-text)' }}
         >
           <span>{"What You Put In vs What It's Worth Now"}</span>
           <HelpTooltip text={MARKET_GAIN_CAVEAT} />
         </div>
-        <div className="flex items-center gap-4 font-mono text-[10px]">
+        <div className="flex items-center gap-4 font-mono text-[11px]">
           <LegendItem color="var(--accent-primary)" label="Portfolio Value" line />
           <LegendItem color="var(--text-secondary)" label="Contributed" line dashed />
           <LegendItem color="var(--signal-positive)" label="Market gain" />
@@ -140,7 +140,7 @@ const ContributionsChart = ({ series }) => {
             <XAxis
               dataKey="name"
               stroke="var(--chart-axis-text)"
-              tick={{ fontSize: 10, fontFamily: 'monospace' }}
+              tick={{ fontSize: 11, fontFamily: 'monospace' }}
               tickLine={false}
               axisLine={false}
               minTickGap={48}

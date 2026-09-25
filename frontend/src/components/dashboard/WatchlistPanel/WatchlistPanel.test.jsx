@@ -2,6 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import WatchlistPanel from './WatchlistPanel';
+import { searchStocks } from '../../../services/marketDataService';
 
 // new
 const addTicker = vi.fn();
@@ -23,9 +24,15 @@ vi.mock('../../../hooks/useWatchlist', () => ({
   default: () => mockState,
 }));
 
+vi.mock('../../../services/marketDataService', () => ({
+  searchStocks: vi.fn(),
+}));
+
 describe('WatchlistPanel', () => {
   beforeEach(() => {
     addTicker.mockClear();
+    vi.mocked(searchStocks).mockReset();
+    vi.mocked(searchStocks).mockResolvedValue({ query: '', results: [] });
     mockState = {
       watchlist: [
         {
@@ -70,5 +77,75 @@ describe('WatchlistPanel', () => {
     render(<WatchlistPanel />);
     fireEvent.click(screen.getByTitle('Remove ABG from watchlist'));
     expect(mockState.removeTicker).toHaveBeenCalledWith('w1');
+  });
+
+  describe('search suggestions (backlog 7.3)', () => {
+    it('does not search below the minimum character count', async () => {
+      render(<WatchlistPanel />);
+      fireEvent.click(screen.getByText('Add'));
+      fireEvent.change(screen.getByPlaceholderText('e.g. NPN'), { target: { value: 'n' } });
+
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      expect(searchStocks).not.toHaveBeenCalled();
+    });
+
+    it('shows suggestions after the debounce once past the minimum length', async () => {
+      vi.mocked(searchStocks).mockResolvedValueOnce({
+        query: 'na',
+        results: [{ symbol: 'NPN.JO', name: 'Naspers Limited' }],
+      });
+      render(<WatchlistPanel />);
+      fireEvent.click(screen.getByText('Add'));
+      fireEvent.change(screen.getByPlaceholderText('e.g. NPN'), { target: { value: 'na' } });
+
+      expect(await screen.findByText('Naspers Limited', {}, { timeout: 1500 })).toBeInTheDocument();
+      expect(searchStocks).toHaveBeenCalledWith('na', expect.anything());
+    });
+
+    it('shows a no-results message when the search comes back empty', async () => {
+      vi.mocked(searchStocks).mockResolvedValueOnce({ query: 'zzz', results: [] });
+      render(<WatchlistPanel />);
+      fireEvent.click(screen.getByText('Add'));
+      fireEvent.change(screen.getByPlaceholderText('e.g. NPN'), { target: { value: 'zzz' } });
+
+      expect(await screen.findByText(/no matches/i, {}, { timeout: 1500 })).toBeInTheDocument();
+    });
+
+    it('moves the selection with arrow keys and fills the input on Enter without submitting', async () => {
+      vi.mocked(searchStocks).mockResolvedValueOnce({
+        query: 'na',
+        results: [
+          { symbol: 'NPN.JO', name: 'Naspers Limited' },
+          { symbol: 'NRP.JO', name: 'NEPI Rockcastle' },
+        ],
+      });
+      render(<WatchlistPanel />);
+      fireEvent.click(screen.getByText('Add'));
+      const input = screen.getByPlaceholderText('e.g. NPN');
+      fireEvent.change(input, { target: { value: 'na' } });
+
+      await screen.findByText('Naspers Limited', {}, { timeout: 1500 });
+
+      fireEvent.keyDown(input, { key: 'ArrowDown' });
+      fireEvent.keyDown(input, { key: 'Enter' });
+
+      expect(input.value).toBe('NPN.JO');
+      expect(addTicker).not.toHaveBeenCalled();
+    });
+
+    it('leaves manual entry working when the search fails', async () => {
+      vi.mocked(searchStocks).mockRejectedValueOnce(new Error('network down'));
+      render(<WatchlistPanel />);
+      fireEvent.click(screen.getByText('Add'));
+      const input = screen.getByPlaceholderText('e.g. NPN');
+      fireEvent.change(input, { target: { value: 'na' } });
+
+      await screen.findByText(/search failed/i, {}, { timeout: 1500 });
+
+      fireEvent.change(input, { target: { value: 'sbk' } });
+      fireEvent.click(screen.getByText('Add', { selector: 'button[type="submit"]' }));
+
+      expect(addTicker).toHaveBeenCalledWith('sbk');
+    });
   });
 });

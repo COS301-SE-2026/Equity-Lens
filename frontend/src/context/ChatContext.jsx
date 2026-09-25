@@ -1,8 +1,8 @@
-import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
-import { API_BASE_URL } from '../utils/constants';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 import api from '../services/api';
+import { API_BASE_URL } from '../utils/constants';
 
 /**
  * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean, savedFacts?: string[], streaming?: boolean}} ChatMessage
@@ -21,7 +21,8 @@ const readScopes = () => {
     return JSON.parse(window.localStorage.getItem(SCOPE_STORAGE_KEY) ?? '{}') ?? {};
   } catch {
     return {};
-  }};
+  }
+};
 
 /** @param {Record<string, string|null>} scopes */
 const persistScopes = (scopes) => {
@@ -29,16 +30,18 @@ const persistScopes = (scopes) => {
     window.localStorage.setItem(SCOPE_STORAGE_KEY, JSON.stringify(scopes));
   } catch {
     // storage blocked or full
-  }};
+  }
+};
 
 /**
  * @param {ChatMessage[]} list
  * @param {ChatMessage} message
  * @returns {ChatMessage[]}
  */
-const upsert = (list, message) => (list.some((m) => m.id === message.id)
-  ? list.map((m) => (m.id === message.id ? message : m))
-  : [...list, message]);
+const upsert = (list, message) =>
+  list.some((m) => m.id === message.id)
+    ? list.map((m) => (m.id === message.id ? message : m))
+    : [...list, message];
 
 /**
  * @param {any} err
@@ -72,8 +75,10 @@ const asAxiosError = async (response) => {
   err.response = {
     status: response.status,
     data,
-    headers: { 'retry-after': response.headers.get('retry-after') },};
-  return err;};
+    headers: { 'retry-after': response.headers.get('retry-after') },
+  };
+  return err;
+};
 
 /** @param {{ children: import('react').ReactNode }} props */
 export const ChatProvider = ({ children }) => {
@@ -85,9 +90,19 @@ export const ChatProvider = ({ children }) => {
   const isThinking = viewKey !== null && busyKeys.has(viewKey);
   const [regeneratingId, setRegeneratingId] = useState(/** @type {number|string|null} */ (null));
   const [conversations, setConversations] = useState(/** @type {Conversation[]} */ ([]));
+  const [dockOpen, setDockOpen] = useState(false);
+  const [pendingQuestion, setPendingQuestion] = useState(/** @type {string|null} */ (null));
+
+  /** @param {string} [question] */
+  const openDock = (question) => {
+    setDockOpen(true);
+    if (question) setPendingQuestion(question);
+  };
+  const closeDock = () => setDockOpen(false);
+  const clearPendingQuestion = () => setPendingQuestion(null);
   /** @typedef {{id: string, fact: string, created_at?: string|null}} Memory */
   const [memories, setMemories] = useState(/** @type {Memory[]} */ ([]));
-  /** @typedef {{id: string, label: string, portfolio_name: string, account_number: string}} ChatPortfolio */    
+  /** @typedef {{id: string, label: string, portfolio_name: string, account_number: string}} ChatPortfolio */
   const [portfolios, setPortfolios] = useState(/** @type {ChatPortfolio[]} */ ([]));
   const [portfolioId, setPortfolioId] = useState(/** @type {string|null} */ (null));
   const [savedScopes] = useState(readScopes);
@@ -96,26 +111,35 @@ export const ChatProvider = ({ children }) => {
   /** @param {string|null} key */
   const showChat = (key) => {
     viewKeyRef.current = key;
-    setViewKey(key);};
+    setViewKey(key);
+  };
 
   /** @param {string} key @param {boolean} on */
-  const markBusy = (key, on) => setBusyKeys((prev) => {
-    const next = new Set(prev);
-    if (on) {next.add(key);} else {next.delete(key);}
-    return next;});
+  const markBusy = (key, on) =>
+    setBusyKeys((prev) => {
+      const next = new Set(prev);
+      if (on) {
+        next.add(key);
+      } else {
+        next.delete(key);
+      }
+      return next;
+    });
 
   useEffect(() => {
-    api.get('/ai_chat/portfolios/')
+    api
+      .get('/ai_chat/portfolios/')
       .then((res) => setPortfolios(res.data))
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (!conversationId) {return;}
+    if (!conversationId) {
+      return;
+    }
     scopeByConversation.current[conversationId] = portfolioId;
     persistScopes(scopeByConversation.current);
   }, [conversationId, portfolioId]);
-
 
   const refreshConversations = () =>
     api
@@ -127,28 +151,35 @@ export const ChatProvider = ({ children }) => {
   }, []);
 
   const refreshMemories = () =>
-    api.get('/ai_chat/memories/')
+    api
+      .get('/ai_chat/memories/')
       .then((res) => setMemories(res.data))
       .catch(() => {});
 
   /** @param {string} memoryId */
   const deleteMemory = (memoryId) => {
-    return api.delete(`/ai_chat/memories/${memoryId}/`)
+    return api
+      .delete(`/ai_chat/memories/${memoryId}/`)
       .then(() => {
         setMemories((prev) => prev.filter((m) => m.id !== memoryId));
       })
-      .catch(() => {});};
-
+      .catch(() => {});
+  };
 
   /**
    * @param {string} rawText
    * @returns {Promise<number>|undefined}
    */
   const sendMessageStreaming = (rawText) => {
-    if (isThinking) {return;}
+    if (isThinking) {
+      return;
+    }
     const text = rawText.trim();
-    if (!text) {return;}
-    return runStream(text);};
+    if (!text) {
+      return;
+    }
+    return runStream(text);
+  };
 
   /**
    * @param {string} text
@@ -162,21 +193,41 @@ export const ChatProvider = ({ children }) => {
     const onScreen = () => viewKeyRef.current === streamKey;
 
     const userMessage = /** @type {ChatMessage} */ ({
-      id: `u-${stamp}`, role: 'user', text, at: new Date() });
+      id: `u-${stamp}`,
+      role: 'user',
+      text,
+      at: new Date(),
+    });
     let replyText = '';
     let replyAt = new Date();
     let replyStatus = /** @type {'none'|'streaming'|'done'|'failed'} */ ('none');
 
     const draw = () => {
-      if (!onScreen()) {return;}
+      if (!onScreen()) {
+        return;
+      }
       setMessages((prev) => {
         const next = upsert(prev, userMessage);
-        if (replyStatus === 'none') {return next;}
-        return upsert(next, /** @type {ChatMessage} */ ({
-          id: `a-${stamp}`, role: 'assistant', text: replyText, at: replyAt,
-          streaming: replyStatus === 'streaming', failed: replyStatus === 'failed' }));});};
+        if (replyStatus === 'none') {
+          return next;
+        }
+        return upsert(
+          next,
+          /** @type {ChatMessage} */ ({
+            id: `a-${stamp}`,
+            role: 'assistant',
+            text: replyText,
+            at: replyAt,
+            streaming: replyStatus === 'streaming',
+            failed: replyStatus === 'failed',
+          }),
+        );
+      });
+    };
 
-    if (!startedIn) {showChat(streamKey);}
+    if (!startedIn) {
+      showChat(streamKey);
+    }
     markBusy(streamKey, true);
     draw();
 
@@ -188,9 +239,14 @@ export const ChatProvider = ({ children }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}` }, body: JSON.stringify({ message: text, conversation_id: startedIn, portfolio_id: scope }) });
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ message: text, conversation_id: startedIn, portfolio_id: scope }),
+      });
 
-      if (!response.ok) {throw await asAxiosError(response);}
+      if (!response.ok) {
+        throw await asAxiosError(response);
+      }
 
       if (!response.body) {
         throw new Error('Streaming response body is unavailable.');
@@ -202,24 +258,32 @@ export const ChatProvider = ({ children }) => {
 
       for (;;) {
         const { done, value } = await reader.read();
-        if (done) {break;}
+        if (done) {
+          break;
+        }
 
         buffer += decoder.decode(value, { stream: true });
         const frames = buffer.split('\n\n');
         buffer = frames.pop() ?? '';
 
         for (const frame of frames) {
-          if (!frame.startsWith('data: ')) {continue;}
+          if (!frame.startsWith('data: ')) {
+            continue;
+          }
 
           const event = JSON.parse(frame.slice(6));
 
           if (event.type === 'text') {
-            if (replyStatus === 'none') {replyAt = new Date();}
+            if (replyStatus === 'none') {
+              replyAt = new Date();
+            }
             replyStatus = 'streaming';
             replyText += event.value;
             draw();
           } else if (event.type === 'done') {
-            if (replyStatus === 'streaming') {replyStatus = 'done';}
+            if (replyStatus === 'streaming') {
+              replyStatus = 'done';
+            }
             draw();
             markBusy(streamKey, false);
             if (onScreen()) {
@@ -235,11 +299,16 @@ export const ChatProvider = ({ children }) => {
         }
       }
 
-      window.setTimeout(() => { refreshConversations(); refreshMemories(); }, 2500);
+      window.setTimeout(() => {
+        refreshConversations();
+        refreshMemories();
+      }, 2500);
       await refreshConversations();
       return 0;
     } catch (err) {
-      if (replyStatus === 'done') {return 0;}
+      if (replyStatus === 'done') {
+        return 0;
+      }
       const { text: errorText, retryAfter } = readError(err);
       replyStatus = 'failed';
       replyText = errorText;
@@ -252,7 +321,8 @@ export const ChatProvider = ({ children }) => {
         replyStatus = 'done';
         draw();
       }
-    }};
+    }
+  };
 
   /** @param {ChatMessage} message */
   const regenerate = (message) => {
@@ -261,7 +331,8 @@ export const ChatProvider = ({ children }) => {
     }
     const index = messages.findIndex((m) => m.id === message.id);
     if (index === -1 || index !== messages.length - 1) {
-      return;}
+      return;
+    }
     const priorUser = [...messages.slice(0, index)].reverse().find((m) => m.role === 'user');
     if (!priorUser) {
       return;
@@ -272,11 +343,17 @@ export const ChatProvider = ({ children }) => {
     setMessages((prev) => prev.slice(0, index + 1));
     setRegeneratingId(message.id);
 
-    return api.post('/ai_chat/', {
-      message: priorUser.text, conversation_id: conversationId, portfolio_id: portfolioId,
-      replace_last: !message.failed })
+    return api
+      .post('/ai_chat/', {
+        message: priorUser.text,
+        conversation_id: conversationId,
+        portfolio_id: portfolioId,
+        replace_last: !message.failed,
+      })
       .then((res) => {
-        if (viewKeyRef.current !== key) {return refreshConversations().then(() => 0);}
+        if (viewKeyRef.current !== key) {
+          return refreshConversations().then(() => 0);
+        }
         showChat(res.data.conversation_id);
         setConversationId(res.data.conversation_id);
         setMessages((prev) =>
@@ -291,11 +368,13 @@ export const ChatProvider = ({ children }) => {
         if (viewKeyRef.current === key) {
           setMessages((prev) => [
             ...prev.map((m) => (m.id === message.id ? { ...m, text: errorText, failed: true } : m)),
-            ...droppedTail,]);
+            ...droppedTail,
+          ]);
         }
-        return retryAfter;})
-      .finally(() => setRegeneratingId(null));};   
-
+        return retryAfter;
+      })
+      .finally(() => setRegeneratingId(null));
+  };
 
   /** @param {Conversation} convo */
   const loadConversation = (convo) => {
@@ -303,9 +382,12 @@ export const ChatProvider = ({ children }) => {
     setConversationId(convo.id);
     setPortfolioId(scopeByConversation.current[convo.id] ?? null);
     setMessages([]);
-    return api.get(`/ai_chat/conversations/${convo.id}/messages/`)
+    return api
+      .get(`/ai_chat/conversations/${convo.id}/messages/`)
       .then((res) => {
-        if (viewKeyRef.current !== convo.id) {return;}
+        if (viewKeyRef.current !== convo.id) {
+          return;
+        }
         setMessages(
           /** @type {ApiMessage[]} */ (res.data).map((m) => ({
             id: m.id,
@@ -322,7 +404,8 @@ export const ChatProvider = ({ children }) => {
     showChat(null);
     setConversationId(null);
     setPortfolioId(null);
-    setMessages([]);};
+    setMessages([]);
+  };
 
   /** @param {string} convoId @param {string} title */
   const renameConversation = (convoId, title) => {
@@ -363,19 +446,27 @@ export const ChatProvider = ({ children }) => {
         isThinking,
         regeneratingId,
         conversations,
+        dockOpen,
+        pendingQuestion,
+        openDock,
+        closeDock,
+        clearPendingQuestion,
         memories,
         portfolios,
         portfolioId,
         setPortfolioId,
         sendMessageStreaming,
+        // the dashboard dock sends through the same streaming path as the chat page
+        sendMessage: sendMessageStreaming,
         regenerate,
         loadConversation,
         startNewChat,
         renameConversation,
         deleteConversation,
         refreshMemories,
-        deleteMemory
-      }}>
+        deleteMemory,
+      }}
+    >
       {children}
     </ChatContext.Provider>
   );

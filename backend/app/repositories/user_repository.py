@@ -43,12 +43,15 @@ class UserRepository:
         if user:
             return user
 
-        # user = self.get_by_email(email)
-        # if user:
-        #     user.cognito_sub = cognito_sub
-        #     self.db.commit()
-        #     self.db.refresh(user)
-        #     return user
+        # a user who signed up before cognito, or whose sub changed, keeps their existing row
+        user = self.get_by_email(email)
+        if user:
+            user.cognito_sub = cognito_sub
+            if not user.full_name:
+                user.full_name = full_name
+            self.db.commit()
+            self.db.refresh(user)
+            return user
 
         user = User(
             id=uuid4(),

@@ -1,9 +1,11 @@
+import json
 import time
 from unittest.mock import patch
 
 import jwt
 import pytest
 from cryptography.hazmat.primitives.asymmetric import rsa
+from jwt.algorithms import RSAAlgorithm
 
 from app.config import settings
 from app.schemas.responses import AppError
@@ -38,13 +40,17 @@ def make_token(key=_key, **overrides):
     return jwt.encode(claims, key, algorithm="RS256")
 
 
+def as_jwk(key):
+    jwk = json.loads(RSAAlgorithm.to_jwk(key.public_key()))
+    jwk.update({"alg": "RS256", "use": "sig", "kid": "test-key"})
+    return jwt.PyJWK.from_dict(jwk)
+
+
 def signing_key_is(key):
     return patch.object(
         token_verifier, "_jwk_client",
         return_value=type("Stub", (), {
-            "get_signing_key_from_jwt": staticmethod(
-                lambda _token: type("K", (), {"key": key.public_key()})
-            )
+            "get_signing_key_from_jwt": staticmethod(lambda _token: as_jwk(key))
         })(),
     )
 
@@ -82,7 +88,7 @@ def test_an_expired_token_is_rejected():
 
 def test_an_unset_pool_id_falls_back():
     with patch.object(settings, "aws_cognito_user_pool_id", None), \
-         pytest.raises(token_verifier.TokenVerificationUnavailable):
+         pytest.raises(token_verifier.TokenVerificationUnavailableError):
         token_verifier.verify_access_token("any.token.here")
 
 
@@ -96,13 +102,13 @@ def test_an_unreachable_jwks_falls_back():
     })()
 
     with patch.object(token_verifier, "_jwk_client", return_value=stub), \
-         pytest.raises(token_verifier.TokenVerificationUnavailable):
+         pytest.raises(token_verifier.TokenVerificationUnavailableError):
         token_verifier.verify_access_token(make_token())
 
 
 def test_a_mismatched_client_id_falls_back():
     with signing_key_is(_key), \
-         pytest.raises(token_verifier.TokenVerificationUnavailable):
+         pytest.raises(token_verifier.TokenVerificationUnavailableError):
         token_verifier.verify_access_token(make_token(client_id="some-other-client"))
 
 
