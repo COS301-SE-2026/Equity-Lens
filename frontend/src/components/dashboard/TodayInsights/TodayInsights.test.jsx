@@ -94,8 +94,29 @@ describe('TodayInsights', () => {
     fireEvent.click(screen.getByText('View Holdings'));
     expect(onScrollTo).toHaveBeenCalledWith('holdings-table');
 
+    fireEvent.click(screen.getByRole('button', { name: /why\?/i }));
     fireEvent.click(screen.getByText('Ask AI Why'));
     expect(onAsk).toHaveBeenCalledWith('Why is that a risk?');
+  });
+
+  it('keeps an insight\'s AI question hidden until Why? is expanded', () => {
+    const insight = {
+      id: 'conc.top-holding',
+      severity: 'risk',
+      text: 'NPN.JO is 58% of your book.',
+      why: 'One company decides the result.',
+      actions: [
+        { label: 'View Holdings', target: 'holdings-table' },
+        { label: 'Ask AI Why', question: 'Why is that a risk?' },
+      ],
+    };
+    render(<TodayInsights insights={[insight]} onScrollTo={vi.fn()} onAsk={vi.fn()} />);
+
+    expect(screen.getByRole('button', { name: 'View Holdings' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Ask AI Why' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /why\?/i }));
+    expect(screen.getByRole('button', { name: 'Ask AI Why' })).toBeInTheDocument();
   });
 
   it('renders at most three actions beside the Why toggle', () => {

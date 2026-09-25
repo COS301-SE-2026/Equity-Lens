@@ -112,6 +112,10 @@ const ChatDock = () => {
               </button>
             </div>
 
+            <p className="px-4 pt-2 text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+              Answers are AI-generated and can be wrong. Informational only, not financial advice.
+            </p>
+
             <div ref={listRef} className="flex-1 space-y-2 overflow-y-auto p-3">
               {messages.length === 0 && !isThinking && (
                 <p className="p-2 text-[13px]" style={{ color: 'var(--text-ghost)' }}>

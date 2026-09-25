@@ -110,10 +110,12 @@ const DashboardHoldingsTable = ({ holdings, sectorData, marketContext, flashHold
 
   return (
     <div className="group relative">
-      <CardMascotTrigger
-        questions={[...buildHoldingsQuestions(holdings, thresholds), ...buildSectorQuestions(sectorData)]}
-        label="Ask AI about your positions"
-        className="-right-6 -top-6"/>
+      {open && (
+        <CardMascotTrigger
+          questions={[...buildHoldingsQuestions(holdings, thresholds), ...buildSectorQuestions(sectorData)]}
+          label="Ask AI about your positions"
+          className="-right-6 -top-6"/>
+      )}
       <GlassPanel className="flex flex-col">
       <PanelHead
         label="All Positions"

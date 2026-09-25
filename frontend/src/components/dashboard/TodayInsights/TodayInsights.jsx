@@ -49,6 +49,7 @@ const InsightCard = ({ insight, isOpen, onToggle, onScrollTo, onAsk }) => {
   const evidence = insight.evidence ?? [];
   // buildInsights hands over a list; a record built by hand may still carry the single action
   const actions = (insight.actions ?? (insight.action ? [insight.action] : [])).slice(0, MAX_ACTIONS);
+  const questions = actions.filter((/** @type {any} */ action) => action.question && !action.target);
 
   return (
     <div
@@ -92,13 +93,7 @@ const InsightCard = ({ insight, isOpen, onToggle, onScrollTo, onAsk }) => {
               </SecondaryButton>
             );
           }
-          if (action.question) {
-            return (
-              <SecondaryButton key={action.label} size="sm" className="!px-1.5 !py-0.5 !text-[11px]" onClick={() => onAsk?.(action.question)}>
-                {action.label}
-              </SecondaryButton>
-            );
-          }
+          if (action.question) return null;
           return (
             <SecondaryButton key={action.label} size="sm" to={action.to} className="!px-1.5 !py-0.5 !text-[11px]">
               {action.label}
@@ -108,6 +103,15 @@ const InsightCard = ({ insight, isOpen, onToggle, onScrollTo, onAsk }) => {
       </div>
 
       <AnimatedReveal show={isOpen}>
+        {questions.length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {questions.map((/** @type {any} */ action) => (
+              <SecondaryButton key={action.label} size="sm" className="!px-1.5 !py-0.5 !text-[11px]" onClick={() => onAsk?.(action.question)}>
+                {action.label}
+              </SecondaryButton>
+            ))}
+          </div>
+        )}
         {evidence.length > 0 && (
           <dl className="mt-1.5 space-y-0.5">
             {evidence.map((/** @type {any} */ row) => (

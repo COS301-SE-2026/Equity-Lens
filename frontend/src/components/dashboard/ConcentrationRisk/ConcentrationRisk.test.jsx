@@ -262,4 +262,17 @@ describe('ConcentrationRisk', () => {
       expect(vi.mocked(simulateSectorInvestment)).toHaveBeenCalledTimes(1);
     });
   });
+
+  it('offers the EquityLens Insight trigger only while the card is open', () => {
+    renderCard();
+    const trigger = () => screen.queryByRole('button', { name: 'Ask AI about sector concentration' });
+
+    expect(trigger()).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /collapse concentration and rebalancing/i }));
+    expect(trigger()).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /expand concentration and rebalancing/i }));
+    expect(trigger()).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /collapse concentration and rebalancing/i }));
+    expect(trigger()).toBeNull();
+  });
 });

@@ -23,7 +23,7 @@ import { buildChartStats, filterByRange, buildExplanation, buildingHistoryLabel,
   BENCHMARK_METHOD, benchmarkCompositionLines, shortBenchmarkLabel,
 } from '../../../utils/dashboardInsights';
 import { buildGroupSeries, rebaseBenchmarkToSlice, rebaseForRange } from '../../../utils/portfolioStats';
-import { buildEventNarrative, longDate, rowLabel } from '../../../utils/eventNarrative';
+import { headlineFor, longDate, rowLabel } from '../../../utils/eventNarrative';
 import { getHoldingSeries } from '../../../services/portfolioService';
 import ContributionsChart from '../ContributionsChart/ContributionsChart';
 import CardMascotTrigger from '../../chat/CardMascotTrigger/CardMascotTrigger';
@@ -259,7 +259,7 @@ function markerNote({ events, loading, failed }) {
   if (loading) return 'Looking for unusual moves...';
   if (!events) return null;
   if ((events.events ?? []).length > 0) {
-    return 'Dots mark unusually large single-day moves. Click one for an explanation.';
+    return 'Each dot is a day one of your holdings moved unusually far for itself. Click one to see what it meant for you.';
   }
 
   const scanned = events.coverage?.holdings_scanned ?? 0;
@@ -305,6 +305,17 @@ const AnchoredPopover = ({ at, containerRef, children }) => {
     const card = cardRef.current;
     if (card) setSize({ width: card.offsetWidth, height: card.offsetHeight });
   }, [at, children]);
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(() => {
+      const width = card.offsetWidth;
+      const height = card.offsetHeight;
+      setSize((prev) => (prev.width === width && prev.height === height ? prev : { width, height }));
+    });
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, []);
 
   const container = containerRef.current;
   const boxWidth = container?.clientWidth ?? 0;
@@ -348,7 +359,8 @@ const AnchoredPopover = ({ at, containerRef, children }) => {
       )}
       <div
         ref={cardRef}
-        className="absolute z-20 max-h-[calc(100%-2.5rem)] overflow-y-auto"
+        data-event-popover
+        className="absolute z-20 flex max-h-[calc(100%-2.5rem)] flex-col"
         style={{ left, top }}
       >
         {children}
@@ -452,6 +464,7 @@ const PerfChart = ({
           const { key, event, y, fill, stroke, strokeWidth } = dot;
           const open = (/** @type {{ cx: number, cy: number }} */ at) =>
             onSelectEvent?.({ ...dot, at });
+          const top = headlineFor(event);
           return (
           <ReferenceDot
             key={key}
@@ -472,7 +485,7 @@ const PerfChart = ({
                 strokeWidth={strokeWidth}
                 role="button"
                 tabIndex={0}
-                aria-label={buildEventNarrative(event, null).headline}
+                aria-label={top ? `${top.headline}, ${top.move} on ${top.date}` : event.ticker}
                 style={{ cursor: 'pointer' }}
                 onClick={() => open({ cx: props.cx, cy: props.cy })}
                 onKeyDown={(/** @type {any} */ e) => {
@@ -489,14 +502,6 @@ const PerfChart = ({
       </LineChart>
     </ResponsiveContainer>
   );
-};
-/** @param {string | undefined} ticker @param {{ ticker: string, value: number }[]} holdings */
-const holdingWeightPct = (ticker, holdings) => {
-  if (!ticker) return null;
-  const upper = ticker.toUpperCase();
-  const bookValue = holdings.reduce((sum, h) => sum + (h.value ?? 0), 0);
-  const held = holdings.find((h) => (h.ticker ?? '').toUpperCase() === upper);
-  return held && bookValue ? (held.value / bookValue) * 100 : null;
 };
 
 /**
@@ -552,6 +557,7 @@ const PerformanceVsBenchmark = ({
   const STEP_COOLDOWN_MS = 250;
   /** @param {WheelEvent} event */
   const handleWheelZoom = useCallback((/** @type {WheelEvent} */ event) => {
+  if (event.target instanceof Element && event.target.closest('[data-event-popover]')) return;
   if (!event.ctrlKey && !event.metaKey) return;
   const idx = RANGES.indexOf(range);
   const scrollingToShorter = event.deltaY > 0;
@@ -694,7 +700,6 @@ const PerformanceVsBenchmark = ({
   };
 
   const openKey = openEvent ? `${openEvent.event.ticker}:${openEvent.event.date}` : null;
-  const eventWeightPct = holdingWeightPct(openEvent?.event?.ticker, holdings);
 
   const tooShortToPlot = chosenSeries.length < 2;
 
@@ -746,10 +751,12 @@ const PerformanceVsBenchmark = ({
 
   return (
       <div className="group relative">
+        {open && (
         <CardMascotTrigger
         questions={buildPerformanceQuestions({ diffPct: stats.diffPct, benchAvailable: stats.benchAvailable, benchmarkLabel })}
         label="Ask AI about performance vs benchmark"
         className="-right-6 top-16"/>
+        )}
       <GlassPanel className="flex flex-col">
       <div
         className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
@@ -880,7 +887,7 @@ const PerformanceVsBenchmark = ({
                 event={openEvent.event}
                 detail={openKey ? eventDetails[openKey] : null}
                 pending={Boolean(openKey) && eventPendingKey === openKey}
-                weightPct={eventWeightPct}
+                scan={events}
                 onClose={() => setOpenEvent(null)}
                 onAsk={onAskAboutEvent}
               />

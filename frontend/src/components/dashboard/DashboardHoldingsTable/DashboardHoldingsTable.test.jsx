@@ -340,4 +340,17 @@ describe('DashboardHoldingsTable', () => {
       await waitForElementToBeRemoved(() => row.queryByText('Avg Cost'));
     });
   });
+
+  it('offers the EquityLens Insight trigger only while the card is open', () => {
+    renderTable(HOLDINGS);
+    const trigger = () => screen.queryByRole('button', { name: 'Ask AI about your positions' });
+
+    expect(trigger()).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /collapse all positions/i }));
+    expect(trigger()).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /expand all positions/i }));
+    expect(trigger()).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /collapse all positions/i }));
+    expect(trigger()).toBeNull();
+  });
 });

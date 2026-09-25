@@ -156,6 +156,11 @@ const EventStudyChart = ({ detail, initialWorkingOpen = false }) => {
             <div className="mt-1 text-[12px] leading-snug" style={{ color: 'var(--text-primary)' }}>
               {equation.result}
             </div>
+            {equation.alpha && (
+              <div className="mt-1 font-mono text-[11px]" style={{ color: 'var(--text-ghost)' }}>
+                {equation.alpha}
+              </div>
+            )}
           </div>
         )}
 

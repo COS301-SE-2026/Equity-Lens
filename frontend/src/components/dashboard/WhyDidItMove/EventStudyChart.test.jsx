@@ -37,6 +37,10 @@ const DETAIL = {
   r_squared: 0.4127,
   estimation_window: { from: '2026-02-19', to: '2026-07-17', offsets: [-120, -21] },
   abnormal_returns: [row(-5, 0, 2.8), row(0, -7.85, 4.8), row(10, -7.2, 11.1)],
+  decomposition: {
+    stock_return_pct: -1.0, market_return_pct: -0.2, beta: 1.1832,
+    market_component_pct: -0.24, company_component_pct: -0.76,
+  },
 };
 
 describe('eventStudyRows', () => {
@@ -97,9 +101,10 @@ describe('EventStudyChart', () => {
     render(<EventStudyChart detail={DETAIL} />);
     await userEvent.click(screen.getByRole('button', { name: 'Show the working' }));
 
-    expect(screen.getByText('expected return = alpha + beta × benchmark return')).toBeInTheDocument();
-    expect(screen.getByText('0.02% + 1.18 × -0.20% = -0.22%')).toBeInTheDocument();
-    expect(screen.getByText(/actually returned -1\.00%, so the abnormal return is -0\.80%/)).toBeInTheDocument();
+    expect(screen.getByText('expected = β × benchmark return; abnormal = actual − expected')).toBeInTheDocument();
+    expect(screen.getByText('1.18 × -0.20% = -0.24%')).toBeInTheDocument();
+    expect(screen.getByText(/actually returned -1\.00%, so the abnormal move is -1\.00% − \(-0\.24%\) = -0\.76%/)).toBeInTheDocument();
+    expect(screen.getByText(/α = 0\.00021, not used/)).toBeInTheDocument();
   });
 
   it('renders nothing at all when the window is incomplete', () => {

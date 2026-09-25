@@ -97,4 +97,13 @@ describe('ChatDock', () => {
 
     expect(chat.sendMessage).toHaveBeenCalledWith('What should I watch?');
   });
+
+  it('says under its header that the answers come from an AI', () => {
+    chat.dockOpen = true;
+    renderDock();
+
+    expect(
+      screen.getByText('Answers are AI-generated and can be wrong. Informational only, not financial advice.'),
+    ).toBeInTheDocument();
+  });
 });

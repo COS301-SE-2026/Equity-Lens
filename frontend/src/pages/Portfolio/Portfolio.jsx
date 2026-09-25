@@ -1,13 +1,18 @@
 import { useState,useEffect } from "react";
-import * as ShowPdf from "pdfjs-dist";
-import PDFworker from "pdfjs-dist/build/pdf.worker.mjs?worker";
 import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, TriangleAlert, Bot ,LoaderCircle } from "lucide-react"
 import { PieChart, Pie, Cell,BarChart,XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
 import api from "../../services/api"
-import * as XLSX from "xlsx"
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "../../utils/constants"
-ShowPdf.GlobalWorkerOptions.workerPort = new PDFworker();
+
+/** @type {Promise<any> | null} */
+let pdfPromise = null;
+const loadPdfjs = () => {
+  if (!pdfPromise) pdfPromise = import('./pdfLoader').then((m) => m.default);
+  return pdfPromise;
+};
+
+const loadXlsx = () => import('xlsx');
 
 const DownloadEXCEL = () =>{ window.open("/template/EquityLens_Portfolio_Excel_Template.xlsx") }
 const cardStyle   = {background: 'var(--surface-card)', borderColor: 'var(--border-subtle)'};
@@ -237,6 +242,7 @@ const ReadingExcelFile = async(file) => {
   {
     return;
   }
+  const XLSX = await loadXlsx();
 
   const read = XLSX.read(await file.arrayBuffer(), { cellDates: true });
 
@@ -294,6 +300,7 @@ const ReadingPDFFile = async(file,password) =>
   {
     return
   }
+  const ShowPdf = await loadPdfjs();
 
   const convertPdf = await ShowPdf.getDocument({
         data: await file.arrayBuffer(),

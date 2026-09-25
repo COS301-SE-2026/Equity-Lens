@@ -298,10 +298,12 @@ const ConcentrationRisk = ({ sectors = [], configVersion = 0 }) => {
 
   return (
     <div className="group relative">
-      <CardMascotTrigger
-        questions={sectorQuestions}
-        label="Ask AI about sector concentration"
-        className="-right-6 -top-6"/>
+      {open && (
+        <CardMascotTrigger
+          questions={sectorQuestions}
+          label="Ask AI about sector concentration"
+          className="-right-6 -top-6"/>
+      )}
       <GlassPanel className="flex flex-col">
         <PanelHead
           label="Concentration & Rebalancing"
