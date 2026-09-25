@@ -14,7 +14,7 @@ const NewsInvestment = () => {
   const [articles, setArticles] = useState(/** @type {any[]}*/([]));
   const [ticker, setTicker] = useState('');
   const [activeTab, setActiveTab] = useState('portfolio');
-  const [activeCategory, setActiveCategory] = useState('portfolio');
+  const [activeCategory, setActiveCategory] = useState('all');
   const [portfoliosTickers, setPortfoliosTickers] = useState(/** @type {any[]}*/([]));
   const [positive, setPositive] = useState(0);
   const [negative, setNegative] = useState(0);
@@ -26,7 +26,11 @@ const NewsInvestment = () => {
     /** @type{any[]}*/
     let AllArticles = [];
 
-    for (const ticker of portfoliosTickers) {
+   const validTickers = portfoliosTickers.filter(
+    (ticker) => ticker !== 'All',
+  );
+
+    for (const ticker of validTickers) {
       const response = await api.get(`/news/test-aapl/${ticker}`);
 
       /** @type {Array<any>} */
@@ -61,9 +65,10 @@ const NewsInvestment = () => {
       AllArticles = [...AllArticles, ...formattedArticles];
     }
     setArticles(AllArticles);
-    setActiveCategory('all');
+    setActiveCategory('All');
     setSentimentFilter('all');
   };
+
 
   /** @param {string} ticker*/
   const ToGetTickerNews = async (ticker) => {
@@ -113,9 +118,70 @@ const NewsInvestment = () => {
     setPortfoliosTickers(reponse.data.tickers || []);
   };
 
+  
   useEffect(() => {
-    ToGetPortfoliosTickers();
-  }, []);
+  const loadPortfolio = async () => {
+    const response = await api.get('/news/portfolio-tickers');
+    const tickers = response.data.tickers || [];
+
+    setPortfoliosTickers(['All', ...tickers.filter((ticker) => ticker !== 'All')]);
+
+    const validTickers = tickers.filter(
+      (ticker) => ticker !== 'All',
+    );
+
+    let allArticles = [];
+
+    for (const ticker of validTickers) {
+      try {
+        const newsResponse = await api.get(
+          `/news/test-aapl/${ticker}`,
+        );
+
+        const tickerArticles =
+          newsResponse.data.articles || [];
+
+        const formattedArticles = tickerArticles.map((article) => {
+          const entity = article.entities?.find(
+            (entity) => entity.symbol === ticker,
+          );
+
+          const score = entity?.sentiment_score;
+
+          let sentiment = 'neutral';
+
+          if (score > 0) {
+            sentiment = 'positive';
+          } else if (score < 0) {
+            sentiment = 'negative';
+          }
+
+          return {
+            article_id: article.uuid,
+            title: article.title,
+            description: article.description,
+            image_url: article.image_url,
+            pubDate: article.published_at,
+            source_name: article.source,
+            category: [ticker],
+            sentiment,
+            sentiment_score: score ?? 0,
+          };
+        });
+
+        allArticles = [...allArticles, ...formattedArticles];
+      } catch (error) {
+        console.error(`Failed to get news for ${ticker}:`, error);
+      }
+    }
+
+    setArticles(allArticles);
+    setActiveCategory('All');
+    setSentimentFilter('all');
+  };
+
+  loadPortfolio();
+}, []);
 
   /** @param {string} ticker*/
   const AddStock = async (ticker) => {
@@ -140,10 +206,6 @@ const NewsInvestment = () => {
     setTotalArticles(gettingTheNews.data.total_articles || 0);
   };
 
-  useEffect(() => {
-    ToGetTheNews();
-  }, []);
-
   const filteredArticles = articles.filter((article) => {
     if (sentimentFilter === 'all') {
       return true;
@@ -152,7 +214,7 @@ const NewsInvestment = () => {
     return article.sentiment === sentimentFilter;
   });
 
-  const marketCategories = ['All', 'Top', 'Business', 'Technology', 'Politics', 'Crime'];
+  const marketCategories = ['Business', 'Top', 'Technology', 'Politics', 'Crime'];
 
   return (
     <div className="mb-8">
@@ -201,7 +263,7 @@ const NewsInvestment = () => {
         </div>
 
 
-        <div className="flex items-center gap-4 p-4 border border-[var(--border-subtle)] rounded-xl">
+        <div className="flex items-center gap-4 p-4 border border-green-500/25 rounded-xl">
           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500/15">
             <TrendingUp className="w-6 h-6 text-green-500" />
           </div>
@@ -213,7 +275,7 @@ const NewsInvestment = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 border border-[var(--border-subtle)] rounded-xl">
+        <div className="flex items-center gap-4 p-4 border border-red-500/25 rounded-xl">
           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/15">
             <TrendingDown className="w-6 h-6 text-red-500" />
           </div>
@@ -225,7 +287,7 @@ const NewsInvestment = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-4 p-4 border border-[var(--border-subtle)] rounded-xl">
+        <div className="flex items-center gap-4 p-4 border border-purple-500/25 rounded-xl">
           <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/15">
             <Star className="w-6 h-6 text-purple-500" />
           </div>
@@ -241,7 +303,7 @@ const NewsInvestment = () => {
 
       <div className="inline-flex items-center rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-card)] p-1 mt-7">
         <button
-          onClick={() => setActiveTab('portfolio')}
+          onClick={() => {setActiveTab('portfolio'); ToGetAllPortfolioNews();}}
           className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${activeTab === 'portfolio'
               ? 'bg-blue-500 text-white shadow-sm'
               : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -274,6 +336,9 @@ const NewsInvestment = () => {
               <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
                 Portfolio News
               </h2>
+              <p className='mt-1 mb-4 text-sm text-[var(--text-secondary)]'>
+                News and market updates related to your current holdings
+              </p>
               <div className="flex items-center justify-between w-full mb-4">
                 <div className="flex flex-wrap gap-2">
                   {portfoliosTickers.map((ticker) => (
@@ -281,11 +346,19 @@ const NewsInvestment = () => {
                       key={ticker}
                       onClick={() => {
                         setActiveCategory(ticker);
-                        ToGetTickerNews(ticker);
+
+                        if(ticker === 'All')
+                        {
+                            ToGetAllPortfolioNews();
+                        }
+                        else
+                        {
+                          ToGetTickerNews(ticker);
+                        }
                       }}
-                      className={`px-3 py-1 rounded-full ${activeCategory === ticker
-                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/40'
-                        : 'bg-[var(--surface-card)] text-[var(--text-secdonary)] border-transparent'
+                      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${activeCategory === ticker
+                        ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
+                        : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
                         }`}
                     >
                       {ticker}
