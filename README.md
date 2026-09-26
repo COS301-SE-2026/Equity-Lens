@@ -14,6 +14,7 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 - [Demo 1 Video](https://drive.google.com/file/d/1zTsXVxXO-8XaZbjOjm34sZqkUZCKs1rV/view?usp=sharing)
 - [Demo 2 Video](./Documentation/Demo_2/Demo_2_video/2026-07-30%2023-18-48.mp4)
 - [Demo 3 Video](https://drive.google.com/file/d/1x89mauJbrfO37-Z5hops6Qw0v2t45XQB/view?usp=sharing)
+- [Demo 4 Video] ()
 
 ---
 
@@ -22,11 +23,11 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 | | Link |
 |---|---|
-| Software Requirement Specification (SRS) | [View SRS](./Documentation/Demo_3/SRS.pdf) |
-| Software Architecture Specification (SAS) | [View SAS](./Documentation/Demo_3/SAS.pdf) |
-| Coding Standards | [View](./Documentation/Demo_3/Coding_Standards.pdf) |
-| Testing Policy | [View](./Documentation/Demo_3/Testing_Policy.pdf) |
-| User Manual | [View](./Documentation/Demo_3/User_Manual.pdf) |
+| Software Requirement Specification (SRS) | [View SRS](./Documentation/Demo_4/SRS.pdf) |
+| Software Architecture Specification (SAS) | [View SAS](./Documentation/Demo_4/SAS.pdf) |
+| Coding Standards | [View](./Documentation/Demo_4/Coding_Standards.pdf) |
+| Testing Policy | [View](./Documentation/Demo_4/Testing_Policy.pdf) |
+| User Manual | [View](./Documentation/Demo_4/User_Manual.pdf) |
 | Brand Style Guide | live at `/brand` in the running app ([source](./frontend/src/pages/BrandStyleGuide/BrandStyleGuide.jsx)) |
 | GitHub Project Board | [View Board](https://github.com/orgs/COS301-SE-2026/projects/45) |
 | Design Document (Demo 1) | [View Design Doc](./Documentation/Demo_1/DESIGN_DOCUMENT.pdf) |
