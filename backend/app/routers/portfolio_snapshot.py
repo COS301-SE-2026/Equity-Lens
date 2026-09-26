@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -23,7 +24,12 @@ from app.services.portfolio_analytics_service import (
     get_portfolio_analytics,
 )
 from app.services.portfolio_brief_service import generate_portfolio_brief
+from app.services.portfolio_insights import build_market_drivers
+from app.services.portfolio_risk_service import build_risk_assessment
+from app.services.portfolio_service import PortfolioService
 from app.services.portfolio_snapshot_service import build_snapshot
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/portfolio_snapshot", tags=["Portfolio Snapshot"])
 
@@ -90,7 +96,27 @@ def get_portfolio_snapshot(
     )
 
     analytics = get_portfolio_analytics(db=db, portfolio_id=portfolio_id,)
+    dashboard = None
+    if repository.get_latest_portfolio_id(current_user.id) == portfolio_id:
+        try:
+            dashboard = PortfolioService(db).get_dashboard(current_user.id)
+        except Exception:
+            logger.exception("dashboard section failed for portfolio %s", portfolio_id)
+            db.rollback()
 
+    risk = None
+    if dashboard:
+        try:
+            risk = build_risk_assessment(dashboard["holdings"])
+        except Exception:
+            logger.exception("risk section failed for portfolio %s", portfolio_id)
+
+    drivers = None
+    if dashboard:
+        try:
+            drivers = build_market_drivers(dashboard["holdings"])
+        except Exception:
+            logger.exception("market drivers section failed for portfolio %s", portfolio_id)
 
     tickers = (
         db.query(Holdings.ticker)
@@ -127,7 +153,7 @@ def get_portfolio_snapshot(
                 )
 
         except Exception:
-            return None
+            logger.warning("ticker news failed for %s", ticker, exc_info=True)
 
     market_news = []
 
@@ -147,7 +173,7 @@ def get_portfolio_snapshot(
             )
 
     except Exception:
-        return None
+        logger.warning("market news failed", exc_info=True)
 
     snapshot = build_snapshot(
         portfolio_id=str(portfolio_id),
@@ -161,6 +187,9 @@ def get_portfolio_snapshot(
         portfolio_news=portfolio_news,
         market_news=market_news,
         analytics=analytics,
+        dashboard=dashboard,
+        risk=risk,
+        drivers=drivers,
     )
 
     stored_snapshot = repository.save_canonical_snapshot(
