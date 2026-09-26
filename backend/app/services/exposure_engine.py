@@ -32,7 +32,7 @@ class NormalizedFeature:
 # of 0.071 despite belonging to Financial Services and Basic Materials respectively.
 SECTOR_MISMATCH_PENALTY = 0.4
  
-def normalize_universe(features: list[Feature]) -> list[NormalizedFeature]:
+def normalize_universe(features: list[Feature], reference: list[Feature]) -> list[NormalizedFeature]:
     log_mcap = np.array([math.log10(f.market_cap) for f in features])
     local_float = np.array([f.local_float_pct for f in features])
     div_yield = np.array([f.dividend_yield for f in features])

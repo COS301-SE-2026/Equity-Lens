@@ -185,7 +185,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
               ? `${Math.round((rec.closeness ?? 0) * 100)}% match to ${rec.similar_to}`
               : '';
           return [
-            `${d.ticker} — ${d.sector}`,
+            `${d.ticker}: ${d.sector}`,
             `R${d.market_cap}bn, ${d.local_float_pct}% free float, ${d.dividend_yield}% yield`,
             status,
           ]
@@ -208,13 +208,12 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
           statusHtml = `<div style="color:var(--signal-positive);font-weight:600;margin-top:4px">${Math.round((rec.closeness ?? 0) * 100)}% match to ${rec.similar_to}</div>`;
         }
 
-        tooltip.innerHTML = `<strong>${d.ticker}</strong> — ${d.sector}<br/>R${d.market_cap}bn, ${d.local_float_pct}% free float, ${d.dividend_yield}% yield${statusHtml}`;
+        tooltip.innerHTML = `<strong>${d.ticker}</strong>: ${d.sector}<br/>R${d.market_cap}bn, ${d.local_float_pct}% free float, ${d.dividend_yield}% yield${statusHtml}`;
       })
       .on('mouseleave', () => {
         if (tooltip) tooltip.style.opacity = '0';
       });
 
-    
     svg
       .append('defs')
       .append('marker')
