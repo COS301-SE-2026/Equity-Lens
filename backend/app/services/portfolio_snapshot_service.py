@@ -75,6 +75,38 @@ def rank_insights(snapshot_data: dict):
             "data": lowest,   
         })
 
+    dashboard = snapshot_data.get("dashboard") or {}
+
+    health = dashboard.get("health") or {}
+    if health.get("score") is not None:
+        insights.append({
+            "type": "health_score",
+            "priority": 95,
+            "title": "Portfolio Health",
+            "data": {"score": health["score"], "label": health.get("label")},
+        })
+
+    cgt = dashboard.get("cgt") or {}
+    if cgt.get("available"):
+        insights.append({
+            "type": "cgt_estimate",
+            "priority": 70,
+            "title": "Capital Gains Tax Estimate",
+            "data": {
+                "net_unrealised_gain": cgt.get("net_unrealised_gain"),
+                "taxable_capital_gain": cgt.get("taxable_capital_gain"),
+            },
+        })
+
+    risk = snapshot_data.get("risk") or {}
+    if risk.get("available"):
+        insights.append({
+            "type": "risk_score",
+            "priority": 92,
+            "title": "Overall Risk Score",
+            "data": {"score": risk["score"], "level": risk["level"]},
+        })
+
     return sorted(
         insights,
         key= lambda item: item["priority"],
@@ -93,6 +125,9 @@ def build_snapshot(
     portfolio_news: list,
     market_news: list,
     analytics: list,
+    dashboard: dict | None = None,
+    risk: dict | None = None,
+    drivers: dict | None = None,
 ):
 
     snapshot_data = {
@@ -118,7 +153,9 @@ def build_snapshot(
         },
 
         "analytics": analytics,
-
+        "dashboard": dashboard,
+        "risk": risk,
+        "drivers": drivers,
 
     }
 
