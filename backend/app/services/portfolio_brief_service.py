@@ -713,36 +713,33 @@ def generate_portfolio_brief(
             ] ]
 
 
+        company_style = ParagraphStyle(
+            "AnalyticsCompany",
+            parent=styles["BodyText"],
+            fontSize=8,
+            leading=10,
+        )
+
         for stock in analytics:
             analytics_data.append(
                 [
-                    stock.get("ticker", "UnKnown"), 
-                    stock.get("name", stock.get("ticker","Unknown",),
-                ), 
-                get_indicator_value(stock.get("capm")),
-                get_indicator_value(stock.get("pe_ratio")),
-                get_indicator_value(stock.get("altman_z")),
-                get_indicator_value(stock.get("beta")),
-                get_indicator_value(stock.get("rsi")),
-                get_indicator_value(stock.get("sharpe")),
-                get_indicator_value(stock.get("sortino")),
-
+                    stock.get("ticker", "Unknown"),
+                    Paragraph(
+                        escape(str(stock.get("name") or stock.get("ticker", "Unknown"))),
+                        company_style,
+                    ),
+                    get_indicator_value(stock.get("capm")),
+                    get_indicator_value(stock.get("pe_ratio")),
+                    get_indicator_value(stock.get("altman_z")),
+                    get_indicator_value(stock.get("beta")),
+                    get_indicator_value(stock.get("rsi")),
+                    get_indicator_value(stock.get("sharpe")),
+                    get_indicator_value(stock.get("sortino")),
                 ])
-
         analytics_table = Table(
             analytics_data,
             repeatRows=1,
-            colWidths=[
-                19 * mm,
-                29 * mm,
-                18 * mm,
-                17 * mm,
-                20 * mm,
-                16 * mm,
-                16 * mm,
-                19 * mm,
-                19 * mm,
-            ]
+            colWidths=[20 * mm, 40 * mm] + [17 * mm] * 7,
         )
 
         analytics_table.setStyle(TableStyle(
@@ -750,11 +747,13 @@ def generate_portfolio_brief(
             ("BACKGROUND", (0,0), (-1,0), colors.HexColor('#E5E7EB'),),
             ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold",),
             ("FONTNAME", (0,0), (0,-1), "Helvetica-Bold",),
-            ("BOX", (0,0), (-1,-1),0.7, '#CBD5E1'),
-            ("LEFTPADDING", (0,0), (-1,-1), 8,),
-            ("RIGHTPADDING", (0,0), (-1,-1), 8,),
-            ("TOPPADDING", (0,0), (-1,-1), 7,),
-            ("BOTTOMPADDING", (0,0), (-1,-1), 7,),
+            ("FONTSIZE", (0,0), (-1,-1), 8,),
+            ("VALIGN", (0,0), (-1,-1), "MIDDLE",),
+            ("BOX", (0,0), (-1,-1), 0.7, '#CBD5E1'),
+            ("LEFTPADDING", (0,0), (-1,-1), 4,),
+            ("RIGHTPADDING", (0,0), (-1,-1), 4,),
+            ("TOPPADDING", (0,0), (-1,-1), 5,),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 5,),
         ]
         ))
 
