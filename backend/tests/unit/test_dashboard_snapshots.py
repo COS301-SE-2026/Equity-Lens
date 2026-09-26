@@ -15,7 +15,7 @@ def _clear_snapshot_guard():
     portfolio_service._snapshot_maintenance_done.clear()
 
 
-@pytest.fixture()
+@pytest.fixture
 def portfolio_with_a_holding(db_session, test_user):
     portfolio = Portfolios(
         user_id=test_user.id, account_number="EE-1", portfolio_name="EasyEquities", currency="ZAR",
@@ -30,9 +30,9 @@ def portfolio_with_a_holding(db_session, test_user):
     db_session.commit()
     return portfolio
 
-
+@pytest.mark.usefixtures("portfolio_with_a_holding")
 def test_a_failed_snapshot_write_does_not_break_the_read(
-    db_session, test_user, portfolio_with_a_holding
+    db_session, test_user
 ):
     with patch.object(
         portfolio_service.PortfolioRepository,
@@ -66,9 +66,9 @@ def test_get_returns_still_fetches_for_itself(db_session, test_user):
     assert returns["invested_capital"] == 4000.0
     assert returns["holdings_count"] == 1
 
-
+@pytest.mark.usefixtures("portfolio_with_a_holding")
 def test_the_snapshot_write_runs_once_a_day_not_once_a_request(
-    db_session, test_user, portfolio_with_a_holding
+    db_session, test_user
 ):
     service = PortfolioService(db_session)
 

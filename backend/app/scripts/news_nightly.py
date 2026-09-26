@@ -256,7 +256,6 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:
         logger.exception("nightly news run failed")
         summary = {"status": "failed", "error": f"{type(exc).__name__}: {exc}"}
-    print(json.dumps(summary))
     return EXIT_CODES.get(summary["status"], 2)
 
 

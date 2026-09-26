@@ -1,6 +1,6 @@
 import io
-from pathlib import Path
 from html import escape
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import requests
