@@ -20,7 +20,11 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from app.services.portfolio_brief_dashboard import add_dashboard_pages, dashboard_toc_rows
+from app.services.portfolio_brief_dashboard import (
+    add_dashboard_pages,
+    dashboard_toc_rows,
+    pie_with_legend,
+)
 
 
 def section_heading(number, title, color):
@@ -344,9 +348,7 @@ def create_allocation_chart(allocation: list):
 
     fig, ax = plt.subplots(figsize=(6, 3.5))
 
-    ax.pie(values,labels=labels,autopct="%1.1f%%",startangle=90,)
-
-    ax.set_title("Portfolio Allocation")
+    pie_with_legend(ax, values, labels, "Portfolio Allocation")
 
     plt.tight_layout()
 
@@ -604,7 +606,7 @@ def generate_portfolio_brief(
         allocation_chart = (create_allocation_chart(allocation))
         story.append(KeepTogether(
             [section_heading(offset + 2, "Portfolio Allocation", '#2563EB'), Spacer(1,8), Image(
-            allocation_chart, width=160 * mm, height=90 * mm,)]))
+            allocation_chart, width=160 * mm, height=90 * mm, kind="proportional")]))
         story.append(Spacer(1,15))
 
 
@@ -713,36 +715,33 @@ def generate_portfolio_brief(
             ] ]
 
 
+        company_style = ParagraphStyle(
+            "AnalyticsCompany",
+            parent=styles["BodyText"],
+            fontSize=8,
+            leading=10,
+        )
+
         for stock in analytics:
             analytics_data.append(
                 [
-                    stock.get("ticker", "UnKnown"), 
-                    stock.get("name", stock.get("ticker","Unknown",),
-                ), 
-                get_indicator_value(stock.get("capm")),
-                get_indicator_value(stock.get("pe_ratio")),
-                get_indicator_value(stock.get("altman_z")),
-                get_indicator_value(stock.get("beta")),
-                get_indicator_value(stock.get("rsi")),
-                get_indicator_value(stock.get("sharpe")),
-                get_indicator_value(stock.get("sortino")),
-
+                    stock.get("ticker", "Unknown"),
+                    Paragraph(
+                        escape(str(stock.get("name") or stock.get("ticker", "Unknown"))),
+                        company_style,
+                    ),
+                    get_indicator_value(stock.get("capm")),
+                    get_indicator_value(stock.get("pe_ratio")),
+                    get_indicator_value(stock.get("altman_z")),
+                    get_indicator_value(stock.get("beta")),
+                    get_indicator_value(stock.get("rsi")),
+                    get_indicator_value(stock.get("sharpe")),
+                    get_indicator_value(stock.get("sortino")),
                 ])
-
         analytics_table = Table(
             analytics_data,
             repeatRows=1,
-            colWidths=[
-                19 * mm,
-                29 * mm,
-                18 * mm,
-                17 * mm,
-                20 * mm,
-                16 * mm,
-                16 * mm,
-                19 * mm,
-                19 * mm,
-            ]
+            colWidths=[20 * mm, 40 * mm] + [17 * mm] * 7,
         )
 
         analytics_table.setStyle(TableStyle(
@@ -750,11 +749,13 @@ def generate_portfolio_brief(
             ("BACKGROUND", (0,0), (-1,0), colors.HexColor('#E5E7EB'),),
             ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold",),
             ("FONTNAME", (0,0), (0,-1), "Helvetica-Bold",),
-            ("BOX", (0,0), (-1,-1),0.7, '#CBD5E1'),
-            ("LEFTPADDING", (0,0), (-1,-1), 8,),
-            ("RIGHTPADDING", (0,0), (-1,-1), 8,),
-            ("TOPPADDING", (0,0), (-1,-1), 7,),
-            ("BOTTOMPADDING", (0,0), (-1,-1), 7,),
+            ("FONTSIZE", (0,0), (-1,-1), 8,),
+            ("VALIGN", (0,0), (-1,-1), "MIDDLE",),
+            ("BOX", (0,0), (-1,-1), 0.7, '#CBD5E1'),
+            ("LEFTPADDING", (0,0), (-1,-1), 4,),
+            ("RIGHTPADDING", (0,0), (-1,-1), 4,),
+            ("TOPPADDING", (0,0), (-1,-1), 5,),
+            ("BOTTOMPADDING", (0,0), (-1,-1), 5,),
         ]
         ))
 

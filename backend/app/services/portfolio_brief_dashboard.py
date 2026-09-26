@@ -140,15 +140,40 @@ def _performance_chart(history, benchmark_label):
     ax.xaxis.set_major_locator(plt.MaxNLocator(6))
     return _png(fig)
 
+PIE_LABEL_MIN_PCT = 5.0
+
+def pie_with_legend(ax, values, labels, title):
+    total = sum(values) or 1
+    colours = plt.get_cmap("tab20").colors
+    wedges, _, _ = ax.pie(
+        values,
+        colors=[colours[i % len(colours)] for i in range(len(values))],
+        startangle=90,
+        counterclock=False,
+        autopct=lambda pct: f"{pct:.1f}%" if pct >= PIE_LABEL_MIN_PCT else "",
+        pctdistance=0.72,
+        wedgeprops={"linewidth": 1, "edgecolor": "white"},
+        textprops={"fontsize": 8},
+    )
+    ax.legend(
+        wedges,
+        [f"{name} ({value / total * 100:.1f}%)"
+         for name, value in zip(labels, values, strict=True)],
+        loc="center left",
+        bbox_to_anchor=(1.0, 0.5),
+        fontsize=8,
+        frameon=False,
+    )
+    ax.set_title(title)
+
 def _sector_chart(sectors):
     fig, ax = plt.subplots(figsize=(6, 3.5))
-    ax.pie(
+    pie_with_legend(
+        ax,
         [s["percentage"] for s in sectors],
-        labels=[s["sector"] for s in sectors],
-        autopct="%1.1f%%",
-        startangle=90,
+        [s["sector"] for s in sectors],
+        "Sector Allocation (live value)",
     )
-    ax.set_title("Sector Allocation (live value)")
     return _png(fig)
 
 
