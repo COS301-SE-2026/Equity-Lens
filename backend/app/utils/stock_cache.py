@@ -9,6 +9,7 @@ import yfinance as yf
 from app.config import settings
 from app.database import SessionLocal
 from app.models.market_data import FundamentalsCache, MarketData
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 _REFRESH_LOCKS = set()
 _PRICE_REFRESH_COOLDOWN_UNTIL: dict[str, datetime] = {}
@@ -453,10 +454,6 @@ def _save_fundamentals(
 ) -> None:
     db = SessionLocal()
     try:
-        existing = (
-            db.query(FundamentalsCache).filter(FundamentalsCache.ticker == ticker.upper()).first()
-        )
-
         balance_sheetjson = None
         if balance_sheet is not None and not balance_sheet.empty:
             balance_sheet_copy = balance_sheet.copy()
@@ -473,21 +470,23 @@ def _save_fundamentals(
             financials_copy = financials_copy.where(pd.notna(financials_copy), None)
             financials_json = financials_copy.to_dict()
 
-        if existing is None:
-            db.add(
-                FundamentalsCache(
-                    ticker=ticker.upper(),
-                    info=info,
-                    balance_sheet=balance_sheetjson,
-                    financials=financials_json,
-                    fetched_at=datetime.now(UTC),
-                )
-            )
-        else:
-            existing.info = info
-            existing.balance_sheet = balance_sheetjson
-            existing.financials = financials_json
-            existing.fetched_at = datetime.now(UTC)
+        stmt = pg_insert(FundamentalsCache).values(
+            ticker = ticker.upper(),
+            info=info,
+            balance_sheet=balance_sheetjson,
+            financials=financials_json,
+            fetched_at=datetime.now(UTC),
+        )
+        stmt = stmt.on_conflict_do_update(
+            index_elements=[FundamentalsCache.ticker],
+            set_={
+                "info": stmt.excluded.info,
+                "balance_sheet": stmt.excluded.balance_sheet,
+                "financials": stmt.excluded.financials,
+                "fetched_at": stmt.excluded.fetched_at,
+            },
+        )
+        db.execute(stmt)
         db.commit()
     finally:
         db.close()

@@ -20,6 +20,7 @@
   "dependencies": {
     "aws-amplify": "^6.18.0",
     "axios": "^1.6.0",
+    "d3": "^7.9.0",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.26.0",
     "pdfjs-dist": "^6.2.108",

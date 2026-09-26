@@ -18,10 +18,14 @@ def get_recommendations(
     if not portfolio:
         raise HTTPException(status_code=400, detail="No holdings to base recommendations on")
  
-    universe_tickers = sorted(set(index_universe.SEED_UNIVERSE) | set(portfolio))
+    try:
+        seed_symbols = index_universe.market_universe("JSE", db)
+    except index_universe.UniverseUnavailable:
+        raise HTTPException(status_code=503, detail="Market data temporarily unavailable")
+    seed = {s.upper().removesuffix(".JO") for s in seed_symbols}
+    universe_tickers = sorted(seed | set(portfolio))
     universe = universe_features.build_universe_features(universe_tickers)
     raw_by_ticker = {f.ticker: f for f in universe}
-    seed = {t.upper().removesuffix(".JO") for t in index_universe.SEED_UNIVERSE}
     reference = [f for f in universe if f.ticker in seed]
     normalized = exposure_engine.normalize_universe(universe, reference=reference)
     norm_by_ticker = {f.ticker: f for f in normalized}
