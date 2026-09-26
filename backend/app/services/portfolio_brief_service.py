@@ -20,7 +20,11 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from app.services.portfolio_brief_dashboard import add_dashboard_pages, dashboard_toc_rows
+from app.services.portfolio_brief_dashboard import (
+    add_dashboard_pages,
+    dashboard_toc_rows,
+    pie_with_legend,
+)
 
 
 def section_heading(number, title, color):
@@ -344,9 +348,7 @@ def create_allocation_chart(allocation: list):
 
     fig, ax = plt.subplots(figsize=(6, 3.5))
 
-    ax.pie(values,labels=labels,autopct="%1.1f%%",startangle=90,)
-
-    ax.set_title("Portfolio Allocation")
+    pie_with_legend(ax, values, labels, "Portfolio Allocation")
 
     plt.tight_layout()
 
@@ -604,7 +606,7 @@ def generate_portfolio_brief(
         allocation_chart = (create_allocation_chart(allocation))
         story.append(KeepTogether(
             [section_heading(offset + 2, "Portfolio Allocation", '#2563EB'), Spacer(1,8), Image(
-            allocation_chart, width=160 * mm, height=90 * mm,)]))
+            allocation_chart, width=160 * mm, height=90 * mm, kind="proportional")]))
         story.append(Spacer(1,15))
 
 
