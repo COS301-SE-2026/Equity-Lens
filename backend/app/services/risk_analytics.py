@@ -10,6 +10,20 @@ logger = logging.getLogger(__name__)
 
 TRADING_DAYS_PER_YEAR = 252
 MIN_HISTORY_DAYS = 30
+UNIT_SWITCH_LOW = 50
+UNIT_SWITCH_HIGH = 200
+
+
+def repair_unit_switches(close: pd.Series) -> pd.Series:
+    close = close.astype(float)
+    ratio = (close / close.shift(1)).to_numpy()
+    repaired = close.to_numpy().copy()
+    for index in np.flatnonzero((ratio > UNIT_SWITCH_LOW) & (ratio < UNIT_SWITCH_HIGH)):
+        repaired[:index] *= 100
+    for index in np.flatnonzero((ratio > 1 / UNIT_SWITCH_HIGH) & (ratio < 1 / UNIT_SWITCH_LOW)):
+        repaired[index:] *= 100
+    return pd.Series(repaired, index=close.index, name=close.name)
+
 
 
 def single_ticker_daily_returns(ticker: str, period: str = "1y") -> pd.Series | None:
@@ -20,7 +34,7 @@ def single_ticker_daily_returns(ticker: str, period: str = "1y") -> pd.Series | 
         return None
     if history is None or history.empty or "Close" not in history:
         return None
-    returns = history["Close"].dropna().pct_change().dropna()
+    returns = repair_unit_switches(history["Close"].dropna()).pct_change().dropna()
     return returns if not returns.empty else None
 
 
