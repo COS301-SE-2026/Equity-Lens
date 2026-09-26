@@ -33,7 +33,6 @@ jobs:
         run: npm ci
 
       - name: Run lint
-        continue-on-error: true
         working-directory: frontend
         run: npm run lint
 
@@ -41,19 +40,8 @@ jobs:
         working-directory: frontend
         run: npm audit --audit-level=low --omit=dev
 
-      - name: Format check
-        working-directory: frontend
-        continue-on-error: true
-        run: npm run format:check
-
-      - name: Type check
-        working-directory: frontend
-        continue-on-error: true
-        run: npm run typecheck
-
       - name: Unit tests
         working-directory: frontend
-        continue-on-error: true
         run: npm run coverage
 
       - name: Read the installed Playwright version
@@ -189,10 +177,8 @@ jobs:
 
       - name: Lint (ruff)
         working-directory: backend
-        continue-on-error: true
         run: |
           ruff check .
-          ruff format --check .
 
       - name: Run pip-audit to check the packages
         working-directory: backend

@@ -449,6 +449,7 @@ const NewsInvestment = () => {
                             <a
                               href={articleLink}
                               target="_blank"
+                              rel="noreferrer"
                               className="inline-flex items-center gap-2 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-1.5 text-sm font-medium text-blue-400 transition-all duration-200 hover:border-blue-500 hover:bg-blue-500 hover:text-white"
                             >
                               Read article
@@ -561,6 +562,7 @@ const NewsInvestment = () => {
                           <a
                             href={articleLink}
                             target="_blank"
+                            rel="noreferrer"
                             className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-400 transition hover:bg-blue-500/20 hover:text-blue-300"
                           >
                             Read article

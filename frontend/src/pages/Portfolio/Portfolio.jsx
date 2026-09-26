@@ -985,7 +985,7 @@ const Portfolio = () => {
               <div>
                 <h3 className="text-lg font-semibold text-white">Excel Template</h3>
                 <p className="text-sm text-gray-400">
-                  Don't have a supported PDF? Use our template instead.
+                  Don&apos;t have a supported PDF? Use our template instead.
                 </p>
               </div>
             </div>
