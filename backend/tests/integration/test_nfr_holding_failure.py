@@ -37,7 +37,7 @@ def test_one_holding_market_failure_does_not_stop_others(mocker):
     # rather than worked out
     mocker.patch("app.services.portfolio_service.quote_currency", return_value="ZAR")
 
-    def fake_price(ticker, db=None):
+    def fake_price(ticker):
 
         if ticker == "MSFT":
             raise Exception("Market data unavailable")

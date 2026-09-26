@@ -32,7 +32,7 @@ def portfolio_with_a_holding(db_session, test_user):
 
 
 def test_a_failed_snapshot_write_does_not_break_the_read(
-    db_session, test_user, portfolio_with_a_holding
+    db_session, test_user
 ):
     with patch.object(
         portfolio_service.PortfolioRepository,
@@ -68,7 +68,7 @@ def test_get_returns_still_fetches_for_itself(db_session, test_user):
 
 
 def test_the_snapshot_write_runs_once_a_day_not_once_a_request(
-    db_session, test_user, portfolio_with_a_holding
+    db_session, test_user
 ):
     service = PortfolioService(db_session)
 

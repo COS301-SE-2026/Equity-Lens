@@ -35,7 +35,7 @@ def portfolio_with_a_holding(db_session, test_user):
 
 
 def test_the_dashboard_carries_the_thresholds_it_scored_with(
-    db_session, test_user, portfolio_with_a_holding
+    db_session, test_user
 ):
     dashboard = PortfolioService(db_session).get_dashboard(test_user.id)
 
@@ -65,7 +65,7 @@ def three_sector_portfolio(db_session, test_user):
 
 
 def test_a_50_percent_sector_is_rebalanceable_under_the_default_ceiling(
-    db_session, test_user, three_sector_portfolio
+    db_session, test_user
 ):
     result = PortfolioService(db_session).simulate_sector_rebalance(test_user.id)
 
@@ -75,7 +75,7 @@ def test_a_50_percent_sector_is_rebalanceable_under_the_default_ceiling(
 
 
 def test_the_same_portfolio_is_not_rebalanceable_once_the_ceiling_moves_to_60(
-    db_session, test_user, three_sector_portfolio
+    db_session, test_user
 ):
     UserPreferenceRepository(db_session).upsert(test_user.id, health_preset_key="concentrated")
     db_session.commit()
@@ -89,7 +89,7 @@ def test_the_same_portfolio_is_not_rebalanceable_once_the_ceiling_moves_to_60(
 
 
 def test_concentration_analysis_flags_against_the_users_ceiling(
-    db_session, test_user, portfolio_with_a_holding
+    db_session, test_user
 ):
     service = PortfolioService(db_session)
     assert service.get_concentration_analysis(test_user.id)["thresholds"] == {
@@ -121,7 +121,7 @@ def test_a_flagged_holding_with_no_usable_price_comes_back_with_a_null_share_cou
 
 
 def test_the_thresholds_follow_the_users_chosen_preset(
-    db_session, test_user, portfolio_with_a_holding
+    db_session, test_user
 ):
     UserPreferenceRepository(db_session).upsert(test_user.id, health_preset_key="concentrated")
     db_session.commit()

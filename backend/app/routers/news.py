@@ -149,14 +149,14 @@ def _count_newsdata_sentiment(articles: list[dict]) -> dict:
 
 
 @router.get("/all", response_model=NewsResponse)
-def get_news(current_user: User = Depends(get_current_user)):
+def get_news(_current_user: User = Depends(get_current_user)):
     return _count_newsdata_sentiment(_newsdata_articles({}))
 
 
 @router.get("/", response_model=NewsResponse)
 def get_news_by_category(
     category: str = "business",
-    current_user: User = Depends(get_current_user),
+    _current_user: User = Depends(get_current_user),
 ):
     return _count_newsdata_sentiment(_newsdata_articles({"category": category}))
 

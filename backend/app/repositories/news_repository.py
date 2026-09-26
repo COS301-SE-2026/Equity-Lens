@@ -127,7 +127,10 @@ class NewsRepository:
             return {}
 
         stmt = (
-            select(NewsArticleTicker.ticker, NewsArticleTicker.match_score, NewsArticle.published_at, NewsArticle.title,)
+            select(
+                NewsArticleTicker.ticker, 
+                NewsArticleTicker.match_score, 
+                NewsArticle.published_at, NewsArticle.title,)
             .join(NewsArticle, NewsArticle.id == NewsArticleTicker.article_id)
             .where(
                 NewsArticleTicker.ticker.in_([canonical_key(t) for t in tickers]),

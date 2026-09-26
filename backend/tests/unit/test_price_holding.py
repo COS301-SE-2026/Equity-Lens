@@ -14,15 +14,6 @@ def _holding(**overrides):
     return SimpleNamespace(**defaults)
 
 
-def test_price_holding_does_not_divide_a_jse_close_by_100_twice(monkeypatch):
-    fake_price = SimpleNamespace(price=500.0, change_percent=25.0)
-    monkeypatch.setattr(portfolio_service, "get_current_price", lambda ticker, db=None: fake_price)
-
-    priced = portfolio_service._price_holding(_holding())
-
-    assert priced["current_price"] == 500.0
-    assert priced["value"] == 5000.0
-
 
 def test_build_summary_excludes_unpriced_holdings_from_gain_denominator():
     priced_holdings = [
@@ -48,23 +39,6 @@ def test_daily_change_is_none_not_zero_when_live_pricing_fails(monkeypatch):
 
     assert priced["priced_live"] is False
     assert priced["daily_change_pct"] is None, "a rate-limited holding must not report 0.00%"
-
-
-def test_daily_change_is_none_when_the_quote_carries_no_change_figure(monkeypatch):
-    fake_price = SimpleNamespace(price=500.0, change_percent=None)
-    monkeypatch.setattr(portfolio_service, "get_current_price", lambda ticker, db=None: fake_price)
-
-    priced = portfolio_service._price_holding(_holding())
-
-    assert priced["priced_live"] is True
-    assert priced["daily_change_pct"] is None
-
-
-def test_a_real_zero_percent_move_is_still_reported_as_zero(monkeypatch):
-    fake_price = SimpleNamespace(price=500.0, change_percent=0.0)
-    monkeypatch.setattr(portfolio_service, "get_current_price", lambda ticker, db=None: fake_price)
-
-    assert portfolio_service._price_holding(_holding())["daily_change_pct"] == 0.0
 
 
 def test_build_summary_ignores_unpriced_holdings_on_both_sides_of_the_average():

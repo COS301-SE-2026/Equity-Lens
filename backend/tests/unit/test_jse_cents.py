@@ -28,7 +28,7 @@ def fake_history(monkeypatch):
     def fake_get_cached_price_history(symbol, period="1y"): # noqa: ARG001
         return series.get(symbol, pd.DataFrame())
 
-    def fake_get_latest_close(symbol, db=None):
+    def fake_get_latest_close(symbol):
         history = series.get(symbol)
         if history is None or history.empty:
             return None
@@ -41,7 +41,7 @@ def fake_history(monkeypatch):
             fetched_at=datetime.now(UTC),
         )
 
-    def fake_second_last_close(symbol, db=None):
+    def fake_second_last_close(symbol):
         history = series.get(symbol)
         if history is None or len(history) < 2:
             return None
@@ -51,7 +51,7 @@ def fake_history(monkeypatch):
         market_data_service, "get_cached_price_history", fake_get_cached_price_history
     )
     monkeypatch.setattr(market_data_service, "get_latest_close", fake_get_latest_close)
-    monkeypatch.setattr(market_data_service, "is_stale", lambda row: False)
+    monkeypatch.setattr(market_data_service, "is_stale")
     monkeypatch.setattr(market_data_service, "_second_last_close", fake_second_last_close)
     return series
 

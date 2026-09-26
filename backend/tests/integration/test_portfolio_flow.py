@@ -34,7 +34,7 @@ def stub_data():
     def mock_history(ticker, period="1y"):  # noqa: ARG001
         return history.get(ticker.upper(), pd.DataFrame())
 
-    def mock_latest_close(ticker, db=None):
+    def mock_latest_close(ticker, _db=None):
         frame = history.get(ticker.upper())
         if frame is None or frame.empty:
             return None
@@ -47,7 +47,7 @@ def stub_data():
             fetched_at=datetime.now(UTC),
         )
 
-    def mock_second_last_close(ticker, db=None):
+    def mock_second_last_close(ticker, _db=None):
         frame = history.get(ticker.upper())
         if frame is None or len(frame) < 2:
             return None
@@ -57,7 +57,7 @@ def stub_data():
         patch("app.services.market_data_service.get_cached_price_history", mock_history),
         patch("app.services.portfolio_service.get_cached_price_history", mock_history),
         patch("app.services.market_data_service.get_latest_close", mock_latest_close),
-        patch("app.services.market_data_service.is_stale", lambda row: False),
+        patch("app.services.market_data_service.is_stale", lambda _row: False),
         patch("app.services.market_data_service._second_last_close", mock_second_last_close),
     ):
         yield
