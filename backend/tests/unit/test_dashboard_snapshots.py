@@ -30,7 +30,7 @@ def portfolio_with_a_holding(db_session, test_user):
     db_session.commit()
     return portfolio
 
-
+@pytest.mark.usefixtures("portfolio_with_a_holding")
 def test_a_failed_snapshot_write_does_not_break_the_read(
     db_session, test_user
 ):
@@ -66,7 +66,7 @@ def test_get_returns_still_fetches_for_itself(db_session, test_user):
     assert returns["invested_capital"] == 4000.0
     assert returns["holdings_count"] == 1
 
-
+@pytest.mark.usefixtures("portfolio_with_a_holding")
 def test_the_snapshot_write_runs_once_a_day_not_once_a_request(
     db_session, test_user
 ):

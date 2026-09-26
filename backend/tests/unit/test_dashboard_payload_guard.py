@@ -57,16 +57,18 @@ def imported_portfolio(db_session, test_user):
     return portfolio
 
 
-def test_every_key_the_dashboard_reads_is_present(db_session, test_user, _imported_portfolio):
+@pytest.mark.usefixtures("imported_portfolio")
+def test_every_key_the_dashboard_reads_is_present(db_session, test_user):
     payload = PortfolioService(db_session).get_dashboard(test_user.id)
 
     missing = [key for key in REQUIRED_KEYS if key not in payload]
-    assert not missing, {
-        f"the dashboard reads these and the payload no longer carries them: {missing}"
-    }
+    assert not missing, (
+    "the dashboard reads these and the payload no longer carries them: "
+    f"{missing}"
+)
 
-
-def test_each_key_has_the_type_the_frontend_assumes(db_session, test_user, _imported_portfolio):
+@pytest.mark.usefixtures("imported_portfolio")
+def test_each_key_has_the_type_the_frontend_assumes(db_session, test_user,):
     payload = PortfolioService(db_session).get_dashboard(test_user.id)
 
     for key, (expected_type, nullable, consumed_at) in REQUIRED_KEYS.items():
@@ -78,18 +80,17 @@ def test_each_key_has_the_type_the_frontend_assumes(db_session, test_user, _impo
             f"{key} is {type(value).__name__}, expected {expected_type.__name__} - {consumed_at}"
         )
 
-
+@pytest.mark.usefixtures("imported_portfolio")
 def test_the_nested_fields_the_cards_destructure_are_there(
-    db_session, test_user, _imported_portfolio
-    ):
+    db_session, test_user,):
     payload = PortfolioService(db_session).get_dashboard(test_user.id)
 
     for parent, children in REQUIRED_NESTED.items():
         for child in children:
             assert child in payload[parent], f"{parent}.{child} is read directly by the dashboard"
 
-
-def test_a_holding_row_carries_what_the_table_renders(db_session, test_user, _imported_portfolio):
+@pytest.mark.usefixtures("imported_portfolio")
+def test_a_holding_row_carries_what_the_table_renders(db_session, test_user):
     payload = PortfolioService(db_session).get_dashboard(test_user.id)
     row = payload["holdings"][0]
 
@@ -98,8 +99,9 @@ def test_a_holding_row_carries_what_the_table_renders(db_session, test_user, _im
     assert isinstance(row["value"], (int, float))
 
 
+@pytest.mark.usefixtures("imported_portfolio")
 def test_thresholds_are_numbers_the_badges_can_compare_against(
-    db_session, test_user, _imported_portfolio
+    db_session, test_user
 ):
     payload = PortfolioService(db_session).get_dashboard(test_user.id)
 
@@ -108,7 +110,8 @@ def test_thresholds_are_numbers_the_badges_can_compare_against(
     assert payload["thresholds"]["concentration_low"] < payload["thresholds"]["concentration_high"]
 
 
-def test_the_payload_has_not_grown_keys_nobody_reads(db_session, test_user, _imported_portfolio):
+@pytest.mark.usefixtures("imported_portfolio")
+def test_the_payload_has_not_grown_keys_nobody_reads(db_session, test_user):
     known_unread = {"historyStartsAt"}
     payload = PortfolioService(db_session).get_dashboard(test_user.id)
 
