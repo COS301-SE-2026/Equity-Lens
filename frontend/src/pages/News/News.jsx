@@ -39,10 +39,10 @@ const NewsInvestment = () => {
       const formattedArticles = tickerArticles.map((article) => ({
         ...article,
         category: [ticker],
-      }));
+      }))
       AllArticles = [...AllArticles, ...formattedArticles];
     }
-    
+
     setArticles(AllArticles);
     const positiveCount = AllArticles.filter(
       (article) => article.sentiment === 'positive',
@@ -316,8 +316,8 @@ const NewsInvestment = () => {
                   <button
                     onClick={() => { setActiveCategory('all'); ToGetAllPortfolioNews(); }}
                     className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${activeCategory === 'all'
-                        ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
-                        : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
+                      ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
+                      : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
                       }`}
                   >
                     All
@@ -367,58 +367,99 @@ const NewsInvestment = () => {
               </div>
 
               {filteredArticles.length === 0 ? (
-                <div className="text-center py-10 text-[var(--text-secondary)]">
-                  <p className="text-lg font-medium">No News available</p>
+                <div className="py-12 text-center text-[var(--text-secondary)]">
+                  <p className="text-lg font-medium">No news available</p>
                 </div>
               ) : (
-                filteredArticles.map((article) => (
-                  <div
-                    key={article.article_id}
-                    className="flex items-center  border-b border-[var(--border-subtle)] p-5 gap-4"
-                  >
-                    <div>
-                      <img
-                        src={article.image_url}
-                        alt="news"
-                        className="w-20 h-20 rounded-lg object-cover"
-                      />
-                    </div>
+                <div className="space-y-3">
+                  {filteredArticles.map((article) => {
+                    const articleLink = article.url || article.link;
 
-                    <div className="flex-1">
-                      <h3 className="text-[var(--text-primary)]">{article.title}</h3>
-                      <p className="text-sm text-[var(--text-secondary)] mt-1">
-                        {article.description}
-                      </p>
-                      <p className="text-sm text-[var(--text-secondary)] mt-1">{article.pubDate}</p>
-                      <p className="text-sm text-[var(--text-secondary)] mt-1">
-                        {article.source_name}
-                      </p>
-                    </div>
+                    return (
+                      <div
+                        key={article.article_id}
+                        className="flex items-center gap-5 rounded-xl border border-gray-700 bg-gray-900/40 p-4 transition hover:border-gray-600 hover:bg-gray-900/70"
+                      >
+                        <div className="shrink-0">
+                          <img
+                            src={article.image_url}
+                            alt={article.title}
+                            className="h-24 w-28 rounded-lg"
+                          />
+                        </div>
 
-                    {article.category.map(
-                      /** @param {string} article*/(article) => (
-                        <p
-                          key={article}
-                          className="px-3 py-1 text-sm rounded-full bg-blue-500/20 text-blue-400"
-                        >
-                          {article}
-                        </p>
-                      ),
-                    )}
-                    <p
-                      className={`px-3 py-1 text-sm rounded-full capitalize flex items-center gap-1 
-                  ${article.sentiment === 'positive' ? 'bg-green-500/20 text-green-400' : article.sentiment === 'negative' ? 'bg-red-500/20 text-red-400' : 'bg-purple-500/20 text-purple-400'}`}
-                    >
-                      {article.sentiment === 'positive' && <TrendingUp className="w-4 h-4" />}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-semibold text-[var(--text-primary)]">
+                            {article.title}
+                          </h3>
 
-                      {article.sentiment === 'negative' && <TrendingDown className="w-4 h-4" />}
+                          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                            {article.description}
+                          </p>
 
-                      {article.sentiment === 'neutral' && <span>-</span>}
+                          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)]">
+                            <span>{article.source_name}</span>
 
-                      {article.sentiment}
-                    </p>
-                  </div>
-                ))
+                            {article.pubDate && (
+                              <>
+                                <span> - </span>
+
+                                <span>
+                                  {new Date(article.pubDate).toLocaleDateString()}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex shrink-0 items-center gap-2">
+                          {article.category?.map(
+              /** @param {string} category */(category) => (
+                              <span
+                                key={category}
+                                className="rounded-full bg-blue-500/20 px-3 py-1 text-xs font-medium text-blue-400"
+                              >
+                                {category}
+                              </span>
+                            ),
+                          )}
+
+                          <span
+                            className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium capitalize ${article.sentiment === 'positive'
+                              ? 'bg-green-500/20 text-green-400'
+                              : article.sentiment === 'negative'
+                                ? 'bg-red-500/20 text-red-400'
+                                : 'bg-purple-500/20 text-purple-400'
+                              }`}
+                          >
+                            {article.sentiment === 'positive' && (
+                              <TrendingUp className="h-3.5 w-3.5" />
+                            )}
+
+                            {article.sentiment === 'negative' && (
+                              <TrendingDown className="h-3.5 w-3.5" />
+                            )}
+
+                            {article.sentiment === 'neutral' && <span>−</span>}
+
+                            {article.sentiment}
+                          </span>
+
+                          {articleLink && (
+                            <a
+                              href={articleLink}
+                              target="_blank"
+                              className="inline-flex items-center gap-2 rounded-lg border border-blue-500/40 bg-blue-500/10 px-3 py-1.5 text-sm font-medium text-blue-400 transition-all duration-200 hover:border-blue-500 hover:bg-blue-500 hover:text-white"
+                            >
+                              Read article
+                              <span className="text-xs">↗</span>
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               )}
             </div>
           </div>
@@ -449,8 +490,8 @@ const NewsInvestment = () => {
                     ToGetTheNews(category.toLowerCase());
                   }}
                   className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${activeCategory === category
-                      ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
-                      : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
+                    ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
+                    : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
                     }`}
                 >
                   {category}
@@ -459,42 +500,79 @@ const NewsInvestment = () => {
             </div>
 
 
-            {articles.map((article) => (
-              <div
-                key={article.article_id}
-                className="flex items-center  border-b border-[var(--border-subtle)] p-5 gap-4"
-              >
-                <div>
-                  <img
-                    src={article.image_url}
-                    alt="news"
-                    className="w-20 h-20 rounded-lg object-cover"
-                  />
-                </div>
-
-                <div className="flex-1">
-                  <h3 className="text-[var(--text-primary)]">{article.title}</h3>
-                  <p className="text-sm text-[var(--text-secondary)] mt-1">
-                    {article.description}
-                  </p>
-                  <p className="text-sm text-[var(--text-secondary)] mt-1">{article.pubDate}</p>
-                  <p className="text-sm text-[var(--text-secondary)] mt-1">
-                    {article.source_name}
-                  </p>
-                </div>
-
-                {article.category.map(
-                    /** @param {string} article*/(article) => (
-                    <p
-                      key={article}
-                      className="px-3 py-1 text-sm rounded-full bg-blue-500/20 text-blue-400"
-                    >
-                      {article}
-                    </p>
-                  ),
-                )}
+            {articles.length === 0 ? (
+              <div className="py-12 text-center text-[var(--text-secondary)]">
+                <p className="text-lg font-medium">No news available</p>
               </div>
-            ))}
+            ) : (
+              <div className="space-y-3">
+                {articles.map((article) => {
+                  const articleLink = article.url || article.link;
+
+                  return (
+                    <div
+                      key={article.article_id}
+                      className="flex items-center gap-5 rounded-xl border border-gray-700 bg-gray-900/40 p-4 transition hover:border-gray-600 hover:bg-gray-900/70"
+                    >
+                      <div className="shrink-0">
+                        <img
+                          src={article.image_url}
+                          alt={article.title}
+                          className="h-24 w-28 rounded-lg object-cover"
+                        />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-[var(--text-primary)]">
+                          {article.title}
+                        </h3>
+
+                        <p className="mt-1 text-sm leading-5 text-[var(--text-secondary)]">
+                          {article.description}
+                        </p>
+
+                        <div className="mt-3 flex items-center gap-2 text-xs text-[var(--text-secondary)]">
+                          <span>{article.source_name}</span>
+
+                          {article.pubDate && (
+                            <>
+                              <span> - </span>
+                              <span>
+                                {new Date(article.pubDate).toLocaleDateString()}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-2">
+                        {article.category?.map(
+              /** @param {string} category */(category) => (
+                            <span
+                              key={category}
+                              className="rounded-full bg-blue-500/20 px-3 py-1 text-xs font-medium text-blue-400"
+                            >
+                              {category}
+                            </span>
+                          ),
+                        )}
+
+                        {articleLink && (
+                          <a
+                            href={articleLink}
+                            target="_blank"
+                            className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-400 transition hover:bg-blue-500/20 hover:text-blue-300"
+                          >
+                            Read article
+                            <span>↗</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
 
           </div>
