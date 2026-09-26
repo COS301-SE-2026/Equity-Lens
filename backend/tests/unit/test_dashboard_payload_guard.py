@@ -4,6 +4,7 @@ import pytest
 
 from app.models.portfolio import Holdings, Portfolios
 from app.services.portfolio_service import PortfolioService, invalidate_priced_holdings
+
 REQUIRED_KEYS = {
     "summary": (dict, False, "Dashboard.jsx:110 summary.daily_change_pct, and DashboardHero"),
     "holdings": (list, False, "Dashboard.jsx:68, then TodayInsights / DashboardHoldingsTable"),
@@ -35,7 +36,7 @@ def _clear_cache():
     invalidate_priced_holdings()
 
 
-@pytest.fixture()
+@pytest.fixture
 def imported_portfolio(db_session, test_user):
     portfolio = Portfolios(
         user_id=test_user.id, account_number="EE-PAYLOAD", portfolio_name="EasyEquities",

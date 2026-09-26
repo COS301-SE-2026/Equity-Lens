@@ -3,7 +3,7 @@ import math
 import threading
 import time
 from bisect import bisect_right
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from itertools import pairwise
 from uuid import UUID
 
@@ -64,10 +64,10 @@ MAX_EXPLANATIONS = 5
 
 def _news_window_utc(first: date, last: date) -> tuple[datetime, datetime]:
     start = datetime.combine(
-        first - timedelta(days=MAX_DAYS_BEFORE + 1), datetime.min.time(), tzinfo=timezone.utc
+        first - timedelta(days=MAX_DAYS_BEFORE + 1), datetime.min.time(), tzinfo=UTC
     )
     end = datetime.combine(
-        last + timedelta(days=MAX_DAYS_AFTER + 1), datetime.max.time(), tzinfo=timezone.utc
+        last + timedelta(days=MAX_DAYS_AFTER + 1), datetime.max.time(), tzinfo=UTC
     )
     return start, end
 
@@ -1466,8 +1466,8 @@ class PortfolioService:
         if last_good is not None and last_good.finished_at is not None:
             finished = last_good.finished_at
             if finished.tzinfo is None:
-                finished = finished.replace(tzinfo=timezone.utc)
-            collected_at = finished.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+                finished = finished.replace(tzinfo=UTC)
+            collected_at = finished.astimezone(UTC).isoformat().replace("+00:00", "Z")
         payload = {
             "period": period,
             "k_sigma": k_sigma,

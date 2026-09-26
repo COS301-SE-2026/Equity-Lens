@@ -204,6 +204,7 @@ def _stored_article(row: NewsArticle) -> dict:
         "image_url": row.image_url,
         "pubDate": _iso_utc(row.published_at) if row.published_at else None,
         "source_name": row.source_name,
+        "url":  row.url,
         "category": [link.ticker for link in row.tickers],
         "sentiment": row.sentiment or "neutral",
         "sentiment_score": row.sentiment_score if row.sentiment_score is not None else 0,

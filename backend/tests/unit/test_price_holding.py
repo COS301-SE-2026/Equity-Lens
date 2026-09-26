@@ -6,10 +6,10 @@ from app.services import portfolio_service
 
 
 def _holding(**overrides):
-    defaults = dict(
-        ticker="MTN.JO", instrument_name="MTN Group", sector="Communication Services",
-        quantity=10, total_cost=4000.0, cost_price=400.0, weight_percentage=100.0,
-    )
+    defaults = {
+        "ticker": "MTN.JO", "instrument_name": "MTN Group", "sector": "Communication Services",
+        "quantity": 10, "total_cost": 4000.0, "cost_price": 400.0, "weight_percentage": 100.0,
+    }
     defaults.update(overrides)
     return SimpleNamespace(**defaults)
 

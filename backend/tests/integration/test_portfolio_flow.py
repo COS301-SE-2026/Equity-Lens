@@ -1,4 +1,4 @@
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from unittest.mock import patch
 
 import pandas as pd
@@ -44,7 +44,7 @@ def stub_data():
             close=float(row["Close"]),
             prev_close=row.get("Prev Close"),
             volume=int(row["Volume"]),
-            fetched_at=datetime.now(timezone.utc),
+            fetched_at=datetime.now(UTC),
         )
 
     def mock_second_last_close(ticker, db=None):

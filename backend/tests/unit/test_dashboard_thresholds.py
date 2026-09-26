@@ -18,7 +18,7 @@ def _clear_cache():
     invalidate_priced_holdings()
 
 
-@pytest.fixture()
+@pytest.fixture
 def portfolio_with_a_holding(db_session, test_user):
     portfolio = Portfolios(
         user_id=test_user.id, account_number="EE-1", portfolio_name="EasyEquities", currency="ZAR",
@@ -43,7 +43,7 @@ def test_the_dashboard_carries_the_thresholds_it_scored_with(
     assert dashboard["thresholds"]["concentration_high"] == 45
 
 
-@pytest.fixture()
+@pytest.fixture
 def three_sector_portfolio(db_session, test_user):
     portfolio = Portfolios(
         user_id=test_user.id, account_number="EE-2", portfolio_name="EasyEquities", currency="ZAR",

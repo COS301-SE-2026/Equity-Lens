@@ -15,7 +15,7 @@ def _clear_snapshot_guard():
     portfolio_service._snapshot_maintenance_done.clear()
 
 
-@pytest.fixture()
+@pytest.fixture
 def portfolio_with_a_holding(db_session, test_user):
     portfolio = Portfolios(
         user_id=test_user.id, account_number="EE-1", portfolio_name="EasyEquities", currency="ZAR",

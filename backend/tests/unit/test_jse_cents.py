@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pandas as pd
 import pytest
@@ -38,7 +38,7 @@ def fake_history(monkeypatch):
             close=float(row["Close"]),
             prev_close=row.get("Prev Close"),
             volume=int(row["Volume"]),
-            fetched_at=datetime.now(timezone.utc),
+            fetched_at=datetime.now(UTC),
         )
 
     def fake_second_last_close(symbol, db=None):
