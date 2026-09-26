@@ -1,6 +1,6 @@
 import io
-from pathlib import Path
 from html import escape
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import requests
@@ -19,6 +19,8 @@ from reportlab.platypus import (
     Table,
     TableStyle,
 )
+
+from app.services.portfolio_brief_dashboard import add_dashboard_pages, dashboard_toc_rows
 
 
 def section_heading(number, title, color):
@@ -485,17 +487,20 @@ def generate_portfolio_brief(
     story.append(Paragraph("Table of Contents", styles["SectionTitle"]))
     story.append(Spacer(1,12))
 
-    data = [
-        ["1.", "Portfolio Summary"],
-        ["2.", "Portfolio Allocation"],
-        ["3.", "Top Holdings"],
-        ["4.", "Trading Activity"],
-        ["5.", "Dividend Income"],
-        ["6.", "Cash Flow"],
-        ["7.", "My Portfolio News"],
-        ["8.", "All Market News"],
-        ["9.", "Portfolio Analytics"],
+    our_rows = dashboard_toc_rows(snapshot)
+    offset = len(our_rows)
+    snapshot_titles = [
+        "Portfolio Summary",
+        "Portfolio Allocation",
+        "Top Holdings",
+        "Trading Activity",
+        "Dividend Income",
+        "Cash Flow",
+        "My Portfolio News",
+        "All Market News",
+        "Portfolio Analytics",
     ]
+    data = [*our_rows, *([f"{offset + n}.", t] for n, t in enumerate(snapshot_titles, 1))]
 
     table_content = Table(
         data,
@@ -541,6 +546,8 @@ def generate_portfolio_brief(
 
     story.append(Spacer(1,8))
 
+    add_dashboard_pages(story, snapshot, styles, section_heading)
+
     summary_data = [
         [
             "Portfolio Value", 
@@ -584,7 +591,7 @@ def generate_portfolio_brief(
         ))
 
     story.append(KeepTogether([section_heading(
-        1, "Portfolio Summary", '#2563EB'), 
+        offset + 1, "Portfolio Summary", '#2563EB'),
         Spacer(1,8),summary_table]))
     story.append(Spacer(1,15))
 
@@ -596,7 +603,7 @@ def generate_portfolio_brief(
     if allocation:
         allocation_chart = (create_allocation_chart(allocation))
         story.append(KeepTogether(
-            [section_heading(2, "Portfolio Allocation", '#2563EB'), Spacer(1,8), Image(
+            [section_heading(offset + 2, "Portfolio Allocation", '#2563EB'), Spacer(1,8), Image(
             allocation_chart, width=160 * mm, height=90 * mm,)]))
         story.append(Spacer(1,15))
 
@@ -633,14 +640,14 @@ def generate_portfolio_brief(
         ))
 
         story.append(KeepTogether([section_heading(
-            3, "Top Holdings", '#2563EB'),Spacer(1,8),holdings_table]))
+            offset + 3, "Top Holdings", '#2563EB'),Spacer(1,8),holdings_table]))
         story.append(Spacer(1,15))
 
     trading = activity.get("trading", [],)
 
     if trading:
         dividend_chart = create_trading_chart(trading)
-        story.append(KeepTogether([section_heading(4, "Trading Activity", '#2563EB'),
+        story.append(KeepTogether([section_heading(offset + 4, "Trading Activity", '#2563EB'),
         Spacer(1,8),Image(dividend_chart, width=160 * mm, height=90 * mm)]))
         story.append(Spacer(1,15))
 
@@ -648,7 +655,7 @@ def generate_portfolio_brief(
 
     if dividends:
         trading_chart = create_dividend_chart(dividends)
-        story.append(KeepTogether([section_heading(5, "Dividend Income", '#2563EB'),
+        story.append(KeepTogether([section_heading(offset + 5, "Dividend Income", '#2563EB'), 
             Spacer(1,8),Image(trading_chart, width=160 * mm, height=90 * mm)]))
         story.append(Spacer(1,15))
 
@@ -656,12 +663,12 @@ def generate_portfolio_brief(
 
     if cash_flow:
         cash_flow_chart = create_cash_flow_chart(cash_flow)
-        story.append(KeepTogether([section_heading(6, "Cash Flow", '#2563EB'),
+        story.append(KeepTogether([section_heading(offset + 6, "Cash Flow", '#2563EB'),
             Spacer(1,8),Image(cash_flow_chart, width=160 * mm, height=90 * mm)]))
         story.append(Spacer(1,15))
 
 
-    story.append(section_heading(7, "My Portfolio News", '#2563EB'))
+    story.append(section_heading(offset + 7, "My Portfolio News", '#2563EB'))
     story.append(Spacer(1,8))
 
     if portfolio_news:
@@ -675,7 +682,7 @@ def generate_portfolio_brief(
     else:
         story.append(Paragraph("No Portfolio news avaiable.", styles["BodyText"],))
 
-    story.append(section_heading(8, "All Market News", '#2563EB'))
+    story.append(section_heading(offset + 8, "All Market News", '#2563EB'))
 
     story.append(Spacer(1,8,))
 
@@ -752,7 +759,7 @@ def generate_portfolio_brief(
         ))
 
         story.append(KeepTogether([section_heading(
-            9, "Portfolio Analytics", '#2563EB'), Spacer(1,8),analytics_table]))
+            offset + 9, "Portfolio Analytics", '#2563EB'), Spacer(1,8),analytics_table]))
 
 
         story.append(Spacer(1,8,))
