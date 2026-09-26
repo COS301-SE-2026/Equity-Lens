@@ -26,90 +26,63 @@ const NewsInvestment = () => {
     /** @type{any[]}*/
     let AllArticles = [];
 
-   const validTickers = portfoliosTickers.filter(
-    (ticker) => ticker !== 'All',
-  );
+    const validTickers = portfoliosTickers.filter(
+      (ticker) => ticker !== 'All',
+    );
 
     for (const ticker of validTickers) {
-      const response = await api.get(`/news/test-aapl/${ticker}`);
+      const response = await api.get(`/news/ticker/${ticker}`);
 
       /** @type {Array<any>} */
       const tickerArticles = response.data.articles || [];
 
-      const formattedArticles = tickerArticles.map((article) => {
-        const entity = article.entities?.find(
-          /** @param {any} entity*/(entity) => entity.symbol === ticker,
-        );
-
-        const score = entity?.sentiment_score;
-
-        let sentiment = 'neutral';
-
-        if (score > 0) {
-          sentiment = 'positive';
-        } else if (score < 0) {
-          sentiment = 'negative';
-        }
-        return {
-          article_id: article.uuid,
-          title: article.title,
-          description: article.description,
-          image_url: article.image_url,
-          pubDate: article.published_at,
-          source_name: article.source,
-          category: [ticker],
-          sentiment,
-          sentiment_score: score ?? 0,
-        };
-      });
+      const formattedArticles = tickerArticles.map((article) => ({
+        ...article,
+        category: [ticker],
+      }));
       AllArticles = [...AllArticles, ...formattedArticles];
     }
+    
     setArticles(AllArticles);
-    setActiveCategory('All');
+    const positiveCount = AllArticles.filter(
+      (article) => article.sentiment === 'positive',
+    ).length;
+
+    const negativeCount = AllArticles.filter(
+      (article) => article.sentiment === 'negative',
+    ).length;
+
+    const neutralCount = AllArticles.filter(
+      (article) => article.sentiment === 'neutral',
+    ).length;
+
+    setPositive(positiveCount);
+    setNegative(negativeCount);
+    setNeutral(neutralCount);
+    setTotalArticles(AllArticles.length);
+    setActiveCategory('all');
     setSentimentFilter('all');
   };
 
 
   /** @param {string} ticker*/
   const ToGetTickerNews = async (ticker) => {
-    const response = await api.get(`/news/test-aapl/${ticker}`);
+    const response = await api.get(`/news/ticker/${ticker}`);
 
     /** @type {Array<any>} */
     const tickerArticles = response.data.articles || [];
 
-    const formattedArticles = tickerArticles.map((article) => {
-      const entity = article.entities?.find(
-        /** @param {any} entity*/(entity) => entity.symbol === ticker,
-      );
-
-      const score = entity?.sentiment_score;
-
-      let sentiment = 'neutral';
-
-      if (score > 0) {
-        sentiment = 'positive';
-      } else if (score < 0) {
-        sentiment = 'negative';
-      }
-      return {
-        article_id: article.uuid,
-        title: article.title,
-        description: article.description,
-        image_url: article.image_url,
-        pubDate: article.published_at,
-        source_name: article.source,
-        category: [ticker],
-        sentiment,
-        sentiment_score: score ?? 0,
-      };
-    });
+    const formattedArticles = tickerArticles.map((article) => ({
+      ...article,
+      category: [ticker],
+    }));
 
     setArticles(formattedArticles);
     setPositive(response.data.positive || 0);
     setNegative(response.data.negative || 0);
     setNeutral(response.data.neutral || 0);
     setTotalArticles(response.data.total_articles || 0);
-    setActiveCategory('all');
+    setActiveCategory(ticker);
     setSentimentFilter('all');
   };
 
@@ -118,70 +91,65 @@ const NewsInvestment = () => {
     setPortfoliosTickers(reponse.data.tickers || []);
   };
 
-  
+
   useEffect(() => {
-  const loadPortfolio = async () => {
-    const response = await api.get('/news/portfolio-tickers');
-    const tickers = response.data.tickers || [];
+    const loadPortfolio = async () => {
+      const response = await api.get('/news/portfolio-tickers');
+      const tickers = response.data.tickers || [];
 
-    setPortfoliosTickers(['All', ...tickers.filter((ticker) => ticker !== 'All')]);
+      setPortfoliosTickers(tickers.filter((ticker) => ticker !== 'All'),);
 
-    const validTickers = tickers.filter(
-      (ticker) => ticker !== 'All',
-    );
+      const validTickers = tickers.filter(
+        (ticker) => ticker !== 'All',
+      );
 
-    let allArticles = [];
+      let allArticles = [];
 
-    for (const ticker of validTickers) {
-      try {
-        const newsResponse = await api.get(
-          `/news/test-aapl/${ticker}`,
-        );
-
-        const tickerArticles =
-          newsResponse.data.articles || [];
-
-        const formattedArticles = tickerArticles.map((article) => {
-          const entity = article.entities?.find(
-            (entity) => entity.symbol === ticker,
+      for (const ticker of validTickers) {
+        try {
+          const newsResponse = await api.get(
+            `/news/ticker/${ticker}`,
           );
 
-          const score = entity?.sentiment_score;
+          const tickerArticles =
+            newsResponse.data.articles || [];
 
-          let sentiment = 'neutral';
-
-          if (score > 0) {
-            sentiment = 'positive';
-          } else if (score < 0) {
-            sentiment = 'negative';
-          }
-
-          return {
-            article_id: article.uuid,
-            title: article.title,
-            description: article.description,
-            image_url: article.image_url,
-            pubDate: article.published_at,
-            source_name: article.source,
+          const formattedArticles = tickerArticles.map((article) => ({
+            ...article,
             category: [ticker],
-            sentiment,
-            sentiment_score: score ?? 0,
-          };
-        });
+          }));
 
-        allArticles = [...allArticles, ...formattedArticles];
-      } catch (error) {
-        console.error(`Failed to get news for ${ticker}:`, error);
+          allArticles = [...allArticles, ...formattedArticles];
+        } catch (error) {
+          console.error(`Failed to get news for ${ticker}:`, error);
+        }
       }
-    }
 
-    setArticles(allArticles);
-    setActiveCategory('All');
-    setSentimentFilter('all');
-  };
+      setArticles(allArticles);
 
-  loadPortfolio();
-}, []);
+      const positiveCount = allArticles.filter(
+        (article) => article.sentiment === 'positive',
+      ).length;
+
+      const negativeCount = allArticles.filter(
+        (article) => article.sentiment === 'negative',
+      ).length;
+
+      const neutralCount = allArticles.filter(
+        (article) => article.sentiment === 'neutral',
+      ).length;
+
+      setPositive(positiveCount);
+      setNegative(negativeCount);
+      setNeutral(neutralCount);
+      setTotalArticles(allArticles.length);
+
+      setActiveCategory('all');
+      setSentimentFilter('all');
+    };
+
+    loadPortfolio();
+  }, []);
 
   /** @param {string} ticker*/
   const AddStock = async (ticker) => {
@@ -307,10 +275,10 @@ const NewsInvestment = () => {
 
       <div className="inline-flex items-center rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-card)] p-1 mt-7">
         <button
-          onClick={() => {setActiveTab('portfolio'); ToGetAllPortfolioNews();}}
+          onClick={() => { setActiveTab('portfolio'); ToGetAllPortfolioNews(); }}
           className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${activeTab === 'portfolio'
-              ? 'bg-blue-500 text-white shadow-sm'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            ? 'bg-blue-500 text-white shadow-sm'
+            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
         >
           <UserRound className="h-4 w-4" />
@@ -324,8 +292,8 @@ const NewsInvestment = () => {
             ToGetTheNews('business');
           }}
           className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-all duration-200 ${activeTab === 'market'
-              ? 'bg-blue-500 text-white shadow-sm'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+            ? 'bg-blue-500 text-white shadow-sm'
+            : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
         >
           <Globe2 className="h-4 w-4" />
@@ -346,12 +314,11 @@ const NewsInvestment = () => {
               <div className="flex items-center justify-between w-full mb-4">
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => setActiveCategory('all')}
-                    className={`px-3 py-1 rounded-full ${
-                      activeCategory === 'all'
-                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/40'
-                        : 'bg-[var(--surface-card)] text-[var(--text-secdonary)] border-transparent'
-                    }`}
+                    onClick={() => { setActiveCategory('all'); ToGetAllPortfolioNews(); }}
+                    className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${activeCategory === 'all'
+                        ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
+                        : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
+                      }`}
                   >
                     All
                   </button>
@@ -360,15 +327,7 @@ const NewsInvestment = () => {
                       key={ticker}
                       onClick={() => {
                         setActiveCategory(ticker);
-
-                        if(ticker === 'All')
-                        {
-                            ToGetAllPortfolioNews();
-                        }
-                        else
-                        {
-                          ToGetTickerNews(ticker);
-                        }
+                        ToGetTickerNews(ticker);
                       }}
                       className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${activeCategory === ticker
                         ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
@@ -470,77 +429,76 @@ const NewsInvestment = () => {
         <div className="mt-6">
           <div className='rounded-2xl border border-[var(--border-subtle)] p-5'>
             <div>
-            <h2 className='text-xl font-semibold text-[var(--text-primary)]'>
-              Market News
-            </h2>
+              <h2 className='text-xl font-semibold text-[var(--text-primary)]'>
+                Market News
+              </h2>
 
-            <p className='mt-1 text-sm text-[var(--text-secondary)]'>
-              Latest financial and market stories
-            </p>
+              <p className='mt-1 text-sm text-[var(--text-secondary)]'>
+                Latest financial and market stories
+              </p>
 
             </div>
-         
 
-           <div className='mt-3 flex flex-wrap items-center gap-2'>                    
-  {marketCategories.map((category) => (
-    <button
-      key={category}
-      onClick={() => {
-        setActiveCategory(category);
-        ToGetTheNews(category.toLowerCase());
-      }}
-      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${
-  activeCategory === category
-    ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
-    : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
-}`}
-    >
-      {category}
-    </button>
-  ))}
-</div>
-                
 
-              {articles.map((article) => (
-                <div
-                  key={article.article_id}
-                  className="flex items-center  border-b border-[var(--border-subtle)] p-5 gap-4"
+            <div className='mt-3 flex flex-wrap items-center gap-2'>
+              {marketCategories.map((category) => (
+                <button
+                  key={category}
+                  onClick={() => {
+                    setActiveCategory(category);
+                    ToGetTheNews(category.toLowerCase());
+                  }}
+                  className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${activeCategory === category
+                      ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
+                      : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
+                    }`}
                 >
-                  <div>
-                    <img
-                      src={article.image_url}
-                      alt="news"
-                      className="w-20 h-20 rounded-lg object-cover"
-                    />
-                  </div>
-
-                  <div className="flex-1">
-                    <h3 className="text-[var(--text-primary)]">{article.title}</h3>
-                    <p className="text-sm text-[var(--text-secondary)] mt-1">
-                      {article.description}
-                    </p>
-                    <p className="text-sm text-[var(--text-secondary)] mt-1">{article.pubDate}</p>
-                    <p className="text-sm text-[var(--text-secondary)] mt-1">
-                      {article.source_name}
-                    </p>
-                  </div>
-
-                  {article.category.map(
-                    /** @param {string} article*/(article) => (
-                      <p
-                        key={article}
-                        className="px-3 py-1 text-sm rounded-full bg-blue-500/20 text-blue-400"
-                      >
-                        {article}
-                      </p>
-                    ),
-                  )}
-                </div>
+                  {category}
+                </button>
               ))}
-
-              
             </div>
+
+
+            {articles.map((article) => (
+              <div
+                key={article.article_id}
+                className="flex items-center  border-b border-[var(--border-subtle)] p-5 gap-4"
+              >
+                <div>
+                  <img
+                    src={article.image_url}
+                    alt="news"
+                    className="w-20 h-20 rounded-lg object-cover"
+                  />
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="text-[var(--text-primary)]">{article.title}</h3>
+                  <p className="text-sm text-[var(--text-secondary)] mt-1">
+                    {article.description}
+                  </p>
+                  <p className="text-sm text-[var(--text-secondary)] mt-1">{article.pubDate}</p>
+                  <p className="text-sm text-[var(--text-secondary)] mt-1">
+                    {article.source_name}
+                  </p>
+                </div>
+
+                {article.category.map(
+                    /** @param {string} article*/(article) => (
+                    <p
+                      key={article}
+                      className="px-3 py-1 text-sm rounded-full bg-blue-500/20 text-blue-400"
+                    >
+                      {article}
+                    </p>
+                  ),
+                )}
+              </div>
+            ))}
+
+
           </div>
+        </div>
       )}
     </div>
   );

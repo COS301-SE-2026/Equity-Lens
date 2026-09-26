@@ -520,40 +520,41 @@ const Portfolio = () => {
    * @type {[any[], function]}
    */
   const [GetTheTopHoldingsImportPDF, setGetTheTopHoldingsImportPDF] = useState(
-    /** @type {any[]}*/ [],
+    /** @type {any[]}*/[],
   );
   /**
    * @type {[any[], function]}
    */
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState(
-    /** @type {any[]}*/ [],
+    /** @type {any[]}*/[],
   );
   const [GetTheLowest, setGetTheLowest] = useState({ name: '', value: 0 });
   /**
    * @type {[any[], function]}
    */
-  const [GetTradingActivity, setGetTradingActivity] = useState(/** @type {any[]}*/ []);
+  const [GetTradingActivity, setGetTradingActivity] = useState(/** @type {any[]}*/[]);
   /**
    * @type {[any[], function]}
    */
-  const [GetCashFlow, setGetCashFlow] = useState(/** @type {any[]}*/ []);
+  const [GetCashFlow, setGetCashFlow] = useState(/** @type {any[]}*/[]);
   /**
    * @type {[any[], function]}
    */
-  const [GetDividendIncome, setGetDividendIncome] = useState(/** @type {any[]}*/ []);
+  const [GetDividendIncome, setGetDividendIncome] = useState(/** @type {any[]}*/[]);
   /**
    * @type {[boolean,function]}
    */
   const [LoadingPage, setLoadingPage] = useState(false);
   const [accountType, setAccountType] = useState('');
   const [showPortfolios, setShowPortfolios] = useState(false);
-  const [portfolios, setPortfolios] = useState(/** @type {any[]}*/ []);
+  const [portfolios, setPortfolios] = useState(/** @type {any[]}*/[]);
   const [snapshot, setSnapshot] = useState(null);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
 
   useEffect(() => {
     const getInfo = async () => {
       const responses = await api.get('/portfolio/current');
+
       setPortfolios(responses.data);
     };
 
@@ -824,66 +825,84 @@ const Portfolio = () => {
 
   return (
     <div className="p-6">
-      <div className="max-w-6xl mx-auto p-6 bg-gray-900 border border-gray-700 rounded-3xl">
-        <div className="text-center mb-10">
-          <h2 className="text-4xl font-bold text-white mb-3">Upload Portfolio</h2>
+      <div className="mx-auto max-w-6xl rounded-3xl border border-gray-800 bg-gray-950/80 p-6 md:p-8">
+        <div className="mb-8 text-center">
+          <h2 className="mb-2 text-3xl font-bold text-white md:text-4xl">
+            Upload <span className="text-orange-500">Portfolio</span>
+          </h2>
 
-          <p className="text-gray-400 max-w-xl mx-auto">
-            Import your easyEquities portfolio but using your statement or our Excel template
+          <p className="mx-auto max-w-2xl text-sm text-gray-400 md:text-base">
+            Import your EasyEquities portfolio using your statement or our Excel template
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-2">My Portfolios</h3>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
 
-            {portfolios.slice(0, 2).map(
-              /** @param {any} portfolio*/ (portfolio, index) => (
-                <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
-                  <div className="flex justify-between items-center">
-                    <p className="text-white font-semibold">{portfolio.portfolio_name}</p>
+          <div className="flex min-h-[380px] flex-col rounded-2xl border border-gray-700 bg-gray-900/70 p-6">
+            <div className="mb-5 flex items-center gap-3">
 
-                    <span className="text-purple-400 font-semibold">
-                      {accountTypeLabel(portfolio.account_type)}
-                    </span>
-                  </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white">My Portfolios</h3>
+                <p className="text-sm text-gray-400">Select one of your existing portfolios</p>
+              </div>
+            </div>
 
-                  <p className="text-sm text-gray-400">Account: {portfolio.account_number}</p>
-
-                  <p className="text-sm text-gray-400">{statementPeriod(portfolio)}</p>
-
-                  <button
-                    onClick={() => ViewSummary(portfolio.id)}
-                    className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer"
+            <div className="flex-1">
+              {portfolios.slice(0, 2).map(
+          /** @param {any} portfolio*/(portfolio, index) => (
+                  <div
+                    key={index}
+                    className="mb-3 rounded-xl border border-gray-700 bg-gray-950/40 p-4 transition hover:border-blue-500/50"
                   >
-                    View Summary
-                  </button>
-                </div>
-              ),
-            )}
+                    <div className="mb-1 flex items-center justify-between gap-3">
+                      <p className="font-semibold text-white">{portfolio.portfolio_name}</p>
+
+                      <span className="rounded-md bg-purple-500/15 px-2 py-1 text-xs font-semibold text-purple-400">
+                        {accountTypeLabel(portfolio.account_type)}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-gray-400">Account: {portfolio.account_number}</p>
+
+                    <p className="text-sm text-gray-400">{statementPeriod(portfolio)}</p>
+
+                    <button
+                      type="button"
+                      onClick={() => ViewSummary(portfolio.id)}
+                      className="mt-3 text-sm font-medium text-blue-400 transition hover:text-blue-300 hover:underline"
+                    >
+                      View Summary
+                    </button>
+                  </div>
+                ),
+              )}
+            </div>
 
             <button
+              type="button"
               onClick={() => setShowPortfolios(true)}
-              className="block mx-auto text-orange-400 mt-4 hover:text-orange-300"
+              className="mt-3 text-sm font-medium text-orange-400 transition hover:text-orange-300"
             >
-              view all
+              View all portfolios
             </button>
           </div>
 
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6">
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white mb-2">Upload your statement</h3>
+          <div className="flex min-h-[380px] flex-col rounded-2xl border-gray-700 bg-gray-900/70 p-6 shadow-lg shadow-orange-500/5">
+            <div className="mb-5 flex items-center gap-3">
 
-              <p className="text-sm text-gray-400">
-                Upload your EasyEquities PDF or Complete the Excel template
-              </p>
-              <p className="text-sm text-gray-400">
-                Upload your EasyEquities PDF or Complete the Excel template
-              </p>
+              <div>
+                <h3 className="text-lg font-semibold text-white">Upload your statement</h3>
+                <p className="text-sm text-gray-400">
+                  Upload your EasyEquities PDF or complete the Excel template
+                </p>
+              </div>
             </div>
 
-            <div className="mb-4">
-              <label htmlFor="account-type-select" className="block text-sm text-gray-400 mb-2">
+            <div className="mb-5">
+              <label
+                htmlFor="account-type-select"
+                className="mb-2 block text-sm font-medium text-gray-300"
+              >
                 Account Type
               </label>
 
@@ -891,9 +910,10 @@ const Portfolio = () => {
                 id="account-type-select"
                 value={accountType}
                 onChange={(event) => setAccountType(event.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-white p-3 rounded-xl"
+                className="w-full rounded-xl border border-gray-700 bg-gray-800 p-3 text-white outline-none transition focus:border-orange-500"
               >
-                <option value=""> Select account type</option>
+                <option value="">Select account type</option>
+
                 {ACCOUNT_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
@@ -902,8 +922,9 @@ const Portfolio = () => {
               </select>
             </div>
 
-            <label className="block text-center cursor-pointer w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
-              choose the File
+            <label className="mt-auto block w-full cursor-pointer rounded-xl bg-orange-500 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-600">
+              Choose File
+
               <input
                 type="file"
                 accept=".pdf,.xlsx"
@@ -911,9 +932,6 @@ const Portfolio = () => {
                 onChange={async (event) => {
                   const file = event.target.files?.[0];
 
-                  if (!file) {
-                    return;
-                  }
                   if (!file) {
                     return;
                   }
@@ -925,6 +943,7 @@ const Portfolio = () => {
                   }
 
                   setLoadingPage(true);
+
                   try {
                     let data;
 
@@ -945,10 +964,10 @@ const Portfolio = () => {
                       );
                     } else if (file.name.toLowerCase().endsWith('.xlsx')) {
                       alert(
-                        'Invalid or unsupported Excel file. Please can you make sure to use the Excel template',
+                        'Invalid or unsupported Excel file. Please make sure to use the Excel template',
                       );
                     } else {
-                      alert('Please make sure you either upload a pdf or Excel');
+                      alert('Please make sure you either upload a PDF or Excel file');
                     }
                   } finally {
                     setLoadingPage(false);
@@ -957,364 +976,395 @@ const Portfolio = () => {
               />
             </label>
 
-            <p className="text-sm text-gray-500 text-center mt-3">PDF or XLSX</p>
+            <p className="mt-3 text-center text-sm text-gray-500">PDF or XLSX</p>
           </div>
 
-          <div className="border border-gray-700 rounded-2xl p-6">
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white mb-2">Excel Template</h3>
-
-              <p className="text-sm text-gray-400">
-                Don&apost have a supported PDF? Don&apost worry, You can enter your portfolio
-                manually using our template
-              </p>
-            </div>
-
-            <button
-              onClick={DownloadEXCEL}
-              className="w-full border border-orange-500 text-orange-400 hover:bg-orange-500 hover:text-white font-semibold py-3 rounded-xl transition"
-            >
-              Download Template
-            </button>
-            <p className="text-sm text-gray-500 text-center mt-3">EquityLens Excel Template</p>
-          </div>
-        </div>
-
-        {showPortfolios && (
-          <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-hidden">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-white mb-2">My Portfolios</h3>
-
-                <button
-                  onClick={() => setShowPortfolios(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  X
-                </button>
-              </div>
+          <div className="flex min-h-[380px] flex-col rounded-2xl border border-gray-700 bg-gray-900/70 p-6">
+            <div className="mb-5 flex items-center gap-3">
 
               <div>
-                <div className="max-h-[65vh] overflow-y-auto pr-2">
-                  {portfolios.map(
-                    /** @param {any} portfolio*/ (portfolio, index) => (
-                      <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
-                        <div className="flex justify-between items-center">
-                          <p className="text-white font-semibold">{portfolio.portfolio_name}</p>
-
-                          <span className="text-purple-400 font-semibold">
-                            {accountTypeLabel(portfolio.account_type)}
-                          </span>
-                        </div>
-
-                        <p className="text-sm text-gray-400">Account: {portfolio.account_number}</p>
-
-                        <p className="text-sm text-gray-400">{statementPeriod(portfolio)}</p>
-
-                        <button
-                          onClick={() => ViewSummary(portfolio.id)}
-                          className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer"
-                        >
-                          View Summary
-                        </button>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {summary && (
-          <div className="grid grid-cols-6 gap-8 mt-8">
-            <div className="p-5 border rounded-2xl" style={panelStyle}>
-              <div className="flex items-center gap-3 mb-2">
-                <Wallet size={20} className="text-yellow-500" />
-                <p style={mutedStyle}>Portfolio Value</p>
-              </div>
-
-              <h2 className="text-2xl font-bold" style={titleStyle}>
-                R {summary?.PortfolioValue || 0}
-              </h2>
-            </div>
-
-            <div className="p-5 border rounded-2xl" style={panelStyle}>
-              <div className="flex items-center gap-3 mb-2">
-                <Briefcase size={20} className="text-blue-500" />
-                <p style={mutedStyle}>Holdings</p>
-              </div>
-
-              <h2 className="text-2xl font-bold" style={titleStyle}>
-                {summary?.TotalHoldings || 0}
-              </h2>
-            </div>
-
-            <div className="p-5 border rounded-2xl" style={panelStyle}>
-              <div className="flex items-center gap-3 mb-2">
-                <ArrowLeftRight size={20} className="text-green-500" />
-                <p style={mutedStyle}>Purchase & Sales</p>
-              </div>
-
-              <h2 className="text-2xl font-bold" style={titleStyle}>
-                R {summary?.TotalPurchasesAndSales || 0}
-              </h2>
-            </div>
-
-            <div className="p-5 border rounded-2xl" style={panelStyle}>
-              <div className="flex items-center gap-3 mb-2">
-                <Landmark size={20} className="text-purple-500" />
-                <p style={mutedStyle}>Contributions</p>
-              </div>
-
-              <h2 className="text-2xl font-bold" style={titleStyle}>
-                R {summary?.TotalContributionsAndWithdrawals || 0}
-              </h2>
-            </div>
-
-            <div className="p-5 border rounded-2xl" style={panelStyle}>
-              <div className="flex items-center gap-3 mb-2">
-                <TrendingUp size={20} className="text-green-500" />
-                <p style={mutedStyle}>Dividends</p>
-              </div>
-
-              <h2 className="text-2xl font-bold" style={titleStyle}>
-                R {summary?.TotalDividendsAndWithholdingTax || 0}
-              </h2>
-            </div>
-
-            <div className="p-5 border rounded-2xl" style={panelStyle}>
-              <div className="flex items-center gap-3 mb-2">
-                <CreditCard size={20} className="text-orange-500" />
-                <p style={mutedStyle}>Expenses</p>
-              </div>
-
-              <h2 className="text-2xl font-bold" style={titleStyle}>
-                R {summary?.TotalTransactionExpenses || 0}
-              </h2>
-            </div>
-          </div>
-        )}
-
-        <div className="mt-8">
-          {snapshot && (
-            <div className="mt-8 p-6 border rounded-2xl" style={panelStyle}>
-              <div className="flex flex-col gap-5 lg:items-start lg:justify-between">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <span className="w-3 h-3 rounded-full bg-green-500" />
-                    <h2 className="text-xl font-bold" style={titleStyle}>
-                      Smart Portfolio Snapshot
-                    </h2>
-                  </div>
-
-                  <p className="mt-2 text-sm" style={mutedStyle}>
-                    All portfolio insights are generated from one verified canonical snapshot.
-                  </p>
-                </div>
-
-                <span className="self-start px-3 py-1 rounded-full text-sm font-semibold bg-green-100/10 text-green-500">
-                  Verified
-                </span>
-              </div>
-
-              <div className="mt-5 p-4 rounded-xl" style={{ background: 'var(--surface-inset)' }}>
-                <p className="text-sm mb-2" style={dimStyle}>
-                  SHA-256 Snapshot ID
+                <h3 className="text-lg font-semibold text-white">Excel Template</h3>
+                <p className="text-sm text-gray-400">
+                  Don't have a supported PDF? Use our template instead.
                 </p>
-                <p className="font-mono text-sm break-all" style={dimStyle}>
-                  {snapshot.snapshot_id}
+              </div>
+            </div>
+
+            <div className="mt-auto">
+              <button
+                type="button"
+                onClick={DownloadEXCEL}
+                className="w-full rounded-xl border border-orange-500 py-3 font-semibold text-orange-400 transition hover:bg-orange-500 hover:text-white"
+              >
+                Download Template
+              </button>
+
+              <p className="mt-3 text-center text-sm text-gray-500">
+                EquityLens Excel Template
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {showPortfolios && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gray-800 bg-gray-950 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-800 px-6 py-5">
+              <div>
+                <h3 className="text-xl font-bold text-white">My Portfolios</h3>
+                <p className="mt-1 text-sm text-gray-400">
+                  Select a portfolio to view its summary
                 </p>
               </div>
 
               <button
                 type="button"
-                onClick={downloadSnapshot}
-                className="mt-5 w-full px-5 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition"
+                onClick={() => setShowPortfolios(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-700 text-gray-400 transition hover:border-gray-600 hover:bg-gray-800 hover:text-white"
               >
-                Download Portfolio Summary
+                ×
               </button>
             </div>
-          )}
-        </div>
 
-        {summaGetTheTopAllocationImportPDFry.length > 0 &&
-          GetTheTopHoldingsImportPDF.length > 0 && (
-            <div className="grid grid-cols-3 gap-8 mb-7">
-              <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-                <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-                  Trading Activity
-                </h2>
-
-                <div className="flex justify-center w-full h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={GetTradingActivity}>
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Bar dataKey="value" fill={colours[1]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-                <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-                  Cash flow
-                </h2>
-
-                <div className="flex justify-center w-full h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={GetCashFlow}
-                        dataKey="value"
-                        nameKey="name"
-                        innerRadius={50}
-                        outerRadius={80}
-                      >
-                        {GetCashFlow.map((item, index) => (
-                          <Cell key={index} fill={colours[index % colours.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-                <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-                  Dividend Income
-                </h2>
-
-                <div className="flex justify-center w-full h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={GetDividendIncome}>
-                      <XAxis dataKey="name" />
-                      <YAxis />
-                      <Tooltip />
-                      <Legend />
-
-                      <Line dataKey="gross_dividend" stroke={colours[1]} />
-                      <Line dataKey="withholding_tax" stroke="#EF4444" />
-                      <Line dataKey="net_dividend" stroke={colours[2]} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-            </div>
-          )}
-
-        {summaGetTheTopAllocationImportPDFry.length > 0 &&
-          GetTheTopHoldingsImportPDF.length > 0 && (
-            <div className="grid grid-cols-3 gap-8 ">
-              <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-                <h2 className="text-xl font-bold text-center" style={titleStyle}>
-                  Assert allocation
-                </h2>
-
-                <div className="flex justify-center w-full h-80">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={summaGetTheTopAllocationImportPDFry}
-                        dataKey="weight_percentage"
-                        innerRadius={50}
-                        outerRadius={80}
-                      >
-                        {summaGetTheTopAllocationImportPDFry.map((item, index) => (
-                          <Cell key={index} fill={colours[index % colours.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              <div className="col-span-2 min-w-0 border rounded-2xl p-4" style={panelStyle}>
-                <h2 className="text-xl font-bold text-center" style={titleStyle}>
-                  Top Holdings
-                </h2>
-
-                {GetTheTopHoldingsImportPDF.map((item, index) => (
-                  <div key={index} className="mb-4">
-                    <div className="flex justify-between mb-1">
-                      <p style={mutedStyle}>{item.name}</p>
-                      <p style={mutedStyle}>R{item.value}</p>
-                    </div>
-
+            <div className="max-h-[65vh] overflow-y-auto p-6">
+              <div className="space-y-4">
+                {portfolios.map(
+          /** @param {any} portfolio */(portfolio) => (
                     <div
-                      className="w-full rounded-full h-3"
-                      style={{ background: 'var(--surface-inset)' }}
+                      key={portfolio.id}
+                      className="rounded-2xl border border-gray-800 bg-gray-900/70 p-5 transition hover:border-gray-700 hover:bg-gray-900"
                     >
-                      <div
-                        className="h-3 rounded-full"
-                        style={{
-                          width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
-                          backgroundColor: colours[index % colours.length],
-                        }}
-                      />
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="truncate text-base font-semibold text-white">
+                            {portfolio.portfolio_name}
+                          </p>
+
+                          <p className="mt-2 text-sm text-gray-400">
+                            Account: {portfolio.account_number}
+                          </p>
+
+                          <p className="mt-1 text-sm text-gray-400">
+                            {statementPeriod(portfolio)}
+                          </p>
+                        </div>
+
+                        <span className="shrink-0 rounded-lg bg-purple-500/15 px-3 py-1 text-xs font-semibold text-purple-400">
+                          {accountTypeLabel(portfolio.account_type)}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 border-t border-gray-800 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowPortfolios(false);
+                            ViewSummary(portfolio.id);
+                          }}
+                          className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+                        >
+                          View Summary
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ),
+                )}
               </div>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
-        {summaGetTheTopAllocationImportPDFry.length > 0 &&
-          GetTheTopHoldingsImportPDF.length > 0 && (
-            <div className="grid grid-cols-2 gap-8 mt-8">
-              <div className="p-6 border border-red-700 rounded-2xl">
-                <div className="flex items-center gap-2">
-                  <TriangleAlert size={24} className="text-red-500" />
-                  <h2 className="text-xl font-bold" style={{ color: 'var(--signal-negative)' }}>
-                    Lowest Holding
-                  </h2>
-                </div>
+      {summary && (
+        <div className="grid grid-cols-6 gap-8 mt-8">
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+            <div className="flex items-center gap-3 mb-2">
+              <Wallet size={20} className="text-yellow-500" />
+              <p style={mutedStyle}>Portfolio Value</p>
+            </div>
 
-                <p className="mb-5" style={mutedStyle}>
-                  Your smallest holdings by weight in the portfolio
-                </p>
-                <div className="flex justify-between border rounded-xl p-4" style={panelStyle}>
-                  <div>
-                    <p className="text-xl font-bold" style={titleStyle}>
-                      {GetTheLowest?.name ?? 'No holdings'}
-                    </p>
-                  </div>
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              R {summary?.PortfolioValue || 0}
+            </h2>
+          </div>
 
-                  <div>
-                    <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
-                  </div>
-                </div>
-              </div>
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+            <div className="flex items-center gap-3 mb-2">
+              <Briefcase size={20} className="text-blue-500" />
+              <p style={mutedStyle}>Holdings</p>
+            </div>
 
-              <div className="p-6 border border-purple-500 rounded-2xl">
-                <div className="flex items-center gap-2">
-                  <Bot size={24} className="text-purple-500" />
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              {summary?.TotalHoldings || 0}
+            </h2>
+          </div>
+
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+            <div className="flex items-center gap-3 mb-2">
+              <ArrowLeftRight size={20} className="text-green-500" />
+              <p style={mutedStyle}>Purchase & Sales</p>
+            </div>
+
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              R {summary?.TotalPurchasesAndSales || 0}
+            </h2>
+          </div>
+
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+            <div className="flex items-center gap-3 mb-2">
+              <Landmark size={20} className="text-purple-500" />
+              <p style={mutedStyle}>Contributions</p>
+            </div>
+
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              R {summary?.TotalContributionsAndWithdrawals || 0}
+            </h2>
+          </div>
+
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+            <div className="flex items-center gap-3 mb-2">
+              <TrendingUp size={20} className="text-green-500" />
+              <p style={mutedStyle}>Dividends</p>
+            </div>
+
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              R {summary?.TotalDividendsAndWithholdingTax || 0}
+            </h2>
+          </div>
+
+          <div className="p-5 border rounded-2xl" style={panelStyle}>
+            <div className="flex items-center gap-3 mb-2">
+              <CreditCard size={20} className="text-orange-500" />
+              <p style={mutedStyle}>Expenses</p>
+            </div>
+
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              R {summary?.TotalTransactionExpenses || 0}
+            </h2>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-8">
+        {snapshot && (
+          <div className="mt-8 p-6 border rounded-2xl" style={panelStyle}>
+            <div className="flex flex-col gap-5 lg:items-start lg:justify-between">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="w-3 h-3 rounded-full bg-green-500" />
                   <h2 className="text-xl font-bold" style={titleStyle}>
-                    AI Portfolio Assistant
+                    Smart Portfolio Snapshot
                   </h2>
                 </div>
 
-                <p className="mb-5" style={mutedStyle}>
-                  Ask questions about your portfolio and recivce AI-powered insights.
+                <p className="mt-2 text-sm" style={mutedStyle}>
+                  All portfolio insights are generated from one verified canonical snapshot.
                 </p>
+              </div>
 
-                <button
-                  onClick={() => navigate(ROUTES.AI_CHAT)}
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold"
-                >
-                  Go To Assistant
-                </button>
+              <span className="self-start px-3 py-1 rounded-full text-sm font-semibold bg-green-100/10 text-green-500">
+                Verified
+              </span>
+            </div>
+
+            <div className="mt-5 p-4 rounded-xl" style={{ background: 'var(--surface-inset)' }}>
+              <p className="text-sm mb-2" style={dimStyle}>
+                SHA-256 Snapshot ID
+              </p>
+              <p className="font-mono text-sm break-all" style={dimStyle}>
+                {snapshot.snapshot_id}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={downloadSnapshot}
+              className="mt-5 w-full px-5 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition"
+            >
+              Download Portfolio Summary
+            </button>
+          </div>
+        )}
+      </div>
+
+      {summaGetTheTopAllocationImportPDFry.length > 0 &&
+        GetTheTopHoldingsImportPDF.length > 0 && (
+          <div className="grid grid-cols-3 gap-8 mb-7">
+            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+              <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
+                Trading Activity
+              </h2>
+
+              <div className="flex justify-center w-full h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={GetTradingActivity}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" fill={colours[1]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
-          )}
-      </div>
+
+            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+              <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
+                Cash flow
+              </h2>
+
+              <div className="flex justify-center w-full h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={GetCashFlow}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={50}
+                      outerRadius={80}
+                    >
+                      {GetCashFlow.map((item, index) => (
+                        <Cell key={index} fill={colours[index % colours.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+              <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
+                Dividend Income
+              </h2>
+
+              <div className="flex justify-center w-full h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={GetDividendIncome}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+
+                    <Line dataKey="gross_dividend" stroke={colours[1]} />
+                    <Line dataKey="withholding_tax" stroke="#EF4444" />
+                    <Line dataKey="net_dividend" stroke={colours[2]} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {summaGetTheTopAllocationImportPDFry.length > 0 &&
+        GetTheTopHoldingsImportPDF.length > 0 && (
+          <div className="grid grid-cols-3 gap-8 ">
+            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+              <h2 className="text-xl font-bold text-center" style={titleStyle}>
+                Assert allocation
+              </h2>
+
+              <div className="flex justify-center w-full h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={summaGetTheTopAllocationImportPDFry}
+                      dataKey="weight_percentage"
+                      innerRadius={50}
+                      outerRadius={80}
+                    >
+                      {summaGetTheTopAllocationImportPDFry.map((item, index) => (
+                        <Cell key={index} fill={colours[index % colours.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="col-span-2 min-w-0 border rounded-2xl p-4" style={panelStyle}>
+              <h2 className="text-xl font-bold text-center" style={titleStyle}>
+                Top Holdings
+              </h2>
+
+              {GetTheTopHoldingsImportPDF.map((item, index) => (
+                <div key={index} className="mb-4">
+                  <div className="flex justify-between mb-1">
+                    <p style={mutedStyle}>{item.name}</p>
+                    <p style={mutedStyle}>R{item.value}</p>
+                  </div>
+
+                  <div
+                    className="w-full rounded-full h-3"
+                    style={{ background: 'var(--surface-inset)' }}
+                  >
+                    <div
+                      className="h-3 rounded-full"
+                      style={{
+                        width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
+                        backgroundColor: colours[index % colours.length],
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      {summaGetTheTopAllocationImportPDFry.length > 0 &&
+        GetTheTopHoldingsImportPDF.length > 0 && (
+          <div className="grid grid-cols-2 gap-8 mt-8">
+            <div className="p-6 border border-red-700 rounded-2xl">
+              <div className="flex items-center gap-2">
+                <TriangleAlert size={24} className="text-red-500" />
+                <h2 className="text-xl font-bold" style={{ color: 'var(--signal-negative)' }}>
+                  Lowest Holding
+                </h2>
+              </div>
+
+              <p className="mb-5" style={mutedStyle}>
+                Your smallest holdings by weight in the portfolio
+              </p>
+              <div className="flex justify-between border rounded-xl p-4" style={panelStyle}>
+                <div>
+                  <p className="text-xl font-bold" style={titleStyle}>
+                    {GetTheLowest?.name ?? 'No holdings'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border border-purple-500 rounded-2xl">
+              <div className="flex items-center gap-2">
+                <Bot size={24} className="text-purple-500" />
+                <h2 className="text-xl font-bold" style={titleStyle}>
+                  AI Portfolio Assistant
+                </h2>
+              </div>
+
+              <p className="mb-5" style={mutedStyle}>
+                Ask questions about your portfolio and recivce AI-powered insights.
+              </p>
+
+              <button
+                onClick={() => navigate(ROUTES.AI_CHAT)}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold"
+              >
+                Go To Assistant
+              </button>
+            </div>
+          </div>
+        )}
     </div>
+    // </div>
   );
 };
 
