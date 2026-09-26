@@ -130,7 +130,7 @@ const GlassSelect = ({
         aria-activedescendant={open && activeIndex >= 0 ? `${id}-option-${activeIndex}` : undefined}
         onClick={() => (open ? setOpen(false) : openList())}
         onKeyDown={handleKeyDown}
-        className="pressable flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left font-mono text-[12px] transition-colors disabled:cursor-not-allowed disabled:opacity-40"
+        className="pressable flex w-full items-center justify-between gap-2 rounded-lg px-3 py-2 text-left font-mono text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-40"
         style={{
           border: '1px solid var(--border-subtle)',
           color: 'var(--text-primary)',
@@ -178,7 +178,7 @@ const GlassSelect = ({
                   e.preventDefault();
                   commit(i);
                 }}
-                className="cursor-pointer px-3 py-1.5 font-mono text-[12px]"
+                className="cursor-pointer px-3 py-1.5 font-mono text-[13px]"
                 style={{
                   color: 'var(--text-primary)',
                   background:

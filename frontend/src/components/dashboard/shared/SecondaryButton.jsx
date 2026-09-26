@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 const BASE_CLASS =
   'pressable inline-flex items-center gap-1.5 rounded-full font-mono font-medium transition-colors hover:bg-[var(--surface-hover)] disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:bg-transparent';
 const SIZE_CLASS = {
-  md: 'px-3 py-1.5 text-[11px]',
-  sm: 'px-2 py-1 text-[10px]',
+  md: 'px-3 py-1.5 text-[12px]',
+  sm: 'px-2 py-1 text-[11px]',
 };
 const STYLE = { border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' };
 

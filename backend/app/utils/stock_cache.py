@@ -1,10 +1,13 @@
 import logging
 import time
 from datetime import UTC, datetime, timedelta
+from typing import NamedTuple
 
 import pandas as pd
 import requests
 import yfinance as yf
+from sqlalchemy import select
+from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import SessionLocal
@@ -18,6 +21,7 @@ YFINANCE_BASE_COOLDOWN_MINUTES = 3
 YFINANCE_MAX_COOLDOWN_MINUTES = 30
 
 logger = logging.getLogger(__name__)
+
 
 def _is_rate_limit_error(exc: Exception) -> bool:
     message = str(exc)
@@ -34,7 +38,7 @@ def _trip_yfinance_global_cooldown() -> None:
     _YFINANCE_COOLDOWN_STRIKES += 1
     logger.warning(
         "Yahoo rate limit hit - pausing all yfinance calls until %s",
-        {_YFINANCE_GLOBAL_COOLDOWN_UNTIL.isoformat()},
+        _YFINANCE_GLOBAL_COOLDOWN_UNTIL.isoformat(),
     )
 
 
@@ -73,25 +77,52 @@ def should_refresh_market_data(last_fetched_at, ttl_hours: int | None = None) ->
     return (now - last_fetched_at) > timedelta(hours=ttl_hours)
 
 
-def _price_cache_is_stale(ticker: str) -> bool:
-    db = SessionLocal()
-    try:
-        latest_record = (
-            db.query(MarketData)
-            .filter(MarketData.ticker == ticker)
-            .order_by(MarketData.date.desc(), MarketData.fetched_at.desc())
-            .first()
+class LatestClose(NamedTuple):
+    date: object
+    close: float
+    prev_close: float | None
+    volume: int | None
+    fetched_at: object
+
+
+def get_latest_close(ticker: str, db: Session | None = None) -> LatestClose | None:
+    stmt = (
+        select(
+            MarketData.date,
+            MarketData.close,
+            MarketData.prev_close,
+            MarketData.volume,
+            MarketData.fetched_at,
         )
+        .where(MarketData.ticker == ticker.upper(), MarketData.close.isnot(None))
+        .order_by(MarketData.date.desc())
+        .limit(1)
+    )
+
+    if db is not None:
+        row = db.execute(stmt).first()
+        return LatestClose(*row) if row else None
+
+    own = SessionLocal()
+    try:
+        row = own.execute(stmt).first()
+        return LatestClose(*row) if row else None
     finally:
-        db.close()
+        own.close()
 
-    if latest_record is None:
+
+def is_stale(row: LatestClose | None) -> bool:
+    if row is None:
         return True
 
-    if should_refresh_market_data(latest_record.fetched_at):
+    if should_refresh_market_data(row.fetched_at):
         return True
 
-    return (datetime.now(UTC).date() - latest_record.date).days > MARKET_DATA_MAX_AGE_DAYS
+    return (datetime.now(UTC).date() - row.date).days > MARKET_DATA_MAX_AGE_DAYS
+
+
+def _price_cache_is_stale(ticker: str) -> bool:
+    return is_stale(get_latest_close(ticker))
 
 
 def _load_local_price_history(ticker: str) -> pd.DataFrame:
@@ -288,8 +319,8 @@ def get_cached_price_history(
     ticker = ticker.upper()
     history = _load_local_price_history(ticker)
     if not history.empty and not _price_cache_is_stale(ticker):
-            logger.debug("Local price hit: %s", ticker)
-            return history
+        logger.debug("Local price hit: %s", ticker)
+        return history
     if ticker in _REFRESH_LOCKS:
         return history
 
@@ -325,8 +356,8 @@ def get_cached_price_histories(
         history = _load_local_price_history(ticker)
         results[ticker] = history
         if not history.empty and not _price_cache_is_stale(ticker):
-                logger.debug("Local price hit: %s", ticker)
-                continue
+            logger.debug("Local price hit: %s", ticker)
+            continue
 
         cooldown_until = _PRICE_REFRESH_COOLDOWN_UNTIL.get(ticker)
         if cooldown_until and datetime.now(UTC) < cooldown_until:
@@ -418,7 +449,7 @@ def get_cached_price_histories(
                     except Exception:
                         logger.warning(
                             "Processing batched Yahoo data failed for %s", ticker, exc_info=True
-                            )
+                        )
                     _PRICE_REFRESH_COOLDOWN_UNTIL[ticker] = datetime.now(UTC) + timedelta(
                         minutes=PRICE_REFRESH_COOLDOWN_MINUTES
                     )

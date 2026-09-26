@@ -1,10 +1,4 @@
-import {
-  TrendingUp,
-  TrendingDown,
-  Star,
-  Newspaper,
-  UserRound,
-} from 'lucide-react';
+import { TrendingUp, TrendingDown, Star, Newspaper, UserRound } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import api from '../../services/api';
@@ -26,88 +20,16 @@ const NewsInvestment = () => {
   const [sortBy, setSortBy] = useState('latest');
 
   const ToGetAllPortfolioNews = async () => {
-    /** @type{any[]}*/
-    let AllArticles = [];
+    //one server-side call for the whole portfolio, cached for 15 minutes. the ticker chips
+    //filter what this returns rather than fetching per click
+    const response = await api.get('/news/portfolio');
 
-    for (const ticker of portfoliosTickers) {
-      const response = await api.get(`/news/test-aapl/${ticker}`);
-
-      /** @type {Array<any>} */
-      const tickerArticles = response.data.articles || [];
-
-      const formattedArticles = tickerArticles.map((article) => {
-        const entity = article.entities?.find(
-          /** @param {any} entity*/ (entity) => entity.symbol === ticker,
-        );
-
-        const score = entity?.sentiment_score;
-
-        let sentiment = 'neutral';
-
-        if (score > 0) {
-          sentiment = 'positive';
-        } else if (score < 0) {
-          sentiment = 'negative';
-        }
-        return {
-          article_id: article.uuid,
-          title: article.title,
-          description: article.description,
-          image_url: article.image_url,
-          pubDate: article.published_at,
-          source_name: article.source,
-          category: [ticker],
-          sentiment,
-          sentiment_score: score ?? 0,
-        };
-      });
-      AllArticles = [...AllArticles, ...formattedArticles];
-    }
-    setArticles(AllArticles);
-    setActiveCategory('all');
-    setSentimentFilter('all');
-  };
-
-  /** @param {string} ticker*/
-  const ToGetTickerNews = async (ticker) => {
-    const response = await api.get(`/news/test-aapl/${ticker}`);
-
-    /** @type {Array<any>} */
-    const tickerArticles = response.data.articles || [];
-
-    const formattedArticles = tickerArticles.map((article) => {
-      const entity = article.entities?.find(
-        /** @param {any} entity*/ (entity) => entity.symbol === ticker,
-      );
-
-      const score = entity?.sentiment_score;
-
-      let sentiment = 'neutral';
-
-      if (score > 0) {
-        sentiment = 'positive';
-      } else if (score < 0) {
-        sentiment = 'negative';
-      }
-      return {
-        article_id: article.uuid,
-        title: article.title,
-        description: article.description,
-        image_url: article.image_url,
-        pubDate: article.published_at,
-        source_name: article.source,
-        category: [ticker],
-        sentiment,
-        sentiment_score: score ?? 0,
-      };
-    });
-
-    setArticles(formattedArticles);
+    setArticles(response.data.results || []);
     setPositive(response.data.positive || 0);
     setNegative(response.data.negative || 0);
     setNeutral(response.data.neutral || 0);
     setTotalArticles(response.data.total_articles || 0);
-
+    setActiveCategory('all');
     setSentimentFilter('all');
   };
 
@@ -116,8 +38,11 @@ const NewsInvestment = () => {
     setPortfoliosTickers(reponse.data.tickers || []);
   };
 
+  //the portfolio tab is the default, so its feed is what loads on mount. the market tab
+  //loads its own from its button - they share the articles state, so only one may write
   useEffect(() => {
     ToGetPortfoliosTickers();
+    ToGetAllPortfolioNews();
   }, []);
 
   /** @param {string} ticker*/
@@ -159,14 +84,14 @@ const NewsInvestment = () => {
   };
 
   useEffect(() => {
-    ToGetTheNews();
-  }, []);
-
-  useEffect(() => {
     ToGetWishlist();
   }, []);
 
   const filteredArticles = articles.filter((article) => {
+    if (activeCategory !== 'all' && !(article.category || []).includes(activeCategory)) {
+      return false;
+    }
+
     if (sentimentFilter === 'all') {
       return true;
     }
@@ -234,7 +159,10 @@ const NewsInvestment = () => {
 
       <div className="flex items-center mt-4 gap-2">
         <button
-          onClick={() => setActiveTab('portfolio')}
+          onClick={() => {
+            setActiveTab('portfolio');
+            ToGetAllPortfolioNews();
+          }}
           className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors border text-sm font-medium ${
             activeTab === 'portfolio'
               ? 'bg-blue-500/20 text-blue-400 border-blue-500/40'
@@ -271,13 +199,20 @@ const NewsInvestment = () => {
               </h2>
               <div className="flex items-center justify-between w-full mb-4">
                 <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setActiveCategory('all')}
+                    className={`px-3 py-1 rounded-full ${
+                      activeCategory === 'all'
+                        ? 'bg-blue-500/20 text-blue-400 border-blue-500/40'
+                        : 'bg-[var(--surface-card)] text-[var(--text-secdonary)] border-transparent'
+                    }`}
+                  >
+                    All
+                  </button>
                   {portfoliosTickers.map((ticker) => (
                     <button
                       key={ticker}
-                      onClick={() => {
-                        setActiveCategory(ticker);
-                        ToGetTickerNews(ticker);
-                      }}
+                      onClick={() => setActiveCategory(ticker)}
                       className={`px-3 py-1 rounded-full ${
                         activeCategory === ticker
                           ? 'bg-blue-500/20 text-blue-400 border-blue-500/40'

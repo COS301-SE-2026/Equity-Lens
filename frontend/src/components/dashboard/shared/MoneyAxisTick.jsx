@@ -8,7 +8,7 @@ const MoneyAxisTick = ({ payload, ...rest }) => (
     {...rest}
     dy={4}
     className="money-value"
-    fontSize={10}
+    fontSize={11}
     fontFamily="monospace"
     fill="var(--chart-axis-text)"
   >

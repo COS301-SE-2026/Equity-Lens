@@ -76,7 +76,7 @@ export default function HelpTooltip({ text }) {
                 scale: shouldReduceMotion ? 1 : 0.95,
               }}
               transition={{ duration: 0.15 }}
-              className="glass-surface-elevated pointer-events-none fixed rounded-lg px-3 py-2 text-[11px] leading-snug"
+              className="glass-surface-elevated pointer-events-none fixed rounded-lg px-3 py-2 text-[12px] leading-snug"
               style={{
                 left: pos.left,
                 bottom: pos.bottom,

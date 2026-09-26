@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     allow_live_market_fallback: bool = False
     alpha_vantage_api_key: str | None = None
     market_data_refresh_ttl_hours: int = 24
-    secret_key: str = "to-be-changed-later" # noqa: S105
+    secret_key: str = "to-be-changed-later"  # noqa: S105
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 30
     cors_origins: list[str] = [
@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     newsdata_api_key: str | None = None
     market_api_key: str | None = None
+    news_refresh_floor_hours: int = 6
+    news_daily_request_budget: int = 80
+    news_nightly_request_budget: int = 60
 
 
 @lru_cache

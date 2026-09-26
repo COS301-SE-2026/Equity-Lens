@@ -38,6 +38,8 @@ const renderHero = (props) =>
         portfolioData={props?.portfolioData ?? DATA}
         health={props?.health ?? HEALTH}
         fetchedAt={props?.fetchedAt}
+        benchmark={props?.benchmark}
+        historyDays={props?.historyDays}
         onScrollToHealth={props?.onScrollToHealth ?? vi.fn()}
       />
     </MemoryRouter>,
@@ -234,6 +236,33 @@ describe('DashboardHero', () => {
     expect(screen.getByText('Needs Attention')).toBeInTheDocument();
     expect(screen.getByText('Review Portfolio Health')).toBeInTheDocument();
     expect(screen.getByText('Ask AI Assistant')).toBeInTheDocument();
+  });
+
+  describe('benchmark figure', () => {
+    it('reads the gap once, in the header, with the period it covers', () => {
+      renderHero({
+        benchmark: { available: true, diffPct: -33, label: 'Satrix 40 (JSE Top 40 proxy)' },
+        historyDays: 92,
+      });
+      expect(screen.getByText('vs Satrix 40 (JSE Top 40 proxy)')).toBeInTheDocument();
+      const figure = screen.getByText('-33.0%');
+      expect(figure).toHaveStyle({ color: 'var(--signal-negative)' });
+      expect(screen.getByText('over 92 days')).toBeInTheDocument();
+    });
+
+    it('says since inception when there is no day count to quote', () => {
+      renderHero({ benchmark: { available: true, diffPct: 4.2, label: 'JSE ALSI' } });
+      expect(screen.getByText('+4.2%')).toHaveStyle({ color: 'var(--signal-positive)' });
+      expect(screen.getByText('since inception')).toBeInTheDocument();
+    });
+
+    it('renders nothing when there is no benchmark to compare against', () => {
+      renderHero({ benchmark: { available: false, diffPct: 0, label: 'JSE ALSI' } });
+      expect(screen.queryByText(/^vs /)).not.toBeInTheDocument();
+
+      renderHero({ benchmark: null });
+      expect(screen.queryByText(/^vs /)).not.toBeInTheDocument();
+    });
   });
 
   it('scrolls to health section', () => {

@@ -32,9 +32,12 @@ def test_one_holding_market_failure_does_not_stop_others(mocker):
         ),
     ]
 
-    mocker.patch("app.services.portfolio_service.is_zar_listed", return_value=True)
+    # the gate these tickers have to get past is quote_currency now, not is_zar_listed - this
+    # test is about one holding's failure not stopping the others, so the currency is forced
+    # rather than worked out
+    mocker.patch("app.services.portfolio_service.quote_currency", return_value="ZAR")
 
-    def fake_price(ticker):
+    def fake_price(ticker, db=None):
 
         if ticker == "MSFT":
             raise Exception("Market data unavailable")

@@ -1,29 +1,50 @@
 import { Star } from 'lucide-react';
-import { useCallback, useState, useRef, useEffect } from 'react';
+import { useCallback, useMemo, useState, useRef, useEffect } from 'react';
 
-import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
+import CardErrorBoundary from '../../components/common/ErrorBoundary/CardErrorBoundary';
 import ConcentrationRisk from '../../components/dashboard/ConcentrationRisk/ConcentrationRisk';
 import DashboardHero from '../../components/dashboard/DashboardHero/DashboardHero';
 import DashboardHoldingsTable from '../../components/dashboard/DashboardHoldingsTable/DashboardHoldingsTable';
 import PerformanceVsBenchmark from '../../components/dashboard/PerformanceVsBenchmark/PerformanceVsBenchmark';
 import PortfolioHealth from '../../components/dashboard/PortfolioHealth/PortfolioHealth';
-import FloatingToggle from '../../components/dashboard/shared/FloatingToggle';
+import CardSkeleton from '../../components/dashboard/shared/CardSkeleton';
 import { GlassPanel } from '../../components/dashboard/shared/GlassPanel';
+import SecondaryButton from '../../components/dashboard/shared/SecondaryButton';
+import FloatingToggle from '../../components/dashboard/shared/FloatingToggle';
 import TodayInsights from '../../components/dashboard/TodayInsights/TodayInsights';
 import WatchlistPanel from '../../components/dashboard/WatchlistPanel/WatchlistPanel';
+import { useChatContext } from '../../context/ChatContext';
 import useAuth from '../../hooks/useAuth';
 import useDashboardAnalytics from '../../hooks/useDashboardAnalytics';
 import usePortfolio from '../../hooks/usePortfolio';
-import { buildSectors, buildAttrib, buildInsights } from '../../utils/dashboardInsights';
+import usePortfolioEvents from '../../hooks/usePortfolioEvents';
+import {
+  buildSectors,
+  buildAttrib,
+  buildChartStats,
+  buildInsights,
+  buildSummary,
+} from '../../utils/dashboardInsights';
 
 const FLASH_TIME = 2500;
 
 const Dashboard = () => {
-  const { portfolioData, loading, error, fetchedAt, refreshQuietly } = usePortfolio();
+  const { portfolioData, loading, error, fetchedAt, refetch, refreshQuietly } = usePortfolio();
   const { marketContext } = useDashboardAnalytics();
+  const {
+    events,
+    loading: eventsLoading,
+    failed: eventsFailed,
+    details: eventDetails,
+    pendingKey: eventPendingKey,
+    lastDetail: eventStudy,
+    loadDetail: onExpandEvent,
+  } = usePortfolioEvents();
   const { user } = useAuth();
+  const { openDock } = useChatContext();
   const [watchlistOpen, setWatchlistOpen] = useState(false);
   const [flashedTarget, setFlashedTarget] = useState(/** @type {string|null} */ (null));
+  const [healthConfigVersion, setHealthConfigVersion] = useState(0);
   /** @type {React.MutableRefObject<ReturnType<typeof setTimeout> | null>} */
   const flashTimeoutRef = useRef(null);
 
@@ -39,32 +60,6 @@ const Dashboard = () => {
       if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
     };
   }, []);
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <LoadingSpinner size="lg" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex min-h-screen items-center justify-center px-4">
-        <GlassPanel className="max-w-md p-8 text-center">
-          <p
-            className="mb-2 font-mono text-[11px] tracking-widest"
-            style={{ color: 'var(--signal-negative)' }}
-          >
-            Could Not Load Portfolio
-          </p>
-          <p className="text-[13px]" style={{ color: 'var(--text-secondary)' }}>
-            {error}
-          </p>
-        </GlassPanel>
-      </div>
-    );
-  }
 
   const firstName = user?.full_name?.split(' ')[0] ?? 'there';
   const holdings = portfolioData?.holdings ?? [];
@@ -82,13 +77,125 @@ const Dashboard = () => {
     }),
   );
 
+  const payloadThresholds = portfolioData?.thresholds;
+  const thresholds = {
+    low: payloadThresholds?.concentration_low ?? 25,
+    high: payloadThresholds?.concentration_high ?? 45,
+  };
+
   const contributionSeries = portfolioData?.contributionsSeries ?? [];
   const benchmarkLabel = portfolioData?.benchmarkLabel ?? 'JSE ALSI';
+  const benchmarkComposition = portfolioData?.benchmarkComposition ?? [];
   const historyDays = portfolioData?.returns?.history_days ?? 0;
   const { sectors: sectorData } = buildSectors(holdings);
   const attribution = buildAttrib(holdings);
   const health = portfolioData?.health ?? { score: null, label: null, subscores: [] };
-  const { insights: todayInsights } = buildInsights({ holdings, attribution, sectorData });
+  const chartStats = useMemo(
+    () => buildChartStats(perfSeries, { historyDays }),
+    [perfSeries, historyDays],
+  );
+  const summary = useMemo(
+    () =>
+      buildSummary({
+        holdings,
+        sectorData,
+        attribution,
+        chartStats,
+        dailyChangePct: portfolioData?.summary?.daily_change_pct ?? 0,
+        benchmarkLabel,
+        thresholds,
+      }),
+    [
+      holdings,
+      sectorData,
+      attribution,
+      chartStats,
+      portfolioData,
+      benchmarkLabel,
+      thresholds.low,
+      thresholds.high,
+    ],
+  );
+
+  const { insights: todayInsights, more: moreInsights } = useMemo(
+    () =>
+      buildInsights({
+        holdings,
+        attribution,
+        sectorData,
+        sectorAllocation: portfolioData?.sectorAllocation ?? [],
+        returns: portfolioData?.returns,
+        health,
+        thresholds,
+        perfSeries,
+        contributionSeries,
+        cgt: portfolioData?.cgt,
+        statementDate: portfolioData?.statementDate,
+        accountType: portfolioData?.accountType,
+        benchmarkLabel,
+        events,
+        eventStudy,
+      }),
+    [
+      holdings,
+      attribution,
+      sectorData,
+      portfolioData,
+      health,
+      thresholds.low,
+      thresholds.high,
+      perfSeries,
+      contributionSeries,
+      benchmarkLabel,
+      events,
+      eventStudy,
+    ],
+  );
+
+  if (loading) {
+    return (
+      <div
+        className="min-h-screen"
+        style={{ color: 'var(--text-primary)', fontFamily: 'var(--font-primary)' }}
+      >
+        <main
+          className="mx-auto max-w-[1800px] space-y-10 px-6 py-8 lg:px-12"
+          aria-label="Portfolio dashboard"
+        >
+          <CardSkeleton label="Overview" height={220} />
+          <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
+            <CardSkeleton label="Portfolio Insights" height={440} />
+            <CardSkeleton label="Portfolio Health" height={440} />
+          </div>
+          <CardSkeleton label="Performance vs Benchmark" height={420} />
+          <CardSkeleton label="All Positions" height={300} />
+          <CardSkeleton label="Concentration & Rebalancing" height={420} />
+        </main>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center px-4">
+        <GlassPanel className="max-w-md p-8 text-center">
+          <p
+            className="mb-2 font-mono text-[12px] tracking-widest"
+            style={{ color: 'var(--signal-negative)' }}
+          >
+            Could Not Load Portfolio
+          </p>
+          <p className="mb-5 text-[13px]" style={{ color: 'var(--text-secondary)' }}>
+            {error}
+          </p>
+          <div className="flex justify-center gap-3">
+            <SecondaryButton onClick={() => refetch()}>Try again</SecondaryButton>
+            <SecondaryButton to="/portfolio">Go to Portfolio</SecondaryButton>
+          </div>
+        </GlassPanel>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -100,47 +207,90 @@ const Dashboard = () => {
         className="mx-auto max-w-[1800px] space-y-10 px-6 py-8 lg:px-12"
         aria-label="Portfolio dashboard"
       >
-        <DashboardHero
-          name={firstName}
-          portfolioData={portfolioData}
-          health={health}
-          fetchedAt={fetchedAt}
-          onScrollToHealth={() => scrollToSection('portfolio-health')}
-        />
+        <CardErrorBoundary label="Overview">
+          <DashboardHero
+            name={firstName}
+            portfolioData={portfolioData}
+            health={health}
+            fetchedAt={fetchedAt}
+            benchmark={summary.benchmark}
+            benchmarkComposition={benchmarkComposition}
+            historyDays={historyDays}
+            onScrollToHealth={() => scrollToSection('portfolio-health')}
+          />
+        </CardErrorBoundary>
         <div className="grid grid-cols-1 items-stretch gap-6 lg:grid-cols-2">
-          <TodayInsights insights={todayInsights} onScrollTo={scrollToSection} />
+          <CardErrorBoundary label="Portfolio Insights">
+            <TodayInsights
+              insights={todayInsights}
+              more={moreInsights}
+              onScrollTo={scrollToSection}
+              onAsk={openDock}
+            />
+          </CardErrorBoundary>
 
           <div
             id="portfolio-health"
             className={`dashboard-highlight rounded-2xl ${flashedTarget === 'portfolio-health' ? 'is-active' : ''}`}
           >
-            <PortfolioHealth
-              health={health}
-              onScrollTo={scrollToSection}
-              onYardstickChanged={refreshQuietly}
-            />
+            <CardErrorBoundary label="Portfolio Health">
+              <PortfolioHealth
+                health={health}
+                onScrollTo={scrollToSection}
+                onYardstickChanged={() => {
+                  refreshQuietly();
+                  setHealthConfigVersion((version) => version + 1);
+                }}
+              />
+            </CardErrorBoundary>
           </div>
         </div>
-        <ConcentrationRisk />
         <div
           id="performance-vs-benchmark"
           className={`dashboard-highlight rounded-2xl ${flashedTarget === 'performance-vs-benchmark' ? 'is-active' : ''}`}
         >
-          <PerformanceVsBenchmark
-            series={perfSeries}
-            contributionSeries={contributionSeries}
-            attribution={attribution}
-            benchmarkLabel={benchmarkLabel}
-            historyDays={historyDays}
-          />
+          <CardErrorBoundary label="Performance vs Benchmark">
+            <PerformanceVsBenchmark
+              series={perfSeries}
+              contributionSeries={contributionSeries}
+              attribution={attribution}
+              benchmarkLabel={benchmarkLabel}
+              benchmarkComposition={benchmarkComposition}
+              historyDays={historyDays}
+              holdings={holdings}
+              events={events}
+              eventsLoading={eventsLoading}
+              eventsFailed={eventsFailed}
+              eventDetails={eventDetails}
+              eventPendingKey={eventPendingKey}
+              onExpandEvent={onExpandEvent}
+              onAskAboutEvent={openDock}
+              importedAt={portfolioData?.importedAt}
+              historyQuality={portfolioData?.historyQuality}
+            />
+          </CardErrorBoundary>
         </div>
-        <DashboardHoldingsTable
-          holdings={holdings}
-          sectorData={sectorData}
-          marketContext={marketContext}
-          flashHoldings={flashedTarget === 'holdings-table'}
-          flashSector={flashedTarget === 'sector-allocation'}
-        />
+        <CardErrorBoundary label="All Positions">
+          <DashboardHoldingsTable
+            holdings={holdings}
+            sectorData={sectorData}
+            marketContext={marketContext}
+            thresholds={thresholds}
+            flashHoldings={flashedTarget === 'holdings-table'}
+            flashSector={flashedTarget === 'sector-allocation'}
+          />
+        </CardErrorBoundary>
+        <div
+          id="concentration-rebalancing"
+          className={`dashboard-highlight rounded-2xl ${flashedTarget === 'concentration-rebalancing' ? 'is-active' : ''}`}
+        >
+          <CardErrorBoundary label="Concentration & Rebalancing">
+            <ConcentrationRisk
+              sectors={portfolioData?.sectorAllocation ?? []}
+              configVersion={healthConfigVersion}
+            />
+          </CardErrorBoundary>
+        </div>
       </main>
 
       <div className="fixed right-5 top-[84px] z-40">

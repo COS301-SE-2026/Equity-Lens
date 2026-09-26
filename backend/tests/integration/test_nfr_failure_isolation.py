@@ -2,6 +2,7 @@ from types import SimpleNamespace
 
 from fastapi.testclient import TestClient
 
+from app.config import settings
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.main import app
@@ -21,6 +22,9 @@ client = TestClient(app, raise_server_exceptions=False)
 def test_news_failure_does_not_break_portfolio(mocker):
     app.dependency_overrides[get_current_user] = fake_user
     app.dependency_overrides[get_db] = fake_db
+    # the category feed skips the provider when no key is configured, so give it one and
+    # let the patched provider fail
+    mocker.patch.object(settings, "newsdata_api_key", "test-key-not-real")
     mocker.patch(
         "app.routers.news.requests.get", side_effect=Exception("News provider unavailable")
     )

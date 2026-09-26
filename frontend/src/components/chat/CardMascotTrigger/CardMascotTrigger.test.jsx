@@ -1,13 +1,15 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, Routes, Route, useSearchParams } from 'react-router-dom';
-import { describe, it, expect } from 'vitest';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 import CardMascotTrigger from './CardMascotTrigger';
 
-const AiStub = () => {
-  const [params] = useSearchParams();
-  return <div>AI page - q={params.get('q')}</div>;
-};
+const mockOpenDock = vi.hoisted(() => vi.fn());
+vi.mock('../../../context/ChatContext', () => ({
+  useChatContext: () => ({ openDock: mockOpenDock }),
+}));
+
+beforeEach(() => mockOpenDock.mockClear());
 
 /**
  * @param {{ questions: string[], label?: string, className?: string }} props
@@ -24,7 +26,6 @@ const renderTrigger = (props) =>
             </div>
           }
         />
-        <Route path="/ai" element={<AiStub />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -75,18 +76,17 @@ describe('CardMascotTrigger', () => {
     expect(trigger.className).toContain('focus-visible:opacity-100');
   });
 
-  it('navigates straight to /ai with the question prefilled when there is only one', () => {
+  it('opens the dock with the question when there is only one', () => {
     renderTrigger({
       questions: ['Why is Technology 26% of my portfolio?'],
       label: 'Ask AI about sector allocation',
     });
     fireEvent.click(screen.getByRole('button', { name: 'Ask AI about sector allocation' }));
-    expect(
-      screen.getByText('AI page - q=Why is Technology 26% of my portfolio?'),
-    ).toBeInTheDocument();
+
+    expect(mockOpenDock).toHaveBeenCalledWith('Why is Technology 26% of my portfolio?');
   });
 
-  it('opens a popover of chips when there is more than one question, and navigates on chip click', () => {
+  it('opens a popover of chips when there is more than one question, and asks on chip click', () => {
     const questions = [
       'Why is Technology 26% of my portfolio?',
       'Should I diversify away from Technology?',
@@ -99,7 +99,7 @@ describe('CardMascotTrigger', () => {
     expect(screen.getByText(questions[1])).toBeInTheDocument();
 
     fireEvent.click(screen.getByText(questions[1]));
-    expect(screen.getByText(`AI page - q=${questions[1]}`)).toBeInTheDocument();
+    expect(mockOpenDock).toHaveBeenCalledWith(questions[1]);
   });
 
   it('closes the popover on an outside click without navigating', async () => {

@@ -10,21 +10,37 @@ import SecondaryButton from '../shared/SecondaryButton';
  *   selected: string|null,
  *   onSelectSector: (sector: string|null) => void,
  *   flashSector?: boolean,
+ *   thresholds?: { low: number, high: number },
  * }} props
  */
-const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector }) => {
+const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector, thresholds }) => {
+  const pieLabel = sectorData.length
+    ? `Sector allocation. ${sectorData
+        .slice(0, 3)
+        .map((s) => `${s.name} ${s.value.toFixed(1)}%`)
+        .join(', ')}${sectorData.length > 3 ? `, and ${sectorData.length - 3} more` : ''}.`
+    : 'Sector allocation. No sectors to show.';
+
   return (
     <div
       id="sector-allocation"
       className={`dashboard-highlight rounded-xl p-3 ${flashSector ? 'is-active' : ''}`}
     >
-      <div className="mb-2.5 flex items-center justify-between gap-2">
-        <div
-          className="flex items-center gap-1 font-mono text-[10px] tracking-widest"
-          style={{ color: 'var(--text-ghost)' }}
-        >
-          Sectors
-          <HelpTooltip text="Where your money sits across industries. Too much in one sector means whole-portfolio news can hit harder." />
+      <div className="mb-2.5 flex items-start justify-between gap-2">
+        <div>
+          <div
+            className="flex items-center gap-1 font-mono text-[11px] tracking-widest"
+            style={{ color: 'var(--text-ghost)' }}
+          >
+            Sectors
+            <HelpTooltip text="Where your money sits across industries. Too much in one sector means whole-portfolio news can hit harder." />
+          </div>
+          <div
+            className="mt-0.5 font-mono text-[16px] font-semibold"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            {sectorData.length}
+          </div>
         </div>
         {selected && (
           <SecondaryButton size="sm" onClick={() => onSelectSector(null)}>
@@ -32,7 +48,11 @@ const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector })
           </SecondaryButton>
         )}
       </div>
-      <div className="relative mx-auto h-[140px] w-full max-w-[140px]">
+      <div
+        className="relative mx-auto h-[140px] w-full max-w-[140px]"
+        role="img"
+        aria-label={pieLabel}
+      >
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -49,7 +69,7 @@ const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector })
               {sectorData.map((s) => (
                 <Cell
                   key={s.name}
-                  fill={getConcRisk(s.value).color}
+                  fill={getConcRisk(s.value, thresholds).color}
                   stroke="var(--surface-card)"
                   strokeWidth={2}
                   opacity={!selected || selected === s.name ? 1 : 0.25}
@@ -61,22 +81,22 @@ const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector })
         </ResponsiveContainer>
       </div>
 
-      <div className="mx-auto mt-2 max-w-[140px] text-center">
-        <div
-          className="font-mono text-[8px] tracking-widest"
-          style={{ color: 'var(--text-ghost)' }}
-        >
-          {selected ?? 'Sectors'}
+      {selected && (
+        <div className="mx-auto mt-2 max-w-[140px] text-center">
+          <div
+            className="font-mono text-[11px] tracking-widest"
+            style={{ color: 'var(--text-ghost)' }}
+          >
+            {selected}
+          </div>
+          <div className="font-mono text-[18px] font-bold">
+            {sectorData.find((s) => s.name === selected)?.value.toFixed(1)}%
+          </div>
         </div>
-        <div className="font-mono text-[18px] font-bold">
-          {selected
-            ? `${sectorData.find((s) => s.name === selected)?.value.toFixed(1)}%`
-            : sectorData.length}
-        </div>
-      </div>
+      )}
       <div className="mt-3 space-y-1">
         {sectorData.map((s) => {
-          const risk = getConcRisk(s.value);
+          const risk = getConcRisk(s.value, thresholds);
           const isSelected = selected === s.name;
           return (
             <button
@@ -86,7 +106,7 @@ const SectorAllocation = ({ sectorData, selected, onSelectSector, flashSector })
               className="w-full rounded px-1.5 py-1 text-left transition-colors hover:bg-[var(--surface-hover)]"
               style={isSelected ? { background: 'var(--surface-hover)' } : undefined}
             >
-              <div className="grid grid-cols-[10px_1fr_44px] items-center gap-2 font-mono text-[11px]">
+              <div className="grid grid-cols-[10px_1fr_44px] items-center gap-2 font-mono text-[12px]">
                 <span className="h-2.5 w-2.5 rounded" style={{ background: risk.color }} />
                 <span style={{ color: 'var(--text-primary)' }}>{s.name}</span>
                 <span
