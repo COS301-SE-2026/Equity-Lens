@@ -8,6 +8,7 @@ import { AuthProvider, useAuthContext } from './AuthContext';
 
 vi.mock('../services/authService');
 
+/** @param {{ onAction?: (ctx: any) => unknown }} props */
 function TestConsumer({ onAction }) {
   const ctx = useAuthContext();
   return (
@@ -21,6 +22,7 @@ function TestConsumer({ onAction }) {
   );
 }
 
+/** @param {(ctx: any) => unknown} [onAction] */
 const renderAuth = (onAction) =>
   render(
     <AuthProvider>
@@ -47,7 +49,9 @@ describe('AuthContext', () => {
     // Resolves user when authenticated
     vi.mocked(authService.isAuthenticated).mockResolvedValueOnce(true);
     vi.mocked(authService.getCurrentUserProfile).mockResolvedValueOnce({
+      sub: 'jane-sub',
       email: 'jane@example.com',
+      full_name: 'Jane',
     });
     renderAuth();
 
@@ -64,14 +68,14 @@ describe('AuthContext', () => {
 
   it('handles registration flow and surfaces errors', async () => {
     vi.mocked(authService.isAuthenticated).mockResolvedValue(false);
-    let error = null;
+    let error = /** @type {Error | null} */ (null);
 
     const user = userEvent.setup();
     renderAuth(async (ctx) => {
       try {
         await ctx.register('Jane', 'jane@example.com', 'pw123456');
       } catch (err) {
-        error = err;
+        if (err instanceof Error) error = err;
       }
     });
 
@@ -87,17 +91,21 @@ describe('AuthContext', () => {
     const user = userEvent.setup();
 
     // 1. TOTP Setup
-    vi.mocked(authService.login).mockResolvedValueOnce({
-      nextStep: { signInStep: 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP' },
-    });
+    vi.mocked(authService.login).mockResolvedValueOnce(
+      /** @type {any} */ ({ nextStep: { signInStep: 'CONTINUE_SIGN_IN_WITH_TOTP_SETUP' } }),
+    );
     renderAuth((ctx) => ctx.login('jane@example.com', 'pw'));
     await user.click(screen.getByText('run'));
     await waitFor(() => expect(screen.getByTestId('mfa')).toHaveTextContent('SETUP'));
 
     // 2. Sign-in complete
-    vi.mocked(authService.login).mockResolvedValueOnce({ nextStep: { signInStep: 'DONE' } });
+    vi.mocked(authService.login).mockResolvedValueOnce(
+      /** @type {any} */ ({ nextStep: { signInStep: 'DONE' } }),
+    );
     vi.mocked(authService.getCurrentUserProfile).mockResolvedValueOnce({
+      sub: 'jane-sub',
       email: 'jane@example.com',
+      full_name: 'Jane',
     });
     await user.click(screen.getByText('run'));
     await waitFor(() => expect(screen.getByTestId('auth')).toHaveTextContent('true'));
@@ -105,7 +113,11 @@ describe('AuthContext', () => {
 
   it('clears state on logout even if network request fails', async () => {
     vi.mocked(authService.isAuthenticated).mockResolvedValue(true);
-    vi.mocked(authService.getCurrentUserProfile).mockResolvedValue({ email: 'jane@example.com' });
+    vi.mocked(authService.getCurrentUserProfile).mockResolvedValue({
+      sub: 'jane-sub',
+      email: 'jane@example.com',
+      full_name: 'Jane',
+    });
     vi.mocked(authService.logout).mockRejectedValue(new Error('Network error'));
 
     const user = userEvent.setup();

@@ -15,6 +15,11 @@ import {
 
 import api from './api';
 
+/**
+ * @param {any} fullName
+ * @param {any} email
+ * @param {any} password
+ */
 export async function register(fullName, email, password) {
   const result = await signUp({
     username: email,
@@ -26,18 +31,38 @@ export async function register(fullName, email, password) {
   return { userId: result.userId, email };
 }
 
+/**
+ * @param {any} email
+ * @param {any} code
+ */
 export const confirmRegistration = (email, code) =>
   confirmSignUp({ username: email, confirmationCode: code });
+/**
+ * @param {any} email
+ * @param {any} password
+ */
 export const login = (email, password) => signIn({ username: email, password });
+/**
+ * @param {any} totpCode
+ */
 export const respondToMFA = (totpCode) => confirmSignIn({ challengeResponse: totpCode });
 export const initTOTPSetup = () => setUpTOTP();
 export const logout = () => signOut();
-
+/**
+ * @param {any} email
+ */
 export const requestPasswordReset = (email) => resetPassword({ username: email });
-
+/**
+ * @param {any} email
+ * @param {any} code
+ * @param {any} newPassword
+ */
 export const confirmPasswordReset = (email, code, newPassword) =>
   confirmResetPassword({ username: email, confirmationCode: code, newPassword });
 
+/**
+ * @param {any} totpCode
+ */
 export async function confirmTOTPSetup(totpCode) {
   await verifyTOTPSetup({ code: totpCode });
   await updateMFAPreference({ totp: 'PREFERRED' });
@@ -75,6 +100,7 @@ export async function getCurrentUserProfile() {
   let email = '';
   let fullName = '';
   if (session.tokens && session.tokens.idToken) {
+    /** @type {any} */
     const payload = session.tokens.idToken.payload;
     email = payload.email || '';
     fullName = payload.name || '';
@@ -87,12 +113,17 @@ export async function getCurrentUserProfile() {
   };
 }
 
+/**
+ * @param {any} email
+ */
 export async function deleteAccount(email) {
   try {
     const response = await api.delete('/auth/me', { data: { email } });
     return response.data;
   } catch (err) {
-    const detail = err.response?.data?.detail || 'Account deletion failed';
+     /** @type {any} */
+     const error = err;
+    const detail = error.response?.data?.detail || 'Account deletion failed';
     throw new Error(detail);
   }
 }

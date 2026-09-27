@@ -534,7 +534,6 @@ def generate_portfolio_brief(
     holdings = snapshot.get("holdings", {})
     activity = snapshot.get("activity", {})
     news = snapshot.get("news", {})
-    portfolio_news = news.get("portfolio", [])
     market_news = news.get("market", [])
     analytics = snapshot.get("analytics", [])
 

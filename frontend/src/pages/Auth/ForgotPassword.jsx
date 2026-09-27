@@ -10,6 +10,7 @@ import { validateEmail } from '../../utils/validators';
 
 /** @param {{ email: string }} values */
 const validate = (values) => {
+  /** @type {Record<string, string>} */
   const errors = {};
   const emailError = validateEmail(values.email);
   if (emailError) errors.email = emailError;
@@ -19,7 +20,9 @@ const validate = (values) => {
 const ForgotPassword = () => {
   const { requestPasswordReset } = useAuth();
   const navigate = useNavigate();
-  const [status, setStatus] = useState({ type: null, message: '' }); // 'error' | 'success'
+  const [status, setStatus] = useState(
+    /** @type {{ type: 'error' | 'success' | null, message: string }} */ ({ type: null, message: '' }),
+  ); // 'error' | 'success'
 
   const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm(
     { email: '' },

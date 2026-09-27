@@ -1,3 +1,4 @@
+/** @param {{ size?: 'sm' | 'md' | 'lg', className?: string }} props */
 const LoadingSpinner = ({ size = 'md', className = '' }) => {
   const sizes = {
     sm: 'h-4 w-4',

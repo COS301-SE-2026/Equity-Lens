@@ -26,7 +26,7 @@ const MOCK_DATA = [
 /** @param {DividendDatum[]} data*/
 const average = (data) => Math.round(data.reduce((sum, d) => sum + d.amount, 0) / data.length);
 
-/**@param {{active?: boolean, payload?: {value: number}[], label?: string}} */
+/** @param {{active?: boolean, payload?: {value: number}[], label?: string}} props */
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (

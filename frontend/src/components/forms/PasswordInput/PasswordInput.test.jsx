@@ -6,7 +6,9 @@ import PasswordInput from './PasswordInput';
 describe('PasswordInput', () => {
   it('renders as password type by default', () => {
     render(<PasswordInput label="Password" value="" onChange={() => {}} />);
-    const input = document.querySelector('input[type="password"]');
+    const input = /** @type {HTMLInputElement} */ (
+      document.querySelector('input[type="password"]')
+    );
     expect(input).not.toBeNull();
     expect(input.type).toBe('password');
   });

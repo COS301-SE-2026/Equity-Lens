@@ -1,10 +1,12 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Send, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { useChatContext } from '../../../context/ChatContext';
 import { GlassPanel } from '../../dashboard/shared/GlassPanel';
+const loadDockMarkdown = () => import('./DockMarkdown');
+const DockMarkdown = lazy(loadDockMarkdown);
 
 const ChatDock = () => {
   const { pathname } = useLocation();
@@ -64,13 +66,22 @@ const ChatDock = () => {
         ref={triggerRef}
         type="button"
         onClick={() => openDock()}
+        onPointerEnter={loadDockMarkdown}
+        onFocus={loadDockMarkdown}
         aria-label="Open EquityLens assistant"
         className="pressable fixed bottom-5 right-5 z-40 flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-lg"
         style={{
           background: 'var(--accent-deep)',
           color: 'var(--icon-on-accent)',
         }}>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        >
           <circle cx="11" cy="11" r="7" />
           <line x1="16.5" y1="16.5" x2="21" y2="21" strokeLinecap="round" />
         </svg>
@@ -91,15 +102,13 @@ const ChatDock = () => {
         <GlassPanel
           elevated
           className="flex w-[min(92vw,380px)] flex-col"
-          style={{ height: 'min(70vh, 560px)' }}>
-          <div
-            role="dialog"
-            aria-label="EquityLens Assistant"
-            className="flex h-full flex-col">
+          style={{ height: 'min(70vh, 560px)' }}
+        >
+          <div role="dialog" aria-label="EquityLens Assistant" className="flex h-full flex-col">
             <div
               className="flex items-center justify-between px-4 py-3"
               style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-              <span className="font-mono text-[11px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+              <span className="font-mono text-[11px] tracking-widest"style={{ color: 'var(--text-ghost)' }}> 
                 EquityLens Assistant
               </span>
               <button
@@ -112,7 +121,9 @@ const ChatDock = () => {
               </button>
             </div>
 
-            <p className="px-4 pt-2 text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+            <p className="px-4 pt-2 text-[11px] leading-snug"
+              style={{ color: 'var(--text-ghost)' }}
+            >
               Answers are AI-generated and can be wrong. Informational only, not financial advice.
             </p>
 
@@ -122,20 +133,33 @@ const ChatDock = () => {
                   Ask about your portfolio, a holding, or anything on this page.
                 </p>
               )}
-              {messages.map((/** @type {any} */ m) => (
-                <div
-                  key={m.id}
-                  className={`max-w-[85%] rounded-lg px-3 py-2 text-[13px] ${m.role === 'user' ? 'ml-auto' : 'mr-auto'}`}
-                  style={{
-                    background: m.role === 'user' ? 'var(--accent-subtle)' : 'var(--surface-hover)',
-                    color: m.failed ? 'var(--signal-negative)' : 'var(--text-primary)',
-                  }}
-                >
-                  {m.text}
-                </div>
-              ))}
+              {messages.map((/** @type {any} */ m) => {
+                const plain = m.role === 'user' || m.failed;
+                return (
+                  <div
+                    key={m.id}
+                    className={`max-w-[85%] break-words rounded-lg px-3 py-2 text-[13px] ${m.role === 'user' ? 'ml-auto' : 'mr-auto'} ${plain ? 'whitespace-pre-wrap' : ''}`}
+                    style={{
+                      background:
+                        m.role === 'user' ? 'var(--accent-subtle)' : 'var(--surface-hover)',
+                      color: m.failed ? 'var(--signal-negative)' : 'var(--text-primary)',
+                    }}
+                  >
+                    {plain ? (
+                      m.text
+                    ) : (
+                      <Suspense fallback={m.text}>
+                        <DockMarkdown text={m.text} />
+                      </Suspense>
+                    )}
+                  </div>
+                );
+              })}
               {isThinking && (
-                <div className="mr-auto rounded-lg px-3 py-2 text-[13px]" style={{ background: 'var(--surface-hover)', color: 'var(--text-ghost)' }}>
+                <div
+                  className="mr-auto rounded-lg px-3 py-2 text-[13px]"
+                  style={{ background: 'var(--surface-hover)', color: 'var(--text-ghost)' }}
+                >
                   EquityLens is thinking…
                 </div>
               )}
@@ -156,7 +180,7 @@ const ChatDock = () => {
                 aria-label="Message"
                 placeholder="Ask a question"
                 className="flex-1 resize-none rounded-lg px-2.5 py-2 text-[13px] outline-none"
-                style={{ background: 'var(--surface-inset)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)' }}
+                style={{ background: 'var(--surface-inset)', border: '1px solid var(--border-subtle)', color: 'var(--text-primary)', }}
               />
               <button
                 type="button"
