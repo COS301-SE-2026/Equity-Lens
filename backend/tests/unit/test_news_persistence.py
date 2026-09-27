@@ -98,7 +98,7 @@ def test_the_article_shape_the_page_renders_is_unchanged(client, auth_headers):
     article = body["results"][0]
     assert set(article) == {
         "article_id", "title", "description", "image_url", "pubDate",
-        "source_name", "category", "sentiment", "sentiment_score",
+        "source_name", "category", "sentiment", "sentiment_score", "url",
     }
     assert article["pubDate"] == "2026-09-01T00:00:00Z"
     assert article["category"] == ["NPN.JO"]

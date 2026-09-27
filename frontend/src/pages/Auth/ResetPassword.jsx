@@ -57,7 +57,7 @@ const ResetPassword = () => {
       const message = err instanceof Error ? err.message : '';
       setStatus({
         type: 'error',
-        message: 'Could not reset your password. Please try again.',
+        message: message || 'Could not reset your password. Please try again.',
       });
     }
   };
