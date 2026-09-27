@@ -92,6 +92,7 @@ const NewsInvestment = () => {
   useEffect(() => {
     const loadPortfolio = async () => {
       const response = await api.get('/news/portfolio-tickers');
+      /** @type {any[]} */
       const tickers = response.data.tickers || [];
 
       setPortfoliosTickers(tickers.filter((ticker) => ticker !== 'All'),);
@@ -100,6 +101,7 @@ const NewsInvestment = () => {
         (ticker) => ticker !== 'All',
       );
 
+      /** @type {any[]} */
       let allArticles = [];
 
       for (const ticker of validTickers) {
@@ -111,7 +113,7 @@ const NewsInvestment = () => {
           const tickerArticles =
             newsResponse.data.articles || [];
 
-          const formattedArticles = tickerArticles.map((article) => ({
+          const formattedArticles = tickerArticles.map((/** @type {any[]} */article) => ({
             ...article,
             category: [ticker],
           }));
@@ -187,82 +189,86 @@ const NewsInvestment = () => {
       <p className="text-[var(--text-secondary)] mt-2">
         Stay updated with the latest market news and insights
       </p>
+      {activeTab === 'portfolio' && (
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
-
-
-        <div className="flex items-center rounded-xl border border-blue-500/25 px-2 py-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mt-4">
 
 
-          <div className="relative flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-500/15 bg-blue-500/10">
-              <Newspaper className="h-5 w-5 text-blue-400" />
-            </div>
+          <div className="flex items-center rounded-xl border border-blue-500/25 px-2 py-4">
 
-            <div>
+
+            <div className="relative flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-blue-500/15 bg-blue-500/10">
+                <Newspaper className="h-5 w-5 text-blue-400" />
+              </div>
 
               <div>
-                <p className='text-sm font-semibold text-[var(--text-primary)]'>
-                  Relevant Articles
-                </p>
+
+                <div>
+                  <p className='text-sm font-semibold text-[var(--text-primary)]'>
+                    Relevant Articles
+                  </p>
 
 
-                <div className='mt-0.5 flex items-baseline gap-2'>
+                  <div className='mt-0.5 flex items-baseline gap-2'>
 
-                  <span className='text-2xl font-bold leading-none text-[var(--text-primary)]'>
-                    {totalArticles}
-                  </span>
-
-
-                  <span className='text-xs text-[var(--text-secondary)]'>
-                    Today
-                  </span>
+                    <span className='text-2xl font-bold leading-none text-[var(--text-primary)]'>
+                      {totalArticles}
+                    </span>
 
 
+                    <span className='text-xs text-[var(--text-secondary)]'>
+                      Today
+                    </span>
+
+
+                  </div>
                 </div>
               </div>
             </div>
+
           </div>
 
+
+          <div className="flex items-center gap-4 p-4 border border-green-500/25 rounded-xl">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500/15">
+              <TrendingUp className="w-6 h-6 text-green-500" />
+            </div>
+
+            <div>
+              <p className="text-sm font-bold text-[var(--text-primary)]">Positive Impact</p>
+              <p className="text-xl font-bold text-[var(--text-primary)]">{positive}</p>
+              <p className="text-sm text-[var(--text-primary)]">On your holdings</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 p-4 border border-red-500/25 rounded-xl">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/15">
+              <TrendingDown className="w-6 h-6 text-red-500" />
+            </div>
+
+            <div>
+              <p className="text-sm font-bold text-[var(--text-primary)]">Negative Impact</p>
+              <p className="text-xl font-bold text-[var(--text-primary)]">{negative}</p>
+              <p className="text-sm text-[var(--text-primary)]">Today</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 p-4 border border-purple-500/25 rounded-xl">
+            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/15">
+              <Star className="w-6 h-6 text-purple-500" />
+            </div>
+
+            <div>
+              <p className="text-sm font-bold text-[var(--text-primary)]">Neutral Impact</p>
+              <p className="text-xl font-bold text-[var(--text-primary)]">{neutral}</p>
+              <p className="text-sm text-[var(--text-primary)]">Today</p>
+            </div>
+          </div>
         </div>
+      )}
 
 
-        <div className="flex items-center gap-4 p-4 border border-green-500/25 rounded-xl">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-green-500/15">
-            <TrendingUp className="w-6 h-6 text-green-500" />
-          </div>
-
-          <div>
-            <p className="text-sm font-bold text-[var(--text-primary)]">Positive Impact</p>
-            <p className="text-xl font-bold text-[var(--text-primary)]">{positive}</p>
-            <p className="text-sm text-[var(--text-primary)]">On your holdings</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 p-4 border border-red-500/25 rounded-xl">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-red-500/15">
-            <TrendingDown className="w-6 h-6 text-red-500" />
-          </div>
-
-          <div>
-            <p className="text-sm font-bold text-[var(--text-primary)]">Negative Impact</p>
-            <p className="text-xl font-bold text-[var(--text-primary)]">{negative}</p>
-            <p className="text-sm text-[var(--text-primary)]">Today</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4 p-4 border border-purple-500/25 rounded-xl">
-          <div className="flex items-center justify-center w-12 h-12 rounded-full bg-purple-500/15">
-            <Star className="w-6 h-6 text-purple-500" />
-          </div>
-
-          <div>
-            <p className="text-sm font-bold text-[var(--text-primary)]">Neutral Impact</p>
-            <p className="text-xl font-bold text-[var(--text-primary)]">{neutral}</p>
-            <p className="text-sm text-[var(--text-primary)]">Today</p>
-          </div>
-        </div>
-      </div>
 
 
       <div className="inline-flex items-center rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-card)] p-1 mt-7">

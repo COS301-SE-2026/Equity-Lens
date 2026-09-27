@@ -552,10 +552,12 @@ const Portfolio = () => {
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [pdfPassword, setPdfPassword] = useState('');
+  /** @type {[File | null, Function]} */
   const [pendingPdfFile, setPendingPdfFile] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [showErrorModal, setShowErrorModal] = useState(false);
-
+  
+  /** @param {string} message */
   const showError = (message) => {
     setErrorMessage(message);
     setShowErrorModal(true);
