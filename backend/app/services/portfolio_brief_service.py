@@ -498,7 +498,6 @@ def generate_portfolio_brief(
         "Trading Activity",
         "Dividend Income",
         "Cash Flow",
-        "My Portfolio News",
         "All Market News",
         "Portfolio Analytics",
     ]
@@ -669,22 +668,7 @@ def generate_portfolio_brief(
             Spacer(1,8),Image(cash_flow_chart, width=160 * mm, height=90 * mm)]))
         story.append(Spacer(1,15))
 
-
-    story.append(section_heading(offset + 7, "My Portfolio News", '#2563EB'))
-    story.append(Spacer(1,8))
-
-    if portfolio_news:
-        for article in portfolio_news[:5]:
-            news_card = create_news_card(article, styles, show_ticker=True,)
-
-
-            story.append(news_card)
-            story.append(Spacer(1,10))
-
-    else:
-        story.append(Paragraph("No Portfolio news avaiable.", styles["BodyText"],))
-
-    story.append(section_heading(offset + 8, "All Market News", '#2563EB'))
+    story.append(section_heading(13, "All Market News", '#2563EB'))
 
     story.append(Spacer(1,8,))
 
@@ -759,8 +743,11 @@ def generate_portfolio_brief(
         ]
         ))
 
-        story.append(KeepTogether([section_heading(
-            offset + 9, "Portfolio Analytics", '#2563EB'), Spacer(1,8),analytics_table]))
+        story.append(KeepTogether([
+            section_heading(14, "Portfolio Analytics", '#2563EB'),
+            Spacer(1, 8),
+            analytics_table
+        ]))
 
 
         story.append(Spacer(1,8,))

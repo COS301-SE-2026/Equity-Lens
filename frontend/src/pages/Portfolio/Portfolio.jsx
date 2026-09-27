@@ -550,12 +550,24 @@ const Portfolio = () => {
   const [portfolios, setPortfolios] = useState(/** @type {any[]}*/[]);
   const [snapshot, setSnapshot] = useState(null);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [pdfPassword, setPdfPassword] = useState('');
+  const [pendingPdfFile, setPendingPdfFile] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState(false);
+
+  const showError = (message) => {
+    setErrorMessage(message);
+    setShowErrorModal(true);
+  };
 
   useEffect(() => {
     const getInfo = async () => {
       const responses = await api.get('/portfolio/current');
 
       setPortfolios(responses.data);
+
+
     };
 
     getInfo();
@@ -592,7 +604,7 @@ const Portfolio = () => {
 
       setGetDividendIncome(data.activity?.dividend_income || []);
     } catch (error) {
-      console.warn('failed to load portfolio summary:', error);
+      showError('Could not load portfolio summary');
     } finally {
       setLoadingPage(false);
     }
@@ -600,7 +612,7 @@ const Portfolio = () => {
 
   const downloadSnapshot = async () => {
     if (!selectedPortfolioId) {
-      alert('Please select a portfolio first');
+      showError('Please select a portfolio first');
       return;
     }
 
@@ -626,7 +638,7 @@ const Portfolio = () => {
 
       window.URL.revokeObjectURL(url);
     } catch (error) {
-      alert('Could not download the portfolio Summary. Please try again later');
+      showError('Could not download the portfolio Summary. Please try again later');
     }
   };
 
@@ -791,9 +803,12 @@ const Portfolio = () => {
 
       setSelectedPortfolioId(savedPortfolio.portfolio_id);
 
+
       const snapshotResponse = await api.get(`/portfolio_snapshot/${savedPortfolio.portfolio_id}`);
 
       setSnapshot(snapshotResponse.data);
+      const portfoliosResponse = await api.get('/portfolio/current');
+      setPortfolios(portfoliosResponse.data);
     } catch (theErrors) {
       if (createdPortfolioId) {
         try {
@@ -803,7 +818,7 @@ const Portfolio = () => {
         }
       }
 
-      alert(
+      showError(
         `Could not save your statement: ${describeApiError(theErrors)}. Nothing was imported - please try again.`,
       );
     }
@@ -937,7 +952,7 @@ const Portfolio = () => {
                   }
 
                   if (!accountType) {
-                    alert('Please select an account type first');
+                    showError('Please select an account type first');
                     event.target.value = '';
                     return;
                   }
@@ -948,8 +963,12 @@ const Portfolio = () => {
                     let data;
 
                     if (file.name.toLowerCase().endsWith('.pdf')) {
-                      const Passwords = prompt('Enter the PDF password') || '';
-                      data = await ReadingPDFFile(file, Passwords);
+                      setPendingPdfFile(file);
+                      setPdfPassword('');
+                      setShowPasswordModal(true);
+                      setLoadingPage(false);
+                      return;
+
                     } else if (file.name.toLowerCase().endsWith('.xlsx')) {
                       data = await ReadingExcelFile(file);
                     }
@@ -957,17 +976,20 @@ const Portfolio = () => {
                     await SavePortfolio(data, file);
                   } catch (theError) {
                     if (theError instanceof Error && theError.name === 'PasswordException') {
-                      alert('Incorrect PDF password. Please check the password and try again');
-                    } else if (file.name.toLowerCase().endsWith('.pdf')) {
-                      alert(
+                      showError('Incorrect PDF password. Please check the password and try again.');
+                      setPdfPassword('');
+                      return;
+                    }
+                    else if (file.name.toLowerCase().endsWith('.pdf')) {
+                      showError(
                         'Could not read this PDF - it may not be an EasyEquities statement. Please use the Excel template',
                       );
                     } else if (file.name.toLowerCase().endsWith('.xlsx')) {
-                      alert(
+                      showError(
                         'Invalid or unsupported Excel file. Please make sure to use the Excel template',
                       );
                     } else {
-                      alert('Please make sure you either upload a PDF or Excel file');
+                      showError('Please make sure you either upload a PDF or Excel file');
                     }
                   } finally {
                     setLoadingPage(false);
@@ -1008,7 +1030,7 @@ const Portfolio = () => {
       </div>
 
       {showPortfolios && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gray-800 bg-gray-950 shadow-2xl">
             <div className="flex items-center justify-between border-b border-gray-800 px-6 py-5">
               <div>
@@ -1166,15 +1188,6 @@ const Portfolio = () => {
               <span className="self-start px-3 py-1 rounded-full text-sm font-semibold bg-green-100/10 text-green-500">
                 Verified
               </span>
-            </div>
-
-            <div className="mt-5 p-4 rounded-xl" style={{ background: 'var(--surface-inset)' }}>
-              <p className="text-sm mb-2" style={dimStyle}>
-                SHA-256 Snapshot ID
-              </p>
-              <p className="font-mono text-sm break-all" style={dimStyle}>
-                {snapshot.snapshot_id}
-              </p>
             </div>
 
             <button
@@ -1363,8 +1376,126 @@ const Portfolio = () => {
             </div>
           </div>
         )}
+
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-3xl border border-gray-800 bg-gray-950 p-6 shadow-2xl">
+
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white">
+                PDF <span className="text-orange-500">Password</span>
+              </h2>
+
+              <p className="mt-2 text-sm text-gray-400">
+                Enter the password for your EasyEquities statement.
+              </p>
+            </div>
+
+            <label
+              htmlFor="pdf-password"
+              className="mb-2 block text-sm font-medium text-gray-300"
+            >
+              Password
+            </label>
+
+            <input
+              id="pdf-password"
+              type="password"
+              value={pdfPassword}
+              onChange={(event) => {
+                setPdfPassword(event.target.value);
+              }}
+              placeholder="Enter PDF password"
+              className="w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-orange-500"
+            />
+
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPendingPdfFile(null);
+                  setPdfPassword('');
+                }}
+                className="flex-1 rounded-xl border border-gray-700 py-3 font-semibold text-gray-300 transition hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!pendingPdfFile) return;
+
+                  try {
+                    setShowPasswordModal(false);
+                    setLoadingPage(true);
+
+                    const data = await ReadingPDFFile(
+                      pendingPdfFile,
+                      pdfPassword,
+                    );
+
+                    await SavePortfolio(data, pendingPdfFile);
+                  } catch (theError) {
+                    if (
+                      theError instanceof Error &&
+                      theError.name === 'PasswordException'
+                    ) {
+                      showError(
+                        'Incorrect PDF password. Please check the password and try again',
+                      );
+                    } else {
+                      showError(
+                        'Could not read this PDF. Please make sure it is a valid EasyEquities statement.',
+                      );
+                    }
+                  } finally {
+                    setLoadingPage(false);
+                    setPendingPdfFile(null);
+                    setPdfPassword('');
+                  }
+                }}
+                className="flex-1 rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600"
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showErrorModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-3xl border border-gray-800 bg-gray-950 p-6 shadow-2xl">
+
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white">
+                Something <span className="text-orange-500">went wrong</span>
+              </h2>
+
+              <p className="mt-3 text-sm leading-6 text-gray-400">
+                {errorMessage}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowErrorModal(false);
+                setErrorMessage('');
+              }}
+              className="w-full rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600"
+            >
+              OK
+            </button>
+
+          </div>
+        </div>
+      )}
+
     </div>
-    // </div>
+
   );
 };
 

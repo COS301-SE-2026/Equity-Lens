@@ -20,7 +20,6 @@ const NewsInvestment = () => {
   const [negative, setNegative] = useState(0);
   const [neutral, setNeutral] = useState(0);
   const [totalArticles, setTotalArticles] = useState(0);
-  const [sentimentFilter, setSentimentFilter] = useState('all');
 
   const ToGetAllPortfolioNews = async () => {
     /** @type{any[]}*/
@@ -61,7 +60,6 @@ const NewsInvestment = () => {
     setNeutral(neutralCount);
     setTotalArticles(AllArticles.length);
     setActiveCategory('all');
-    setSentimentFilter('all');
   };
 
 
@@ -83,7 +81,6 @@ const NewsInvestment = () => {
     setNeutral(response.data.neutral || 0);
     setTotalArticles(response.data.total_articles || 0);
     setActiveCategory(ticker);
-    setSentimentFilter('all');
   };
 
   const ToGetPortfoliosTickers = async () => {
@@ -145,7 +142,6 @@ const NewsInvestment = () => {
       setTotalArticles(allArticles.length);
 
       setActiveCategory('all');
-      setSentimentFilter('all');
     };
 
     loadPortfolio();
@@ -179,11 +175,7 @@ const NewsInvestment = () => {
       return false;
     }
 
-    if (sentimentFilter === 'all') {
-      return true;
-    }
-
-    return article.sentiment === sentimentFilter;
+    return true;
   });
 
   const marketCategories = ['Business', 'Top', 'Technology', 'Politics', 'Crime'];
@@ -339,31 +331,6 @@ const NewsInvestment = () => {
                   ))}
                 </div>
 
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setSentimentFilter('positive')}
-                      className="px-4 py-2 rounded-lg border border-green-500/40 bg-green-500/20 text-green-400 hover:bg-green-500/30 transition"
-                    >
-                      {' '}
-                      Positive{' '}
-                    </button>
-                    <button
-                      onClick={() => setSentimentFilter('negative')}
-                      className="px-4 py-2 rounded-lg border border-red-500/40 bg-red-500/20 text-red-400 hover:bg-red-500/30 transition"
-                    >
-                      {' '}
-                      Negative{' '}
-                    </button>
-                    <button
-                      onClick={() => setSentimentFilter('neutral')}
-                      className="px-4 py-2 rounded-lg border border-purple-500/40 bg-purple-500/20 text-purple-400 hover:bg-purple-500/30 transition"
-                    >
-                      {' '}
-                      Neutral{' '}
-                    </button>
-                  </div>
-                </div>
               </div>
 
               {filteredArticles.length === 0 ? (
@@ -482,7 +449,7 @@ const NewsInvestment = () => {
             </div>
 
 
-            <div className='mt-3 flex flex-wrap items-center gap-2'>
+            <div className='mt-3 flex flex-wrap items-center gap-2 mb-4'>
               {marketCategories.map((category) => (
                 <button
                   key={category}
