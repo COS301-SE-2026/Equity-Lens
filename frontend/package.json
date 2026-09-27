@@ -20,6 +20,7 @@
   "dependencies": {
     "aws-amplify": "^6.18.0",
     "axios": "^1.6.0",
+    "d3": "^7.9.0",
     "framer-motion": "^12.42.2",
     "lucide-react": "^1.26.0",
     "pdfjs-dist": "^6.2.108",
@@ -39,6 +40,7 @@
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
+    "@types/d3": "^7.4.3",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@vitejs/plugin-react": "^4.7.0",

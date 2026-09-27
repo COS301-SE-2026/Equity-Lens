@@ -33,6 +33,7 @@ const News = lazyWithRetry(() => import('../pages/News/News'));
 const AIChat = lazyWithRetry(() => import('../pages/AIChat/AIChat'));
 const Help = lazyWithRetry(() => import('../pages/Help/Help'));
 const Analytics = lazyWithRetry(() => import('../pages/Analytics/Analytics'));
+const Explore = lazyWithRetry(() => import('../pages/Explore/Explore'));
 const ConfirmEmail = lazyWithRetry(() => import('../pages/Auth/ConfirmEmail'));
 const ForgotPassword = lazyWithRetry(() => import('../pages/Auth/ForgotPassword'));
 const ResetPassword = lazyWithRetry(() => import('../pages/Auth/ResetPassword'));
@@ -131,92 +132,101 @@ export const AppRoutes = () => (
         }
       />
 
-      <Route
-        path={ROUTES.DASHBOARD}
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={ROUTES.PORTFOLIO}
-        element={
-          <ProtectedRoute>
-            <Portfolio />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={ROUTES.NEWS}
-        element={
-          <ProtectedRoute>
-            <News />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={ROUTES.AI_CHAT}
-        element={
-          <ProtectedRoute>
-            <AIChat />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={ROUTES.ANALYTICS}
-        element={
-          <ProtectedRoute>
-            <Analytics />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={ROUTES.CONFIRM_EMAIL}
-        element={
-          <PublicRoute>
-            <ConfirmEmail />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path={ROUTES.FORGOT_PASSWORD}
-        element={
-          <PublicRoute>
-            <ForgotPassword />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path={ROUTES.RESET_PASSWORD}
-        element={
-          <PublicRoute>
-            <ResetPassword />
-          </PublicRoute>
-        }
-      />
-      <Route
-        path={ROUTES.HELP}
-        element={
-          <ProtectedRoute
-            publicFallback={
-              <div className="min-h-screen bg-bg-primary p-6">
-                <Help />
-              </div>
-            }
-          >
-            <Help />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={ROUTES.SETTINGS}
-        element={
-          <ProtectedRoute>
-            <Settings />
-          </ProtectedRoute>
-        }
-      />
+    <Route
+      path={ROUTES.DASHBOARD}
+      element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.PORTFOLIO}
+      element={
+        <ProtectedRoute>
+          <Portfolio />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.NEWS}
+      element={
+        <ProtectedRoute>
+          <News />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.AI_CHAT}
+      element={
+        <ProtectedRoute>
+          <AIChat />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.ANALYTICS}
+      element={
+        <ProtectedRoute>
+          <Analytics />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.CONFIRM_EMAIL}
+      element={
+        <PublicRoute>
+          <ConfirmEmail />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path={ROUTES.FORGOT_PASSWORD}
+      element={
+        <PublicRoute>
+          <ForgotPassword />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path={ROUTES.RESET_PASSWORD}
+      element={
+        <PublicRoute>
+          <ResetPassword />
+        </PublicRoute>
+      }
+    />
+    <Route
+      path={ROUTES.HELP}
+      element={
+        <ProtectedRoute
+          publicFallback={
+            <div className="min-h-screen bg-bg-primary p-6">
+              <Help />
+            </div>
+          }
+        >
+          <Help />
+        </ProtectedRoute>
+      }
+    />
+    {/* <Route path="/help-landing" element={<HelpLandingPage />} /> */}
+    <Route
+      path={ROUTES.SETTINGS}
+      element={
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      }
+    />
+    <Route
+      path={ROUTES.EXPLORE}
+      element={
+        <ProtectedRoute>
+          <Explore />
+        </ProtectedRoute>
+      }
+    />
 
       <Route path={ROUTES.HOME} element={<Landing />} />
       <Route path={ROUTES.BRAND_GUIDE} element={<BrandStyleGuide />} />

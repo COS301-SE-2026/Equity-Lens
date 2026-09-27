@@ -18,6 +18,7 @@ from app.models import market_data, news_event, user  # noqa: F401
 from app.routers import (
     ai_chat,
     auth,
+    explore,
     import_pdf,
     indicators,
     news,
@@ -137,3 +138,4 @@ app.include_router(import_pdf.router)
 app.include_router(indicators.router)
 app.include_router(market_data_router.router)
 app.include_router(portfolio_snapshot.router)
+app.include_router(explore.router)
