@@ -1,8 +1,8 @@
 /**
  * @param {{
- *   label: string,
+ *   label?: string,
  *   name: string,
- *   type: string,
+ *   type?: string,
  *   value: string,
  *   onChange: (e: any) => void,
  *   onBlur?: (e: any) => void,

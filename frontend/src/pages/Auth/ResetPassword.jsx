@@ -54,6 +54,7 @@ const ResetPassword = () => {
       setStatus({ type: 'success', message: 'Password reset. Redirecting to sign in...' });
       setTimeout(() => navigate(ROUTES.LOGIN), 1500);
     } catch (err) {
+      const message = err instanceof Error ? err.message : '';
       setStatus({
         type: 'error',
         message: 'Could not reset your password. Please try again.',
