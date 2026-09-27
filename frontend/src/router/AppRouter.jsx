@@ -9,7 +9,6 @@ import Sidebar from '../components/common/Sidebar/Sidebar';
 import Topbar from '../components/common/Topbar/Topbar';
 import { ChatProvider } from '../context/ChatContext';
 import useAuth from '../hooks/useAuth';
-import Explore from '../pages/Explore/Explore';
 import { ROUTES } from '../utils/constants';
 /** @param {() => Promise<any>} importer */
 export const lazyWithRetry = (importer) =>
@@ -34,6 +33,7 @@ const News = lazyWithRetry(() => import('../pages/News/News'));
 const AIChat = lazyWithRetry(() => import('../pages/AIChat/AIChat'));
 const Help = lazyWithRetry(() => import('../pages/Help/Help'));
 const Analytics = lazyWithRetry(() => import('../pages/Analytics/Analytics'));
+const Explore = lazyWithRetry(() => import('../pages/Explore/Explore'));
 const ConfirmEmail = lazyWithRetry(() => import('../pages/Auth/ConfirmEmail'));
 const ForgotPassword = lazyWithRetry(() => import('../pages/Auth/ForgotPassword'));
 const ResetPassword = lazyWithRetry(() => import('../pages/Auth/ResetPassword'));

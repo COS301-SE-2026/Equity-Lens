@@ -151,7 +151,7 @@ class TestFailureModesAndDegradedState:
         failing_screener = MagicMock(side_effect=RuntimeError("Yahoo service down"))
         monkeypatch.setattr(iu.yf, "screen", failing_screener)
 
-        with pytest.raises(iu.UniverseUnavailable):
+        with pytest.raises(iu.UniverseUnavailableError):
             iu.market_universe("JSE", mock_db_session)
 
     def test_raises_unavailable_when_screener_returns_empty_results(
@@ -160,5 +160,5 @@ class TestFailureModesAndDegradedState:
         empty_screener = make_screener_mock([])
         monkeypatch.setattr(iu.yf, "screen", empty_screener)
 
-        with pytest.raises(iu.UniverseUnavailable):
+        with pytest.raises(iu.UniverseUnavailableError):
             iu.market_universe("JSE", mock_db_session)

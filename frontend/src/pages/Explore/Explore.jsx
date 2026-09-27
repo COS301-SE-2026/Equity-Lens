@@ -18,6 +18,7 @@ const GLASS_PANEL_STYLE = {
   padding: '20px',
 };
 
+/** @type {Record<string, string>} */
 const UNAVAILABLE_MESSAGES = {
   no_holdings: 'Add holdings to your portfolio to see similar JSE shares.',
   no_jse_holdings:
@@ -35,10 +36,18 @@ function getCognitoAccessToken() {
   return localStorage.getItem(`${prefix}.${sub}.accessToken`);
 }
 
+/**
+ * @typedef {import('../../components/charts/ExposureChart/ExposureChart').Stock} Stock
+ * @typedef {import('../../components/charts/ExposureChart/ExposureChart').Recommendation} Recommendation
+ * @typedef {{ eligible: false, reason: string, excluded: string[] }
+ *   | { eligible: true, excluded: string[], portfolio: Stock[], universe: Stock[],
+ *       recommended: Recommendation[] }} ExploreResponse
+ */
+
 export default function Explore() {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState(/** @type {ExploreResponse | null} */ (null));
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(/** @type {string | null} */ (null));
 
   useEffect(() => {
     let active = true;
@@ -47,7 +56,7 @@ export default function Explore() {
 
     const token = getCognitoAccessToken();
 
-    return fetch(`${API_BASE_URL}/explore/recommendations?k=9`, {
+    fetch(`${API_BASE_URL}/explore/recommendations?k=9`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -58,11 +67,11 @@ export default function Explore() {
       .then((json) => {
         if (active) setData(json);
       })
-      .catch((err) => {
-        if (active) setError(err.message);
-      })
       .finally(() => {
         if (active) setLoading(false);
+      })
+      .catch((err) => {
+        if (active) setError(err.message);
       });
 
     return () => {
@@ -71,7 +80,7 @@ export default function Explore() {
   }, []);
 
   const universeMap = useMemo(() => {
-    if (!data?.universe) return new Map();
+    if (!data?.eligible) return new Map();
     return new Map(data.universe.map((item) => [item.ticker, item.name]));
   }, [data]);
 

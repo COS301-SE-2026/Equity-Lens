@@ -60,6 +60,10 @@ const MOCK_ELIGIBLE_RESPONSE = {
   excluded: [],
 };
 
+/**
+ * @param {object} response
+ * @param {{ ok?: boolean, status?: number }} [options]
+ */
 const setupFetchMock = (response, options = {}) => {
   const { ok = true, status = 200 } = options;
   const mockFn = vi.fn().mockResolvedValue({
@@ -86,6 +90,13 @@ describe('Explore Component', () => {
   });
 
   describe('Page Layout & Initial State', () => {
+    it('unmounts cleanly while the request is still in flight', () => {
+      setupPendingFetch();
+      const { unmount } = render(<Explore />);
+
+      expect(() => unmount()).not.toThrow();
+    });
+
     it('renders the core page heading', () => {
       setupPendingFetch();
       render(<Explore />);
@@ -146,10 +157,10 @@ describe('Explore Component', () => {
 
       await screen.findByTestId('exposure-chart');
 
-      const chartProps = ExposureChart.mock.calls.at(-1)[0];
-      expect(chartProps.portfolio).toEqual(MOCK_ELIGIBLE_RESPONSE.portfolio);
-      expect(chartProps.universe).toEqual(MOCK_ELIGIBLE_RESPONSE.universe);
-      expect(chartProps.recommended).toEqual(MOCK_ELIGIBLE_RESPONSE.recommended);
+      const chartProps = vi.mocked(ExposureChart).mock.lastCall?.[0];
+      expect(chartProps?.portfolio).toEqual(MOCK_ELIGIBLE_RESPONSE.portfolio);
+      expect(chartProps?.universe).toEqual(MOCK_ELIGIBLE_RESPONSE.universe);
+      expect(chartProps?.recommended).toEqual(MOCK_ELIGIBLE_RESPONSE.recommended);
     });
 
     it('lists holdings excluded from universe coverage', async () => {

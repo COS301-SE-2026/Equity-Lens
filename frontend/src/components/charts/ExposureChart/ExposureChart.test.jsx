@@ -35,14 +35,15 @@ const setup = (overrideProps = {}) => {
 
   const utils = render(<ExposureChart {...props} />);
   
+  /** @param {string} ticker */
   const getStockBubble = (ticker) => {
     const stockCircles = Array.from(utils.container.querySelectorAll('circle.stock'));
-    
-    return stockCircles.find((circle) => {
-      if (circle.__data__?.ticker === ticker) return true;
+    const bubble = stockCircles.find((circle) => {
       const titleText = circle.querySelector('title')?.textContent || '';
-      return titleText.startsWith(`${ticker}:`) || titleText.startsWith(`${ticker}\n`);
+      return titleText.startsWith(`${ticker}:`);
     });
+    if (!bubble) throw new Error(`no bubble for ${ticker}`);
+    return bubble;
   };
 
   return {

@@ -1,13 +1,13 @@
 """add market_universe_snapshots
 
 Revision ID: b8c9d0e1f2a3
-Revises: a7b8c9d0e1f2
+Revises: e2f3a4b5c6d7
 """
 from alembic import op
 import sqlalchemy as sa
 
 revision = "b8c9d0e1f2a3"
-down_revision = "a7b8c9d0e1f2"
+down_revision = "e2f3a4b5c6d7"
 branch_labels = None
 depends_on = None
 

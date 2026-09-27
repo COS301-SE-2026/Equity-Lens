@@ -30,7 +30,7 @@ def get_recommendations(
             return {"eligible": False, "reason": "no_jse_holdings", "excluded": excluded}
         try:
             seed_symbols = index_universe.market_universe("JSE", db)
-        except index_universe.UniverseUnavailable as error:
+        except index_universe.UniverseUnavailableError as error:
             raise HTTPException(
                 status_code=503, 
                 detail="Market data temporarily unavailable") from error

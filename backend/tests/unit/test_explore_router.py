@@ -58,7 +58,9 @@ def configure_dependencies(monkeypatch, features_registry, seed_symbols):
             get_holdings=MagicMock(return_value=holdings),
             build=MagicMock(side_effect=mock_build),
             universe=MagicMock(
-                side_effect=index_universe.UniverseUnavailable("JSE") if universe_error else None,
+                side_effect=(
+                    index_universe.UniverseUnavailableError("JSE") if universe_error else None
+                ),
                 return_value=seed_symbols,
             ),
         )

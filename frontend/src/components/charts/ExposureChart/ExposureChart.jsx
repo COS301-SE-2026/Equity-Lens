@@ -2,6 +2,15 @@ import * as d3 from 'd3';
 import { useEffect, useRef, useState } from 'react';
 
 
+/**
+ * @typedef {{ ticker: string, name?: string, sector: string, market_cap: number,
+ *   local_float_pct: number, dividend_yield: number, highlighted?: boolean }} Stock
+ * @typedef {{ ticker: string, similar_to: string, distance?: number, closeness?: number,
+ *   description?: string }} Recommendation
+ * @typedef {{ source: string, target: string, x1: number, y1: number, x2: number, y2: number }} Link
+ */
+
+/** @type {Record<string, string>} */
 const SECTOR_COLORS = {
   'Financial Services': '#2a78d6',
   'Basic Materials': '#eb6834',
@@ -16,6 +25,7 @@ const SECTOR_COLORS = {
   Utilities: '#c9b458',
 };
 
+/** @type {import('react').CSSProperties} */
 const TOOLTIP_STYLE = {
   position: 'absolute',
   pointerEvents: 'none',
@@ -37,6 +47,11 @@ const BACKGROUND_OPACITY = 0.35;
 const DIMMED_OPACITY = 0.08;
 const FOCUS_MS = 150;
 
+/**
+ * @param {number} min
+ * @param {number} max
+ * @param {number} [maxCount]
+ */
 function getLogTicks(min, max, maxCount = 6) {
   const ticks = [];
   const start = Math.floor(Math.log10(min));
@@ -54,11 +69,14 @@ function getLogTicks(min, max, maxCount = 6) {
   return ticks.filter((_, i) => i % step === 0);
 }
 
+/**
+ * @param {{ portfolio?: Stock[], universe?: Stock[], recommended?: Recommendation[] }} props
+ */
 export function ExposureChart({ portfolio = [], universe = [], recommended = [] }) {
-  const svgRef = useRef(null);
-  const tooltipRef = useRef(null);
-  const focusRef = useRef(null);
-  const [selected, setSelected] = useState(null);
+  const svgRef = useRef(/** @type {SVGSVGElement | null} */ (null));
+  const tooltipRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const focusRef = useRef(/** @type {((ticker: string | null) => void) | null} */ (null));
+  const [selected, setSelected] = useState(/** @type {string | null} */ (null));
 
   useEffect(() => {
     if (!svgRef.current || !universe.length) return;
@@ -119,7 +137,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     const xAxis = svg
       .append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).tickValues(xTicks).tickFormat((v) => `R${Math.round(v)}bn`));
+      .call(d3.axisBottom(x).tickValues(xTicks).tickFormat((v) => `R${Math.round(Number(v))}bn`));
 
     xAxis.selectAll('text').style('fill', 'var(--chart-axis-text)').style('font-size', '11px');
     xAxis.selectAll('path, line').style('stroke', 'var(--border-subtle)');
@@ -127,7 +145,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     const yAxis = svg
       .append('g')
       .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y).ticks(5).tickFormat((v) => `${Math.round(v)}%`));
+      .call(d3.axisLeft(y).ticks(5).tickFormat((v) => `${Math.round(Number(v))}%`));
 
     yAxis.selectAll('text').style('fill', 'var(--chart-axis-text)').style('font-size', '11px');
     yAxis.selectAll('path, line').style('stroke', 'var(--border-subtle)');
@@ -152,20 +170,29 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     const universeMap = new Map(points.map((u) => [u.ticker, u]));
     const recMap = new Map(recommended.map((rec) => [rec.ticker, rec]));
     const recTickers = new Set(recommended.map((rec) => rec.ticker));
+    /** @param {Stock} d */
     const isKey = (d) => d.highlighted || recTickers.has(d.ticker);
+    /** @param {Stock} d */
     const radius = (d) => (isKey(d) ? r(d.dividend_yield) : r(d.dividend_yield) * 0.6);
+    /** @param {Stock} d */
     const baseOpacity = (d) => (isKey(d) ? KEY_OPACITY : BACKGROUND_OPACITY);
+    /** @param {{ closeness?: number }} d */
     const haloOpacity = (d) => (d.closeness ?? 0.3) * 0.4;
+
+    const haloPoints = recommended.flatMap((rec) => {
+      const point = universeMap.get(rec.ticker);
+      return point ? [{ ...point, closeness: rec.closeness }] : [];
+    });
 
     const halos = svg
       .append('g')
       .selectAll('.halo')
-      .data(recommended.filter((rec) => universeMap.has(rec.ticker)))
+      .data(haloPoints)
       .join('circle')
       .attr('class', 'halo')
-      .attr('cx', (d) => x(universeMap.get(d.ticker).market_cap))
-      .attr('cy', (d) => y(universeMap.get(d.ticker).local_float_pct))
-      .attr('r', (d) => r(universeMap.get(d.ticker).dividend_yield) + 14)
+      .attr('cx', (d) => x(d.market_cap))
+      .attr('cy', (d) => y(d.local_float_pct))
+      .attr('r', (d) => r(d.dividend_yield) + 14)
       .attr('fill', 'var(--signal-positive)')
       .attr('fill-opacity', haloOpacity)
       .style('pointer-events', 'none');
@@ -282,7 +309,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
           y2: y2 - uy * endGap,
         };
       })
-      .filter(Boolean);
+      .filter((l) => l !== null);
     
     const linkLayer = svg.append('g').style('pointer-events', 'none');
     const linkGroups = linkLayer.selectAll('g').data(links).join('g').attr('opacity', 0.8);
@@ -310,8 +337,10 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
 
     const focusText = svg.append('g').style('pointer-events', 'none');
 
+    /** @type {string | null} */
     let focused = null;
 
+    /** @param {string} ticker */
     function relatedTo(ticker) {
       const related = new Set([ticker]);
       recommended.forEach((rec) => {
@@ -321,10 +350,12 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
       return related;
     }
 
+    /** @param {string | null} ticker */
     function applyFocus(ticker) {
       focused = ticker;
       setSelected(ticker);
       const related = ticker ? relatedTo(ticker) : null;
+      /** @param {Link} l */
       const active = (l) => Boolean(related) && (l.source === ticker || l.target === ticker);
 
       stocks
@@ -361,7 +392,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
             const pairs = ticker
         ? recommended.filter((rec) => rec.similar_to === ticker || rec.ticker === ticker)
         : [];
-      const isHolding = Boolean(ticker) && universeMap.get(ticker)?.highlighted;
+      const isHolding = ticker !== null && universeMap.get(ticker)?.highlighted;
       const lines = pairs.length
         ? pairs.map((rec) => `${rec.similar_to} → ${rec.ticker} (${Math.round((rec.closeness ?? 0) * 100)}%)`)
         : isHolding
@@ -386,6 +417,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
       focusText.raise();
     }
 
+    /** @param {Stock} d */
     const toggle = (d) => applyFocus(focused === d.ticker ? null : d.ticker);
 
     stocks
