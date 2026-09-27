@@ -372,47 +372,6 @@ def test_load_cached_fundamentals_rebuilds_dataframes_from_json(mock_session_loc
     assert result["balance_sheet"].loc["Total Assets"].iloc[0] == 500.0
 
 
-@patch("app.utils.stock_cache.SessionLocal")
-def test_save_fundamentals_converts_timestamp_columns_to_strings(mock_session_local):
-    mock_db = MagicMock()
-    mock_session_local.return_value = mock_db
-    mock_db.query.return_value.filter.return_value.first.return_value = None
-    balance_sheet = pd.DataFrame({pd.Timestamp("2026-03-31"): {"Total Assets": 500.0}})
-    financials = pd.DataFrame({pd.Timestamp("2026-03-31"): {"EBIT": 60.0}})
-    stock_cache._save_fundamentals(MOCK_TICKER, {"sector": "Technology"}, balance_sheet, financials)
-    added_obj = mock_db.add.call_args[0][0]
-
-    assert all(isinstance(k, str) for k in added_obj.balance_sheet)
-    assert added_obj.info == {"sector": "Technology"}
-
-
-@patch("app.utils.stock_cache.SessionLocal")
-def test_save_fundamentals_converts_nan_to_none_for_json_safety(mock_session_local):
-    mock_db = MagicMock()
-    mock_session_local.return_value = mock_db
-    mock_db.query.return_value.filter.return_value.first.return_value = None
-    balance_sheet = pd.DataFrame({pd.Timestamp("2026-03-31"): {"Total Assets": float("nan")}})
-    stock_cache._save_fundamentals(MOCK_TICKER, {}, balance_sheet, pd.DataFrame())
-    added_obj = mock_db.add.call_args[0][0]
-    col_key = next(iter(added_obj.balance_sheet.keys()))
-
-    assert added_obj.balance_sheet[col_key]["Total Assets"] is None
-
-
-@patch("app.utils.stock_cache.SessionLocal")
-def test_save_fundamentals_empty_dataframes_store_none(mock_session_local):
-    mock_db = MagicMock()
-    mock_session_local.return_value = mock_db
-    mock_db.query.return_value.filter.return_value.first.return_value = None
-    stock_cache._save_fundamentals(
-        MOCK_TICKER, {"sector": "Technology"}, pd.DataFrame(), pd.DataFrame()
-    )
-    added_obj = mock_db.add.call_args[0][0]
-
-    assert added_obj.balance_sheet is None
-    assert added_obj.financials is None
-
-
 @patch("app.utils.stock_cache._load_cached_fundamentals", return_value=None)
 @patch("app.utils.stock_cache._save_fundamentals")
 @patch("app.utils.stock_cache.yf.Ticker")

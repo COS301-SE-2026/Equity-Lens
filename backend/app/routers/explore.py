@@ -1,10 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
- 
+
 from app.dependencies import get_current_user, get_db
 from app.schemas.auth import UserResponse
-from app.services import exposure_engine, index_universe, portfolio_tickers, recommendation_copy, universe_features
- 
+from app.services import (
+        exposure_engine,
+        index_universe,
+        portfolio_tickers,
+        recommendation_copy,
+        universe_features,
+)
+
 router = APIRouter(prefix="/api/explore", tags=["explore"])
  
  
@@ -24,10 +30,13 @@ def get_recommendations(
             return {"eligible": False, "reason": "no_jse_holdings", "excluded": excluded}
         try:
             seed_symbols = index_universe.market_universe("JSE", db)
-        except index_universe.UniverseUnavailable:
-            raise HTTPException(status_code=503, detail="Market data temporarily unavailable")
+        except index_universe.UniverseUnavailable as error:
+            raise HTTPException(
+                status_code=503, 
+                detail="Market data temporarily unavailable") from error
         seed = {s.upper().removesuffix(".JO") for s in seed_symbols}
-        universe_tickers = sorted(set(seed_symbols) | {t for t in portfolio if t.upper() not in seed})
+        universe_tickers = sorted(set(seed_symbols) | {t for t in portfolio 
+            if t.upper() not in seed})
         universe = universe_features.build_universe_features(universe_tickers)
         raw_by_ticker = {f.ticker: f for f in universe}
         reference = [f for f in universe if f.ticker in seed]
@@ -35,7 +44,10 @@ def get_recommendations(
         norm_by_ticker = {f.ticker: f for f in normalized}
     
         recs_by_holding = {
-            t: exposure_engine.similarity_scores(norm_by_ticker[t], normalized, k=k + len(portfolio))
+            t: exposure_engine.similarity_scores(
+                norm_by_ticker[t], 
+                normalized, 
+                k=k + len(portfolio))
             for t in portfolio
             if t in norm_by_ticker
         }
@@ -43,12 +55,17 @@ def get_recommendations(
         for rec in recommended:
             source_sector = raw_by_ticker[rec["similar_to"]].sector
             target_sector = raw_by_ticker[rec["ticker"]].sector
-            rec["description"] = recommendation_copy.describe_similar(rec, source_sector, target_sector)
+            rec["description"] = recommendation_copy.describe_similar(
+                rec, 
+                source_sector, 
+                target_sector)
     
         return {
             "eligible": True,
             "portfolio": [
-                _to_point(raw_by_ticker[t], highlighted=True) for t in portfolio if t in raw_by_ticker
+                _to_point(
+                    raw_by_ticker[t], 
+                    highlighted=True) for t in portfolio if t in raw_by_ticker
             ],
             "universe": [_to_point(f) for f in universe],
             "recommended": recommended,

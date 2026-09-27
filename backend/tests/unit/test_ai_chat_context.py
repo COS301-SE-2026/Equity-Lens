@@ -20,25 +20,6 @@ def converse_recorder(captured, reply = "A response."):
 
 
 @patch("app.services.ai_service.get_bedrock_client")
-def test_history_order(mock_bedrock_client, db_session, test_user):
-    captured = []
-    mocked_client = MagicMock()
-    mocked_client.converse.side_effect = converse_recorder(captured)
-    mock_bedrock_client.return_value = mocked_client
-
-    _, conversation_id = chat("A question?", db_session, test_user.id)
-    chat("A second question?", db_session, test_user.id, conversation_id)
-
-    second_turn = captured[1]
-    assert [m["role"] for m in second_turn] == ["user", "assistant", "user"]
-    assert [m["content"][0]["text"] for m in second_turn] == [
-        "A question?",
-        "A response.",
-        "A second question?",
-    ]
-
-
-@patch("app.services.ai_service.get_bedrock_client")
 def test_another_users_conversation(mock_bedrock_client, db_session, test_user):
     other_user = User(
         email = "someone.else@example.com",

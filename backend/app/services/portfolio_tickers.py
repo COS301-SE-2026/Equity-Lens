@@ -2,8 +2,8 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from app.models.portfolio import Portfolios
-from app.models.portfolio import Holdings
+from app.models.portfolio import Holdings, Portfolios
+
 
 def get_user_holdings(db: Session, user_id: UUID) -> list[str]:
     tickers = (

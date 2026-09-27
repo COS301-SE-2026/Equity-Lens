@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+
 @dataclass(frozen=True)
 class Feature:
     ticker: str
@@ -35,7 +36,7 @@ YIELD_CAP = 15.0
 # Expected distance between 2 random stocks
 RANDOM_PAIR_DISTANCE = 2.26
  
-def normalize_universe(features: list[Feature], reference: list[Feature]) -> list[NormalizedFeature]:
+def normalize_universe(features: list[Feature]):
     log_mcap = np.array([math.log10(f.market_cap) for f in features])
     local_float = np.array([f.local_float_pct for f in features])
     div_yield = np.array([min(f.dividend_yield, YIELD_CAP) for f in features])

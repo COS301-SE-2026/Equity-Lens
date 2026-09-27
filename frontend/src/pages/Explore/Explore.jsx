@@ -47,7 +47,7 @@ export default function Explore() {
 
     const token = getCognitoAccessToken();
 
-    fetch(`${API_BASE_URL}/explore/recommendations?k=9`, {
+    return fetch(`${API_BASE_URL}/explore/recommendations?k=9`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {

@@ -7,12 +7,12 @@ import pandas as pd
 import requests
 import yfinance as yf
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import SessionLocal
 from app.models.market_data import FundamentalsCache, MarketData
-from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 _REFRESH_LOCKS = set()
 _PRICE_REFRESH_COOLDOWN_UNTIL: dict[str, datetime] = {}

@@ -18,6 +18,7 @@ from app.models import market_data, news_event, user  # noqa: F401
 from app.routers import (
     ai_chat,
     auth,
+    explore,
     import_pdf,
     indicators,
     news,
@@ -25,7 +26,6 @@ from app.routers import (
     portfolio,
     portfolio_snapshot,
     watchlist,
-    explore,
 )
 from app.routers import market_data as market_data_router
 from app.schemas.responses import STATUS_ERROR_CODES

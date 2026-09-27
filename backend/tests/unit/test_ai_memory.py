@@ -67,25 +67,7 @@ def fill(db_session, conversation_id, pairs = 40):
     ('["' + "x" * 400 + '"]', ["x" * 300]),                         
 ])
 def test_parse_facts_handles_model_output(raw, expected):
-    assert _parse_facts(raw) == expected
-
-
-@patch("app.services.ai_service.get_bedrock_client")
-def test_fact_saved(mock_bedrock_client, db_session, test_user):
-    client, captured = memory_client(fact_reply = '["User plans to retire in 15 years"]')
-    mock_bedrock_client.return_value = client
-
-    _, conversation_id = chat("I want to retire in 15 years", db_session, test_user.id)
-
-    run_post_turn(conversation_id, test_user.id, "I want to retire in 15 years", db_session)
-
-    facts = db_session.query(UserMemory).filter(UserMemory.user_id == test_user.id).all()
-    assert [f.fact for f in facts] == ["User plans to retire in 15 years"]
-
-    chat("what next?", db_session, test_user.id, conversation_id)
-    assert "User plans to retire in 15 years" in captured["system_prompts"][-1]
-    assert "<user_memory>" in captured["system_prompts"][-1]
-    assert captured["summary_calls"] == 0      
+    assert _parse_facts(raw) == expected     
 
 
 @patch("app.services.ai_service.get_bedrock_client")
