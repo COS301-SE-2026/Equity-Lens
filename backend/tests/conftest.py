@@ -10,9 +10,9 @@ import app.database as db_module
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.main import app
-from app.models.user import User
 from app.services.portfolio_service import invalidate_priced_holdings
 from app.utils import stock_cache
+
 
 @pytest.fixture(autouse=True)
 def _clear_priced_holdings_cache():
