@@ -35,16 +35,22 @@ YIELD_CAP = 15.0
 # Expected distance between 2 random stocks
 RANDOM_PAIR_DISTANCE = 2.26
  
-def normalize_universe(features: list[Feature], reference: list[Feature]) -> list[NormalizedFeature]:
-    log_mcap = np.array([math.log10(f.market_cap) for f in features])
-    local_float = np.array([f.local_float_pct for f in features])
-    div_yield = np.array([min(f.dividend_yield, YIELD_CAP) for f in features])
- 
-    def z(arr: np.ndarray) -> np.ndarray:
-        std = arr.std()
-        return (arr - arr.mean()) / std if std > 0 else np.zeros_like(arr)
- 
-    z_mcap, z_float, z_div = z(log_mcap), z(local_float), z(div_yield)
+def normalize_universe(features: list[Feature], reference: list[Feature] | None = None) -> list[NormalizedFeature]:
+    ref = reference or features
+
+    def columns(fs: list[Feature]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        return (
+            np.array([math.log10(f.market_cap) for f in fs]),
+            np.array([f.local_float_pct for f in fs]),
+            np.array([min(f.dividend_yield, YIELD_CAP) for f in fs]),
+        )
+
+    def z(arr: np.ndarray, ref_arr: np.ndarray) -> np.ndarray:
+        std = ref_arr.std()
+        return (arr - ref_arr.mean()) / std if std > 0 else np.zeros_like(arr)
+
+    z_mcap, z_float, z_div = (z(c, r) for c, r in zip(columns(features), columns(ref)))
+
  
     return [
         NormalizedFeature(f.ticker, f.sector, float(z_mcap[i]), float(z_float[i]), float(z_div[i]))

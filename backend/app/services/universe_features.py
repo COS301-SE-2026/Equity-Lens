@@ -33,7 +33,7 @@ def build_feature(ticker: str) -> Feature | None:
         return None
 
     dividend_yield = info.get("dividendYield") or 0
-    name = info.get("longName") or info.get("shortName") or ticker.upper()
+    name = info.get("longName") or info.get("shortName") or ticker.upper().removesuffix(".JO")
 
     return Feature(
         ticker=ticker.upper().removesuffix(".JO"),
