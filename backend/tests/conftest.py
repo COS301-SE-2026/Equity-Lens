@@ -12,6 +12,7 @@ from app.dependencies import get_current_user
 from app.main import app
 from app.services.portfolio_service import invalidate_priced_holdings
 from app.utils import stock_cache
+from app.models.user import User
 
 
 @pytest.fixture(autouse=True)
