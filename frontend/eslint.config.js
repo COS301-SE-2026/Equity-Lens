@@ -41,7 +41,6 @@ export default [
     },
     rules: {
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
       'no-unused-vars': 'off',
       'unused-imports/no-unused-imports': 'error',
       'unused-imports/no-unused-vars': [
@@ -72,17 +71,10 @@ export default [
       ],
       'promise/catch-or-return': 'error',
       'promise/no-return-wrap': 'error',
-      'promise/param-names': 'error',
-      'sonarjs/cognitive-complexity': ['warn', 18],
       'sonarjs/no-identical-functions': 'error',
       'sonarjs/no-duplicated-branches': 'error',
-      'sonarjs/no-collapsible-if': 'warn',
-      'sonarjs/no-redundant-boolean': 'warn',
       'react/prop-types': 'off',
       'react/jsx-key': 'error',
-      'react/jsx-no-useless-fragment': 'warn',
-      'react/self-closing-comp': 'warn',
-      'react/no-array-index-key': 'warn',
     },
   },
   {

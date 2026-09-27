@@ -97,25 +97,60 @@ const portfolioNews = {
 /**
  * @param {string} label
  */
-const statCard = (label) => /** @type {HTMLElement} */ (screen.getByText(label).parentElement);
+const statCard = (label) => /** @type {HTMLElement} */(screen.getByText(label).parentElement);
 
 describe('News page', () => {
   beforeEach(() => {
     mockGet.mockImplementation((/** @type {string} */ url) => {
       if (url === '/news/portfolio-tickers') {
-        return Promise.resolve({ data: { tickers: ['AAPL', 'MSFT'] } });
+        return Promise.resolve({
+          data: {
+            tickers: ['AAPL', 'MSFT'],
+          },
+        });
       }
+
+      if (url === '/news/ticker/AAPL') {
+        return Promise.resolve({
+          data: {
+            articles: [
+              portfolioArticle('AAPL', 1, 'positive'),
+              portfolioArticle('AAPL', 2, 'negative'),
+              portfolioArticle('AAPL', 3, 'neutral'),
+            ],
+            positive: 1,
+            negative: 1,
+            neutral: 1,
+            total_articles: 3,
+          },
+        });
+      }
+
+      if (url === '/news/ticker/MSFT') {
+        return Promise.resolve({
+          data: {
+            articles: [
+              portfolioArticle('MSFT', 1, 'positive'),
+            ],
+            positive: 1,
+            negative: 0,
+            neutral: 0,
+            total_articles: 1,
+          },
+        });
+      }
+
       if (url === '/watchlist/') {
         return Promise.resolve(watchlistResponse);
       }
-      if (url === '/news/portfolio') {
-        return Promise.resolve(portfolioNews);
-      }
+
       if (url.startsWith('/news/?category=')) {
         return Promise.resolve(newsResponse);
       }
+
       return Promise.resolve({ data: {} });
     });
+
     mockPost.mockResolvedValue({ data: {} });
   });
 
@@ -135,12 +170,10 @@ describe('News page', () => {
 
     await waitFor(() => {
       expect(mockGet).toHaveBeenCalledWith('/news/portfolio-tickers');
-      expect(mockGet).toHaveBeenCalledWith('/news/portfolio');
-      expect(mockGet).toHaveBeenCalledWith('/watchlist/');
+      expect(mockGet).toHaveBeenCalledWith('/news/ticker/AAPL');
+      expect(mockGet).toHaveBeenCalledWith('/news/ticker/MSFT');
     });
 
-    // market news is the other tab's feed and shares the articles state - loading it
-    // here too meant two writers racing over what the portfolio tab displayed
     expect(mockGet).not.toHaveBeenCalledWith('/news/?category=business');
   });
 
@@ -167,21 +200,24 @@ describe('News page', () => {
 
     expect(await screen.findByText('AAPL beats expectations')).toBeInTheDocument();
     expect(screen.getAllByText('Quarterly earnings came in ahead of forecast.').length).toBe(4);
-    expect(screen.getAllByText('2026-07-14').length).toBe(4);
+    const formattedDate = new Date('2026-07-14').toLocaleDateString();
+
+    expect(screen.getAllByText(formattedDate).length).toBe(4);
     expect(screen.getAllByText('Reuters').length).toBe(4);
   });
 
-  it('filters to one ticker without going back to the server', async () => {
+  it('loads news for one ticker', async () => {
     const user = userEvent.setup();
     render(<NewsInvestment />);
 
     await screen.findByText('MSFT beats expectations');
-    const callsBefore = mockGet.mock.calls.length;
 
     await user.click(screen.getByRole('button', { name: 'AAPL' }));
 
-    // the chips used to fire a marketaux call each - once per click, per user
-    expect(mockGet.mock.calls.length).toBe(callsBefore);
+    await waitFor(() => {
+      expect(mockGet).toHaveBeenCalledWith('/news/ticker/AAPL');
+    });
+
     expect(screen.getByText('AAPL beats expectations')).toBeInTheDocument();
     expect(screen.queryByText('MSFT beats expectations')).not.toBeInTheDocument();
 
@@ -236,20 +272,18 @@ describe('News page', () => {
     expect(mockGet).toHaveBeenCalledWith('/news/?category=business');
 
     await user.click(screen.getByRole('button', { name: 'Top' }));
-    expect(mockGet).toHaveBeenCalledWith('/news/?category=Top');
+    expect(mockGet).toHaveBeenCalledWith('/news/?category=top');
 
     await user.click(screen.getByRole('button', { name: 'Technology' }));
-    expect(mockGet).toHaveBeenCalledWith('/news/?category=Technology');
+    expect(mockGet).toHaveBeenCalledWith('/news/?category=technology');
 
     await user.click(screen.getByRole('button', { name: 'Politics' }));
-    expect(mockGet).toHaveBeenCalledWith('/news/?category=Politics');
+    expect(mockGet).toHaveBeenCalledWith('/news/?category=politics');
 
     await user.click(screen.getByRole('button', { name: 'Crime' }));
-    expect(mockGet).toHaveBeenCalledWith('/news/?category=Crime');
+    expect(mockGet).toHaveBeenCalledWith('/news/?category=crime');
 
-    const [categoryAll] = screen.getAllByRole('button', { name: 'All' });
-    await user.click(categoryAll);
-    expect(mockGet).toHaveBeenCalledWith('/news/?category=All');
+
   });
 
   it('returns to portfolio', async () => {

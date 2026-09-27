@@ -85,7 +85,11 @@ describe('WatchlistPanel', () => {
       fireEvent.click(screen.getByText('Add'));
       fireEvent.change(screen.getByPlaceholderText('e.g. NPN'), { target: { value: 'n' } });
 
-      await new Promise((resolve) => setTimeout(resolve, 400));
+      await new Promise((resolve) => 
+        {
+          setTimeout(resolve, 400);
+        });
+
       expect(searchStocks).not.toHaveBeenCalled();
     });
 

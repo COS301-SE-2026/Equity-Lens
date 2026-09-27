@@ -12,7 +12,7 @@ def test_one_holding_market_failure_does_not_stop_others(mocker):
             quantity=2,
             total_cost=1000,
             cost_price=500,
-            sector="Technology",
+            sector="Technology"
         ),
         SimpleNamespace(
             ticker="MSFT",
@@ -20,7 +20,7 @@ def test_one_holding_market_failure_does_not_stop_others(mocker):
             quantity=2,
             total_cost=1200,
             cost_price=600,
-            sector="Technology",
+            sector="Technology"
         ),
         SimpleNamespace(
             ticker="GOOG",
@@ -28,23 +28,34 @@ def test_one_holding_market_failure_does_not_stop_others(mocker):
             quantity=2,
             total_cost=1400,
             cost_price=700,
-            sector="Technology",
+            sector="Technology"
         ),
     ]
 
-    # the gate these tickers have to get past is quote_currency now, not is_zar_listed - this
-    # test is about one holding's failure not stopping the others, so the currency is forced
-    # rather than worked out
-    mocker.patch("app.services.portfolio_service.quote_currency", return_value="ZAR")
+    mocker.patch(
+        "app.services.portfolio_service.is_zar_listed",
+        return_value=True
+    )
 
-    def fake_price(ticker, db=None):
+    mocker.patch(
+        "app.services.portfolio_service.quote_currency",
+        return_value="ZAR"
+    )
+
+    def fake_price(ticker, *args, **kwargs):
 
         if ticker == "MSFT":
             raise Exception("Market data unavailable")
 
-        return SimpleNamespace(price=800, change_percent=1.5)
+        return SimpleNamespace(
+            price=800,
+            change_percent=1.5
+        )
 
-    mocker.patch("app.services.portfolio_service.get_current_price", side_effect=fake_price)
+    mocker.patch(
+        "app.services.portfolio_service.get_current_price",
+        side_effect=fake_price
+    )
 
     result = _price_holdings(holdings)
 

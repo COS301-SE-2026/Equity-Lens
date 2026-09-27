@@ -18,7 +18,7 @@ def _clear_cache():
     invalidate_priced_holdings()
 
 
-@pytest.fixture()
+@pytest.fixture
 def portfolio_with_a_holding(db_session, test_user):
     portfolio = Portfolios(
         user_id=test_user.id, account_number="EE-1", portfolio_name="EasyEquities", currency="ZAR",
@@ -33,9 +33,9 @@ def portfolio_with_a_holding(db_session, test_user):
     db_session.commit()
     return portfolio
 
-
+@pytest.mark.usefixtures("portfolio_with_a_holding")
 def test_the_dashboard_carries_the_thresholds_it_scored_with(
-    db_session, test_user, portfolio_with_a_holding
+    db_session, test_user
 ):
     dashboard = PortfolioService(db_session).get_dashboard(test_user.id)
 
@@ -43,7 +43,7 @@ def test_the_dashboard_carries_the_thresholds_it_scored_with(
     assert dashboard["thresholds"]["concentration_high"] == 45
 
 
-@pytest.fixture()
+@pytest.fixture
 def three_sector_portfolio(db_session, test_user):
     portfolio = Portfolios(
         user_id=test_user.id, account_number="EE-2", portfolio_name="EasyEquities", currency="ZAR",
@@ -64,8 +64,9 @@ def three_sector_portfolio(db_session, test_user):
     return portfolio
 
 
+@pytest.mark.usefixtures("three_sector_portfolio")
 def test_a_50_percent_sector_is_rebalanceable_under_the_default_ceiling(
-    db_session, test_user, three_sector_portfolio
+    db_session, test_user
 ):
     result = PortfolioService(db_session).simulate_sector_rebalance(test_user.id)
 
@@ -73,9 +74,9 @@ def test_a_50_percent_sector_is_rebalanceable_under_the_default_ceiling(
     assert result["from_sector"] == "Technology"
     assert result["thresholds"]["concentration_high"] == 45
 
-
+@pytest.mark.usefixtures("three_sector_portfolio")
 def test_the_same_portfolio_is_not_rebalanceable_once_the_ceiling_moves_to_60(
-    db_session, test_user, three_sector_portfolio
+    db_session, test_user
 ):
     UserPreferenceRepository(db_session).upsert(test_user.id, health_preset_key="concentrated")
     db_session.commit()
@@ -88,8 +89,9 @@ def test_the_same_portfolio_is_not_rebalanceable_once_the_ceiling_moves_to_60(
     assert result["thresholds"]["concentration_high"] == 60
 
 
+@pytest.mark.usefixtures("portfolio_with_a_holding")
 def test_concentration_analysis_flags_against_the_users_ceiling(
-    db_session, test_user, portfolio_with_a_holding
+    db_session, test_user
 ):
     service = PortfolioService(db_session)
     assert service.get_concentration_analysis(test_user.id)["thresholds"] == {
@@ -119,9 +121,9 @@ def test_a_flagged_holding_with_no_usable_price_comes_back_with_a_null_share_cou
     assert flagged.shares_to_sell is None
     assert flagged.value_to_reduce == 4000.0
 
-
+@pytest.mark.usefixtures("portfolio_with_a_holding")
 def test_the_thresholds_follow_the_users_chosen_preset(
-    db_session, test_user, portfolio_with_a_holding
+    db_session, test_user
 ):
     UserPreferenceRepository(db_session).upsert(test_user.id, health_preset_key="concentrated")
     db_session.commit()
