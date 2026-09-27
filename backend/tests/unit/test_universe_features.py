@@ -75,7 +75,7 @@ class TestFeatureBuilder:
         assert feature.dividend_yield == 0
 
     @pytest.mark.parametrize(
-        "overrides, expected_name",
+        ("overrides", "expected_name"),
         [
             ({"longName": None}, "Capitec"),
             ({"longName": None, "shortName": None}, "BBB"),
@@ -90,7 +90,7 @@ class TestFeatureBuilder:
         feature = uf.build_feature(ticker)
         assert feature.name == expected_name
 
-    def test_empty_cache_returns_none(self, cache):
+    def test_empty_cache_returns_none(self):
         assert uf.build_feature("NOPE.JO") is None
 
     @pytest.mark.parametrize(
@@ -136,5 +136,5 @@ class TestJseEquityValidation:
         cache["AAPL"] = make_capitec_info(exchange="NMS")
         assert uf.is_jse_equity("AAPL") is False
 
-    def test_unregistered_ticker_excluded(self, cache):
+    def test_unregistered_ticker_excluded(self):
         assert uf.is_jse_equity("NOPE") is False

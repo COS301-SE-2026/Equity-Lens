@@ -11,7 +11,7 @@ from app.services.exposure_engine import Feature
 
 @pytest.fixture
 def make_feature():
-    def _factory(ticker: str, sector: str, market_cap: float, float_pct: float, yield_pct: float) -> Feature:
+    def _factory(ticker: str, sector: str, market_cap: float, float_pct: float, yield_pct: float):
         return Feature(
             ticker=ticker,
             name=ticker,
@@ -45,7 +45,9 @@ def seed_symbols():
 
 @pytest.fixture
 def configure_dependencies(monkeypatch, features_registry, seed_symbols):
-    def _configure(holdings: list[str], jse_equities: list[str] | None = None, universe_error: bool = False):
+    def _configure(
+        holdings: list[str], jse_equities: list[str] | 
+        None = None, universe_error: bool = False):
         jse_set = set(holdings) if jse_equities is None else set(jse_equities)
 
         def mock_build(tickers):

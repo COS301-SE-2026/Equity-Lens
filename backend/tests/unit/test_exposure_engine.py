@@ -83,11 +83,12 @@ class TestUniverseNormalization:
         outlier_stock = make_feature("XYZ", 1.5, 10, 0.5)
         standalone_norm = ee.normalize_universe(reference_universe)
         combined_norm = ee.normalize_universe(
-            reference_universe + [outlier_stock],
+            [*reference_universe, outlier_stock],
             reference=reference_universe,
         )
 
-        for base, relative in zip(standalone_norm, combined_norm[: len(reference_universe)]):
+        for base, relative in zip(
+            standalone_norm, combined_norm[: len(reference_universe)], strict=False):
             assert relative.z_log_mcap == pytest.approx(base.z_log_mcap)
             assert relative.z_local_float == pytest.approx(base.z_local_float)
             assert relative.z_div_yield == pytest.approx(base.z_div_yield)
@@ -123,10 +124,9 @@ class TestUniverseNormalization:
         assert first_step == pytest.approx(second_step)
 
     def test_dividend_yield_cap_clamping(self, make_feature, reference_universe):
-        dataset = reference_universe + [
-            make_feature("CAP", 100, 80, ee.YIELD_CAP),
-            make_feature("SPECIAL", 100, 80, ee.YIELD_CAP + 10),
-        ]
+        dataset = [*reference_universe, make_feature(
+            "CAP", 100, 80, 
+            ee.YIELD_CAP), make_feature("SPECIAL", 100, 80, ee.YIELD_CAP + 10)]
         results = {item.ticker: item for item in ee.normalize_universe(dataset)}
         
         assert results["CAP"].z_div_yield == pytest.approx(results["SPECIAL"].z_div_yield)
@@ -223,9 +223,10 @@ class TestSimilarityScoringEngine:
         
         assert results["NEAR"]["closeness"] == pytest.approx(expected, abs=1e-3)
 
-    test_outlier_closeness_lower_bound = lambda self, scoring_context: (
-        assert_closeness_zero(scoring_context)
-    )
+    def test_outlier_closeness_lower_bound(self, scoring_context):
+        return (
+            assert_closeness_zero(scoring_context)
+        )
 
 
 def assert_closeness_zero(scoring_context):

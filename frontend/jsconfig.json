@@ -11,5 +11,10 @@
     "types": ["vite/client"]
   },
   "include": ["src/**/*.js", "src/**/*.jsx"],
-  "exclude": ["src/test"]
+  "exclude": [
+  "node_modules",
+  "dist",
+  "coverage",
+  "src/test"
+]
 }

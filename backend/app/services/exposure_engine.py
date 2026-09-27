@@ -36,7 +36,7 @@ YIELD_CAP = 15.0
 # Expected distance between 2 random stocks
 RANDOM_PAIR_DISTANCE = 2.26
  
-def normalize_universe(features: list[Feature], reference: list[Feature] | None = None) -> list[NormalizedFeature]:
+def normalize_universe(features: list[Feature], reference: list[Feature] | None = None):
     ref = reference or features
 
     def columns(fs: list[Feature]) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -50,7 +50,10 @@ def normalize_universe(features: list[Feature], reference: list[Feature] | None 
         std = ref_arr.std()
         return (arr - ref_arr.mean()) / std if std > 0 else np.zeros_like(arr)
 
-    z_mcap, z_float, z_div = (z(c, r) for c, r in zip(columns(features), columns(ref)))
+    z_mcap, z_float, z_div = (z(c, r) for c, r in zip(
+        columns(features), 
+        columns(ref), 
+        strict=False))
 
  
     return [
