@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router-dom';
 
 import api from '../../services/api';
 
@@ -98,6 +99,12 @@ const portfolioNews = {
  * @param {string} label
  */
 const statCard = (label) => /** @type {HTMLElement} */(screen.getByText(label).parentElement);
+const renderNews = () =>
+  render(
+    <MemoryRouter>
+      <NewsInvestment />
+    </MemoryRouter>,
+  );
 
 describe('News page', () => {
   beforeEach(() => {
@@ -155,7 +162,7 @@ describe('News page', () => {
   });
 
   it('renders the page heading and description', async () => {
-    render(<NewsInvestment />);
+    renderNews();
 
     expect(screen.getByRole('heading', { level: 1, name: 'Investment News' })).toBeInTheDocument();
     expect(
@@ -166,7 +173,7 @@ describe('News page', () => {
   });
 
   it('loads the portfolio feed, its tickers and the watchlist on mount', async () => {
-    render(<NewsInvestment />);
+    renderNews();
 
     await waitFor(() => {
       expect(mockGet).toHaveBeenCalledWith('/news/portfolio-tickers');
@@ -178,7 +185,7 @@ describe('News page', () => {
   });
 
   it('shows summary cards from the news response', async () => {
-    render(<NewsInvestment />);
+    renderNews();
 
     await screen.findByText('AAPL beats expectations');
 
@@ -189,14 +196,14 @@ describe('News page', () => {
   });
 
   it('renders a filter button for every portfolio ticker', async () => {
-    render(<NewsInvestment />);
+    renderNews();
 
     expect(await screen.findByRole('button', { name: 'AAPL' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'MSFT' })).toBeInTheDocument();
   });
 
   it('renders article title, description, date and source in the feed', async () => {
-    render(<NewsInvestment />);
+    renderNews();
 
     expect(await screen.findByText('AAPL beats expectations')).toBeInTheDocument();
     expect(screen.getAllByText('Quarterly earnings came in ahead of forecast.').length).toBe(4);
@@ -208,7 +215,7 @@ describe('News page', () => {
 
   it('loads news for one ticker', async () => {
     const user = userEvent.setup();
-    render(<NewsInvestment />);
+    renderNews();
 
     await screen.findByText('MSFT beats expectations');
 
@@ -228,7 +235,7 @@ describe('News page', () => {
 
   it('the All chip puts every ticker back in the feed', async () => {
     const user = userEvent.setup();
-    render(<NewsInvestment />);
+    renderNews();
 
     await user.click(await screen.findByRole('button', { name: 'AAPL' }));
     expect(screen.queryByText('MSFT beats expectations')).not.toBeInTheDocument();
@@ -240,7 +247,7 @@ describe('News page', () => {
 
   it('now switches to the market tab and swaps thel heading', async () => {
     const user = userEvent.setup();
-    render(<NewsInvestment />);
+    renderNews();
 
     await screen.findByText('Portfolio News');
     await user.click(screen.getByRole('button', { name: /All Market/ }));
@@ -252,7 +259,7 @@ describe('News page', () => {
 
   it('requests the matching endpoint for each of the market types', async () => {
     const user = userEvent.setup();
-    render(<NewsInvestment />);
+    renderNews();
 
     await user.click(screen.getByRole('button', { name: /All Market/ }));
     await screen.findByText('Market News');
@@ -275,7 +282,7 @@ describe('News page', () => {
 
   it('returns to portfolio', async () => {
     const user = userEvent.setup();
-    render(<NewsInvestment />);
+    renderNews();
 
     await user.click(screen.getByRole('button', { name: /All Market/ }));
     await screen.findByText('Market News');
