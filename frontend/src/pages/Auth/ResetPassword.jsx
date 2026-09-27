@@ -9,7 +9,9 @@ import useForm from '../../hooks/useForm';
 import { ROUTES } from '../../utils/constants';
 import { validatePassword, validateConfirmPassword } from '../../utils/validators';
 
+/** @param {{ code: string, newPassword: string, confirmPassword: string }} values */
 const validate = (values) => {
+  /** @type {Record<string, string>} */
   const errors = {};
   if (!values.code || values.code.length !== 6) errors.code = 'Enter the 6-digit code';
   const passwordError = validatePassword(values.newPassword);
@@ -24,13 +26,16 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState(location.state?.email || '');
-  const [status, setStatus] = useState({ type: null, message: '' }); // 'error' | 'success'
+  const [status, setStatus] = useState(
+    /** @type {{ type: 'error' | 'success' | null, message: string }} */ ({ type: null, message: '' }),
+  ); // 'error' | 'success'
 
   const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm(
     { code: '', newPassword: '', confirmPassword: '' },
     validate,
   );
 
+  /** @param {{ code: string, newPassword: string, confirmPassword: string }} formValues */
   const onSubmit = async (formValues) => {
     if (!email) return;
     setStatus({ type: null, message: '' });
@@ -39,9 +44,10 @@ const ResetPassword = () => {
       setStatus({ type: 'success', message: 'Password reset. Redirecting to sign in...' });
       setTimeout(() => navigate(ROUTES.LOGIN), 1500);
     } catch (err) {
+      const message = err instanceof Error ? err.message : '';
       setStatus({
         type: 'error',
-        message: err.message || 'Could not reset your password. Please try again.',
+        message: message || 'Could not reset your password. Please try again.',
       });
     }
   };
@@ -95,7 +101,6 @@ const ResetPassword = () => {
                 label="Verification code"
                 name="code"
                 type="text"
-                inputMode="numeric"
                 value={values.code}
                 onChange={(e) =>
                   handleChange({
