@@ -1,11 +1,17 @@
 import { useState } from 'react';
 
+/**
+ * @template {Record<string, string>} T
+ * @param {T} initialValues
+ * @param {(values: T) => Record<string, string>} [validate]
+ */
 const useForm = (initialValues, validate) => {
   const [values, setValues] = useState(initialValues);
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+  const [errors, setErrors] = useState(/** @type {Record<string, string>} */ ({}));
+  const [touched, setTouched] = useState(/** @type {Record<string, boolean>} */ ({}));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /** @param {{ target: { name: string, value: string } }} e */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setValues((prev) => ({ ...prev, [name]: value }));
@@ -15,6 +21,7 @@ const useForm = (initialValues, validate) => {
     }
   };
 
+  /** @param {{ target: { name: string } }} e */
   const handleBlur = (e) => {
     const { name } = e.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
@@ -24,7 +31,8 @@ const useForm = (initialValues, validate) => {
     }
   };
 
-  const handleSubmit = (onSubmit) => async (e) => {
+  /** @param {(values: T) => Promise<void> | void} onSubmit */
+  const handleSubmit = (onSubmit) => async (/** @type {React.FormEvent} */ e) => {
     e.preventDefault();
     const allTouched = Object.keys(values).reduce((acc, key) => ({ ...acc, [key]: true }), {});
     setTouched(allTouched);

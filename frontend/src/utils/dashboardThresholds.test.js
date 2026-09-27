@@ -31,6 +31,7 @@ describe('buildInsights when no holding has a daily move', () => {
     { ticker: 'NPN.JO', name: 'Naspers', value: 5000, total_cost: 4000, daily_change_pct: null },
     { ticker: 'SBK.JO', name: 'Standard Bank', value: 3000, total_cost: 3000, daily_change_pct: null },
   ];
+  /** @type {any} */
   const attribution = { contributors: [], drags: [] };
 
   it('says so rather than leaving the panel empty', () => {

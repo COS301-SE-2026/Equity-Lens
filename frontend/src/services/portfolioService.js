@@ -20,6 +20,7 @@ export const getPerformanceHistory = async () => {
   return response.data;
 };
 
+/**@param {any}  accountType*/
 export const setAccountType = async (accountType) => {
   const response = await api.patch('/portfolio/account-type', { account_type: accountType });
   return response.data;
@@ -30,6 +31,7 @@ export const getMarketContext = async () => {
   return response.data;
 };
 
+/**@param {any}  sector*/
 export const simulateSectorInvestment = async (sector) => {
   const response = await api.post('/portfolio/simulate-sector-investment', { sector });
   return response.data;

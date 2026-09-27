@@ -12,9 +12,12 @@ const ConfirmEmail = () => {
   const location = useLocation();
   const [email, setEmail] = useState(location.state?.email || '');
   const [code, setCode] = useState('');
-  const [status, setStatus] = useState({ type: null, message: '' }); // 'error' | 'success'
+  const [status, setStatus] = useState(
+    /** @type {{ type: 'error' | 'success' | null, message: string }} */ ({ type: null, message: '' }),
+  ); // 'error' | 'success'
   const [isLoading, setIsLoading] = useState(false);
 
+  /** @param {React.FormEvent} e */
   const handleConfirm = async (e) => {
     e.preventDefault();
     if (!email || code.length !== 6) {
@@ -29,7 +32,8 @@ const ConfirmEmail = () => {
       setStatus({ type: 'success', message: 'Email verified. Redirecting...' });
       setTimeout(() => navigate(ROUTES.LOGIN), 1500);
     } catch (err) {
-      setStatus({ type: 'error', message: err.message || 'Invalid code. Please try again.' });
+      const message = err instanceof Error ? err.message : '';
+      setStatus({ type: 'error', message: message || 'Invalid code. Please try again.' });
       setCode('');
     } finally {
       setIsLoading(false);
@@ -81,8 +85,6 @@ const ConfirmEmail = () => {
                 label="Verification code"
                 name="code"
                 type="text"
-                inputMode="numeric"
-                maxLength={6}
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
                 placeholder="000000"

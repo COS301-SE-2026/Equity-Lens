@@ -4,6 +4,24 @@ import { useNavigate, Link } from 'react-router-dom';
 import useIndicators from '../../hooks/useIndicators';
 import { ROUTES } from '../../utils/constants';
 
+/**
+ * @typedef {'positive' | 'negative' | 'neutral'} Signal
+ * @typedef {{
+ *   label: string,
+ *   tooltip: string,
+ *   signal: (v: number) => Signal,
+ *   describe: (v: number) => string,
+ *   why: string,
+ *   plainFormula: string,
+ *   formula: string,
+ *   sectorCaveat?: string,
+ * }} Indicator
+ * @typedef {{ status: string, value: number, unit?: string, reason?: string }} IndicatorResult
+ * @typedef {import('../../hooks/useIndicators').IndicatorRow} IndicatorRow
+ * @typedef {{ id: string, label: string, keys: string[] }} Preset
+ */
+
+/** @type {Record<string, Indicator>} */
 const INDICATORS = {
   capm: {
     label: 'CAPM',
@@ -112,6 +130,7 @@ const presets = [
 const STORAGE_KEY = 'analytics_indicator_pref';
 const CUSTOM_PRESETS_KEY = 'analytics_custom_presets';
 
+/** @returns {Record<string, string[]>} */
 function loadIndicatorPrefs() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -122,6 +141,7 @@ function loadIndicatorPrefs() {
   }
 }
 
+/** @returns {Preset[]} */
 function loadCustomPresets() {
   try {
     const raw = window.localStorage.getItem(CUSTOM_PRESETS_KEY);
@@ -132,6 +152,7 @@ function loadCustomPresets() {
   }
 }
 
+/** @param {{ text: string, children: React.ReactNode, align?: 'left' | 'right' }} props */
 const Tooltip = ({ text, children, align = 'left' }) => {
   const [show, setShow] = useState(false);
   return (
@@ -195,6 +216,7 @@ const EditIcon = () => (
   </svg>
 );
 
+/** @param {number | string | undefined} value */
 const formatValue = (value) => {
   const numericValue = Number(value);
   if (!Number.isFinite(numericValue)) {
@@ -203,8 +225,17 @@ const formatValue = (value) => {
   return numericValue.toFixed(2);
 };
 
+/**
+ * @param {{
+ *   indicatorKey: string,
+ *   result?: IndicatorResult,
+ *   loading: boolean,
+ *   onSelect: () => void,
+ * }} props
+ */
 const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
   const meta = INDICATORS[indicatorKey];
+  /** @param {Signal} sig */
   const color = (sig) =>
     sig === 'positive'
       ? 'var(--signal-positive)'
@@ -271,6 +302,18 @@ const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
   );
 };
 
+/**
+ * @param {{
+ *   stock: IndicatorRow,
+ *   loading: boolean,
+ *   results: IndicatorRow,
+ *   index: number,
+ *   onCellSelect: (indicatorKey: string, ticker: string) => void,
+ *   visibleKeys: string[],
+ *   onEdit: () => void,
+ *   onQuickRemove: (key: string) => void,
+ * }} props
+ */
 const StockRow = ({
   stock,
   loading,
@@ -364,10 +407,19 @@ const StockRow = ({
   </div>
 );
 
+/**
+ * @param {{
+ *   indicatorKey?: string,
+ *   activeTicker?: string,
+ *   stocks: IndicatorRow[],
+ *   onClose: () => void,
+ * }} props
+ */
 const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) => {
   if (!indicatorKey) return null;
   const meta = INDICATORS[indicatorKey];
 
+  /** @param {Signal} sig */
   const color = (sig) =>
     sig === 'positive'
       ? 'var(--signal-positive,#22c55e)'
@@ -387,7 +439,7 @@ const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) =
         sig: meta.signal(result.value),
       };
     })
-    .filter(Boolean)
+    .filter((row) => row !== null)
     .sort((a, b) => a.ticker.localeCompare(b.ticker));
 
   return (
@@ -535,6 +587,19 @@ const IndicatorDetailModal = ({ indicatorKey, activeTicker, stocks, onClose }) =
   );
 };
 
+/**
+ * @param {{
+ *   ticker: string,
+ *   name?: string,
+ *   selectedKeys: string[],
+ *   customPresets: Preset[],
+ *   onSave: (keys: string[]) => void,
+ *   onApplyToAll: (keys: string[]) => void,
+ *   onSaveCustomPreset: (label: string, keys: string[]) => void,
+ *   onDeleteCustomPreset: (id: string) => void,
+ *   onClose: () => void,
+ * }} props
+ */
 const IndicatorPickerModal = ({
   ticker,
   name,
@@ -550,6 +615,7 @@ const IndicatorPickerModal = ({
   const [newPresetName, setNewPresetName] = useState('');
   const [applyToAll, setApplyToAll] = useState(false);
 
+  /** @param {string} key */
   const toggle = (key) => {
     setDraft((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
   };
@@ -855,8 +921,10 @@ export default function Analytics() {
   const stocks = Object.values(stockData)
     .map((s) => s.results)
     .filter(Boolean);
-  const [selected, setSelected] = useState(null);
-  const [editingTicker, setEditingTicker] = useState(null);
+  const [selected, setSelected] = useState(
+    /** @type {{ indicatorKey: string, ticker: string } | null} */ (null),
+  );
+  const [editingTicker, setEditingTicker] = useState(/** @type {string | null} */ (null));
   const [indicatorPrefs, setIndicatorPrefs] = useState(loadIndicatorPrefs);
   const [customPresets, setCustomPresets] = useState(loadCustomPresets);
 
@@ -876,15 +944,24 @@ export default function Analytics() {
     }
   }, [customPresets]);
 
+  /** @param {string} ticker */
   const getVisibleKeys = (ticker) => {
     const saved = indicatorPrefs[ticker];
     return saved && saved.length > 0 ? saved : ALL_INDICATORS;
   };
 
+  /**
+   * @param {string} ticker
+   * @param {string[]} keys
+   */
   const updateVisibleKeys = (ticker, keys) => {
     setIndicatorPrefs((prev) => ({ ...prev, [ticker]: keys }));
   };
 
+  /**
+   * @param {string} ticker
+   * @param {string} key
+   */
   const handleQuickRemove = (ticker, key) => {
     const current = getVisibleKeys(ticker);
     const next = current.filter((k) => k !== key);
@@ -892,6 +969,7 @@ export default function Analytics() {
     updateVisibleKeys(ticker, next);
   };
 
+  /** @param {string[]} keys */
   const handleApplyToAllHoldings = (keys) => {
     setIndicatorPrefs((prev) => {
       const next = { ...prev };
@@ -902,11 +980,16 @@ export default function Analytics() {
     });
   };
 
+  /**
+   * @param {string} label
+   * @param {string[]} keys
+   */
   const handleSaveCustomPreset = (label, keys) => {
     const id = `custom-${Date.now()}`;
     setCustomPresets((prev) => [...prev, { id, label, keys }]);
   };
 
+  /** @param {string} id */
   const handleDeleteCustomPreset = (id) => {
     setCustomPresets((prev) => prev.filter((p) => p.id !== id));
   };

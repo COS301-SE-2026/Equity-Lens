@@ -125,7 +125,7 @@ describe('WatchlistPanel', () => {
       });
       render(<WatchlistPanel />);
       fireEvent.click(screen.getByText('Add'));
-      const input = screen.getByPlaceholderText('e.g. NPN');
+      const input = /** @type {HTMLInputElement} */ (screen.getByPlaceholderText('e.g. NPN'));
       fireEvent.change(input, { target: { value: 'na' } });
 
       await screen.findByText('Naspers Limited', {}, { timeout: 1500 });

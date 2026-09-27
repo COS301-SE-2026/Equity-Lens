@@ -16,7 +16,9 @@ import {
 
 import { Card } from './Login';
 
+/** @param {{ fullName: string, email: string, password: string, confirmPassword: string }} values */
 const validate = (values) => {
+  /** @type {Record<string, string>} */
   const errors = {};
   const nameError = validateName(values.fullName);
   const emailError = validateEmail(values.email);
@@ -32,7 +34,7 @@ const validate = (values) => {
 const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [serverError, setServerError] = useState(null);
+  const [serverError, setServerError] = useState(/** @type {string | null} */ (null));
   const [success, setSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
 
@@ -41,6 +43,7 @@ const Register = () => {
     validate,
   );
 
+  /** @param {{ fullName: string, email: string, password: string, confirmPassword: string }} formValues */
   const onSubmit = async (formValues) => {
     setServerError(null);
     try {
@@ -52,7 +55,8 @@ const Register = () => {
         1500,
       );
     } catch (err) {
-      const msg = err.message?.toLowerCase() || '';
+      const message = err instanceof Error ? err.message : '';
+      const msg = message.toLowerCase();
       if (
         msg.includes('already exists') ||
         msg.includes('already registered') ||
@@ -60,7 +64,7 @@ const Register = () => {
       ) {
         setServerError('An account with this email already exists. Sign in instead.');
       } else {
-        setServerError(err.message || 'Registration failed.');
+        setServerError(message || 'Registration failed.');
       }
     }
   };

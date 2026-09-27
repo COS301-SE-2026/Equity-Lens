@@ -76,7 +76,7 @@ describe('ChatDock', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('shows the conversation it shares with the /ai page', () => {
+  it('shows the conversation it shares with the /ai page', async () => {
     chat.dockOpen = true;
     chat.messages = [
       { id: 1, role: 'user', text: 'Why is NPN so big?', at: new Date() },
@@ -84,15 +84,17 @@ describe('ChatDock', () => {
     ];
     renderDock();
 
-    expect(screen.getByText('Why is NPN so big?')).toBeInTheDocument();
-    expect(screen.getByText('It is 41% of your book.')).toBeInTheDocument();
+    expect(await screen.findByText('Why is NPN so big?')).toBeInTheDocument();
+    expect(await screen.findByText('It is 41% of your book.')).toBeInTheDocument();
   });
 
   it('sends what you type', () => {
     chat.dockOpen = true;
     renderDock();
 
-    fireEvent.change(screen.getByLabelText('Message'), { target: { value: 'What should I watch?' } });
+    fireEvent.change(screen.getByLabelText('Message'), {
+      target: { value: 'What should I watch?' },
+    });
     fireEvent.click(screen.getByLabelText('Send'));
 
     expect(chat.sendMessage).toHaveBeenCalledWith('What should I watch?');
@@ -103,7 +105,69 @@ describe('ChatDock', () => {
     renderDock();
 
     expect(
-      screen.getByText('Answers are AI-generated and can be wrong. Informational only, not financial advice.'),
+      screen.getByText('Answers are AI-generated and can be wrong. Informational only, not financial advice.',),
     ).toBeInTheDocument();
+  });
+
+  describe('markdown in replies', () => {
+    /** @param {any[]} messages */
+    const openWith = (messages) => {
+      chat.dockOpen = true;
+      chat.messages = messages.map((m, i) => ({ id: i + 1, at: new Date(), ...m }));
+      return renderDock();
+    };
+
+    it('shows bold as bold, with no ** left over', async () => {
+      openWith([{ role: 'assistant', text: 'Your **largest** holding is NPN.' }]);
+
+      expect((await screen.findByText('largest')).tagName).toBe('STRONG');
+      expect(screen.queryByText(/\*\*/)).toBeNull();
+    });
+
+    it('turns a dash list into list items', async () => {
+      openWith([{ role: 'assistant', text: '- NPN\n- SBK' }]);
+
+      await screen.findByText('NPN');
+      expect(screen.getAllByRole('listitem')).toHaveLength(2);
+    });
+
+    it('leaves what the user typed alone', async () => {
+      openWith([
+        { role: 'user', text: 'is **this** bold?' },
+        { role: 'assistant', text: '**ready**' },
+      ]);
+      await screen.findByText('ready');
+
+      const typed = screen.getByText('is **this** bold?');
+      expect(typed.querySelector('strong')).toBeNull();
+    });
+
+    it('shows a failed reply as the plain error line, not markdown', async () => {
+      openWith([
+        { role: 'assistant', text: 'Something went wrong, try again.', failed: true },
+        { role: 'assistant', text: '**ready**' },
+      ]);
+      await screen.findByText('ready');
+
+      expect(screen.getByText('Something went wrong, try again.').tagName).toBe('DIV');
+    });
+
+    it('never turns raw html in a reply into an element', async () => {
+      const { container } = openWith([
+        { role: 'assistant', text: '<img src=x onerror=alert(1)>' },
+        { role: 'assistant', text: '**ready**' },
+      ]);
+
+      expect((await screen.findByText('ready')).tagName).toBe('STRONG');
+      expect(container.querySelector('img')).toBeNull();
+    });
+
+    it('opens links in a new tab without handing over the opener', async () => {
+      openWith([{ role: 'assistant', text: '[docs](https://example.com)' }]);
+
+      const link = await screen.findByRole('link', { name: 'docs' });
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link.getAttribute('rel')).toContain('noopener');
+    });
   });
 });

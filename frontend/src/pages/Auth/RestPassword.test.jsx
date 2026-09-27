@@ -23,11 +23,14 @@ vi.mock('react-router-dom', async () => {
 });
 
 vi.mock('../../utils/validators', () => ({
-  validatePassword: (val) => (val?.length < 8 ? 'Password must be at least 8 characters' : null),
-  validateConfirmPassword: (pass, confirm) => (pass !== confirm ? 'Passwords do not match' : null),
+  validatePassword: (/** @type {string} */ val) =>
+    val?.length < 8 ? 'Password must be at least 8 characters' : null,
+  validateConfirmPassword: (/** @type {string} */ pass, /** @type {string} */ confirm) =>
+    pass !== confirm ? 'Passwords do not match' : null,
 }));
 
 describe('ResetPassword', () => {
+  /** @param {{ email: string } | null} [initialState] */
   const renderComponent = (initialState = { email: 'user@example.com' }) => {
     return render(
       <MemoryRouter initialEntries={[{ pathname: '/reset-password', state: initialState }]}>
@@ -96,7 +99,7 @@ describe('ResetPassword', () => {
 
   it('submits successfully and redirects after delay', async () => {
     const user = userEvent.setup();
-    mockConfirmPasswordReset.mockResolvedValueOnce();
+    mockConfirmPasswordReset.mockResolvedValueOnce(undefined);
 
     renderComponent({ email: 'user@example.com' });
 
@@ -142,7 +145,7 @@ describe('ResetPassword', () => {
 
   it('allows manual email entry when missing and passes it to confirmPasswordReset', async () => {
     const user = userEvent.setup();
-    mockConfirmPasswordReset.mockResolvedValueOnce();
+    mockConfirmPasswordReset.mockResolvedValueOnce(undefined);
 
     renderComponent(null);
 

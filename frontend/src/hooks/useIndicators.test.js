@@ -20,7 +20,7 @@ const mockStocks = [
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getIndicatorData.mockResolvedValue(mockStocks);
+  vi.mocked(getIndicatorData).mockResolvedValue(mockStocks);
 });
 
 describe('useIndicators', () => {
@@ -45,14 +45,14 @@ describe('useIndicators', () => {
   });
 
   it('sets error when getMockIndicatorData throws', async () => {
-    getIndicatorData.mockRejectedValue(new Error('Service failed'));
+    vi.mocked(getIndicatorData).mockRejectedValue(new Error('Service failed'));
     const { result } = renderHook(() => useIndicators());
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.error).toBe('Service failed');
   });
 
   it('sets a fallback error message when the error has no message', async () => {
-    getIndicatorData.mockRejectedValue({});
+    vi.mocked(getIndicatorData).mockRejectedValue({});
     const { result } = renderHook(() => useIndicators());
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.error).toBe('Failed to load indicators');

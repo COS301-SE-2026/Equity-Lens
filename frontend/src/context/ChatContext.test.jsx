@@ -37,7 +37,7 @@ const sseResponse = (...events) => {
 };
 
 /** @param {number} n which fetch call, 0-based */
-const sentBody = (n) => JSON.parse(/** @type {any} */ (global.fetch).mock.calls[n][1].body);
+const sentBody = (n) => JSON.parse(/** @type {any} */ (globalThis.fetch).mock.calls[n][1].body);
 
 const mockUseAuth = /** @type {any} */ (useAuth);
 
@@ -72,7 +72,7 @@ describe('shared conversation across navigation', () => {
     mockUseAuth.mockReturnValue({ user: { full_name: 'Josh Heath' } });
     /** @type {any} */ (api.get).mockResolvedValue({ data: [] });
     // a fresh stream per call, so the second send gets its own reply
-    global.fetch = vi
+    globalThis.fetch = vi
       .fn()
       .mockImplementation(async () =>
         sseResponse(
@@ -91,7 +91,7 @@ describe('shared conversation across navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
 
     expect(await screen.findByText('Technology is your largest sector.')).toBeInTheDocument();
-    expect(global.fetch).toHaveBeenCalledWith(
+    expect(globalThis.fetch).toHaveBeenCalledWith(
       expect.stringContaining('/ai_chat/stream/'),
       expect.objectContaining({ method: 'POST' }),
     );
@@ -105,7 +105,7 @@ describe('shared conversation across navigation', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(2));
     expect(sentBody(1)).toMatchObject({ message: 'follow up', conversation_id: 'convo-42' });
   });
 
