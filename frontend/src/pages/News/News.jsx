@@ -9,8 +9,10 @@ import {
 import { useEffect, useState } from 'react';
 
 import api from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const NewsInvestment = () => {
+  const navigate = useNavigate();
   const [articles, setArticles] = useState(/** @type {any[]}*/([]));
   const [ticker, setTicker] = useState('');
   const [activeTab, setActiveTab] = useState('portfolio');
@@ -309,39 +311,67 @@ const NewsInvestment = () => {
               <p className='mt-1 mb-4 text-sm text-[var(--text-secondary)]'>
                 News and market updates related to your current holdings
               </p>
-              <div className="flex items-center justify-between w-full mb-4">
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => { setActiveCategory('all'); ToGetAllPortfolioNews(); }}
-                    className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${activeCategory === 'all'
-                      ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
-                      : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
-                      }`}
-                  >
-                    All
-                  </button>
-                  {portfoliosTickers.map((ticker) => (
+              {portfoliosTickers.length > 0 && (
+                <div className="flex items-center justify-between w-full mb-4">
+                  <div className="flex flex-wrap gap-2">
                     <button
-                      key={ticker}
-                      onClick={() => {
-                        setActiveCategory(ticker);
-                        ToGetTickerNews(ticker);
-                      }}
-                      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${activeCategory === ticker
+                      onClick={() => { setActiveCategory('all'); ToGetAllPortfolioNews(); }}
+                      className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${activeCategory === 'all'
                         ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
                         : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
                         }`}
                     >
-                      {ticker}
+                      All
                     </button>
-                  ))}
+                    {portfoliosTickers.map((ticker) => (
+                      <button
+                        key={ticker}
+                        onClick={() => {
+                          setActiveCategory(ticker);
+                          ToGetTickerNews(ticker);
+                        }}
+                        className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-all duration-200 ${activeCategory === ticker
+                          ? 'border-blue-500 bg-blue-500 text-white shadow-sm'
+                          : 'border-[var(--border-subtle)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-blue-500/40 hover:text-[var(--text-primary)]'
+                          }`}
+                      >
+                        {ticker}
+                      </button>
+                    ))}
+                  </div>
+
                 </div>
+              )}
 
-              </div>
+              {portfoliosTickers.length === 0 ? (
+                <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-[var(--border-subtle)] py-14 text-center">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10">
+                    <Newspaper className="h-6 w-6 text-blue-400" />
+                  </div>
 
-              {filteredArticles.length === 0 ? (
+                  <h3 className="text-lg font-semibold text-[var(--text-primary)]">
+                    No holdings found
+                  </h3>
+
+                  <p className="mt-2 max-w-md text-sm text-[var(--text-secondary)]">
+                    Import your portfolio holdings to receive news and market updates
+                    related to the companies you own.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/portfolio')}
+                    className="mt-5 rounded-lg bg-blue-500 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-600"
+                  >
+                    Import Holdings
+                  </button>
+                </div>
+              ) : filteredArticles.length === 0 ? (
                 <div className="py-12 text-center text-[var(--text-secondary)]">
                   <p className="text-lg font-medium">No news available</p>
+                  <p className="mt-1 text-sm">
+                    There are currently no recent articles for your holdings.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -552,7 +582,7 @@ const NewsInvestment = () => {
 
           </div>
         </div>
-      )}
+      )}  
     </div>
   );
 };
