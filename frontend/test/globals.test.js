@@ -4,10 +4,13 @@ import { describe, it, expect } from 'vitest';
 
 const css = readFileSync('src/styles/globals.css', 'utf-8');
 
-const lightBlock = css.slice(
-  css.indexOf('[data-theme="light"] {'),
-  css.indexOf("[data-theme='dark'] {")
-);
+// prettier may write the attribute selector with either quote, so find whichever is there
+const blockStart = (theme) =>
+  [`[data-theme="${theme}"] {`, `[data-theme='${theme}'] {`]
+    .map((selector) => css.indexOf(selector))
+    .find((index) => index !== -1) ?? -1;
+
+const lightBlock = css.slice(blockStart('light'), blockStart('dark'));
 
 const requiredTokens = [
   '--text-primary',

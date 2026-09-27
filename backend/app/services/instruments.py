@@ -70,6 +70,26 @@ REGION_BENCHMARKS = {
     REGION_EM: ("EEM", "MSCI EM", "USD"),
 }
 
+def is_region_benchmark(ticker: str | None, region: str) -> bool:
+    entry = REGION_BENCHMARKS.get(region)
+    return bool(entry and ticker and ticker.upper() == entry[0].upper())
+
+
+REGION_CURRENCIES = {
+    REGION_SA: "ZAR",
+    REGION_US: "USD",
+    REGION_GLOBAL: "USD",
+    REGION_EM: "USD",
+    REGION_UNKNOWN: None,
+}
+
+
+def quote_currency(ticker: str | None, region: str) -> str | None:
+    if is_zar_listed(ticker):
+        return "ZAR"
+    return REGION_CURRENCIES.get(region)
+
+
 LOOK_THROUGH_NOTES = {
     "NPN.JO": (
         "Naspers' value is dominated by its stake in Prosus, which in turn holds a large "

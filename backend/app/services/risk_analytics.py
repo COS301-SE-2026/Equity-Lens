@@ -1,15 +1,58 @@
 import logging
+from datetime import date
 
 import numpy as np
 import pandas as pd
 
 from app.indicators.beta import calculate_beta
-from app.utils.stock_cache import get_cached_price_history
+from app.utils.stock_cache import get_cached_price_histories, get_cached_price_history
 
 logger = logging.getLogger(__name__)
 
 TRADING_DAYS_PER_YEAR = 252
 MIN_HISTORY_DAYS = 30
+UNIT_SWITCH_LOW = 50
+UNIT_SWITCH_HIGH = 200
+
+
+def repair_unit_switches(close: pd.Series) -> pd.Series:
+    close = close.astype(float)
+    ratio = (close / close.shift(1)).to_numpy()
+    repaired = close.to_numpy().copy()
+    for index in np.flatnonzero((ratio > UNIT_SWITCH_LOW) & (ratio < UNIT_SWITCH_HIGH)):
+        repaired[:index] *= 100
+    for index in np.flatnonzero((ratio > 1 / UNIT_SWITCH_HIGH) & (ratio < 1 / UNIT_SWITCH_LOW)):
+        repaired[index:] *= 100
+    return pd.Series(repaired, index=close.index, name=close.name)
+
+
+
+def _closes(history: pd.DataFrame | None) -> list[tuple[date, float]]:
+    if history is None or history.empty or "Close" not in history:
+        return []
+    closes = history["Close"].dropna()
+    return [(timestamp.date(), float(price)) for timestamp, price in closes.items()]
+
+
+def single_ticker_closes(ticker: str, period: str = "1y") -> list[tuple[date, float]]:
+    try:
+        return _closes(get_cached_price_history(ticker, period=period))
+    except Exception as exc:
+        logger.warning("price history fetch failed for %s: %s", ticker, exc)
+        return []
+
+
+def closes_for_tickers(
+    tickers: list[str], period: str = "1y"
+) -> dict[str, list[tuple[date, float]]]:
+    if not tickers:
+        return {}
+    try:
+        histories = get_cached_price_histories(tickers, period=period)
+    except Exception as exc:
+        logger.warning("batched price history fetch failed for %s: %s", tickers, exc)
+        return {}
+    return {ticker: _closes(history) for ticker, history in histories.items()}
 
 
 def single_ticker_daily_returns(ticker: str, period: str = "1y") -> pd.Series | None:
@@ -20,7 +63,7 @@ def single_ticker_daily_returns(ticker: str, period: str = "1y") -> pd.Series | 
         return None
     if history is None or history.empty or "Close" not in history:
         return None
-    returns = history["Close"].dropna().pct_change().dropna()
+    returns = repair_unit_switches(history["Close"].dropna()).pct_change().dropna()
     return returns if not returns.empty else None
 
 

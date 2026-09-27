@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-
+import api from './api';
 import { getStockDetails, getHistorialData, searchStocks } from './marketDataService';
 
 vi.mock('./api', () => ({
@@ -8,7 +8,6 @@ vi.mock('./api', () => ({
   },
 }));
 
-import api from './api';
 
 describe('marketDataService', () => {
   beforeEach(() => {

@@ -1,23 +1,43 @@
+import logging
 from uuid import UUID
+
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
+
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.schemas.auth import UserResponse
-from app.repositories.portfolio_repository import PortfolioRepository
-from app.services.pdf_summary_service import get_summary_import_PDF,get_the_top_holdings_import_PDF,get_the_top_allocation_import_PDF,get_the_lowest_holdings_import_PDF,get_trading_activity_import_PDF,get_cash_flow_import_PDF,get_dividend_income_import_PDF
-from app.services.portfolio_snapshot_service import build_snapshot
-from fastapi.responses import StreamingResponse
-from app.services.portfolio_brief_service import generate_portfolio_brief
 from app.models.portfolio import Holdings
+from app.repositories.portfolio_repository import PortfolioRepository
 from app.routers.news import fetch_market_news, fetch_ticker_news
-from app.services.portfolio_analytics_service import (get_portfolio_analytics,)
+from app.schemas.auth import UserResponse
+from app.services.pdf_summary_service import (
+    get_cash_flow_import_PDF,
+    get_dividend_income_import_PDF,
+    get_summary_import_PDF,
+    get_the_lowest_holdings_import_PDF,
+    get_the_top_allocation_import_PDF,
+    get_the_top_holdings_import_PDF,
+    get_trading_activity_import_PDF,
+)
+from app.services.portfolio_analytics_service import (
+    get_portfolio_analytics,
+)
+from app.services.portfolio_brief_service import generate_portfolio_brief
+from app.services.portfolio_insights import build_market_drivers
+from app.services.portfolio_risk_service import build_risk_assessment
 from app.services.portfolio_service import PortfolioService
+from app.services.portfolio_snapshot_service import build_snapshot
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/portfolio_snapshot", tags=["Portfolio Snapshot"])
 
 @router.get("/{portfolio_id}")
-def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),current_user: UserResponse = Depends(get_current_user)):
+def get_portfolio_snapshot(
+    portfolio_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)):
     repository = PortfolioRepository(db)
 
     portfolio = repository.get_portfolio_for_user(
@@ -76,7 +96,27 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
     )
 
     analytics = get_portfolio_analytics(db=db, portfolio_id=portfolio_id,)
+    dashboard = None
+    if repository.get_latest_portfolio_id(current_user.id) == portfolio_id:
+        try:
+            dashboard = PortfolioService(db).get_dashboard(current_user.id)
+        except Exception:
+            logger.exception("dashboard section failed for portfolio %s", portfolio_id)
+            db.rollback()
 
+    risk = None
+    if dashboard:
+        try:
+            risk = build_risk_assessment(dashboard["holdings"])
+        except Exception:
+            logger.exception("risk section failed for portfolio %s", portfolio_id)
+
+    drivers = None
+    if dashboard:
+        try:
+            drivers = build_market_drivers(dashboard["holdings"])
+        except Exception:
+            logger.exception("market drivers section failed for portfolio %s", portfolio_id)
 
     tickers = (
         db.query(Holdings.ticker)
@@ -112,9 +152,8 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
                     }
                 )
 
-        except Exception as error:
-            print("Error getting news data")
-
+        except Exception:
+            logger.warning("ticker news failed for %s", ticker, exc_info=True)
 
     market_news = []
 
@@ -133,8 +172,8 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
                 }
             )
 
-    except Exception as error:
-        print("Error getting news data")
+    except Exception:
+        logger.warning("market news failed", exc_info=True)
 
     snapshot = build_snapshot(
         portfolio_id=str(portfolio_id),
@@ -148,6 +187,9 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
         portfolio_news=portfolio_news,
         market_news=market_news,
         analytics=analytics,
+        dashboard=dashboard,
+        risk=risk,
+        drivers=drivers,
     )
 
     stored_snapshot = repository.save_canonical_snapshot(
@@ -165,7 +207,10 @@ def get_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),curr
     }
 
 @router.get("/{portfolio_id}/download")
-def download_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db),current_user: UserResponse = Depends(get_current_user)):
+def download_portfolio_snapshot(
+    portfolio_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: UserResponse = Depends(get_current_user)):
     repository = PortfolioRepository(db)
     portfolio = repository.get_portfolio_for_user(
         portfolio_id=portfolio_id, 
@@ -192,6 +237,7 @@ def download_portfolio_snapshot(portfolio_id: UUID,db: Session = Depends(get_db)
         portfolio_id=str(portfolio_id),
         snapshot_hash=stored_snapshot.snapshot_hash,
         snapshot=stored_snapshot.snapshot_data,
+        user_name=current_user.full_name,
     )
 
     return StreamingResponse(

@@ -152,9 +152,7 @@ def delete_portfolio_import(database, user_id, portfolio_id):
 
 def save_instrument_purchases_and_sales_import(database, user_id, data):
     ticker = search_ticket_number(data.instrument_name)
-    save_instrument_purchases_and_sales(
-        database, user_id, data, ticker["ticker"], ticker["sector"]
-    )
+    save_instrument_purchases_and_sales(database, user_id, data, ticker["ticker"], ticker["sector"])
 
     return {"Success": True, "Message": "Instrument purchase and sales has been saved successfully"}
 
@@ -167,9 +165,7 @@ def save_contributions_and_withdrawals_import(database, user_id, data):
 
 def save_dividends_and_withholding_tax_import(database, user_id, data):
     ticker = search_ticket_number(data.instrument_name)
-    save_dividends_and_withholding_tax(
-        database, user_id, data, ticker["ticker"], ticker["sector"]
-    )
+    save_dividends_and_withholding_tax(database, user_id, data, ticker["ticker"], ticker["sector"])
 
     return {
         "Success": True,

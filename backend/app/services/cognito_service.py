@@ -42,7 +42,7 @@ def cognito_register(full_name: str, email: str, password: str) -> dict:
         if code == "UsernameExistsException":
             raise AppError(409, "EMAIL_ALREADY_REGISTERED", "email already registered") from e
         if code == "InvalidPasswordException":
-            raise HTTPException(status_code=422, detail=msg) from e
+            raise AppError(422, "WEAK_PASSWORD", msg) from e
 
         raise HTTPException(status_code=400, detail=msg) from e
 

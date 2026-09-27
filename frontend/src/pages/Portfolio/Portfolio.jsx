@@ -1,15 +1,46 @@
-import { useState, useEffect } from "react";
-import * as ShowPdf from "pdfjs-dist";
-import PDFworker from "pdfjs-dist/build/pdf.worker.mjs?worker";
-import { ArrowLeftRight, Wallet, CreditCard, TrendingUp, Landmark, Briefcase, TriangleAlert, Bot, LoaderCircle } from "lucide-react"
-import { PieChart, Pie, Cell, BarChart, XAxis, YAxis, Tooltip, Bar, LineChart, Line, Legend, ResponsiveContainer } from "recharts"
-import api from "../../services/api"
-import * as XLSX from "xlsx"
-import { useNavigate } from "react-router-dom";
-import { ROUTES } from "../../utils/constants"
-ShowPdf.GlobalWorkerOptions.workerPort = new PDFworker();
+import {
+  ArrowLeftRight,
+  Wallet,
+  CreditCard,
+  TrendingUp,
+  Landmark,
+  Briefcase,
+  TriangleAlert,
+  Bot,
+  LoaderCircle,
+} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Bar,
+  LineChart,
+  Line,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
-const DownloadEXCEL = () => { window.open("/template/EquityLens_Portfolio_Excel_Template.xlsx") }
+import api from '../../services/api';
+import { ROUTES } from '../../utils/constants';
+
+/** @type {Promise<any> | null} */
+let pdfPromise = null;
+const loadPdfjs = () => {
+  if (!pdfPromise) pdfPromise = import('./pdfLoader').then((m) => m.default);
+  return pdfPromise;
+};
+
+const loadXlsx = () => import('xlsx');
+
+const DownloadEXCEL = () => {
+  window.open('/template/EquityLens_Portfolio_Excel_Template.xlsx');
+};
 const cardStyle = { background: 'var(--surface-card)', borderColor: 'var(--border-subtle)' };
 const panelStyle = { borderColor: 'var(--border-subtle)' };
 const titleStyle = { color: 'var(--text-primary)' };
@@ -143,15 +174,21 @@ export const parseExposureRow = (text) => {
   const cost = getNumber();
   const quantity = getNumber();
 
-  if (weight === undefined || costPrice === undefined ||
-    cost === undefined || quantity === undefined) {
+  if (
+    weight === undefined ||
+    costPrice === undefined ||
+    cost === undefined ||
+    quantity === undefined
+  ) {
     return null;
   }
 
   const impliedPrice = parseFloat(cost) / parseFloat(quantity);
 
-  if (!weight.includes("%") ||
-    Math.abs(impliedPrice - parseFloat(costPrice)) > parseFloat(costPrice) / 100) {
+  if (
+    !weight.includes('%') ||
+    Math.abs(impliedPrice - parseFloat(costPrice)) > parseFloat(costPrice) / 100
+  ) {
     throw new Error(`Could not read the exposure columns for: ${text.trim()}`);
   }
 
@@ -231,55 +268,65 @@ const toDateOnly = (value) => {
  * @param {File} file
  */
 const ReadingExcelFile = async (file) => {
-
   if (!file) {
     return;
   }
+  const XLSX = await loadXlsx();
 
   const read = XLSX.read(await file.arrayBuffer(), { cellDates: true });
 
-  const Portfolio = XLSX.utils.sheet_to_json(read.Sheets["Portfolio"]).map((item) => ({
-    account_number: String(item["Account Number"] ?? ""),
-    portfolio_name: String(item["Portfolio Name"] ?? ""),
-    statement_date: toDateOnly(item["Statement Date"]),
+  const Portfolio = XLSX.utils.sheet_to_json(read.Sheets['Portfolio']).map((item) => ({
+    account_number: String(item['Account Number'] ?? ''),
+    portfolio_name: String(item['Portfolio Name'] ?? ''),
+    statement_date: toDateOnly(item['Statement Date']),
   }));
-  const Holdings = XLSX.utils.sheet_to_json(read.Sheets["Holdings"]).map((item) => ({
-    instrument_name: item["Instrument Name"],
-    quantity: item["Quantity"],
-    total_cost: item["Total Cost"],
+  const Holdings = XLSX.utils.sheet_to_json(read.Sheets['Holdings']).map((item) => ({
+    instrument_name: item['Instrument Name'],
+    quantity: item['Quantity'],
+    total_cost: item['Total Cost'],
   }));
-  const PurchaseandSales = XLSX.utils.sheet_to_json(read.Sheets["Purchase and Sales"]).map((item) => ({
-    transaction_date: toDateOnly(item["Transaction Date"]),
-    transaction_name: item["Transaction Type"],
-    instrument_name: item["Instrument Name"],
-    price: item.Price,
-    quantity: item.Quantity,
-    value_zar: (Number(item.Price) * Number(item.Quantity)),
-  }));
-  const ContributionsandWithdrawals = XLSX.utils.sheet_to_json(read.Sheets["Contributions and Withdrawals"]).map((item) => ({
-    transaction_date: toDateOnly(item["Transaction Date"]),
-    statement_date: toDateOnly(item["Settlement Date"]),
-    transaction_name: item["Transaction Type"],
-    value: item.Value,
-  }));
-  const DividendsandWithholdingTax = XLSX.utils.sheet_to_json(read.Sheets["Dividends and Withholding Tax"]).map((item) => ({
-    transaction_date: toDateOnly(item["Transaction Date"]),
-    instrument_name: item["Instrument Name"],
-    gross_dividend: item["Gross Dividend"],
-    tax_rate: item["Tax Rate(%)"],
-  }));
-  const Expenses = XLSX.utils.sheet_to_json(read.Sheets["Expenses"]).map((item) => ({
-    transaction_date: toDateOnly(item["Transaction Date"]),
-    settlement_date: toDateOnly(item["Settlement Date"]),
-    narrative: item["Narrative"],
-    value: item["Value"],
+  const PurchaseandSales = XLSX.utils
+    .sheet_to_json(read.Sheets['Purchase and Sales'])
+    .map((item) => ({
+      transaction_date: toDateOnly(item['Transaction Date']),
+      transaction_name: item['Transaction Type'],
+      instrument_name: item['Instrument Name'],
+      price: item.Price,
+      quantity: item.Quantity,
+      value_zar: Number(item.Price) * Number(item.Quantity),
+    }));
+  const ContributionsandWithdrawals = XLSX.utils
+    .sheet_to_json(read.Sheets['Contributions and Withdrawals'])
+    .map((item) => ({
+      transaction_date: toDateOnly(item['Transaction Date']),
+      statement_date: toDateOnly(item['Settlement Date']),
+      transaction_name: item['Transaction Type'],
+      value: item.Value,
+    }));
+  const DividendsandWithholdingTax = XLSX.utils
+    .sheet_to_json(read.Sheets['Dividends and Withholding Tax'])
+    .map((item) => ({
+      transaction_date: toDateOnly(item['Transaction Date']),
+      instrument_name: item['Instrument Name'],
+      gross_dividend: item['Gross Dividend'],
+      tax_rate: item['Tax Rate(%)'],
+    }));
+  const Expenses = XLSX.utils.sheet_to_json(read.Sheets['Expenses']).map((item) => ({
+    transaction_date: toDateOnly(item['Transaction Date']),
+    settlement_date: toDateOnly(item['Settlement Date']),
+    narrative: item['Narrative'],
+    value: item['Value'],
   }));
 
   return {
-    Portfolio, Holdings, PurchaseandSales, ContributionsandWithdrawals, DividendsandWithholdingTax, Expenses
-  }
-
-}
+    Portfolio,
+    Holdings,
+    PurchaseandSales,
+    ContributionsandWithdrawals,
+    DividendsandWithholdingTax,
+    Expenses,
+  };
+};
 
 /**
  * @param {File} file
@@ -287,30 +334,26 @@ const ReadingExcelFile = async (file) => {
  */
 const ReadingPDFFile = async (file, password) => {
   if (!file) {
-    return
+    return;
   }
+  const ShowPdf = await loadPdfjs();
 
   const convertPdf = await ShowPdf.getDocument({
     data: await file.arrayBuffer(),
-    password: password,
+    password,
   }).promise;
 
   const allRows = [];
 
   for (let x = 1; x <= convertPdf.numPages; x++) {
-
     const toGetThePage = await convertPdf.getPage(x);
     const ToGetTheContent = await toGetThePage.getTextContent();
 
     for (const items of ToGetTheContent.items) {
-      if ("str" in items && "transform" in items) {
-
-        allRows.push({ text: items.str, x: items.transform[4], y: items.transform[5], page: x })
-
+      if ('str' in items && 'transform' in items) {
+        allRows.push({ text: items.str, x: items.transform[4], y: items.transform[5], page: x });
       }
     }
-
-
   }
 
   /**
@@ -319,21 +362,17 @@ const ReadingPDFFile = async (file, password) => {
   const allRowsTogther = [];
 
   for (const items of allRows) {
-    const ExistRow = allRowsTogther.find((row) => row.y === items.y && row.page === items.page)
-
+    const ExistRow = allRowsTogther.find((row) => row.y === items.y && row.page === items.page);
 
     if (ExistRow) {
       ExistRow.items.push(items);
+    } else {
+      allRowsTogther.push({ page: items.page, text: '', y: items.y, items: [items] });
     }
-    else {
-      allRowsTogther.push({ page: items.page, text: "", y: items.y, items: [items] })
-    }
-
-
   }
 
   for (const row of allRowsTogther) {
-    row.text = row.items.map((item) => item.text).join(" ")
+    row.text = row.items.map((item) => item.text).join(' ');
   }
 
   /**
@@ -349,38 +388,46 @@ const ReadingPDFFile = async (file, password) => {
   const TaxTable = getTheTable('Detailed Transactions - Dividends and withholding Tax');
   const ExpensesTable = getTheTable('Detailed Transactions - Expenses');
 
-  const accountIndex = allRowsTogther.findIndex((row) => { return row.text.trim().startsWith("EE") })
-  const statementIndex = allRowsTogther.find((row) => { return row.text.trim().includes(" to ") })
-  const accountRow = allRowsTogther[accountIndex]
-  const PortfolioRow = allRowsTogther[accountIndex + 1].text.trim()
+  const accountIndex = allRowsTogther.findIndex((row) => {
+    return row.text.trim().startsWith('EE');
+  });
+  const statementIndex = allRowsTogther.find((row) => {
+    return row.text.trim().includes(' to ');
+  });
+  const accountRow = allRowsTogther[accountIndex];
+  const PortfolioRow = allRowsTogther[accountIndex + 1].text.trim();
 
   if (!statementIndex) {
-    throw ("error for the statementIndex")
+    throw 'error for the statementIndex';
   }
 
   const gettingthData = statementIndex.text.split('to')[1].trim();
   const date = new Date(gettingthData).toISOString().split('T')[0];
 
-  const Portfolio = [{
-
-    account_number: accountRow.text,
-    portfolio_name: PortfolioRow,
-    statement_date: date,
-
-  }];
+  const Portfolio = [
+    {
+      account_number: accountRow.text,
+      portfolio_name: PortfolioRow,
+      statement_date: date,
+    },
+  ];
 
   let instrumentName = '';
 
   const Holdings = HoldingsTable.map((row) => {
-
-    if (row.text.includes("Opening Balance") || row.text.includes("Instrument") || row.text.includes("Total") || row.text.includes("Page")) {
-      return null
+    if (
+      row.text.includes('Opening Balance') ||
+      row.text.includes('Instrument') ||
+      row.text.includes('Total') ||
+      row.text.includes('Page')
+    ) {
+      return null;
     }
 
-    const parsed = parseExposureRow(row.text)
+    const parsed = parseExposureRow(row.text);
 
     if (parsed === null) {
-      instrumentName = instrumentName + " " + row.text;
+      instrumentName = instrumentName + ' ' + row.text;
       return null;
     }
 
@@ -392,20 +439,17 @@ const ReadingPDFFile = async (file, password) => {
     instrumentName = '';
 
     return holdings;
+  }).filter((item) => item !== null);
 
-  }).filter((item) => item !== null)
-
-
-  const PurchaseandSales = PurchaseAndSalesTable
-    .map((row) => parsePurchaseRow(row.text))
-    .filter((item) => item !== null)
-
+  const PurchaseandSales = PurchaseAndSalesTable.map((row) => parsePurchaseRow(row.text)).filter(
+    (item) => item !== null,
+  );
 
   const ContributionsandWithdrawals = ContributionsTable.map((row) => {
-    const splitParts = row.text.split(" ").filter((item => item !== ""))
+    const splitParts = row.text.split(' ').filter((item) => item !== '');
 
-    if (!splitParts[0].includes("/")) {
-      return null
+    if (!splitParts[0].includes('/')) {
+      return null;
     }
 
     const last = splitParts.at(-1) || '';
@@ -414,52 +458,59 @@ const ReadingPDFFile = async (file, password) => {
     const chackThousands = !Number.isNaN(Number(secondLast));
 
     return {
-      transaction_date: splitParts[0].replaceAll("/", "-"),
-      statement_date: splitParts[1].replaceAll("/", "-"),
-      transaction_name: splitParts.slice(2, chackThousands ? -2 : -1).join(" ").replaceAll("Capital", ""),
-      value: chackThousands ? secondLast + last : last
-    }
-
-  }).filter((item) => item !== null)
-
+      transaction_date: splitParts[0].replaceAll('/', '-'),
+      statement_date: splitParts[1].replaceAll('/', '-'),
+      transaction_name: splitParts
+        .slice(2, chackThousands ? -2 : -1)
+        .join(' ')
+        .replaceAll('Capital', ''),
+      value: chackThousands ? secondLast + last : last,
+    };
+  }).filter((item) => item !== null);
 
   const DividendsandWithholdingTax = TaxTable.map((row) => {
-    const splitParts = row.text.split(" ").filter((item) => item !== "")
+    const splitParts = row.text.split(' ').filter((item) => item !== '');
 
-    if (!splitParts[0].includes("/")) {
+    if (!splitParts[0].includes('/')) {
       return null;
     }
 
     return {
-      transaction_date: splitParts[0].replaceAll("/", "-"),
-      instrument_name: splitParts.slice(1, -4).join(" "),
+      transaction_date: splitParts[0].replaceAll('/', '-'),
+      instrument_name: splitParts.slice(1, -4).join(' '),
       gross_dividend: splitParts[splitParts.length - 4],
       tax_rate: splitParts[splitParts.length - 1],
     };
   }).filter((item) => item !== null);
 
   const Expenses = ExpensesTable.map((row) => {
-    const splitParts = row.text.split(" ").filter((item => item !== ""))
+    const splitParts = row.text.split(' ').filter((item) => item !== '');
 
-    if (!splitParts[0].includes("/")) {
+    if (!splitParts[0].includes('/')) {
       return null;
     }
 
     return {
-      transaction_date: splitParts[0].replaceAll("/", "-"),
-      settlement_date: splitParts[1].replaceAll("/", "-"),
-      narrative: splitParts.slice(2, -1).join(" "),
+      transaction_date: splitParts[0].replaceAll('/', '-'),
+      settlement_date: splitParts[1].replaceAll('/', '-'),
+      narrative: splitParts.slice(2, -1).join(' '),
       value: splitParts[splitParts.length - 1],
     };
   }).filter((item) => item !== null);
 
-  const results = { Portfolio, Holdings, PurchaseandSales, ContributionsandWithdrawals, DividendsandWithholdingTax, Expenses }
+  const results = {
+    Portfolio,
+    Holdings,
+    PurchaseandSales,
+    ContributionsandWithdrawals,
+    DividendsandWithholdingTax,
+    Expenses,
+  };
 
   return results;
 };
 
 const Portfolio = () => {
-
   const navigate = useNavigate();
   /**
    * @type {[any, function]}
@@ -494,17 +545,31 @@ const Portfolio = () => {
    * @type {[boolean,function]}
    */
   const [LoadingPage, setLoadingPage] = useState(false);
-  const [accountType, setAccountType] = useState("");
+  const [accountType, setAccountType] = useState('');
   const [showPortfolios, setShowPortfolios] = useState(false);
   const [portfolios, setPortfolios] = useState(/** @type {any[]}*/[]);
   const [snapshot, setSnapshot] = useState(null);
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
-
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [pdfPassword, setPdfPassword] = useState('');
+  /** @type {[File | null, Function]} */
+  const [pendingPdfFile, setPendingPdfFile] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  
+  /** @param {string} message */
+  const showError = (message) => {
+    setErrorMessage(message);
+    setShowErrorModal(true);
+  };
 
   useEffect(() => {
     const getInfo = async () => {
       const responses = await api.get('/portfolio/current');
+
       setPortfolios(responses.data);
+
+
     };
 
     getInfo();
@@ -515,67 +580,56 @@ const Portfolio = () => {
    * @param {*} id
    */
   const ViewSummary = async (id) => {
-
     try {
+      setLoadingPage(true);
 
+      setSelectedPortfolioId(id);
 
-      setLoadingPage(true)
-
-      setSelectedPortfolioId(id)
-
-      const response = await api.get(`/portfolio_snapshot/${id}`)
+      const response = await api.get(`/portfolio_snapshot/${id}`);
 
       const portfolioSnapshot = response.data;
       const data = portfolioSnapshot.snapshot;
 
-      setSnapshot(portfolioSnapshot)
+      setSnapshot(portfolioSnapshot);
 
-      setSummary(data.summary)
+      setSummary(data.summary);
 
       setGetTheTopHoldingsImportPDF(data.holdings?.top || []);
 
       setGetTheTopAllocationImportPDF(data.holdings?.allocation || []);
 
-      setGetTheLowest(data.holdings?.lowest || { name: "", value: 0, });
+      setGetTheLowest(data.holdings?.lowest || { name: '', value: 0 });
 
       setGetTradingActivity(data.activity?.trading || []);
 
       setGetCashFlow(data.activity?.cash_flow || []);
 
       setGetDividendIncome(data.activity?.dividend_income || []);
-
-
+    } catch (error) {
+      showError('Could not load portfolio summary');
+    } finally {
+      setLoadingPage(false);
     }
-
-    catch (error) {
-      console.warn("failed to load portfolio summary:", error)
-    }
-    finally {
-      setLoadingPage(false)
-    }
-
-  }
+  };
 
   const downloadSnapshot = async () => {
     if (!selectedPortfolioId) {
-      alert("Please select a portfolio first");
+      showError('Please select a portfolio first');
       return;
     }
 
     try {
-      const response = await api.get(`/portfolio_snapshot/${selectedPortfolioId}/download`,
-        {
-          responseType: "blob",
-        }
-      );
+      const response = await api.get(`/portfolio_snapshot/${selectedPortfolioId}/download`, {
+        responseType: 'blob',
+      });
 
       const blob = new Blob([response.data], {
-        type: "application/pdf"
+        type: 'application/pdf',
       });
 
       const url = window.URL.createObjectURL(blob);
 
-      const link = document.createElement("a");
+      const link = document.createElement('a');
 
       link.href = url;
       link.download = `equity-lens-${selectedPortfolioId}.pdf`;
@@ -584,12 +638,11 @@ const Portfolio = () => {
       link.click();
       link.remove();
 
-      window.URL.revokeObjectURL(url)
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      showError('Could not download the portfolio Summary. Please try again later');
     }
-    catch (error) {
-      alert("Could not download the portfolio Summary. Please try again later")
-    }
-  }
+  };
 
   const colours = ['#8B5CF6', '#3B82F6', '#22C55E', '#F59E0B'];
 
@@ -599,47 +652,39 @@ const Portfolio = () => {
    * @param {File} file
    */
 
-
   const SavePortfolio = async (data, file) => {
     let createdPortfolioId = null;
 
     try {
       const uploadInvestmentStatements = await api.post(
-        "/import_pdf/",
+        '/import_pdf/',
 
         {
           file_name: file.name,
-        }
-
+        },
       );
 
       const document = uploadInvestmentStatements.data;
       const portfolio = data.Portfolio[0];
 
-      const uploadPortfolioRequest = await api.post(
-        "/import_pdf/save_portfolios/",
-        {
-          document_id: document.document_id,
-          account_number: portfolio.account_number,
-          portfolio_name: portfolio.portfolio_name,
-          currency: "ZAR",
-          statement_end_date: portfolio.statement_date,
-          account_type: accountType
-        }
-      );
+      const uploadPortfolioRequest = await api.post('/import_pdf/save_portfolios/', {
+        document_id: document.document_id,
+        account_number: portfolio.account_number,
+        portfolio_name: portfolio.portfolio_name,
+        currency: 'ZAR',
+        statement_end_date: portfolio.statement_date,
+        account_type: accountType,
+      });
 
       const savedPortfolio = uploadPortfolioRequest.data;
       createdPortfolioId = savedPortfolio.portfolio_id;
 
       for (const holding of buildHoldingsPayload(data.Holdings)) {
-        const uploadHoldingsRequest = await api.post(
-          "/import_pdf/save_holdings",
-          { portfolio_id: savedPortfolio.portfolio_id, ...holding }
-        )
+        const uploadHoldingsRequest = await api.post('/import_pdf/save_holdings', {
+          portfolio_id: savedPortfolio.portfolio_id,
+          ...holding,
+        });
       }
-
-
-
 
       for (const eachItems of data.PurchaseandSales) {
         const price = parseFloat(eachItems.price);
@@ -652,16 +697,14 @@ const Portfolio = () => {
             transaction_date: eachItems.transaction_date,
             transaction_name: eachItems.transaction_name,
             instrument_name: eachItems.instrument_name,
-            ticker: " ",
-            sector: " ",
-            price: price,
-            quantity: quantity,
+            ticker: ' ',
+            sector: ' ',
+            price,
+            quantity,
             value_zar: parseFloat(eachItems.value_zar),
-          }
-        )
-
+          },
+        );
       }
-
 
       for (const eachItems of data.ContributionsandWithdrawals) {
         const value_zar = parseFloat(eachItems.value);
@@ -673,15 +716,15 @@ const Portfolio = () => {
             transaction_date: eachItems.transaction_date,
             settlement_date: eachItems.statement_date,
             transaction_name: eachItems.transaction_name,
-            value_zar: value_zar,
-          }
+            value_zar,
+          },
         );
       }
 
       for (const eachItems of data.DividendsandWithholdingTax) {
         const gross_dividend = parseFloat(eachItems.gross_dividend);
         const tax_rate = parseFloat(eachItems.tax_rate);
-        const net_dividend = ((gross_dividend - (gross_dividend * (tax_rate / 100))));
+        const net_dividend = gross_dividend - gross_dividend * (tax_rate / 100);
 
         const uploadHoldingsRequest = await api.post(
           '/import_pdf/save_dividends_and_withholding_tax/',
@@ -689,32 +732,27 @@ const Portfolio = () => {
             portfolio_id: savedPortfolio.portfolio_id,
             transaction_date: eachItems.transaction_date,
             instrument_name: eachItems.instrument_name,
-            ticker: " ",
-            sector: " ",
-            gross_dividend: gross_dividend,
-            withholding_tax: (gross_dividend * (tax_rate / 100)),
-            net_dividend: net_dividend,
-            tax_rate: tax_rate,
-          }
-        )
+            ticker: ' ',
+            sector: ' ',
+            gross_dividend,
+            withholding_tax: gross_dividend * (tax_rate / 100),
+            net_dividend,
+            tax_rate,
+          },
+        );
       }
-
 
       for (const eachItems of data.Expenses) {
         const value_zar = parseFloat(eachItems.value);
 
-        const uploadHoldingsRequest = await api.post(
-          "/import_pdf/save_transaction_expenses/",
-          {
-            portfolio_id: savedPortfolio.portfolio_id,
-            transaction_date: eachItems.transaction_date,
-            settlement_date: eachItems.settlement_date,
-            narrative_name: eachItems.narrative,
-            value_zar: value_zar,
-          }
-        );
+        const uploadHoldingsRequest = await api.post('/import_pdf/save_transaction_expenses/', {
+          portfolio_id: savedPortfolio.portfolio_id,
+          transaction_date: eachItems.transaction_date,
+          settlement_date: eachItems.settlement_date,
+          narrative_name: eachItems.narrative,
+          value_zar,
+        });
       }
-
 
       const getSummaryRequest = await api.get(
         `/import_pdf_summary/summary/${savedPortfolio.portfolio_id}`,
@@ -745,148 +783,154 @@ const Portfolio = () => {
       setGetTheLowest(LowestHoldings);
 
       const TradingActivity = await api.get(
-        `/import_pdf_summary/trading_activity/${savedPortfolio.portfolio_id}`
-      )
+        `/import_pdf_summary/trading_activity/${savedPortfolio.portfolio_id}`,
+      );
 
       const TradingActivityImport = TradingActivity.data;
       setGetTradingActivity(TradingActivityImport);
 
       const CashFlow = await api.get(
-        `/import_pdf_summary/cash_flow/${savedPortfolio.portfolio_id}`
-      )
+        `/import_pdf_summary/cash_flow/${savedPortfolio.portfolio_id}`,
+      );
 
       const CashFlowImport = CashFlow.data;
       setGetCashFlow(CashFlowImport);
 
       const Income = await api.get(
-        `/import_pdf_summary/dividend_income/${savedPortfolio.portfolio_id}`
-      )
+        `/import_pdf_summary/dividend_income/${savedPortfolio.portfolio_id}`,
+      );
 
       const IncomeImport = Income.data;
       setGetDividendIncome(IncomeImport);
 
       setSelectedPortfolioId(savedPortfolio.portfolio_id);
 
-      const snapshotResponse = await api.get(`/portfolio_snapshot/${savedPortfolio.portfolio_id}`)
+
+      const snapshotResponse = await api.get(`/portfolio_snapshot/${savedPortfolio.portfolio_id}`);
 
       setSnapshot(snapshotResponse.data);
-
-    }
-    catch (theErrors) {
-
+      const portfoliosResponse = await api.get('/portfolio/current');
+      setPortfolios(portfoliosResponse.data);
+    } catch (theErrors) {
       if (createdPortfolioId) {
         try {
-          await api.delete(`/import_pdf/portfolios/${createdPortfolioId}`)
-        }
-        catch (cleanupError) {
-          console.warn("could not remove the half-imported portfolio:", cleanupError)
+          await api.delete(`/import_pdf/portfolios/${createdPortfolioId}`);
+        } catch (cleanupError) {
+          console.warn('could not remove the half-imported portfolio:', cleanupError);
         }
       }
 
-      alert(`Could not save your statement: ${describeApiError(theErrors)}. Nothing was imported - please try again.`)
+      showError(
+        `Could not save your statement: ${describeApiError(theErrors)}. Nothing was imported - please try again.`,
+      );
     }
-
-
-  }
+  };
 
   if (LoadingPage) {
     return (
       <div className="flex flex-col items-center justify-center mt-32">
         <LoaderCircle className="w-20 h-16 animate-spin text-orange-500" />
-        <h2 className="text-2xl font-bold mt-4" style={{ color: 'var(--text-primary)' }}>Loading Portfolio</h2>
-        <p style={{ color: 'var(--text-secondary)' }}>Please wait until we import your portfolio...</p>
+        <h2 className="text-2xl font-bold mt-4" style={{ color: 'var(--text-primary)' }}>
+          Loading Portfolio
+        </h2>
+        <p style={{ color: 'var(--text-secondary)' }}>
+          Please wait until we import your portfolio...
+        </p>
       </div>
-    )
+    );
   }
 
   return (
-
-
     <div className="p-6">
-      <div className="max-w-6xl mx-auto p-6 bg-gray-900 border border-gray-700 rounded-3xl">
-        <div className="text-center mb-10">
-          <h2 className="text-4xl font-bold text-white mb-3">
-            Upload Portfolio
+      <div className="mx-auto max-w-6xl rounded-3xl border border-gray-800 bg-gray-950/80 p-6 md:p-8">
+        <div className="mb-8 text-center">
+          <h2 className="mb-2 text-3xl font-bold text-white md:text-4xl">
+            Upload <span className="text-orange-500">Portfolio</span>
           </h2>
 
-          <p className="text-gray-400 max-w-xl mx-auto">
-            Import your easyEquities portfolio but using your statement
-            or our Excel template
+          <p className="mx-auto max-w-2xl text-sm text-gray-400 md:text-base">
+            Import your EasyEquities portfolio using your statement or our Excel template
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
 
-            <h3 className="text-lg font-semibold text-white mb-2">
-              My Portfolios
-            </h3>
+          <div className="flex min-h-[380px] flex-col rounded-2xl border border-gray-700 bg-gray-900/70 p-6">
+            <div className="mb-5 flex items-center gap-3">
 
-
-
-            {portfolios.slice(0, 2).map(/** @param {any} portfolio*/(portfolio, index) => (
-
-              <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
-                <div className="flex justify-between items-center">
-
-                  <p className="text-white font-semibold">
-                    {portfolio.portfolio_name}
-                  </p>
-
-                  <span className="text-purple-400 font-semibold">
-                    {accountTypeLabel(portfolio.account_type)}
-                  </span>
-
-                </div>
-
-                <p className="text-sm text-gray-400">
-                  Account: {portfolio.account_number}
-                </p>
-
-                <p className="text-sm text-gray-400">
-                  {statementPeriod(portfolio)}
-                </p>
-
-                <button onClick={() => ViewSummary(portfolio.id)} className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
-                  View Summary
-                </button>
+              <div>
+                <h3 className="text-lg font-semibold text-white">My Portfolios</h3>
+                <p className="text-sm text-gray-400">Select one of your existing portfolios</p>
               </div>
-
-            ))}
-
-            <button
-              onClick={() => setShowPortfolios(true)}
-              className="block mx-auto text-orange-400 mt-4 hover:text-orange-300">
-              view all
-            </button>
-
-          </div>
-
-
-          <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6">
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Upload your statement
-              </h3>
-
-              <p className="text-sm text-gray-400">
-                Upload your EasyEquities PDF or Complete the Excel template
-              </p>
-              <p className="text-sm text-gray-400">
-                Upload your EasyEquities PDF or Complete the Excel template
-              </p>
             </div>
 
-            <div className="mb-4">
-              <label htmlFor="account-type-select" className="block text-sm text-gray-400 mb-2">Account Type</label>
+            <div className="flex-1">
+              {portfolios.slice(0, 2).map(
+          /** @param {any} portfolio*/(portfolio, index) => (
+                  <div
+                    key={index}
+                    className="mb-3 rounded-xl border border-gray-700 bg-gray-950/40 p-4 transition hover:border-blue-500/50"
+                  >
+                    <div className="mb-1 flex items-center justify-between gap-3">
+                      <p className="font-semibold text-white">{portfolio.portfolio_name}</p>
+
+                      <span className="rounded-md bg-purple-500/15 px-2 py-1 text-xs font-semibold text-purple-400">
+                        {accountTypeLabel(portfolio.account_type)}
+                      </span>
+                    </div>
+
+                    <p className="text-sm text-gray-400">Account: {portfolio.account_number}</p>
+
+                    <p className="text-sm text-gray-400">{statementPeriod(portfolio)}</p>
+
+                    <button
+                      type="button"
+                      onClick={() => ViewSummary(portfolio.id)}
+                      className="mt-3 text-sm font-medium text-blue-400 transition hover:text-blue-300 hover:underline"
+                    >
+                      View Summary
+                    </button>
+                  </div>
+                ),
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowPortfolios(true)}
+              className="mt-3 text-sm font-medium text-orange-400 transition hover:text-orange-300"
+            >
+              View all portfolios
+            </button>
+          </div>
+
+          <div className="flex min-h-[380px] flex-col rounded-2xl border-gray-700 bg-gray-900/70 p-6 shadow-lg shadow-orange-500/5">
+            <div className="mb-5 flex items-center gap-3">
+
+              <div>
+                <h3 className="text-lg font-semibold text-white">Upload your statement</h3>
+                <p className="text-sm text-gray-400">
+                  Upload your EasyEquities PDF or complete the Excel template
+                </p>
+              </div>
+            </div>
+
+            <div className="mb-5">
+              <label
+                htmlFor="account-type-select"
+                className="mb-2 block text-sm font-medium text-gray-300"
+              >
+                Account Type
+              </label>
 
               <select
                 id="account-type-select"
                 value={accountType}
                 onChange={(event) => setAccountType(event.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 text-white p-3 rounded-xl"
+                className="w-full rounded-xl border border-gray-700 bg-gray-800 p-3 text-white outline-none transition focus:border-orange-500"
               >
-                <option value=""> Select account type</option>
+                <option value="">Select account type</option>
+
                 {ACCOUNT_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
@@ -895,8 +939,8 @@ const Portfolio = () => {
               </select>
             </div>
 
-            <label className="block text-center cursor-pointer w-full bg-orange-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-orange-600 transition">
-              choose the File
+            <label className="mt-auto block w-full cursor-pointer rounded-xl bg-orange-500 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-600">
+              Choose File
 
               <input
                 type="file"
@@ -908,463 +952,553 @@ const Portfolio = () => {
                   if (!file) {
                     return;
                   }
-                  if (!file) {
-                    return;
-                  }
 
                   if (!accountType) {
-                    alert("Please select an account type first");
-                    event.target.value = "";
+                    showError('Please select an account type first');
+                    event.target.value = '';
                     return;
                   }
 
-                  setLoadingPage(true)
+                  setLoadingPage(true);
+
                   try {
                     let data;
 
-                    if (file.name.toLowerCase().endsWith(".pdf")) {
-                      const Passwords = prompt("Enter the PDF password") || "";
-                      data = await ReadingPDFFile(file, Passwords);
+                    if (file.name.toLowerCase().endsWith('.pdf')) {
+                      setPendingPdfFile(file);
+                      setPdfPassword('');
+                      setShowPasswordModal(true);
+                      setLoadingPage(false);
+                      return;
 
-                    }
-                    else if (file.name.toLowerCase().endsWith(".xlsx")) {
+                    } else if (file.name.toLowerCase().endsWith('.xlsx')) {
                       data = await ReadingExcelFile(file);
                     }
 
-
                     await SavePortfolio(data, file);
+                  } catch (theError) {
+                    if (theError instanceof Error && theError.name === 'PasswordException') {
+                      showError('Incorrect PDF password. Please check the password and try again.');
+                      setPdfPassword('');
+                      return;
+                    }
+                    else if (file.name.toLowerCase().endsWith('.pdf')) {
+                      showError(
+                        'Could not read this PDF - it may not be an EasyEquities statement. Please use the Excel template',
+                      );
+                    } else if (file.name.toLowerCase().endsWith('.xlsx')) {
+                      showError(
+                        'Invalid or unsupported Excel file. Please make sure to use the Excel template',
+                      );
+                    } else {
+                      showError('Please make sure you either upload a PDF or Excel file');
+                    }
+                  } finally {
+                    setLoadingPage(false);
                   }
-
-                  catch (theError) {
-                    if (theError instanceof Error && theError.name === "PasswordException") {
-                      alert("Incorrect PDF password. Please check the password and try again")
-                    }
-                    else if (file.name.toLowerCase().endsWith(".pdf")) {
-                      alert("Could not read this PDF - it may not be an EasyEquities statement. Please use the Excel template")
-                    }
-                    else if (file.name.toLowerCase().endsWith(".xlsx")) {
-                      alert("Invalid or unsupported Excel file. Please can you make sure to use the Excel template")
-                    }
-                    else {
-                      alert("Please make sure you either upload a pdf or Excel")
-                    }
-                  }
-                  finally {
-                    setLoadingPage(false)
-                  }
-
-                }
-                }
+                }}
               />
             </label>
 
-            <p className="text-sm text-gray-500 text-center mt-3">
-              PDF or XLSX
-            </p>
+            <p className="mt-3 text-center text-sm text-gray-500">PDF or XLSX</p>
           </div>
 
-          <div className="border border-gray-700 rounded-2xl p-6">
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white mb-2">Excel Template</h3>
-
-              <p className="text-sm text-gray-400">
-                Don&apost have a supported PDF? Don&apost worry, You can enter your portfolio
-                manually using our template
-              </p>
-            </div>
-
-            <button
-              onClick={DownloadEXCEL}
-              className="w-full border border-orange-500 text-orange-400 hover:bg-orange-500 hover:text-white font-semibold py-3 rounded-xl transition"
-            >
-              Download Template
-            </button>
-            <p className="text-sm text-gray-500 text-center mt-3">EquityLens Excel Template</p>
-          </div>
-        </div>
-
-
-
-
-        {showPortfolios && (
-
-          <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-            <div className="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-lg max-h-[80vh] overflow-hidden">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-semibold text-white mb-2">
-                  My Portfolios
-                </h3>
-
-                <button onClick={() => setShowPortfolios(false)} className="text-gray-400 hover:text-white">
-                  X
-                </button>
-              </div>
-
+          <div className="flex min-h-[380px] flex-col rounded-2xl border border-gray-700 bg-gray-900/70 p-6">
+            <div className="mb-5 flex items-center gap-3">
 
               <div>
-                <div className="max-h-[65vh] overflow-y-auto pr-2">
-                  {portfolios.map(/** @param {any} portfolio*/(portfolio, index) => (
-
-                    <div key={index} className="border border-gray-700 rounded-xl p-4 mb-3">
-                      <div className="flex justify-between items-center">
-
-                        <p className="text-white font-semibold">
-                          {portfolio.portfolio_name}
-                        </p>
-
-                        <span className="text-purple-400 font-semibold">
-                          {accountTypeLabel(portfolio.account_type)}
-                        </span>
-
-                      </div>
-
-                      <p className="text-sm text-gray-400">
-                        Account: {portfolio.account_number}
-                      </p>
-
-                      <p className="text-sm text-gray-400">
-                        {statementPeriod(portfolio)}
-                      </p>
-
-                      <button onClick={() => ViewSummary(portfolio.id)} className="text-purple-400 mt-2 hover:text-purple-300 hover:underline cursor-pointer">
-                        View Summary
-                      </button>
-                    </div>
-
-                  ))}
-
-                </div>
+                <h3 className="text-lg font-semibold text-white">Excel Template</h3>
+                <p className="text-sm text-gray-400">
+                  Don&apos;t have a supported PDF? Use our template instead.
+                </p>
               </div>
             </div>
 
+            <div className="mt-auto">
+              <button
+                type="button"
+                onClick={DownloadEXCEL}
+                className="w-full rounded-xl border border-orange-500 py-3 font-semibold text-orange-400 transition hover:bg-orange-500 hover:text-white"
+              >
+                Download Template
+              </button>
+
+              <p className="mt-3 text-center text-sm text-gray-500">
+                EquityLens Excel Template
+              </p>
+            </div>
           </div>
-        )
+        </div>
+      </div>
 
+      {showPortfolios && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gray-800 bg-gray-950 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-gray-800 px-6 py-5">
+              <div>
+                <h3 className="text-xl font-bold text-white">My Portfolios</h3>
+                <p className="mt-1 text-sm text-gray-400">
+                  Select a portfolio to view its summary
+                </p>
+              </div>
 
+              <button
+                type="button"
+                onClick={() => setShowPortfolios(false)}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-700 text-gray-400 transition hover:border-gray-600 hover:bg-gray-800 hover:text-white"
+              >
+                ×
+              </button>
+            </div>
 
-        }
+            <div className="max-h-[65vh] overflow-y-auto p-6">
+              <div className="space-y-4">
+                {portfolios.map(
+          /** @param {any} portfolio */(portfolio) => (
+                    <div
+                      key={portfolio.id}
+                      className="rounded-2xl border border-gray-800 bg-gray-900/70 p-5 transition hover:border-gray-700 hover:bg-gray-900"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="min-w-0">
+                          <p className="truncate text-base font-semibold text-white">
+                            {portfolio.portfolio_name}
+                          </p>
 
-        {summary && <div className="grid grid-cols-6 gap-8 mt-8">
+                          <p className="mt-2 text-sm text-gray-400">
+                            Account: {portfolio.account_number}
+                          </p>
 
+                          <p className="mt-1 text-sm text-gray-400">
+                            {statementPeriod(portfolio)}
+                          </p>
+                        </div>
+
+                        <span className="shrink-0 rounded-lg bg-purple-500/15 px-3 py-1 text-xs font-semibold text-purple-400">
+                          {accountTypeLabel(portfolio.account_type)}
+                        </span>
+                      </div>
+
+                      <div className="mt-4 border-t border-gray-800 pt-4">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowPortfolios(false);
+                            ViewSummary(portfolio.id);
+                          }}
+                          className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
+                        >
+                          View Summary
+                        </button>
+                      </div>
+                    </div>
+                  ),
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {summary && (
+        <div className="grid grid-cols-6 gap-8 mt-8">
           <div className="p-5 border rounded-2xl" style={panelStyle}>
-
             <div className="flex items-center gap-3 mb-2">
-
               <Wallet size={20} className="text-yellow-500" />
               <p style={mutedStyle}>Portfolio Value</p>
-
             </div>
 
-            <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.PortfolioValue || 0}</h2>
-
-
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              R {summary?.PortfolioValue || 0}
+            </h2>
           </div>
 
           <div className="p-5 border rounded-2xl" style={panelStyle}>
-
             <div className="flex items-center gap-3 mb-2">
-
               <Briefcase size={20} className="text-blue-500" />
               <p style={mutedStyle}>Holdings</p>
-
             </div>
 
-            <h2 className="text-2xl font-bold" style={titleStyle}>{summary?.TotalHoldings || 0}</h2>
-
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              {summary?.TotalHoldings || 0}
+            </h2>
           </div>
 
           <div className="p-5 border rounded-2xl" style={panelStyle}>
-
             <div className="flex items-center gap-3 mb-2">
               <ArrowLeftRight size={20} className="text-green-500" />
               <p style={mutedStyle}>Purchase & Sales</p>
             </div>
 
-            <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalPurchasesAndSales || 0}</h2>
-
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              R {summary?.TotalPurchasesAndSales || 0}
+            </h2>
           </div>
 
-
           <div className="p-5 border rounded-2xl" style={panelStyle}>
-
             <div className="flex items-center gap-3 mb-2">
-
               <Landmark size={20} className="text-purple-500" />
               <p style={mutedStyle}>Contributions</p>
-
             </div>
 
-            <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalContributionsAndWithdrawals || 0}</h2>
-
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              R {summary?.TotalContributionsAndWithdrawals || 0}
+            </h2>
           </div>
 
           <div className="p-5 border rounded-2xl" style={panelStyle}>
-
             <div className="flex items-center gap-3 mb-2">
-
               <TrendingUp size={20} className="text-green-500" />
               <p style={mutedStyle}>Dividends</p>
-
             </div>
 
-            <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalDividendsAndWithholdingTax || 0}</h2>
-
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              R {summary?.TotalDividendsAndWithholdingTax || 0}
+            </h2>
           </div>
 
           <div className="p-5 border rounded-2xl" style={panelStyle}>
-
             <div className="flex items-center gap-3 mb-2">
-
               <CreditCard size={20} className="text-orange-500" />
               <p style={mutedStyle}>Expenses</p>
-
             </div>
 
-            <h2 className="text-2xl font-bold" style={titleStyle}>R {summary?.TotalTransactionExpenses || 0}</h2>
-
+            <h2 className="text-2xl font-bold" style={titleStyle}>
+              R {summary?.TotalTransactionExpenses || 0}
+            </h2>
           </div>
         </div>
+      )}
 
-
-        }
-
-
-        <div className="mt-8">
-
-          {snapshot && (
-            <div className="mt-8 p-6 border rounded-2xl" style={panelStyle}>
-              <div className="flex flex-col gap-5 lg:items-start lg:justify-between">
-                <div>
-                  <div className="flex items-center gap-3">
-                    <span className="w-3 h-3 rounded-full bg-green-500" />
-                    <h2 className="text-xl font-bold" style={titleStyle}>
-                      Smart Portfolio Snapshot
-                    </h2>
-
-                  </div>
-
-                  <p className="mt-2 text-sm" style={mutedStyle}>
-                    All portfolio insights are generated
-                    from one verified canonical snapshot.
-                  </p>
-
+      <div className="mt-8">
+        {snapshot && (
+          <div className="mt-8 p-6 border rounded-2xl" style={panelStyle}>
+            <div className="flex flex-col gap-5 lg:items-start lg:justify-between">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span className="w-3 h-3 rounded-full bg-green-500" />
+                  <h2 className="text-xl font-bold" style={titleStyle}>
+                    Smart Portfolio Snapshot
+                  </h2>
                 </div>
 
-                <span className="self-start px-3 py-1 rounded-full text-sm font-semibold bg-green-100/10 text-green-500">
-                  Verified
-                </span>
+                <p className="mt-2 text-sm" style={mutedStyle}>
+                  All portfolio insights are generated from one verified canonical snapshot.
+                </p>
               </div>
 
-              <div className="mt-5 p-4 rounded-xl" style={{ background: "var(--surface-inset)" }}>
-                <p className="text-sm mb-2" style={dimStyle}>SHA-256 Snapshot ID</p>
-                <p className="font-mono text-sm break-all" style={dimStyle}>{snapshot.snapshot_id}</p>
+              <span className="self-start px-3 py-1 rounded-full text-sm font-semibold bg-green-100/10 text-green-500">
+                Verified
+              </span>
+            </div>
 
+            <button
+              type="button"
+              onClick={downloadSnapshot}
+              className="mt-5 w-full px-5 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition"
+            >
+              Download Portfolio Summary
+            </button>
+          </div>
+        )}
+      </div>
+
+      {summaGetTheTopAllocationImportPDFry.length > 0 &&
+        GetTheTopHoldingsImportPDF.length > 0 && (
+          <div className="grid grid-cols-3 gap-8 mb-7">
+            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+              <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
+                Trading Activity
+              </h2>
+
+              <div className="flex justify-center w-full h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={GetTradingActivity}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="value" fill={colours[1]} />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
+            </div>
+
+            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+              <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
+                Cash flow
+              </h2>
+
+              <div className="flex justify-center w-full h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={GetCashFlow}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={50}
+                      outerRadius={80}
+                    >
+                      {GetCashFlow.map((item, index) => (
+                        <Cell key={index} fill={colours[index % colours.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+              <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
+                Dividend Income
+              </h2>
+
+              <div className="flex justify-center w-full h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={GetDividendIncome}>
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+
+                    <Line dataKey="gross_dividend" stroke={colours[1]} />
+                    <Line dataKey="withholding_tax" stroke="#EF4444" />
+                    <Line dataKey="net_dividend" stroke={colours[2]} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        )}
+
+      {summaGetTheTopAllocationImportPDFry.length > 0 &&
+        GetTheTopHoldingsImportPDF.length > 0 && (
+          <div className="grid grid-cols-3 gap-8 ">
+            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
+              <h2 className="text-xl font-bold text-center" style={titleStyle}>
+                Assert allocation
+              </h2>
+
+              <div className="flex justify-center w-full h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={summaGetTheTopAllocationImportPDFry}
+                      dataKey="weight_percentage"
+                      innerRadius={50}
+                      outerRadius={80}
+                    >
+                      {summaGetTheTopAllocationImportPDFry.map((item, index) => (
+                        <Cell key={index} fill={colours[index % colours.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="col-span-2 min-w-0 border rounded-2xl p-4" style={panelStyle}>
+              <h2 className="text-xl font-bold text-center" style={titleStyle}>
+                Top Holdings
+              </h2>
+
+              {GetTheTopHoldingsImportPDF.map((item, index) => (
+                <div key={index} className="mb-4">
+                  <div className="flex justify-between mb-1">
+                    <p style={mutedStyle}>{item.name}</p>
+                    <p style={mutedStyle}>R{item.value}</p>
+                  </div>
+
+                  <div
+                    className="w-full rounded-full h-3"
+                    style={{ background: 'var(--surface-inset)' }}
+                  >
+                    <div
+                      className="h-3 rounded-full"
+                      style={{
+                        width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
+                        backgroundColor: colours[index % colours.length],
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+      {summaGetTheTopAllocationImportPDFry.length > 0 &&
+        GetTheTopHoldingsImportPDF.length > 0 && (
+          <div className="grid grid-cols-2 gap-8 mt-8">
+            <div className="p-6 border border-red-700 rounded-2xl">
+              <div className="flex items-center gap-2">
+                <TriangleAlert size={24} className="text-red-500" />
+                <h2 className="text-xl font-bold" style={{ color: 'var(--signal-negative)' }}>
+                  Lowest Holding
+                </h2>
+              </div>
+
+              <p className="mb-5" style={mutedStyle}>
+                Your smallest holdings by weight in the portfolio
+              </p>
+              <div className="flex justify-between border rounded-xl p-4" style={panelStyle}>
+                <div>
+                  <p className="text-xl font-bold" style={titleStyle}>
+                    {GetTheLowest?.name ?? 'No holdings'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border border-purple-500 rounded-2xl">
+              <div className="flex items-center gap-2">
+                <Bot size={24} className="text-purple-500" />
+                <h2 className="text-xl font-bold" style={titleStyle}>
+                  AI Portfolio Assistant
+                </h2>
+              </div>
+
+              <p className="mb-5" style={mutedStyle}>
+                Ask questions about your portfolio and recivce AI-powered insights.
+              </p>
+
+              <button
+                onClick={() => navigate(ROUTES.AI_CHAT)}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold"
+              >
+                Go To Assistant
+              </button>
+            </div>
+          </div>
+        )}
+
+      {showPasswordModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-3xl border border-gray-800 bg-gray-950 p-6 shadow-2xl">
+
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white">
+                PDF <span className="text-orange-500">Password</span>
+              </h2>
+
+              <p className="mt-2 text-sm text-gray-400">
+                Enter the password for your EasyEquities statement.
+              </p>
+            </div>
+
+            <label
+              htmlFor="pdf-password"
+              className="mb-2 block text-sm font-medium text-gray-300"
+            >
+              Password
+            </label>
+
+            <input
+              id="pdf-password"
+              type="password"
+              value={pdfPassword}
+              onChange={(event) => {
+                setPdfPassword(event.target.value);
+              }}
+              placeholder="Enter PDF password"
+              className="w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-orange-500"
+            />
+
+
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPendingPdfFile(null);
+                  setPdfPassword('');
+                }}
+                className="flex-1 rounded-xl border border-gray-700 py-3 font-semibold text-gray-300 transition hover:bg-gray-800"
+              >
+                Cancel
+              </button>
 
               <button
                 type="button"
-                onClick={downloadSnapshot}
-                className="mt-5 w-full px-5 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition">
-                Download Portfolio Summary
+                onClick={async () => {
+                  if (!pendingPdfFile) return;
+
+                  try {
+                    setShowPasswordModal(false);
+                    setLoadingPage(true);
+
+                    const data = await ReadingPDFFile(
+                      pendingPdfFile,
+                      pdfPassword,
+                    );
+
+                    await SavePortfolio(data, pendingPdfFile);
+                  } catch (theError) {
+                    if (
+                      theError instanceof Error &&
+                      theError.name === 'PasswordException'
+                    ) {
+                      showError(
+                        'Incorrect PDF password. Please check the password and try again',
+                      );
+                    } else {
+                      showError(
+                        'Could not read this PDF. Please make sure it is a valid EasyEquities statement.',
+                      );
+                    }
+                  } finally {
+                    setLoadingPage(false);
+                    setPendingPdfFile(null);
+                    setPdfPassword('');
+                  }
+                }}
+                className="flex-1 rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600"
+              >
+                Continue
               </button>
-
             </div>
-
-
-          )}
-
-
-        </div>
-
-
-        {summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 mb-7">
-
-          <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-            <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-              Trading Activity
-            </h2>
-
-            <div className="flex justify-center w-full h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={GetTradingActivity}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill={colours[1]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-          </div>
-
-          <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-            <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-              Cash flow
-            </h2>
-
-            <div className="flex justify-center w-full h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={GetCashFlow}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={50}
-                    outerRadius={80}>
-
-                    {GetCashFlow.map((item, index) => (<Cell key={index} fill={colours[index % colours.length]} />))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-          </div>
-
-          <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-            <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-              Dividend Income
-            </h2>
-
-            <div className="flex justify-center w-full h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={GetDividendIncome}>
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-
-                  <Line dataKey="gross_dividend" stroke={colours[1]} />
-                  <Line dataKey="withholding_tax" stroke="#EF4444" />
-                  <Line dataKey="net_dividend" stroke={colours[2]} />
-
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-        </div>
-
-        }
-
-
-        {summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-3 gap-8 ">
-
-
-
-          <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-            <h2 className="text-xl font-bold text-center" style={titleStyle}>
-              Assert allocation
-            </h2>
-
-            <div className="flex justify-center w-full h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={summaGetTheTopAllocationImportPDFry}
-                    dataKey="weight_percentage"
-                    innerRadius={50}
-                    outerRadius={80}>
-                    {summaGetTheTopAllocationImportPDFry.map((item, index) => (<Cell key={index} fill={colours[index % colours.length]} />))}
-                  </Pie>
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-          </div>
-
-          <div className="col-span-2 min-w-0 border rounded-2xl p-4" style={panelStyle}>
-            <h2 className="text-xl font-bold text-center" style={titleStyle}>
-              Top Holdings
-            </h2>
-
-            {GetTheTopHoldingsImportPDF.map((item, index) =>
-              <div key={index} className="mb-4">
-                <div className="flex justify-between mb-1">
-                  <p style={mutedStyle}>
-                    {item.name}
-                  </p>
-                  <p style={mutedStyle}>
-                    R{item.value}
-                  </p>
-                </div>
-
-
-                <div className="w-full rounded-full h-3" style={{ background: 'var(--surface-inset)' }}>
-                  <div className="h-3 rounded-full"
-                    style={{
-                      width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
-                      backgroundColor: colours[index % colours.length]
-                    }}>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
+      )}
+      {showErrorModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-3xl border border-gray-800 bg-gray-950 p-6 shadow-2xl">
 
-        }
-
-
-        {summaGetTheTopAllocationImportPDFry.length > 0 && GetTheTopHoldingsImportPDF.length > 0 && <div className="grid grid-cols-2 gap-8 mt-8">
-
-          <div className="p-6 border border-red-700 rounded-2xl">
-
-            <div className="flex items-center gap-2">
-              <TriangleAlert size={24} className="text-red-500"></TriangleAlert>
-              <h2 className="text-xl font-bold" style={{ color: 'var(--signal-negative)' }}>
-                Lowest Holding
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-white">
+                Something <span className="text-orange-500">went wrong</span>
               </h2>
+
+              <p className="mt-3 text-sm leading-6 text-gray-400">
+                {errorMessage}
+              </p>
             </div>
 
-            <p className="mb-5" style={mutedStyle}>
-              Your smallest holdings by weight in the portfolio
-            </p>
-            <div className="flex justify-between border rounded-xl p-4" style={panelStyle}>
-
-              <div>
-                <p className="text-xl font-bold" style={titleStyle}>{GetTheLowest?.name ?? "No holdings"}</p>
-              </div>
-
-              <div>
-                <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
-              </div>
-
-            </div>
-          </div>
-
-          <div className="p-6 border border-purple-500 rounded-2xl">
-
-            <div className="flex items-center gap-2">
-              <Bot size={24} className="text-purple-500"></Bot>
-              <h2 className="text-xl font-bold" style={titleStyle}>
-                AI Portfolio Assistant
-              </h2>
-            </div>
-
-            <p className="mb-5" style={mutedStyle}>
-              Ask questions about your portfolio and recivce AI-powered insights.
-            </p>
-
-            <button onClick={() => navigate(ROUTES.AI_CHAT)} className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold">
-              Go To Assistant
+            <button
+              type="button"
+              onClick={() => {
+                setShowErrorModal(false);
+                setErrorMessage('');
+              }}
+              className="w-full rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600"
+            >
+              OK
             </button>
 
           </div>
-
         </div>
+      )}
 
-        }
-        
-      </div>
     </div>
 
-
-  )
-
+  );
 };
 
 export default Portfolio;

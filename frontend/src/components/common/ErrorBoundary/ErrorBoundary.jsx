@@ -30,7 +30,7 @@ class ErrorBoundary extends Component {
       >
         <div className="glass-surface w-full max-w-md rounded-2xl p-8 text-center">
           <p
-            className="mb-2 font-mono text-[11px] tracking-widest"
+            className="mb-2 font-mono text-[12px] tracking-widest"
             style={{ color: 'var(--signal-negative)' }}
           >
             SOMETHING WENT WRONG

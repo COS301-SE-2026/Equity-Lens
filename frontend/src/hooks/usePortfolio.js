@@ -17,13 +17,19 @@ const usePortfolio = () => {
       setFetchedAt(new Date());
     } catch (err) {
       console.warn('portfolio fetch failed:', err);
-      const message =
-        err && typeof err === 'object' && 'response' in err
-          ? /** @type {any} */ (err).response?.data?.detail
-          : err instanceof Error
-            ? err.message
-            : null;
-      setError(message || 'Failed to load portfolio data');
+      const response =
+        err && typeof err === 'object' ? /** @type {any} */ (err).response : undefined;
+      const reachedServer = Boolean(response);
+      const message = reachedServer
+        ? response?.data?.detail
+        : err instanceof Error && !('response' in /** @type {any} */ (err))
+          ? err.message
+          : null;
+      setError(
+        reachedServer
+          ? message || 'Failed to load portfolio data'
+          : 'We could not reach the server',
+      );
     } finally {
       if (!quiet) setLoading(false);
     }

@@ -1,19 +1,16 @@
 import { zar } from './currency';
+import { POOR_DIVERSIFICATION_COUNT, SEVERITY_RANK, TEMPLATES } from './insightTemplates';
+import { dailyReturnsFromIndex, seriesKey } from './portfolioStats';
+
+/** @param {any} v */
+const num = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
 const CONCENTRATION_LOW = 25;
 const CONCENTRATION_HIGH = 45;
 const RANGE = { '1D': 1, '1W': 7, '1M': 30, '3M': 90, '1Y': 365 };
-const COMMON_SECTORS = [
-  'Financials',
-  'Technology',
-  'Healthcare',
-  'Consumer',
-  'Industrials',
-  'Telecommunications',
-];
 const NOTABLE_BENCHMARK_GAP_PCT = 2;
+const PERFORMANCE_BADGE = 'Performance';
 const NOTABLE_DAILY_MOVE_PCT = 1;
-const POOR_DIVERSIFICATION_COUNT = 2;
 const DRIVER_LIM = 0.5;
 const MOVE_LIM = 5;
 const MARKET_WIDE_BREADTH = 0.6;
@@ -45,34 +42,18 @@ export function buildSectors(holdings) {
 /**
  * @param {any} holding
  */
-export const isFund = (holding) => holding?.kind === 'etf';
+const isFund = (holding) => holding?.kind === 'etf';
 
 /**
- * @param {any} holding
+ * @param {number} pct
+ * @param {{ low: number, high: number }} [thresholds]
  */
-export function concWording(holding) {
-  if (isFund(holding)) {
-    const exposure = holding?.sector || holding?.region || 'one market';
-    return {
-      label: 'Fund Concentration',
-      risk: `Most of your portfolio sits in one fund so your result tracks ${exposure} rather than a spread of markets.`,
-      fix: 'funds covering other markets',
-      dominates: 'no single market carries your portfolio',
-    };
-  }
-  return {
-    label: 'Single-Stock Risk',
-    risk: 'Single-stock risk this high means one earnings miss can dominate return.',
-    fix: 'other positions',
-    dominates: 'no single stock dominates your return',
-  };
-}
-
-/** @param {number} pct */
-export function getConcRisk(pct) {
-  if (pct < CONCENTRATION_LOW)
-    return { level: 'low', label: 'Low', color: 'var(--signal-positive)' };
-  if (pct < CONCENTRATION_HIGH)
+export function getConcRisk(
+  pct,
+  thresholds = { low: CONCENTRATION_LOW, high: CONCENTRATION_HIGH },
+) {
+  if (pct < thresholds.low) return { level: 'low', label: 'Low', color: 'var(--signal-positive)' };
+  if (pct < thresholds.high)
     return { level: 'moderate', label: 'Moderate', color: 'var(--signal-warning)' };
   return { level: 'high', label: 'High', color: 'var(--signal-negative)' };
 }
@@ -91,6 +72,31 @@ function getTopHolding(holdings) {
 /** @param {number} days */
 export const buildingHistoryLabel = (days) =>
   `Building history - ${days} day${days === 1 ? '' : 's'} so far`;
+
+/**
+ * @typedef {{ region: string, label: string, weight: number }} BenchmarkComponent
+ */
+/**
+ * @param {BenchmarkComponent[]} composition
+ * @param {string} fullLabel
+ */
+export const shortBenchmarkLabel = (composition, fullLabel) => {
+  const parts = composition ?? [];
+  if (parts.length < 2) return fullLabel;
+  const biggest = [...parts].sort((a, b) => b.weight - a.weight)[0];
+  return `${biggest.label} + ${parts.length - 1} more`;
+};
+
+/** @param {BenchmarkComponent[]} composition */
+export const benchmarkCompositionLines = (composition) =>
+  [...(composition ?? [])]
+    .sort((a, b) => b.weight - a.weight)
+    .map((c) => `${c.label} - ${c.weight}% of your book`);
+
+export const BENCHMARK_METHOD =
+  "Each region's index is converted to rand at that day's exchange rate, blended by that " +
+  "region's share of your book, then rebased to what your portfolio was worth on the first " +
+  'day of the series.';
 /**
  * @template {{ date: string }} T
  * @param {T[]} series
@@ -127,16 +133,22 @@ export function buildChartStats(series, meta = {}) {
     };
   }
 
-  /** @param {'twr_index'|'benchmark' |'value'} key */
-  const cumulativeReturn = (key) => {
-    const first = series.find((p) => typeof p[key] === 'number');
-    const last = [...series].reverse().find((p) => typeof p[key] === 'number');
-    if (!first || !last || first === last || !first[key] || !last[key]) return null;
-    return ((last[key] - first[key]) / first[key]) * 100;
+  const portKey = /** @type {'value'|'benchmark'|'twr_index'} */ (seriesKey(series));
+
+  /** @param {'value'|'benchmark'|'twr_index'} field @param {number} from */
+  const legReturn = (field, from) => {
+    const points = series.slice(from).filter((p) => typeof p[field] === 'number');
+    const first = points[0];
+    const last = points[points.length - 1];
+    if (!first || !last || first === last || !first[field] || !last[field]) return null;
+    return ((last[field] - first[field]) / first[field]) * 100;
   };
 
-  const portPct = cumulativeReturn('twr_index') ?? cumulativeReturn('value');
-  const benchPct = cumulativeReturn('benchmark');
+  const shared = series.findIndex(
+    (p) => typeof p[portKey] === 'number' && typeof p.benchmark === 'number',
+  );
+  const portPct = legReturn(portKey, shared === -1 ? 0 : shared);
+  const benchPct = shared === -1 ? null : legReturn('benchmark', shared);
   const portAvailable = portPct !== null;
   const benchAvailable = benchPct !== null && portAvailable;
   const diffPct = benchAvailable ? portPct - benchPct : 0;
@@ -144,13 +156,10 @@ export function buildChartStats(series, meta = {}) {
   let best = { pct: -Infinity, name: '' };
   let worst = { pct: Infinity, name: '' };
 
-  const portKey = series.some((p) => typeof p.twr_index === 'number') ? 'twr_index' : 'value';
-
   for (let i = 1; i < series.length; i++) {
-    const prev = series[i - 1][portKey];
-    const now = series[i][portKey];
-    if (!prev || !now) continue;
-    const pct = ((now - prev) / prev) * 100;
+    const returns = dailyReturnsFromIndex(series.slice(i - 1, i + 1), portKey);
+    if (!returns) continue;
+    const pct = returns[0] * 100;
     if (pct > best.pct) best = { pct, name: series[i].name };
     if (pct < worst.pct) worst = { pct, name: series[i].name };
   }
@@ -175,9 +184,10 @@ export function buildChartStats(series, meta = {}) {
  * @param {any[]} holdings
  */
 export function buildAttrib(holdings) {
-  const rows = holdings.map((h) => ({
+  const priced = holdings.filter((h) => num(h.daily_change_pct) !== null);
+  const rows = priced.map((h) => ({
     ticker: h.ticker,
-    contribution: ((h.value ?? 0) * (h.daily_change_pct ?? 0)) / 100,
+    contribution: ((num(h.value) ?? 0) * h.daily_change_pct) / 100,
   }));
   const contributors = rows
     .filter((r) => r.contribution > 0)
@@ -186,38 +196,18 @@ export function buildAttrib(holdings) {
     .filter((r) => r.contribution < 0)
     .sort((a, b) => a.contribution - b.contribution);
   const todayReturn = rows.reduce((s, r) => s + r.contribution, 0);
-  return { contributors, drags, todayReturn };
+  return { contributors, drags, todayReturn, excluded: holdings.length - priced.length };
 }
 
 /**
- * @param {any[]} holdings
+ * @param {{ holdings: any[], attribution: { contributors: any[], drags: any[], todayReturn: number } }} ctx
  */
-const canJudgeGaps = (holdings) => holdings.some((h) => !isFund(h));
+function dailyRecords({ holdings, attribution }) {
+  const hasLiveMove = holdings.some(
+    (/** @type {any} */ h) => h.daily_change_pct !== null && h.daily_change_pct !== undefined,
+  );
+  if (!hasLiveMove) return [];
 
-/**
- * @param {any[]} holdings
- * @param {{ name: string }[]} sectorData
- * @returns {{ sector: string | null }}
- */
-function findMissing(holdings, sectorData) {
-  if (!canJudgeGaps(holdings)) return { sector: null };
-  return {
-    sector: COMMON_SECTORS.find((sector) => !sectorData.some((s) => s.name === sector)) ?? null,
-  };
-}
-
-/**
- * @param {{
- *   holdings: any[],
- *   attribution: { contributors: { ticker: string, contribution: number }[], drags: { ticker: string, contribution: number }[], todayReturn: number },
- *   sectorData?: { name: string, value: number }[],
- * }} args
- * @returns {{ insights: { type: string, text: string, why: string, action: { label: string, to?: string, target?: string } | null }[] }}
- */
-export function buildInsights({ holdings, attribution, sectorData = [] }) {
-  if (!holdings.length) return { insights: [] };
-
-  const insights = [];
   /** @param {string} ticker */
   const findHolding = (ticker) => holdings.find((h) => h.ticker === ticker);
 
@@ -226,25 +216,33 @@ export function buildInsights({ holdings, attribution, sectorData = [] }) {
     const holding = findHolding(row.ticker);
     if (!holding) return null;
     const context = classifyContext({ holding, holdings });
+    if (!context) return null;
     if (context.level === 'unusual') {
-      return {
-        label: 'Ask AI Why',
-        to: `/ai?q=${encodeURIComponent(`Why did ${row.ticker} move today?`)}`,
-      };
+      return askAiWhy(`Why did ${row.ticker} move today?`);
     }
     if (context.level === 'sector') {
       return { label: 'Review Holdings', target: 'holdings-table' };
     }
     return null;
   };
+  const records = [];
 
   const gain = attribution.contributors[0];
   const gainHolding = gain && findHolding(gain.ticker);
   if (gain && gainHolding) {
-    insights.push({
+    const movePct = gainHolding.daily_change_pct ?? 0;
+    records.push({
+      id: 'daily.gainer',
+      category: 'daily',
+      severity: 'opportunity',
+      magnitude: Math.min(1, Math.abs(movePct) / 10),
       type: 'gain',
-      text: `${gain.ticker} is today's biggest gainer, up ${(gainHolding.daily_change_pct ?? 0).toFixed(1)}% (+${zar(Math.abs(gain.contribution))}).`,
-      why: classifyContext({ holding: gainHolding, holdings }).detail,
+      text: `${gain.ticker} is today's biggest gainer, up ${movePct.toFixed(1)}% (+${zar(Math.abs(gain.contribution))}).`,
+      why: classifyContext({ holding: gainHolding, holdings })?.detail,
+      evidence: [
+        { label: gain.ticker, value: `+${movePct.toFixed(1)}%` },
+        { label: "Added to today's move", value: zar(Math.abs(gain.contribution)) },
+      ],
       action: rowAction(gain),
     });
   }
@@ -252,39 +250,111 @@ export function buildInsights({ holdings, attribution, sectorData = [] }) {
   const loss = attribution.drags[0];
   const lossHolding = loss && findHolding(loss.ticker);
   if (loss && lossHolding) {
-    insights.push({
+    const movePct = Math.abs(lossHolding.daily_change_pct ?? 0);
+    records.push({
+      id: 'daily.drag',
+      category: 'daily',
+      severity: 'risk',
+      magnitude: Math.min(1, movePct / 10),
       type: 'loss',
-      text: `${loss.ticker} is today's biggest drag, down ${Math.abs(lossHolding.daily_change_pct ?? 0).toFixed(1)}% (-${zar(Math.abs(loss.contribution))}).`,
-      why: classifyContext({ holding: lossHolding, holdings }).detail,
+      text: `${loss.ticker} is today's biggest drag, down ${movePct.toFixed(1)}% (-${zar(Math.abs(loss.contribution))}).`,
+      why: classifyContext({ holding: lossHolding, holdings })?.detail,
+      evidence: [
+        { label: loss.ticker, value: `-${movePct.toFixed(1)}%` },
+        { label: "Took off today's move", value: zar(Math.abs(loss.contribution)) },
+      ],
       action: rowAction(loss),
     });
   }
 
   const { driver } = buildDriver({ holdings, attribution });
   if (driver) {
-    insights.push({
+    records.push({
+      id: 'daily.driver',
+      category: 'daily',
+      severity: 'neutral',
+      magnitude: 0.5,
       type: 'driver',
       text: driver.text,
       why: "Ranked by each holding's Rand contribution to today's move, not long-term gain or sector weight.",
+      evidence: [
+        {
+          label: "Today's move",
+          value: `${attribution.todayReturn >= 0 ? '+' : ''}${zar(attribution.todayReturn ?? 0)}`,
+        },
+        ...(driver.tickers.length
+          ? [{ label: 'Driven by', value: driver.tickers.join(', ') }]
+          : []),
+      ],
       action: null,
     });
   }
 
-  const { sector: missingSector } = findMissing(holdings, sectorData);
-  if (missingSector) {
-    insights.push({
-      type: 'opportunity',
-      text: `You have no ${missingSector} exposure - a common gap in balanced JSE portfolios.`,
-      why: `Checked against the usual JSE sector spread: ${COMMON_SECTORS.join(', ')}.`,
-      action: { label: 'Explore Sector Allocation', target: 'sector-allocation' },
-    });
-  }
+  return records;
+}
+const VISIBLE_INSIGHTS = 8;
+const PER_CATEGORY_CAP = 2;
+/** @type {Record<string, number>} */
+const CATEGORY_CAP = { daily: 3 };
 
-  return { insights: insights.slice(0, 5) };
+/**
+ * @param {{
+ *   holdings: any[],
+ *   attribution: { contributors: { ticker: string, contribution: number }[], drags: { ticker: string, contribution: number }[], todayReturn: number },
+ *   sectorData?: { name: string, value: number }[],
+ *   sectorAllocation?: any[],
+ *   returns?: any,
+ *   health?: any,
+ *   thresholds?: any,
+ *   perfSeries?: any[],
+ *   contributionSeries?: any[],
+ *   cgt?: any,
+ *   statementDate?: string | null,
+ *   accountType?: string | null,
+ *   benchmarkLabel?: string,
+ *   events?: any,
+ *   eventStudy?: any,
+ * }} args
+ * @returns {{ insights: any[], more: any[] }}
+ */
+export function buildInsights({ holdings, attribution, sectorData = [], ...rest }) {
+  if (!holdings.length) return { insights: [], more: [] };
+
+  const ctx = { holdings, attribution, sectorData, ...rest };
+  const candidates = [...TEMPLATES.map((t) => t.build(ctx)), ...dailyRecords(ctx)].filter(Boolean);
+
+  candidates.sort(
+    (/** @type {any} */ a, /** @type {any} */ b) =>
+      SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.magnitude - a.magnitude,
+  );
+
+  /** @type {Record<string, number>} */
+  const seen = {};
+  const ranked = candidates.filter((/** @type {any} */ r) => {
+    const cap = CATEGORY_CAP[r.category] ?? PER_CATEGORY_CAP;
+    seen[r.category] = (seen[r.category] ?? 0) + 1;
+    return seen[r.category] <= cap;
+  });
+
+  const withAsk = ranked.map((/** @type {any} */ r) => {
+    const own = r.action ? [r.action] : [];
+    return {
+      ...r,
+      actions: own.some((/** @type {any} */ a) => a.question)
+        ? own
+        : [...own, askAiWhy(`${r.text} Why does this matter for my portfolio?`)],
+    };
+  });
+
+  return { insights: withAsk.slice(0, VISIBLE_INSIGHTS), more: withAsk.slice(VISIBLE_INSIGHTS) };
 }
 
 /** @param {string} question */
-const askAiWhy = (question) => ({ label: 'Ask AI Why', to: '/ai', prefill: question });
+export const askAiWhy = (question) => ({
+  label: 'Ask AI Why',
+  question,
+  to: `/ai?q=${encodeURIComponent(question)}`,
+});
 
 /**
  * @param {{
@@ -294,14 +364,16 @@ const askAiWhy = (question) => ({ label: 'Ask AI Why', to: '/ai', prefill: quest
  *   chartStats: { diff: string, diffPct: number, benchAvailable: boolean },
  *   dailyChangePct: number,
  *   benchmarkLabel?: string,
+ *   thresholds?: { low: number, high: number },
  * }} args
  * @returns {{
  *   headline: string,
  *   supportingText: string[],
  *   severity: 'risk'|'opportunity'|'neutral',
  *   badge: string,
- *   suggestedActions: { label: string, to?: string, target?: string, prefill?: string }[],
- *   signals: { rank: number, severity: 'risk'|'opportunity'|'neutral', badge: string, text: string, actions: { label: string, to?: string, target?: string, prefill?: string }[] }[],
+ *   suggestedActions: { label: string, to?: string, target?: string, question?: string }[],
+ *   benchmark: { available: boolean, diffPct: number, label: string } | null,
+ *   signals: { id: string, rank: number, severity: 'risk'|'opportunity'|'neutral', badge: string, text: string, actions: { label: string, to?: string, target?: string, question?: string }[] }[],
  * }}
  */
 export function buildSummary({
@@ -311,6 +383,7 @@ export function buildSummary({
   chartStats,
   dailyChangePct,
   benchmarkLabel = 'JSE ALSI',
+  thresholds,
 }) {
   if (!holdings.length) {
     return {
@@ -319,22 +392,24 @@ export function buildSummary({
       severity: 'neutral',
       badge: 'Overview',
       suggestedActions: [{ label: 'Import Portfolio', to: '/portfolio' }],
+      benchmark: null,
       signals: [],
     };
   }
 
   const topSector = sectorData[0] ?? { name: 'None', value: 0 };
   const { topHolding, topPct } = getTopHolding(holdings);
-  const sectorRisk = getConcRisk(topSector.value);
-  const holdingRisk = getConcRisk(topPct);
+  const sectorRisk = getConcRisk(topSector.value, thresholds);
+  const holdingRisk = getConcRisk(topPct, thresholds);
   const diffPct = chartStats.diffPct ?? 0;
   const positive = dailyChangePct >= 0;
   const driver = positive ? attribution.contributors[0] : attribution.drags[0];
-  /** @type {{ rank: number, severity: 'risk'|'opportunity'|'neutral', badge: string, text: string, actions: { label: string, to?: string, target?: string, prefill?: string }[] }[]} */
+  /** @type {{ id: string, rank: number, severity: 'risk'|'opportunity'|'neutral', badge: string, text: string, actions: { label: string, to?: string, target?: string, question?: string }[] }[]} */
   const signals = [];
 
   if (holdingRisk.level === 'high') {
     signals.push({
+      id: 'conc.top-holding',
       rank: 1,
       severity: 'risk',
       badge: 'Concentration',
@@ -350,6 +425,7 @@ export function buildSummary({
 
   if (sectorRisk.level === 'high') {
     signals.push({
+      id: 'sector.largest',
       rank: 2,
       severity: 'risk',
       badge: 'Concentration',
@@ -363,19 +439,21 @@ export function buildSummary({
 
   if (holdings.length <= POOR_DIVERSIFICATION_COUNT) {
     signals.push({
+      id: 'conc.position-count',
       rank: 3,
       severity: 'risk',
       badge: 'Diversification',
-      text: `Only ${holdings.length} position${holdings.length === 1 ? '' : 's'} make up your entire book.`,
+      text: `Only ${holdings.length} position${holdings.length === 1 ? ' makes' : 's make'} up your entire book.`,
       actions: [{ label: 'Review Diversification', to: '/portfolio' }],
     });
   }
 
   if (chartStats.benchAvailable && diffPct <= -NOTABLE_BENCHMARK_GAP_PCT) {
     signals.push({
+      id: 'perf.behind-benchmark',
       rank: 4,
       severity: 'risk',
-      badge: 'Performance',
+      badge: PERFORMANCE_BADGE,
       text: `You're underperforming the ${benchmarkLabel} by ${Math.abs(diffPct).toFixed(1)}%.`,
       actions: [{ label: 'Compare Against Benchmark', target: 'performance-vs-benchmark' }],
     });
@@ -383,9 +461,10 @@ export function buildSummary({
 
   if (chartStats.benchAvailable && diffPct >= NOTABLE_BENCHMARK_GAP_PCT) {
     signals.push({
+      id: 'perf.ahead-of-benchmark',
       rank: 5,
       severity: 'opportunity',
-      badge: 'Performance',
+      badge: PERFORMANCE_BADGE,
       text: `You're outperforming the ${benchmarkLabel} by ${diffPct.toFixed(1)}%.`,
       actions: [{ label: 'Compare Against Benchmark', target: 'performance-vs-benchmark' }],
     });
@@ -395,6 +474,7 @@ export function buildSummary({
     const holding = holdings.find((h) => h.ticker === driver.ticker);
     const sector = holding?.sector ? ` in ${holding.sector}` : '';
     signals.push({
+      id: 'daily.driver',
       rank: 6,
       severity: 'neutral',
       badge: 'Market',
@@ -406,27 +486,37 @@ export function buildSummary({
     });
   }
 
-  if (signals.length === 0) {
+  signals.sort((a, b) => a.rank - b.rank);
+
+  const benchmark = {
+    available: Boolean(chartStats.benchAvailable),
+    diffPct,
+    label: benchmarkLabel,
+  };
+  const headlineSignals = signals.filter((s) => s.badge !== PERFORMANCE_BADGE);
+
+  if (headlineSignals.length === 0) {
     return {
       headline: `Your holdings are well diversified, no company is more than ${topPct.toFixed(0)}% of your book.`,
-      supportingText: chartStats.benchAvailable
-        ? [
-            `Performance is tracking the ${benchmarkLabel} closely (${chartStats.diff} this period).`,
-          ]
-        : [],
+      supportingText:
+        chartStats.benchAvailable && signals.length === 0
+          ? [
+              `Performance is tracking the ${benchmarkLabel} closely (${chartStats.diff} this period).`,
+            ]
+          : [],
       severity: 'neutral',
       badge: 'Overview',
       suggestedActions: [askAiWhy('What should I be watching in my portfolio right now?')],
-      signals: [],
+      benchmark,
+      signals,
     };
   }
 
-  signals.sort((a, b) => a.rank - b.rank);
-  const [primary, ...rest] = signals;
+  const [primary, ...rest] = headlineSignals;
 
-  /** @type {{ label: string, to?: string, target?: string, prefill?: string }[]} */
+  /** @type {{ label: string, to?: string, target?: string, question?: string }[]} */
   const actions = [];
-  for (const signal of signals) {
+  for (const signal of headlineSignals) {
     for (const action of signal.actions) {
       if (!actions.some((a) => a.label === action.label)) actions.push(action);
     }
@@ -438,6 +528,7 @@ export function buildSummary({
     severity: primary.severity,
     badge: primary.badge,
     suggestedActions: actions.slice(0, 3),
+    benchmark,
     signals,
   };
 }
@@ -471,10 +562,11 @@ export function buildExplanation({ stats, attribution }) {
 
 /**
  * @param {{ holding: any, holdings: any[] }} args
- * @returns {{ level: 'normal'|'market'|'sector'|'unusual', label: string, detail: string }}
+ * @returns {{ level: 'normal'|'market'|'sector'|'unusual', label: string, detail: string } | null}
  */
 function classifyContext({ holding, holdings }) {
-  const changePct = holding?.daily_change_pct ?? 0;
+  const changePct = num(holding.daily_change_pct);
+  if (changePct === null) return null;
 
   if (Math.abs(changePct) < MOVE_LIM) {
     return {
@@ -488,11 +580,11 @@ function classifyContext({ holding, holdings }) {
   const sectorPeers = holdings.filter(
     (h) => h.sector === holding.sector && h.ticker !== holding.ticker,
   );
-  const sectorPeersAligned = sectorPeers.filter(
-    (h) =>
-      Math.sign(h.daily_change_pct ?? 0) === direction && Math.abs(h.daily_change_pct ?? 0) >= 1,
+  const knownPeers = sectorPeers.filter((h) => num(h.daily_change_pct) !== null);
+  const sectorPeersAligned = knownPeers.filter(
+    (h) => Math.sign(h.daily_change_pct) === direction && Math.abs(h.daily_change_pct) >= 1,
   );
-  if (sectorPeers.length > 0 && sectorPeersAligned.length === sectorPeers.length) {
+  if (knownPeers.length >= 2 && sectorPeersAligned.length === knownPeers.length) {
     return {
       level: 'sector',
       label: 'Sector-driven',
@@ -500,12 +592,12 @@ function classifyContext({ holding, holdings }) {
     };
   }
 
-  const movedWithDirection = holdings.filter(
-    (h) =>
-      Math.sign(h.daily_change_pct ?? 0) === direction && Math.abs(h.daily_change_pct ?? 0) >= 1,
+  const knownMovers = holdings.filter((h) => num(h.daily_change_pct) !== null);
+  const movedWithDirection = knownMovers.filter(
+    (h) => Math.sign(h.daily_change_pct) === direction && Math.abs(h.daily_change_pct) >= 1,
   );
-  const breadth = holdings.length ? movedWithDirection.length / holdings.length : 0;
-  if (holdings.length >= 3 && breadth >= MARKET_WIDE_BREADTH) {
+  const breadth = knownMovers.length ? movedWithDirection.length / knownMovers.length : 0;
+  if (knownMovers.length >= 3 && breadth >= MARKET_WIDE_BREADTH) {
     return {
       level: 'market',
       label: 'Market-wide move',
@@ -524,7 +616,7 @@ function classifyContext({ holding, holdings }) {
  * @param {{ holdings: any[], attribution: { contributors: any[], drags: any[], todayReturn: number } }} args
  * @returns {{ driver: { text: string, tickers: string[] } | null }}
  */
-export function buildDriver({ holdings, attribution }) {
+function buildDriver({ holdings, attribution }) {
   if (!holdings.length) return { driver: null };
 
   const totalAbs = [...attribution.contributors, ...attribution.drags].reduce(
@@ -569,8 +661,8 @@ export function buildDriver({ holdings, attribution }) {
 
   /** @type {Record<string, number>} */
   const sectorTotals = {};
-  for (const h of holdings) {
-    const contribution = ((h.value ?? 0) * (h.daily_change_pct ?? 0)) / 100;
+  for (const h of holdings.filter((x) => num(x.daily_change_pct) !== null)) {
+    const contribution = ((num(h.value) ?? 0) * h.daily_change_pct) / 100;
     const sector = h.sector || 'Other';
     sectorTotals[sector] = (sectorTotals[sector] ?? 0) + Math.abs(contribution);
   }
@@ -700,11 +792,15 @@ export function buildPerformanceQuestions({ diffPct, benchAvailable, benchmarkLa
  * @param {any[]} holdings
  * @returns {string[]}
  */
-export function buildHoldingsQuestions(holdings) {
+/**
+ * @param {any[]} holdings
+ * @param {{ low: number, high: number }} [thresholds]
+ */
+export function buildHoldingsQuestions(holdings, thresholds) {
   if (!holdings.length) return [];
   const { topHolding, topPct } = getTopHolding(holdings);
   if (!topHolding) return [];
-  const holdingRisk = getConcRisk(topPct);
+  const holdingRisk = getConcRisk(topPct, thresholds);
 
   if (holdingRisk.level === 'low') {
     return [
@@ -720,105 +816,10 @@ export function buildHoldingsQuestions(holdings) {
 
   const { sectors } = buildSectors(holdings);
   const topSector = sectors[0];
-  if (topSector && getConcRisk(topSector.value).level === 'high') {
+  if (topSector && getConcRisk(topSector.value, thresholds).level === 'high') {
     questions.push(
       `My ${topSector.name} exposure is ${topSector.value.toFixed(0)}% of my portfolio - is that too concentrated?`,
     );
-  }
-
-  return questions.slice(0, 4);
-}
-
-const MEANINGFUL_CONTRIBUTION_SURPLUS = 500;
-
-/**
- * @param {{ requiredMonthly: number | null | undefined, monthlyContribution: number | null | undefined }} args
- * @returns {string}
- */
-export function buildContributionMessage({ requiredMonthly, monthlyContribution }) {
-  const contributionUnset = monthlyContribution === null || monthlyContribution === undefined;
-  const requiredKnown = requiredMonthly !== null && requiredMonthly !== undefined;
-
-  if (contributionUnset && requiredKnown && Math.round(requiredMonthly) === 0) {
-    return "You're on track - no further contributions are required to hit your target.";
-  }
-  if (contributionUnset) {
-    return "Set a monthly contribution in Edit Goal to see whether you're on track.";
-  }
-  if (!requiredKnown) {
-    return "You're on track.";
-  }
-
-  const delta = requiredMonthly - monthlyContribution;
-  if (Math.round(delta) === 0) return "You're on track.";
-
-  if (delta < 0) {
-    const surplus = -delta;
-    return surplus > MEANINGFUL_CONTRIBUTION_SURPLUS
-      ? `You're on track - you could invest about ${zar(surplus)} less a month and still hit your target.`
-      : "You're on track.";
-  }
-
-  return `Invest about ${zar(delta)} more a month to stay on track.`;
-}
-
-const GOAL_OFF_TRACK_PROBABILITY_PCT = 50;
-
-/**
- * @param {{
- *   progress: { target_date?: string | null } | null,
- *   simulation: { probability_pct?: number | null } | null,
- * }} params
- */
-export function buildGoalQuestions({ progress, simulation }) {
-  if (!progress) return [];
-  const questions = [
-    `Am I on track to hit my target by ${formatMonthYearLabel(progress.target_date)}?`,
-  ];
-  const probability = simulation?.probability_pct;
-  if (probability !== null && probability !== undefined) {
-    questions.push(
-      probability < GOAL_OFF_TRACK_PROBABILITY_PCT
-        ? `My probability of reaching my goal is only ${Math.round(probability)}% - what should I change?`
-        : `How can I improve my ${Math.round(probability)}% probability of reaching my goal?`,
-    );
-  }
-  return questions;
-}
-
-/** @param {string|null|undefined} iso */
-function formatMonthYearLabel(iso) {
-  if (!iso) return 'my target date';
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return 'my target date';
-  return date.toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' });
-}
-
-/**
- * @param {any} tax
- * @returns {string[]}
- */
-export function buildTaxQuestions(tax) {
-  if (!tax) return [];
-
-  if (!tax.available) {
-    if (tax.reason === 'tfsa_exempt') {
-      return ["Why isn't tax shown for this account?"];
-    }
-    return [];
-  }
-
-  const questions =
-    tax.taxable_capital_gain !== null
-      ? [
-          `How is my ${zar(tax.taxable_capital_gain)} taxable capital gain calculated?`,
-          'How can I reduce my capital gains tax?',
-        ]
-      : [
-          `What does an assessed capital loss of ${zar(tax.assessed_capital_loss)} mean for next tax year?`,
-        ];
-  if (tax.potential_realised_loss !== null) {
-    questions.push('How does tax-loss harvesting work?');
   }
 
   return questions.slice(0, 4);

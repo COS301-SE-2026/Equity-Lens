@@ -3,7 +3,12 @@ import { TrendingUp, TrendingDown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import { zar, zarFull } from '../../../utils/currency';
-import { buildHeroSummary } from '../../../utils/dashboardInsights';
+import {
+  BENCHMARK_METHOD,
+  benchmarkCompositionLines,
+  buildHeroSummary,
+  shortBenchmarkLabel,
+} from '../../../utils/dashboardInsights';
 import HelpTooltip from '../../common/HelpTooltip/HelpTooltip';
 import Money from '../../common/Money/Money';
 
@@ -73,7 +78,7 @@ const HeroFigure = ({
 }) => (
   <div>
     <div
-      className="flex items-center gap-1 font-mono text-[10px] tracking-widest sm:justify-end"
+      className="flex items-center gap-1 font-mono text-[11px] tracking-widest sm:justify-end"
       style={{ color: 'var(--text-ghost)' }}
     >
       <span>{label}</span>
@@ -98,15 +103,33 @@ const HeroFigure = ({
 );
 
 /**
+ * @param {number} historyDays
+ */
+const benchmarkPeriod = (historyDays) =>
+  historyDays > 0 ? `over ${historyDays} days` : 'since inception';
+
+/**
  * @param {{
  *   name: string,
  *   portfolioData: any,
  *   health: { score: number|null, label: string|null },
  *   fetchedAt?: Date|null,
+ *   benchmark?: { available: boolean, diffPct: number, label: string } | null,
+ *   benchmarkComposition?: { region: string, label: string, weight: number }[],
+ *   historyDays?: number,
  *   onScrollToHealth: () => void,
  * }} props
  */
-const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealth }) => {
+const DashboardHero = ({
+  name,
+  portfolioData,
+  health,
+  fetchedAt,
+  benchmark,
+  benchmarkComposition = [],
+  historyDays = 0,
+  onScrollToHealth,
+}) => {
   const slowMo = useReducedMotion();
   const greeting = greet(new Date().getHours());
   const time = newTime(fetchedAt);
@@ -189,7 +212,7 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
             <div className="sm:text-right">
               {' '}
               <div
-                className="flex items-center gap-1 font-mono text-[10px] tracking-widest sm:justify-end"
+                className="flex items-center gap-1 font-mono text-[11px] tracking-widest sm:justify-end"
                 style={{ color: 'var(--text-ghost)' }}
               >
                 {' '}
@@ -261,7 +284,7 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
           ) : (
             <div className="sm:text-right">
               <div
-                className="font-mono text-[10px] tracking-widest"
+                className="font-mono text-[11px] tracking-widest"
                 style={{ color: 'var(--text-ghost)' }}
               >
                 Portfolio Value
@@ -274,7 +297,7 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
         </div>
         {time && (
           <div
-            className="mt-5 text-right font-mono text-[9px]"
+            className="mt-5 text-right font-mono text-[11px]"
             style={{ color: 'var(--text-ghost)' }}
           >
             {time}
@@ -285,32 +308,64 @@ const DashboardHero = ({ name, portfolioData, health, fetchedAt, onScrollToHealt
             className="mt-5 flex flex-wrap items-center justify-between gap-4 pt-4"
             style={{ borderTop: '1px solid var(--border-subtle)' }}
           >
-            <div className="flex items-center gap-2">
-              <span
-                className="font-mono text-[10px] tracking-widest"
-                style={{ color: 'var(--text-ghost)' }}
-              >
-                Portfolio Health
-              </span>
-              <span
-                className="rounded-full px-2.5 py-1 font-mono text-[11px] font-semibold"
-                style={{ background: 'var(--surface-raised)', color: healthTone(health.score) }}
-              >
-                {health.label}
-              </span>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <div className="flex items-center gap-2">
+                <span
+                  className="font-mono text-[11px] tracking-widest"
+                  style={{ color: 'var(--text-ghost)' }}
+                >
+                  Portfolio Health
+                </span>
+                <span
+                  className="rounded-full px-2.5 py-1 font-mono text-[12px] font-semibold"
+                  style={{ background: 'var(--surface-raised)', color: healthTone(health.score) }}
+                >
+                  {health.label}
+                </span>
+              </div>
+              {benchmark?.available && (
+                <div>
+                  <div
+                    className="flex items-center gap-1 font-mono text-[11px] tracking-widest"
+                    style={{ color: 'var(--text-ghost)' }}
+                  >
+                    <span>vs {shortBenchmarkLabel(benchmarkComposition, benchmark.label)}</span>
+                    <HelpTooltip
+                      text={[
+                        `Your return against the ${benchmark.label} ${benchmarkPeriod(historyDays)}. Performance vs Benchmark below can be narrowed to a shorter range, so the figure there will differ.`,
+                        ...benchmarkCompositionLines(benchmarkComposition),
+                        BENCHMARK_METHOD,
+                      ].join('\n')}
+                    />
+                  </div>
+                  <div
+                    className="mt-0.5 font-mono text-[16px] font-semibold leading-none"
+                    style={{ color: signColor(benchmark.diffPct) }}
+                  >
+                    {signPrefix(benchmark.diffPct)}
+                    {Math.abs(benchmark.diffPct).toFixed(1)}%
+                  </div>
+                  <div
+                    className="mt-0.5 font-mono text-[11px]"
+                    style={{ color: 'var(--text-ghost)' }}
+                  >
+                    {benchmarkPeriod(historyDays)}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={onScrollToHealth}
-                className="rounded-md px-4 py-2 font-mono text-[11px] font-medium transition-opacity hover:opacity-80"
+                className="rounded-md px-4 py-2 font-mono text-[12px] font-medium transition-opacity hover:opacity-80"
                 style={{ background: 'var(--accent-primary)', color: 'var(--text-on-accent)' }}
               >
                 Review Portfolio Health
               </button>
               <Link
                 to="/ai"
-                className="rounded-md px-4 py-2 font-mono text-[11px] font-medium transition-colors"
+                className="rounded-md px-4 py-2 font-mono text-[12px] font-medium transition-colors"
                 style={{ border: '1px solid var(--border-subtle)', color: 'var(--text-secondary)' }}
               >
                 Ask AI Assistant

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import api from './api';
 
 import {
   getPortfolio,
@@ -13,7 +14,7 @@ vi.mock('./api', () => ({
   },
 }));
 
-import api from './api';
+
 
 beforeEach(() => {
   vi.clearAllMocks();

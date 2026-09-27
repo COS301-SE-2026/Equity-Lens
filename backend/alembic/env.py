@@ -9,7 +9,14 @@ from alembic import context
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 from app.config import settings
 from app.database import Base
+
+# imported for their side effect: each module registers its tables on Base.metadata,
+# which autogenerate compares the database against
 from app.models import (
+    chat,  # noqa: F401
+    market_data,  # noqa: F401
+    news_event,  # noqa: F401
+    portfolio,  # noqa: F401
     user,  # noqa: F401
 )
 
