@@ -9,19 +9,22 @@ vi.mock('./api', () => ({
   },
 }));
 
+/** @type {any} */
+const mockedGet = api.get;
+
 describe('indicatorService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
   it('calls the cached indicators endpoint', async () => {
-    api.get.mockResolvedValue({ data: [] });
+    mockedGet.mockResolvedValue({ data: [] });
     await getIndicatorData();
     expect(api.get).toHaveBeenCalledWith('/indicators');
   });
 
   it('returns the backend response payload unchanged', async () => {
     const payload = [{ ticker: 'AAPL', name: 'Apple Inc.' }];
-    api.get.mockResolvedValue({ data: payload });
+    mockedGet.mockResolvedValue({ data: payload });
     await expect(getIndicatorData()).resolves.toBe(payload);
   });
 });

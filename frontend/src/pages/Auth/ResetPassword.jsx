@@ -9,9 +9,9 @@ import useForm from '../../hooks/useForm';
 import { ROUTES } from '../../utils/constants';
 import { validatePassword, validateConfirmPassword } from '../../utils/validators';
 
-/** @param {{ code: string, newPassword: string, confirmPassword: string }} values */
+/** @param {any} values*/
 const validate = (values) => {
-  /** @type {Record<string, string>} */
+  /** @type {any} */
   const errors = {};
   if (!values.code || values.code.length !== 6) errors.code = 'Enter the 6-digit code';
   const passwordError = validatePassword(values.newPassword);
@@ -26,16 +26,26 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState(location.state?.email || '');
-  const [status, setStatus] = useState(
-    /** @type {{ type: 'error' | 'success' | null, message: string }} */ ({ type: null, message: '' }),
-  ); // 'error' | 'success'
+  /** @type {any} */
+  const [status, setStatus] = useState({ type: null, message: '' });
 
-  const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm(
+  /** @type {any} */
+  const form = useForm(
     { code: '', newPassword: '', confirmPassword: '' },
     validate,
   );
 
-  /** @param {{ code: string, newPassword: string, confirmPassword: string }} formValues */
+  const {
+    values,
+    errors,
+    touched,
+    isSubmitting,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+  } = form;
+
+  /** @param {any} formValues*/
   const onSubmit = async (formValues) => {
     if (!email) return;
     setStatus({ type: null, message: '' });
@@ -47,7 +57,7 @@ const ResetPassword = () => {
       const message = err instanceof Error ? err.message : '';
       setStatus({
         type: 'error',
-        message: message || 'Could not reset your password. Please try again.',
+        message: 'Could not reset your password. Please try again.',
       });
     }
   };
@@ -71,11 +81,10 @@ const ResetPassword = () => {
 
           {status.type && (
             <div
-              className={`mb-6 rounded-lg border p-3 text-sm ${
-                status.type === 'success'
+              className={`mb-6 rounded-lg border p-3 text-sm ${status.type === 'success'
                   ? 'border-[rgba(34,197,94,0.2)] bg-[rgba(34,197,94,0.1)] text-[var(--color-success)]'
                   : 'border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.1)] text-[var(--color-danger)]'
-              }`}
+                }`}
               role={status.type === 'success' ? 'status' : 'alert'}
               aria-live="polite"
             >
