@@ -72,6 +72,7 @@ const CustomTooltip = ({ active, payload }) => {
   );
 };
 
+/** @param {{ data?: SectorDatum[] | null }} props */
 const SectorPieChart = ({ data = mockSectorData }) => {
   if (!data || data.length === 0) {
     return (

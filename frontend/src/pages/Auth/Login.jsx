@@ -10,7 +10,9 @@ import useForm from '../../hooks/useForm';
 import { ROUTES } from '../../utils/constants';
 import { validateEmail } from '../../utils/validators';
 
+/** @param {{ email: string, password: string }} values */
 const validate = (values) => {
+  /** @type {Record<string, string>} */
   const errors = {};
   const emailError = validateEmail(values.email);
   if (emailError) errors.email = emailError;
@@ -18,6 +20,14 @@ const validate = (values) => {
   return errors;
 };
 
+/**
+ * @param {{
+ *   title: string,
+ *   subtitle: string,
+ *   serverError?: string | null,
+ *   children?: React.ReactNode,
+ * }} props
+ */
 export const Card = ({ title, subtitle, serverError, children }) => (
   <div className="glass-surface-elevated rounded-2xl p-8">
     <div className="mb-8">
@@ -43,10 +53,12 @@ const Login = () => {
   const navigate = useNavigate();
 
   const [view, setView] = useState('login');
-  const [serverError, setServerError] = useState(null);
+  const [serverError, setServerError] = useState(/** @type {string | null} */ (null));
   const [mfaCode, setMfaCode] = useState('');
   const [isMfaLoading, setIsMfaLoading] = useState(false);
-  const [totpData, setTotpData] = useState({ secret: null, uri: null });
+  const [totpData, setTotpData] = useState(
+    /** @type {{ secret: string | null, uri: string | null }} */ ({ secret: null, uri: null }),
+  );
   const [email, setEmail] = useState('');
 
   useEffect(() => {
@@ -62,6 +74,7 @@ const Login = () => {
     validate,
   );
 
+  /** @param {{ email: string, password: string }} formValues */
   const handleLoginSubmit = async (formValues) => {
     sessionStorage.removeItem('login_error');
     setServerError(null);
@@ -93,6 +106,7 @@ const Login = () => {
     }
   };
 
+  /** @param {'verify' | 'setup'} actionType */
   const handleMfaSubmit = async (actionType) => {
     if (mfaCode.length !== 6) {
       return;
@@ -109,13 +123,18 @@ const Login = () => {
       }
       setTimeout(() => navigate(ROUTES.DASHBOARD, { replace: true }), 700);
     } catch (err) {
-      setServerError(err.message || 'Code invalid');
+      const message = err instanceof Error ? err.message : '';
+      setServerError(message || 'Code invalid');
       setMfaCode('');
     } finally {
       setIsMfaLoading(false);
     }
   };
 
+  /**
+   * @param {string} buttonText
+   * @param {'verify' | 'setup'} actionType
+   */
   const renderMfaInput = (buttonText, actionType) => (
     <div className="flex flex-col gap-5">
       <input

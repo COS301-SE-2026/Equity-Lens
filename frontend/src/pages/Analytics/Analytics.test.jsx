@@ -17,7 +17,7 @@ const renderAnalytics = () =>
 
 describe('Analytics', () => {
   beforeEach(() => {
-    useIndicators.mockReturnValue({
+    vi.mocked(useIndicators).mockReturnValue({
       stockData: {},
       loading: false,
       error: null,
@@ -44,7 +44,7 @@ describe('Analytics', () => {
   });
 
   it('reflects the number of stocks returned by useIndicators', () => {
-    useIndicators.mockReturnValue({
+    vi.mocked(useIndicators).mockReturnValue({
       stockData: {
         AAPL: { loading: false, results: { ticker: 'AAPL', name: 'Apple Inc.' } },
         MSFT: { loading: false, results: { ticker: 'MSFT', name: 'Microsoft Corp.' } },
@@ -57,7 +57,7 @@ describe('Analytics', () => {
   });
 
   it('shows all indicator column labels for each stock row', () => {
-    useIndicators.mockReturnValue({
+    vi.mocked(useIndicators).mockReturnValue({
       stockData: {
         AAPL: { loading: false, results: { ticker: 'AAPL', name: 'Apple Inc.' } },
       },
@@ -75,7 +75,7 @@ describe('Analytics', () => {
   });
 
   it("renders an indicator's value and description when a result is present", () => {
-    useIndicators.mockReturnValue({
+    vi.mocked(useIndicators).mockReturnValue({
       stockData: {
         AAPL: {
           loading: false,
@@ -95,7 +95,7 @@ describe('Analytics', () => {
   });
 
   it("renders the error cell when an indicator result has status 'error'", () => {
-    useIndicators.mockReturnValue({
+    vi.mocked(useIndicators).mockReturnValue({
       stockData: {
         AAPL: {
           loading: false,
@@ -115,7 +115,7 @@ describe('Analytics', () => {
   });
 
   it('renders skeleton placeholders while loading', () => {
-    useIndicators.mockReturnValue({
+    vi.mocked(useIndicators).mockReturnValue({
       stockData: {},
       loading: true,
       error: null,
@@ -126,7 +126,7 @@ describe('Analytics', () => {
   });
 
   it("renders 'N/A' and the first sentence of the reason for insufficient data", () => {
-    useIndicators.mockReturnValue({
+    vi.mocked(useIndicators).mockReturnValue({
       stockData: {
         AAPL: {
           loading: false,
