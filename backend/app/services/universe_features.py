@@ -5,13 +5,17 @@ from app.utils.stock_cache import get_cached_fundamentals
 
 logger = logging.getLogger(__name__)
 
+MIN_PLAUSIBLE_FLOAT = 0.05
 
 def _local_float_proxy(info: dict) -> float | None:
     float_shares = info.get("floatShares")
     shares_out = info.get("sharesOutstanding")
     if not float_shares or not shares_out:
         return None
-    return round(min(float_shares / shares_out, 1.0) * 100, 2)
+    ratio = float_shares / shares_out
+    if ratio < MIN_PLAUSIBLE_FLOAT:
+        return None
+    return round(min(ratio, 1.0) * 100, 2)
 
 
 def build_feature(ticker: str) -> Feature | None:

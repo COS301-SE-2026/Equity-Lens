@@ -10,7 +10,7 @@ router = APIRouter(prefix="/api/explore", tags=["explore"])
  
 @router.get("/recommendations")
 def get_recommendations(
-    k: int = Query(6, ge=1, le=20),
+    k: int = Query(9, ge=1, le=20),
     db: Session = Depends(get_db),
     current_user: UserResponse = Depends(get_current_user),
 ) -> dict:
