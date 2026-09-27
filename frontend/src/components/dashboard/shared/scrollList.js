@@ -16,7 +16,7 @@ const markAtEnd = (el) => {
 };
 
 export const useScrollEndFade = () => {
-  const ref = useRef(/** @type {HTMLElement | null} */ (null));
+  const ref = useRef(/** @type {HTMLDivElement | null} */ (null));
   useEffect(() => {
     markAtEnd(ref.current);
   });

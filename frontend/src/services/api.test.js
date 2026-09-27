@@ -1,5 +1,5 @@
 import { fetchAuthSession, signOut } from 'aws-amplify/auth';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 vi.mock('aws-amplify/auth', () => ({
   fetchAuthSession: vi.fn(),
@@ -12,17 +12,22 @@ vi.mock('../utils/constants', () => ({
 
 import api from './api';
 
-const requestFulfilled = api.interceptors.request.handlers[0].fulfilled;
-const responseRejected = api.interceptors.response.handlers[0].rejected;
+// the interceptors are read out of axios's handler list so they can be called directly
+const requestFulfilled = /** @type {(config: any) => Promise<any>} */ (
+  api.interceptors.request.handlers?.[0].fulfilled
+);
+const responseRejected = /** @type {(error: any) => Promise<any>} */ (
+  api.interceptors.response.handlers?.[0].rejected
+);
 
 describe('api request interceptor', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
   it('attaches a bearer token to the request when a session exists', async () => {
-    fetchAuthSession.mockResolvedValue({
-      tokens: { accessToken: { toString: () => 'live-token' } },
-    });
+    vi.mocked(fetchAuthSession).mockResolvedValue(
+      /** @type {any} */ ({ tokens: { accessToken: { toString: () => 'live-token' } } }),
+    );
 
     const config = await requestFulfilled({ headers: {} });
 
@@ -30,7 +35,7 @@ describe('api request interceptor', () => {
   });
 
   it('leaves the request unauthenticated when there is no session', async () => {
-    fetchAuthSession.mockResolvedValue({});
+    vi.mocked(fetchAuthSession).mockResolvedValue({});
 
     const config = await requestFulfilled({ headers: {} });
 
@@ -38,7 +43,7 @@ describe('api request interceptor', () => {
   });
 
   it('lets the request through unmodified if fetchAuthSession throws', async () => {
-    fetchAuthSession.mockRejectedValue(new Error('network error'));
+    vi.mocked(fetchAuthSession).mockRejectedValue(new Error('network error'));
 
     const config = await requestFulfilled({ headers: {} });
 
@@ -48,19 +53,21 @@ describe('api request interceptor', () => {
 
 describe('api response interceptor', () => {
   const originalLocation = window.location;
+  // location is swapped for a plain object so the redirect can be read back
+  const win = /** @type {any} */ (window);
 
   beforeEach(() => {
     vi.clearAllMocks();
-    delete window.location;
-    window.location = { ...originalLocation, href: '', pathname: '/dashboard' };
+    delete win.location;
+    win.location = { ...originalLocation, href: '', pathname: '/dashboard' };
   });
 
   afterEach(() => {
-    window.location = originalLocation;
+    win.location = originalLocation;
   });
 
   it('signs out and redirects to /login on a rejected token', async () => {
-    signOut.mockResolvedValue(undefined);
+    vi.mocked(signOut).mockResolvedValue(undefined);
     const error = { response: { status: 401, data: { error_code: 'TOKEN_EXPIRED' } } };
 
     await expect(responseRejected(error)).rejects.toBe(error);
@@ -70,7 +77,7 @@ describe('api response interceptor', () => {
   });
 
   it('still redirects to /login even if signOut itself fails', async () => {
-    signOut.mockRejectedValue(new Error('signOut failed'));
+    vi.mocked(signOut).mockRejectedValue(new Error('signOut failed'));
     const error = { response: { status: 401, data: { error_code: 'TOKEN_EXPIRED' } } };
 
     await expect(responseRejected(error)).rejects.toBe(error);

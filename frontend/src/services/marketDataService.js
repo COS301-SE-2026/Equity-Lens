@@ -18,7 +18,7 @@ export const getHistorialData = async (symbol, period = '1mo') => {
 
 /**
  * @param {any} query 
- * @param {any} signal 
+ * @param {AbortSignal} [signal]
  * */
 export const searchStocks = async (query, signal) => {
   const response = await api.get('/stocks/search', {

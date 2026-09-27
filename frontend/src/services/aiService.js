@@ -39,7 +39,19 @@ const toCard = (t) => ({
 // portfolio vs JSE comparison.
 const PORTFOLIO_VS_JSE = { portfolio: 8.42, jse: 5.17 };
 
-/** @param {any} rawInput*/
+/**
+ * @typedef {{
+ *   text: string,
+ *   trend?: 'up' | 'down',
+ *   changeText?: string,
+ *   cards?: ReturnType<typeof toCard>[],
+ * }} MockResponse
+ */
+
+/**
+ * @param {any} rawInput
+ * @returns {MockResponse}
+ */
 export const getMockResponse = (rawInput) => {
   const text = normalize(rawInput);
 
