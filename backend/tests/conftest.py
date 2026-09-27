@@ -12,6 +12,7 @@ from app.dependencies import get_current_user
 from app.main import app
 from app.models.user import User
 from app.services.portfolio_service import invalidate_priced_holdings
+from app.utils import stock_cache
 
 
 @pytest.fixture(autouse=True)
@@ -19,6 +20,13 @@ def _clear_priced_holdings_cache():
     invalidate_priced_holdings()
     yield
     invalidate_priced_holdings()
+
+@pytest.fixture(autouse=True)
+def _reset_price_refresh_cooldowns():
+    stock_cache._PRICE_REFRESH_COOLDOWN_UNTIL.clear()
+    stock_cache._REFRESH_LOCKS.clear()
+    stock_cache._YFINANCE_GLOBAL_COOLDOWN_UNTIL = None
+    stock_cache._YFINANCE_COOLDOWN_STRIKES = 0
 
 
 @pytest.fixture
