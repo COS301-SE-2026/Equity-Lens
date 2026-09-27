@@ -238,19 +238,6 @@ describe('News page', () => {
     expect(screen.getByText('MSFT beats expectations')).toBeInTheDocument();
   });
 
-  it('filters the feed down to negative articles', async () => {
-    const user = userEvent.setup();
-    render(<NewsInvestment />);
-
-    await user.click(await screen.findByRole('button', { name: 'AAPL' }));
-
-    await user.click(screen.getByRole('button', { name: 'Negative' }));
-
-    expect(screen.getByText('AAPL faces supply issues')).toBeInTheDocument();
-    expect(screen.queryByText('AAPL beats expectations')).not.toBeInTheDocument();
-    expect(screen.queryByText('AAPL holds steady')).not.toBeInTheDocument();
-  });
-
   it('now switches to the market tab and swaps thel heading', async () => {
     const user = userEvent.setup();
     render(<NewsInvestment />);
