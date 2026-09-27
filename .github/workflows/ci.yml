@@ -37,7 +37,7 @@ jobs:
         run: npm run lint
 
       - name: Type check
-        continue-on-error: true
+        continue-on-error: false
         working-directory: frontend
         run: npm run typecheck
 
@@ -203,7 +203,7 @@ jobs:
           alembic upgrade head
 
       - name: Run tests
-        continue-on-error: true
+        continue-on-error: false
         working-directory: backend
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/equitylens

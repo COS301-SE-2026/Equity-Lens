@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -108,7 +108,7 @@ class TestCachingAndColdStart:
 
         iu._cache["JSE"] = {
             "symbols": ["CACHED.JO"],
-            "built_at": datetime.now(timezone.utc),
+            "built_at": datetime.now(UTC),
         }
 
         assert iu.market_universe("JSE", mock_db_session) == ["CACHED.JO"]
@@ -123,7 +123,7 @@ class TestCachingAndColdStart:
 
         mock_db_session.get.return_value = SimpleNamespace(
             symbols=["SAVED.JO"],
-            built_at=datetime.now(timezone.utc),
+            built_at=datetime.now(UTC),
         )
 
         assert iu.market_universe("JSE", mock_db_session) == ["SAVED.JO"]
@@ -137,7 +137,7 @@ class TestFailureModesAndDegradedState:
         failing_screener = MagicMock(side_effect=RuntimeError("Yahoo service down"))
         monkeypatch.setattr(iu.yf, "screen", failing_screener)
 
-        stale_timestamp = datetime.now(timezone.utc) - timedelta(days=8)
+        stale_timestamp = datetime.now(UTC) - timedelta(days=8)
         iu._cache["JSE"] = {"symbols": ["OLD.JO"], "built_at": stale_timestamp}
 
         assert iu.market_universe("JSE", mock_db_session) == ["OLD.JO"]

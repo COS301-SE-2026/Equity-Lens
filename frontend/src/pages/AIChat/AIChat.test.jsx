@@ -87,7 +87,7 @@ describe("AIChat", () => {
       vi.clearAllMocks();
         mockGet.mockResolvedValue({data: []});
         mockPost.mockResolvedValue({data: {reply: "mock reply", conversation_id: 1}});
-        global.fetch = vi.fn().mockResolvedValue({
+        globalThis.fetch = vi.fn().mockResolvedValue({
           ok: true,
           body: sseBody(
             { type: "text", value: "mock reply" },
@@ -126,7 +126,7 @@ describe("AIChat", () => {
       fireEvent.click(sendButton);
 
       expect(await screen.findByText("mock reply")).toBeDefined();
-      expect(global.fetch).toHaveBeenCalledWith(
+      expect(globalThis.fetch).toHaveBeenCalledWith(
         expect.stringContaining("/ai_chat/stream/"),
         expect.objectContaining({ method: "POST" }));      
     });

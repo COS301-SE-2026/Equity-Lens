@@ -1,6 +1,6 @@
 import logging
 import threading
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import yfinance as yf
 from sqlalchemy.orm import Session
@@ -31,7 +31,7 @@ _cache: dict[str, dict] = {}
 _LOCKS = {market: threading.Lock() for market in _QUERIES}
 
 
-class UniverseUnavailable(Exception):
+class UniverseUnavailableError(Exception):
     """Raised when the screener fails and no previous universe exists."""
 
 
@@ -61,13 +61,13 @@ def _build(market: str) -> list[str]:
 
 def market_universe(market: str, db: Session) -> list[str]:
     entry = _cache.get(market)
-    if entry and datetime.now(timezone.utc) - entry["built_at"] < _TTL:
+    if entry and datetime.now(UTC) - entry["built_at"] < _TTL:
         return entry["symbols"]
     with _LOCKS[market]:
         return _load_or_build(market,db)
 
 def _load_or_build(market: str, db: Session) -> list[str]:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     entry = _cache.get(market)
     if entry is None:
@@ -100,4 +100,4 @@ def _load_or_build(market: str, db: Session) -> list[str]:
         entry["built_at"] = now - _TTL + _RETRY
         return entry["symbols"]
 
-    raise UniverseUnavailable(market)
+    raise UniverseUnavailableError(market)

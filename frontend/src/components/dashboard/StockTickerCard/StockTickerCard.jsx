@@ -1,3 +1,12 @@
+/**
+ * @param {{
+ *   ticker: string,
+ *   name: string,
+ *   price: number,
+ *   changePercent: number,
+ *   totalReturn: number,
+ * }} props
+ */
 const StockTickerCard = ({ ticker, name, price, changePercent, totalReturn }) => {
   const dailyPositive = changePercent >= 0;
   const totalPositive = totalReturn >= 0;
@@ -115,7 +124,7 @@ const StockTickerCard = ({ ticker, name, price, changePercent, totalReturn }) =>
             color: dailyPositive ? 'var(--signal-positive)' : 'var(--signal-negative)',
           }}
         >
-          24h {dailyPositive ? '▲' : '▼'} {Math.abs(changePercent?.toFixed(2))}%
+          24h {dailyPositive ? '▲' : '▼'} {Math.abs(changePercent).toFixed(2)}%
         </span>
       </div>
     </div>

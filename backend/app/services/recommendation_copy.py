@@ -9,5 +9,11 @@ def describe_similar(rec: dict, source_sector: str, target_sector: str) -> str:
     pct = round(rec["closeness"] * 100)
     traits = _closest_traits(rec["gaps"])
     if target_sector == source_sector:
-        return f"{pct}% match to {rec['similar_to']}: same sector ({target_sector}), similar {traits}"
-    return f"{pct}% match to {rec['similar_to']}: similar {traits} despite a different sector ({target_sector})"
+        return (
+            f"{pct}% match to {rec['similar_to']}: "
+            f"same sector ({target_sector}), similar {traits}"
+        )
+    return (
+        f"{pct}% match to {rec['similar_to']}: "
+        f"similar {traits} despite a different sector ({target_sector})"
+    )

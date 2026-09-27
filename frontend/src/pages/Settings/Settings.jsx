@@ -6,10 +6,11 @@ import { useAuthContext } from '../../context/AuthContext';
 import { deleteAccount } from '../../services/authService';
 import { ROUTES } from '../../utils/constants';
 
+/** @param {any} props */
 const DeleteAccountModal = ({ userEmail, onClose, onConfirmed }) => {
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(/** @type {string | null} */ (null));
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -18,7 +19,8 @@ const DeleteAccountModal = ({ userEmail, onClose, onConfirmed }) => {
       await deleteAccount(userEmail);
       onConfirmed();
     } catch (err) {
-      setError(err.message || 'Account deletion failed');
+      const message = err instanceof Error ? err.message : '';
+      setError(message || 'Account deletion failed');
       setDeleting(false);
     }
   };

@@ -7,7 +7,7 @@ import Landing from './Landing';
 
 vi.mock('recharts', async () => {
   const actual = await vi.importActual('recharts');
-  return { ...actual, ResponsiveContainer: ({ children }) => <div>{children}</div> };
+  return { ...actual, ResponsiveContainer: (/** @type {any} */ { children }) => <div>{children}</div> };
 });
 
 const renderPage = () =>
