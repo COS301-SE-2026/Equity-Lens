@@ -1,7 +1,7 @@
 import json
 import logging
 import time
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 from threading import Lock
 
@@ -1094,8 +1094,11 @@ def _persist_turn(db: Session, chat_conversation, user_id, user_message: str, re
         db.add(chat_conversation)
         db.flush()
 
-    db.add(ChatMessages(conversation_id=chat_conversation.id, role="user", content=user_message))
-    db.add(ChatMessages(conversation_id=chat_conversation.id, role="assistant", content=reply))
+    asked_at = datetime.now(UTC)
+    db.add(ChatMessages(conversation_id=chat_conversation.id, role="user", content=user_message,
+                        created_at=asked_at))
+    db.add(ChatMessages(conversation_id=chat_conversation.id, role="assistant", content=reply,
+                        created_at=asked_at + timedelta(microseconds=1)))
 
     chat_conversation.updated_at = datetime.now(UTC)
     db.commit()
