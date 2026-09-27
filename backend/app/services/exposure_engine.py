@@ -32,6 +32,8 @@ class NormalizedFeature:
 # of 0.071 despite belonging to Financial Services and Basic Materials respectively.
 SECTOR_MISMATCH_PENALTY = 0.4
 YIELD_CAP = 15.0
+# Expected distance between 2 random stocks
+RANDOM_PAIR_DISTANCE = 2.26
  
 def normalize_universe(features: list[Feature], reference: list[Feature]) -> list[NormalizedFeature]:
     log_mcap = np.array([math.log10(f.market_cap) for f in features])
@@ -76,16 +78,12 @@ def similarity_scores(
     scored = [(f, _distance(holding, f)) for f in candidates]
     scored.sort(key=lambda pair: pair[1])
  
-    distances = [d for _, d in scored]
-    d_min, d_max = min(distances), max(distances)
-    span = (d_max - d_min) or 1.0
- 
     return [
         {
             "ticker": f.ticker,
             "similar_to": holding.ticker,
             "distance": round(d, 3),
-            "closeness": round(1 - (d - d_min) / span, 3),
+            "closeness": round(max(0.0, 1 - d / RANDOM_PAIR_DISTANCE), 3),
             "gaps": _gaps(holding, f),
         }
         for f, d in scored[:k]

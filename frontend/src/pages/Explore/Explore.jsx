@@ -18,6 +18,12 @@ const GLASS_PANEL_STYLE = {
   padding: '20px',
 };
 
+const UNAVAILABLE_MESSAGES = {
+  no_holdings: 'Add holdings to your portfolio to see similar JSE shares.',
+  no_jse_holdings:
+    "Explore finds JSE shares similar to the ones you hold. Your portfolio doesn't contain any JSE-listed shares yet.",
+};
+
 function getCognitoAccessToken() {
   const authKey = Object.keys(localStorage).find(
     (key) => key.startsWith('CognitoIdentityServiceProvider.') && key.endsWith('.LastAuthUser'),
@@ -45,6 +51,7 @@ export default function Explore() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
+        if (res.status === 503) throw new Error('market data is temporarily unavailable. Try again shortly.');
         if (!res.ok) throw new Error(`HTTP error ${res.status}`);
         return res.json();
       })
@@ -115,8 +122,29 @@ export default function Explore() {
           </div>
         )}
 
-        {data && (
+                {data && !data.eligible && (
+          <div className="glass-surface" style={{ ...GLASS_PANEL_STYLE, maxWidth: '560px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 8px' }}>
+              Explore isn&apos;t available for this portfolio
+            </h2>
+            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+              {UNAVAILABLE_MESSAGES[data.reason]}
+            </p>
+            {data.excluded?.length > 0 && (
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '12px 0 0' }}>
+                Not supported: {data.excluded.join(', ')}
+              </p>
+            )}
+          </div>
+        )}
+
+        {data?.eligible && (
           <>
+            {data.excluded?.length > 0 && (
+              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 16px' }}>
+                Not included: {data.excluded.join(', ')}. Explore only covers JSE-listed shares.
+              </p>
+            )}
             <ul
               style={{
                 listStyle: 'none',

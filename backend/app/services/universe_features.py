@@ -45,6 +45,11 @@ def build_feature(ticker: str) -> Feature | None:
     )
 
 
+def is_jse_equity(ticker: str) -> bool:
+    info = get_cached_fundamentals(ticker).get("info") or {}
+    return info.get("exchange") == "JNB" and info.get("quoteType") == "EQUITY"
+
+
 def build_universe_features(tickers: list[str]) -> list[Feature]:
     features = []
     for ticker in tickers:
