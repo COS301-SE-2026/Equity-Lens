@@ -28,6 +28,7 @@ const TICKERS = {
 };
 
 // Maps TICKERS entry onto the StockTickerCard
+/** @param {any} t*/
 const toCard = (t) => ({
   ticker: t.symbol,
   name: t.name,
@@ -38,6 +39,7 @@ const toCard = (t) => ({
 // portfolio vs JSE comparison.
 const PORTFOLIO_VS_JSE = { portfolio: 8.42, jse: 5.17 };
 
+/** @param {any} rawInput*/
 export const getMockResponse = (rawInput) => {
   const text = normalize(rawInput);
 

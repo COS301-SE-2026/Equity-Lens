@@ -2,6 +2,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+import app.services.import_pdf as import_pdf_service
 from app.services.import_pdf import (
     import_Pdf_data,
     save_contributions_and_withdrawals_import,
@@ -112,9 +113,6 @@ def test_save_transaction_expenses_import(mock_data):
 
     assert result["Success"] is True
     assert result["Message"] == "Transaction expenses has been saved successfully"
-
-
-import app.services.import_pdf as import_pdf_service
 
 
 @pytest.fixture(autouse=True)

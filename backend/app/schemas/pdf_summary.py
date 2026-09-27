@@ -1,4 +1,3 @@
-from typing import List, Optional
 
 from pydantic import BaseModel
 
@@ -15,20 +14,20 @@ class ImportSummary(BaseModel):
 
 
 class NamedValue(BaseModel):
-    name: Optional[str] = None
+    name: str | None = None
     value: float
 
 
 class AllocationSlice(BaseModel):
-    name: Optional[str] = None
+    name: str | None = None
     weight_percentage: float
 
 
 class DividendIncomeRow(BaseModel):
-    name: Optional[str] = None
+    name: str | None = None
     gross_dividend: float
     withholding_tax: float
     net_dividend: float
 
 
-NamedValueList = List[NamedValue]
+NamedValueList = list[NamedValue]

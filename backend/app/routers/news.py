@@ -149,14 +149,14 @@ def _count_newsdata_sentiment(articles: list[dict]) -> dict:
 
 
 @router.get("/all", response_model=NewsResponse)
-def get_news(current_user: User = Depends(get_current_user)):
+def get_news(_current_user: User = Depends(get_current_user)):
     return _count_newsdata_sentiment(_newsdata_articles({}))
 
 
 @router.get("/", response_model=NewsResponse)
 def get_news_by_category(
     category: str = "business",
-    current_user: User = Depends(get_current_user),
+    _current_user: User = Depends(get_current_user),
 ):
     return _count_newsdata_sentiment(_newsdata_articles({"category": category}))
 
@@ -204,6 +204,7 @@ def _stored_article(row: NewsArticle) -> dict:
         "image_url": row.image_url,
         "pubDate": _iso_utc(row.published_at) if row.published_at else None,
         "source_name": row.source_name,
+        "url":  row.url,
         "category": [link.ticker for link in row.tickers],
         "sentiment": row.sentiment or "neutral",
         "sentiment_score": row.sentiment_score if row.sentiment_score is not None else 0,
@@ -354,17 +355,42 @@ def fetch_market_news(category: str = "business"):
 def fetch_ticker_news(ticker: str):
     api_key = settings.market_api_key
 
-    response = requests.get(
-        "https://api.marketaux.com/v1/news/all",
-        params={
-            "api_token": api_key,
-            "symbols": ticker,
-            "filter_entities": "true",
-            "language": "en",
-            "limit": 20,
-        },
-        timeout=6,
-    )
+    try:
+        response = requests.get(
+            "https://api.marketaux.com/v1/news/all",
+            params={
+                "api_token": api_key,
+                "symbols": ticker,
+                "filter_entities": "true",
+                "language": "en",
+                "limit": 20,
+            },
+            timeout=15,
+        )
+
+        response.raise_for_status()
+
+    except requests.exceptions.Timeout:
+        logger.error("MarketAux timed out for ticker %s", ticker)
+        return {
+            "ticker": ticker,
+            "total_articles": 0,
+            "positive": 0,
+            "negative": 0,
+            "neutral": 0,
+            "articles": [],
+        }
+
+    except requests.exceptions.RequestException as exc:
+        logger.error("MarketAux request failed for %s: %s", ticker, exc)
+        return {
+            "ticker": ticker,
+            "total_articles": 0,
+            "positive": 0,
+            "negative": 0,
+            "neutral": 0,
+            "articles": [],
+        }
 
     data = response.json()
 

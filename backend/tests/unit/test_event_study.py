@@ -10,6 +10,7 @@ from app.services.event_study import (
     aligned_simple_returns,
     run,
 )
+
 START = date(2026, 1, 1)
 
 def prices(returns, start_price=100.0):

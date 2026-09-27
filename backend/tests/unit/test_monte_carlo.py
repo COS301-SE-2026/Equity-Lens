@@ -8,7 +8,11 @@ def test_zero_years_returns_a_null_result_not_a_crash():
         current_value=100_000, target_value=200_000, years=0,
         monthly_contribution=1000, expected_return_pct=8, volatility_pct=15,
     )
-    assert result == {"probability_pct": None, "months": 0, "path_percentiles": [], "median_final_value": None}
+    assert result == {
+        "probability_pct": None, "months": 0, 
+        "path_percentiles": [], 
+        "median_final_value": None
+        }
 
 
 def test_zero_target_value_returns_a_null_result_not_a_divide_by_zero():
