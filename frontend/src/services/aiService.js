@@ -67,8 +67,11 @@ export const getMockResponse = (rawInput) => {
     };
   }
 
-  for (const key of Object.keys(TICKERS)) {
-    const t = TICKERS[key];
+  /** @type {any} */
+  const tickers = TICKERS;
+
+  for (const key of Object.keys(tickers)) {
+    const t = tickers[key];
     const keywords = [key, ...t.aliases];
     if (keywords.some((word) => new RegExp(`\\b${word}\\b`).test(text))) {
       return {

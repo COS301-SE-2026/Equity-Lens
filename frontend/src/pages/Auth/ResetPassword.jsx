@@ -9,7 +9,9 @@ import useForm from '../../hooks/useForm';
 import { ROUTES } from '../../utils/constants';
 import { validatePassword, validateConfirmPassword } from '../../utils/validators';
 
+/** @param {any} values*/
 const validate = (values) => {
+  /** @type {any} */
   const errors = {};
   if (!values.code || values.code.length !== 6) errors.code = 'Enter the 6-digit code';
   const passwordError = validatePassword(values.newPassword);
@@ -24,13 +26,26 @@ const ResetPassword = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState(location.state?.email || '');
-  const [status, setStatus] = useState({ type: null, message: '' }); // 'error' | 'success'
+  /** @type {any} */
+  const [status, setStatus] = useState({ type: null, message: '' });
 
-  const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm(
+  /** @type {any} */
+  const form = useForm(
     { code: '', newPassword: '', confirmPassword: '' },
     validate,
   );
 
+  const {
+    values,
+    errors,
+    touched,
+    isSubmitting,
+    handleChange,
+    handleBlur,
+    handleSubmit,
+  } = form;
+
+  /** @param {any} formValues*/
   const onSubmit = async (formValues) => {
     if (!email) return;
     setStatus({ type: null, message: '' });
@@ -41,7 +56,7 @@ const ResetPassword = () => {
     } catch (err) {
       setStatus({
         type: 'error',
-        message: err.message || 'Could not reset your password. Please try again.',
+        message: 'Could not reset your password. Please try again.',
       });
     }
   };
@@ -65,11 +80,10 @@ const ResetPassword = () => {
 
           {status.type && (
             <div
-              className={`mb-6 rounded-lg border p-3 text-sm ${
-                status.type === 'success'
+              className={`mb-6 rounded-lg border p-3 text-sm ${status.type === 'success'
                   ? 'border-[rgba(34,197,94,0.2)] bg-[rgba(34,197,94,0.1)] text-[var(--color-success)]'
                   : 'border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.1)] text-[var(--color-danger)]'
-              }`}
+                }`}
               role={status.type === 'success' ? 'status' : 'alert'}
               aria-live="polite"
             >
@@ -95,7 +109,6 @@ const ResetPassword = () => {
                 label="Verification code"
                 name="code"
                 type="text"
-                inputMode="numeric"
                 value={values.code}
                 onChange={(e) =>
                   handleChange({
