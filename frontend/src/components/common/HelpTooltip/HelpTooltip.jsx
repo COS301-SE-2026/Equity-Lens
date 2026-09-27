@@ -1,37 +1,50 @@
-import { useRef, useState, useEffect } from 'react';
-import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { HelpCircle } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
+/** @param {{ text: string }} props */
 export default function HelpTooltip({ text }) {
   const [visible, setVisible] = useState(false);
   const [pos, setPos] = useState({ left: 0, bottom: 0 });
-  const buttonRef = useRef(null);
+  const buttonRef = useRef(/** @type {HTMLButtonElement | null} */ (null));
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
-    if (!visible) { return; }
+    if (!visible) {
+      return;
+    }
     function syncPosition() {
-      if (!buttonRef.current) { return; }
+      if (!buttonRef.current) {
+        return;
+      }
       const rect = buttonRef.current.getBoundingClientRect();
       const width = 208;
       let left = rect.left + rect.width / 2 - width / 2;
-      if (left < 8) { left = 8; }
-      if (left + width > window.innerWidth - 8) { left = window.innerWidth - width - 8; }
-      setPos({ left, bottom: window.innerHeight - rect.top + 8, });}
+      if (left < 8) {
+        left = 8;
+      }
+      if (left + width > window.innerWidth - 8) {
+        left = window.innerWidth - width - 8;
+      }
+      setPos({ left, bottom: window.innerHeight - rect.top + 8 });
+    }
 
     syncPosition();
 
+    /** @param {KeyboardEvent} e */
     const handleKeyDown = (e) => {
-    if (e.key === 'Escape') setVisible(false); };
+      if (e.key === 'Escape') setVisible(false);
+    };
     window.addEventListener('scroll', syncPosition, true);
     window.addEventListener('resize', syncPosition);
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('scroll', syncPosition, true);
       window.removeEventListener('resize', syncPosition);
-      window.removeEventListener('keydown', handleKeyDown);};
-    }, [visible]);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [visible]);
 
   return (
     <>
@@ -44,7 +57,8 @@ export default function HelpTooltip({ text }) {
         onMouseLeave={() => setVisible(false)}
         onFocus={() => setVisible(true)}
         onBlur={() => setVisible(false)}
-        aria-label="What does this mean?" >
+        aria-label="What does this mean?"
+      >
         <HelpCircle size={12} />
       </button>
       {createPortal(
@@ -52,23 +66,32 @@ export default function HelpTooltip({ text }) {
           {visible && (
             <motion.span
               role="tooltip"
-              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : 4, scale: shouldReduceMotion ? 1 : 0.95 }}
+              initial={{
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : 4,
+                scale: shouldReduceMotion ? 1 : 0.95,
+              }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: shouldReduceMotion ? 0 : 4, scale: shouldReduceMotion ? 1 : 0.95 }}
+              exit={{
+                opacity: 0,
+                y: shouldReduceMotion ? 0 : 4,
+                scale: shouldReduceMotion ? 1 : 0.95,
+              }}
               transition={{ duration: 0.15 }}
-              className="glass-surface-elevated pointer-events-none fixed rounded-lg px-3 py-2 text-[11px] leading-snug"
+              className="glass-surface-elevated pointer-events-none fixed rounded-lg px-3 py-2 text-[12px] leading-snug"
               style={{
                 left: pos.left,
                 bottom: pos.bottom,
                 width: 208,
                 zIndex: 9999,
                 color: 'var(--text-secondary)',
-              }} >
+              }}
+            >
               {text}
             </motion.span>
           )}
         </AnimatePresence>,
-        document.body
+        document.body,
       )}
     </>
   );

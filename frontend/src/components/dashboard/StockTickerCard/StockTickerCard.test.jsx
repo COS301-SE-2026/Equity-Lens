@@ -1,11 +1,12 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+
 import StockTickerCard from './StockTickerCard';
 
 const mockProps = {
   ticker: 'NPN',
   name: 'Naspers',
-  price: 3150.00,
+  price: 3150.0,
   changePercent: 1.4,
   totalReturn: 12.5,
 };

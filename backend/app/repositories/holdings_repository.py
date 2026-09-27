@@ -1,6 +1,8 @@
 from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from app.models.portfolio import Holdings
 
 
@@ -15,5 +17,6 @@ class HoldingsRepository:
         stmt = (
             select(Holdings)
             .where(Holdings.portfolio_id.in_(portfolio_ids))
-            .order_by(Holdings.total_cost.desc()))
+            .order_by(Holdings.total_cost.desc())
+        )
         return list(self.db.scalars(stmt).all())

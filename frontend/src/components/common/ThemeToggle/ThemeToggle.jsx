@@ -1,13 +1,14 @@
-import { useThemeContext } from '../../../context/ThemeContext.jsx'
+import { useThemeContext } from '../../../context/ThemeContext.jsx';
 
 function ThemeToggle() {
-  const { theme, toggleTheme } = useThemeContext()
-  const isDark = theme === 'dark'
+  const { theme, toggleTheme } = useThemeContext();
+  const isDark = theme === 'dark';
 
   return (
     <button
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       role="switch"
       aria-checked={isDark}
       className="theme-toggle"
@@ -16,8 +17,10 @@ function ThemeToggle() {
         width: '40px',
         height: '22px',
         borderRadius: '999px',
-        border: '1px solid var(--border-subtle,#2a2a2a)',
-        background: isDark ? 'var(--accent-primary,#d4a017)' : 'var(--border-subtle,#2a2a2a)',
+        border: '1px solid var(--border-subtle,rgba(255,255,255,0.10))',
+        background: isDark
+          ? 'var(--accent-primary,#FF6A00)'
+          : 'var(--border-subtle,rgba(255,255,255,0.10))',
         cursor: 'pointer',
         padding: 0,
         transition: 'background 150ms ease-out',
@@ -38,15 +41,15 @@ function ThemeToggle() {
           justifyContent: 'center',
           transition: 'left 150ms ease-out',
         }}
-      > 
-      <img
-        src={isDark ? '/assets/dark.png' : '/assets/light.png'}
-        alt=""
-        style={{ width: '16px', height: '16px' }}
-      />
+      >
+        <img
+          src={isDark ? '/assets/dark.png' : '/assets/light.png'}
+          alt=""
+          style={{ width: '16px', height: '16px' }}
+        />
       </span>
     </button>
-  )
+  );
 }
 
-export default ThemeToggle
+export default ThemeToggle;

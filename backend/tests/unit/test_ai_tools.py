@@ -1,48 +1,66 @@
-import pandas as pd
-import pytest
 from unittest.mock import MagicMock, patch
-from app.services import ai_service
-from app.services.ai_service import chat, get_market_news_tool, get_stock_data_tool
-from app.models.chat import ChatMessages
 
-@pytest.fixture(autouse = True)
-def clear_news_cache():
-    ai_service._NEWS_CACHE.clear()
-    yield
-    ai_service._NEWS_CACHE.clear()
+import pandas as pd
+
+from app.models.chat import ChatMessages
+from app.services import ai_service
+from app.services.ai_service import (
+    MAX_NEWS_ARTICLES,
+    chat,
+    get_market_news_tool,
+    get_stock_data_tool,
+)
+
 
 @patch("app.services.ai_service.requests.get")
 def test_news_headlines(mock_get):
     response = MagicMock()
-    response.json.return_value = {"results": 
+    response.json.return_value = {"data":
         [
             {
-                "title":"Rates held steady",
-                "source_name": "Moneyweb",
-                "description": "The reserve bank kept the repo rate unchanged."
-            }, 
+                "title": "Rates held steady",
+                "source": "Moneyweb",
+                "published_at": "2026-09-19T08:00:00.000000Z",
+                "description": "The reserve bank kept the repo rate unchanged.",
+                "entities": [
+                    {
+                        "symbol": "SOL.JO",
+                        "sentiment_score": 0.42,
+                        "highlights": [
+                            {
+                                "highlight": "Sasol gained on the news.",
+                                "highlighted_in": "main_text",
+                            }
+                        ],
+                    }
+                ],
+            },
             {
-                "title":"Long story",
-                "source_name": "Reuters",
-                "description": "x" * 300
-            }
+                "title": "Long story",
+                "source": "Reuters",
+                "published_at": "2026-09-19T09:00:00.000000Z",
+                "description": "x" * 300,
+                "entities": [],
+            },
         ]}
     mock_get.return_value = response
 
-    with patch.object(ai_service.settings, "newsdata_api_key", "test-key"):
+    with patch.object(ai_service.settings, "market_api_key", "test-key"):
         output = get_market_news_tool()
 
-    assert "Recent headlines:" in output
+    assert "Recent market news:" in output
     assert "Rates held steady" in output
     assert "Moneyweb" in output
-    assert "The reserve bank kept the repo rate unchanged." in output
-
+    assert "Sentiment for SOL.JO: positive" in output
+    assert "Sasol gained on the news." in output
     assert ("x" * 250) + "..." in output
     assert "x" * 251 not in output
 
     params = mock_get.call_args.kwargs["params"]
-    assert params["category"] == "business"
-    assert "q" not in params
+
+    assert params["api_token"] == "test-key"
+    assert params["limit"] == MAX_NEWS_ARTICLES
+    assert "search" not in params
 
 
 @patch("app.services.ai_service.get_cached_price_history")
@@ -82,7 +100,7 @@ def test_chat_runs_the_stock_tool(mock_bedrock_client, mock_h, db_session, test_
             "output": {"message": {"role": "assistant", "content":
                 [
                     {"text": "Let me check that."},
-                    {"toolUse": 
+                    {"toolUse":
                         {
                             "toolUseId": "tool-1",
                             "name": "get_stock_data",
@@ -92,12 +110,13 @@ def test_chat_runs_the_stock_tool(mock_bedrock_client, mock_h, db_session, test_
         },
 
         { "output": {"message": {"content": [{"text": "Sasol closed at R110.00."}]}}},
+        {"output": {"message": {"content": [{"text": "[]"}]}}},
         {"output": {"message": {"content": [{"text": "Sasol price"}]}}}
     ]
     mock_bedrock_client.return_value = mocked_client
     reply, conversation_id = chat("How is Sasol doing?", db_session, test_user.id)
     assert reply == "Sasol closed at R110.00."
-    assert mocked_client.converse.call_count == 3
+    assert mocked_client.converse.call_count == 2
 
     assert mock_h.call_args.args[0] == "SOL.JO"
 

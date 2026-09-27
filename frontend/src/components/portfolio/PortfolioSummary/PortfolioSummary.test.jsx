@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+
 import PortfolioSummary from './PortfolioSummary';
 
 describe('PortfolioSummary', () => {
@@ -18,7 +19,4 @@ describe('PortfolioSummary', () => {
     expect(screen.getByText('+1.25%')).toBeInTheDocument();
     expect(screen.getByText('8')).toBeInTheDocument();
   });
-
-
-
 });

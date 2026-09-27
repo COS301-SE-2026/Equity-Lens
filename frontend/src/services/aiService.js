@@ -10,8 +10,7 @@ export const normalize = (input = '') =>
 
 // Returned when no keyword matches.
 const FALLBACK = {
-  text:
-    "I'm a demo assistant (Send a keyword to receive a prompt)",
+  text: "I'm a demo assistant (Send a keyword to receive a prompt)",
 };
 
 // Card snapshots
@@ -19,10 +18,17 @@ const TICKERS = {
   npn: { symbol: 'NPN', name: 'Naspers', aliases: ['naspers'], price: 3842.5, changePct: 1.84 },
   mtn: { symbol: 'MTN', name: 'MTN Group', aliases: ['mtn group'], price: 84.17, changePct: -2.05 },
   sol: { symbol: 'SOL', name: 'Sasol', aliases: ['sasol'], price: 138.6, changePct: 0.92 },
-  fsr: { symbol: 'FSR', name: 'FirstRand', aliases: ['firstrand', 'first rand'], price: 71.34, changePct: 0.41 },
+  fsr: {
+    symbol: 'FSR',
+    name: 'FirstRand',
+    aliases: ['firstrand', 'first rand'],
+    price: 71.34,
+    changePct: 0.41,
+  },
 };
 
 // Maps TICKERS entry onto the StockTickerCard
+/** @param {any} t*/
 const toCard = (t) => ({
   ticker: t.symbol,
   name: t.name,
@@ -33,12 +39,25 @@ const toCard = (t) => ({
 // portfolio vs JSE comparison.
 const PORTFOLIO_VS_JSE = { portfolio: 8.42, jse: 5.17 };
 
+/**
+ * @typedef {{
+ *   text: string,
+ *   trend?: 'up' | 'down',
+ *   changeText?: string,
+ *   cards?: ReturnType<typeof toCard>[],
+ * }} MockResponse
+ */
+
+/**
+ * @param {any} rawInput
+ * @returns {MockResponse}
+ */
 export const getMockResponse = (rawInput) => {
   const text = normalize(rawInput);
 
   if (/\b(hi|hello|hey)\b/.test(text)) {
     return {
-      text: "Hi. Good day",
+      text: 'Hi. Good day',
     };
   }
 
@@ -49,10 +68,7 @@ export const getMockResponse = (rawInput) => {
     };
   }
 
-  if (
-    /\bportfolio\b/.test(text) &&
-    /\b(jse|benchmark|all share|compar)/.test(text)
-  ) {
+  if (/\bportfolio\b/.test(text) && /\b(jse|benchmark|all share|compar)/.test(text)) {
     const { portfolio, jse } = PORTFOLIO_VS_JSE;
     const delta = portfolio - jse;
     const verb = delta >= 0 ? 'Outperforming' : 'Underperforming';
@@ -63,8 +79,11 @@ export const getMockResponse = (rawInput) => {
     };
   }
 
-  for (const key of Object.keys(TICKERS)) {
-    const t = TICKERS[key];
+  /** @type {any} */
+  const tickers = TICKERS;
+
+  for (const key of Object.keys(tickers)) {
+    const t = tickers[key];
     const keywords = [key, ...t.aliases];
     if (keywords.some((word) => new RegExp(`\\b${word}\\b`).test(text))) {
       return {

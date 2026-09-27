@@ -10,5 +10,11 @@
     "skipLibCheck": true,
     "types": ["vite/client"]
   },
-  "include": ["src/**/*.js", "src/**/*.jsx"]
+  "include": ["src/**/*.js", "src/**/*.jsx"],
+  "exclude": [
+  "node_modules",
+  "dist",
+  "coverage",
+  "src/test"
+]
 }

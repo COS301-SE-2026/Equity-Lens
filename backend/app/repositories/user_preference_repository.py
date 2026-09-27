@@ -1,7 +1,10 @@
 from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from app.models.user_preference import UserPreference
+
 
 class UserPreferenceRepository:
     def __init__(self, db: Session):

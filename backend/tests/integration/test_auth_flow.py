@@ -9,8 +9,10 @@ def test_full_registration_login_flow(client, sample_user_data):
         "ExpiresIn": 3600,
         "TokenType": "Bearer",
     }
-    with patch("app.routers.auth.cognito.cognito_register") as mock_register, \
-         patch("app.routers.auth.cognito.cognito_login") as mock_login:
+    with (
+        patch("app.routers.auth.cognito.cognito_register") as mock_register,
+        patch("app.routers.auth.cognito.cognito_login") as mock_login,
+    ):
         mock_register.return_value = {
             "user_sub": "test-cognito-sub-123",
             "email": sample_user_data["email"],

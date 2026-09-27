@@ -1,15 +1,16 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.repositories.user_repository import UserRepository
-from app.schemas.auth import RegisterRequest, LoginRequest, AuthResponse, UserResponse
+from app.schemas.auth import AuthResponse, LoginRequest, RegisterRequest, UserResponse
 from app.utils.exceptions import (
-    UserAlreadyExistsException,
     InvalidCredentialsException,
     TokenExpiredException,
+    UserAlreadyExistsException,
 )
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -24,9 +25,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(user_id: str) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.access_token_expire_minutes
-    )
+    expire = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
     payload = {"sub": str(user_id), "exp": expire}
     return jwt.encode(payload, settings.secret_key, algorithm=settings.algorithm)
 
@@ -38,8 +37,8 @@ def decode_token(token: str) -> str:
         if user_id is None:
             raise InvalidCredentialsException()
         return user_id
-    except JWTError:
-        raise TokenExpiredException()
+    except JWTError as err:
+        raise TokenExpiredException() from err
 
 
 class AuthService:
@@ -69,8 +68,10 @@ class AuthService:
 
     def get_user_by_id(self, user_id: str) -> UserResponse:
         import uuid
+
         user = self.repo.get_by_id(uuid.UUID(user_id))
         if not user:
             from app.utils.exceptions import UserNotFoundException
+
             raise UserNotFoundException()
         return UserResponse.model_validate(user)

@@ -28,9 +28,12 @@ const Button = ({
   `;
 
   const variants = {
-    primary: 'bg-[var(--accent-primary)] text-[var(--text-on-accent)] hover:bg-[var(--accent-hover)]',
-    secondary: 'bg-transparent text-[var(--accent-primary)] border border-[var(--accent-primary)] hover:bg-[var(--accent-subtle)]',
-    ghost: 'bg-transparent text-[var(--text-primary)] border border-[var(--border-default)] hover:bg-[var(--bg-secondary)]',
+    primary:
+      'bg-[var(--accent-primary)] text-[var(--text-on-accent)] hover:bg-[var(--accent-hover)]',
+    secondary:
+      'bg-transparent text-[var(--accent-primary)] border border-[var(--accent-primary)] hover:bg-[var(--accent-subtle)]',
+    ghost:
+      'bg-transparent text-[var(--text-primary)] border border-[var(--border-default)] hover:bg-[var(--bg-secondary)]',
     danger: 'bg-[var(--color-danger)] text-[var(--text-on-accent)] hover:brightness-90',
   };
 
@@ -61,7 +64,14 @@ const Button = ({
           viewBox="0 0 24 24"
           aria-hidden="true"
         >
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
         </svg>
       )}

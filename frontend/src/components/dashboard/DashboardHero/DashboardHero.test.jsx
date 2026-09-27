@@ -1,7 +1,9 @@
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
+
 import { zar, zarFull } from '../../../utils/currency';
+
 import DashboardHero from './DashboardHero';
 
 const NBSP = String.fromCharCode(160);
@@ -36,6 +38,8 @@ const renderHero = (props) =>
         portfolioData={props?.portfolioData ?? DATA}
         health={props?.health ?? HEALTH}
         fetchedAt={props?.fetchedAt}
+        benchmark={props?.benchmark}
+        historyDays={props?.historyDays}
         onScrollToHealth={props?.onScrollToHealth ?? vi.fn()}
       />
     </MemoryRouter>,
@@ -156,21 +160,21 @@ describe('DashboardHero', () => {
     expect(screen.queryByText(/\+R\s*0/)).not.toBeInTheDocument();
   });
 
-  it("no longer shows the old Portfolio Summary strip", () => {
+  it('no longer shows the old Portfolio Summary strip', () => {
     renderHero();
     expect(screen.queryByText('Portfolio Summary')).not.toBeInTheDocument();
   });
 
   describe('warm summary sentence', () => {
-  /**
-   * @param {number} daily_change_value
-   * @param {number} daily_change_pct
-   * @param {Partial<typeof DATA.returns>} [returnsOverrides]
-   */
-  const withDaily = (daily_change_value, daily_change_pct, returnsOverrides = {}) => ({
-    holdings: DATA.holdings,
-    summary: { total_value: 77000, daily_change_pct, daily_change_value },
-    returns: { ...DATA.returns, ...returnsOverrides },
+    /**
+     * @param {number} daily_change_value
+     * @param {number} daily_change_pct
+     * @param {Partial<typeof DATA.returns>} [returnsOverrides]
+     */
+    const withDaily = (daily_change_value, daily_change_pct, returnsOverrides = {}) => ({
+      holdings: DATA.holdings,
+      summary: { total_value: 77000, daily_change_pct, daily_change_value },
+      returns: { ...DATA.returns, ...returnsOverrides },
     });
 
     it('reads as a strong-day sentence on a big gain', () => {
@@ -215,10 +219,15 @@ describe('DashboardHero', () => {
 
     it('shows no summary sentence when there are no holdings', () => {
       renderHero({
-        portfolioData: { holdings: [], summary: { total_value: 0, daily_change_pct: 0, daily_change_value: 0 } },
+        portfolioData: {
+          holdings: [],
+          summary: { total_value: 0, daily_change_pct: 0, daily_change_value: 0 },
+        },
         health: { score: null, label: null },
       });
-      expect(screen.queryByText(/quiet day|steady gain|strong day|rough day|small dip/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/quiet day|steady gain|strong day|rough day|small dip/i),
+      ).not.toBeInTheDocument();
     });
   });
 
@@ -227,6 +236,33 @@ describe('DashboardHero', () => {
     expect(screen.getByText('Needs Attention')).toBeInTheDocument();
     expect(screen.getByText('Review Portfolio Health')).toBeInTheDocument();
     expect(screen.getByText('Ask AI Assistant')).toBeInTheDocument();
+  });
+
+  describe('benchmark figure', () => {
+    it('reads the gap once, in the header, with the period it covers', () => {
+      renderHero({
+        benchmark: { available: true, diffPct: -33, label: 'Satrix 40 (JSE Top 40 proxy)' },
+        historyDays: 92,
+      });
+      expect(screen.getByText('vs Satrix 40 (JSE Top 40 proxy)')).toBeInTheDocument();
+      const figure = screen.getByText('-33.0%');
+      expect(figure).toHaveStyle({ color: 'var(--signal-negative)' });
+      expect(screen.getByText('over 92 days')).toBeInTheDocument();
+    });
+
+    it('says since inception when there is no day count to quote', () => {
+      renderHero({ benchmark: { available: true, diffPct: 4.2, label: 'JSE ALSI' } });
+      expect(screen.getByText('+4.2%')).toHaveStyle({ color: 'var(--signal-positive)' });
+      expect(screen.getByText('since inception')).toBeInTheDocument();
+    });
+
+    it('renders nothing when there is no benchmark to compare against', () => {
+      renderHero({ benchmark: { available: false, diffPct: 0, label: 'JSE ALSI' } });
+      expect(screen.queryByText(/^vs /)).not.toBeInTheDocument();
+
+      renderHero({ benchmark: null });
+      expect(screen.queryByText(/^vs /)).not.toBeInTheDocument();
+    });
   });
 
   it('scrolls to health section', () => {
@@ -243,7 +279,10 @@ describe('DashboardHero', () => {
 
   it('prompts import when no holdings, instead of four zeroed-out figures', () => {
     renderHero({
-      portfolioData: { holdings: [], summary: { total_value: 0, daily_change_pct: 0, daily_change_value: 0 } },
+      portfolioData: {
+        holdings: [],
+        summary: { total_value: 0, daily_change_pct: 0, daily_change_value: 0 },
+      },
       health: { score: null, label: null },
     });
     expect(screen.getByText(/import a portfolio to see your figures/i)).toBeInTheDocument();

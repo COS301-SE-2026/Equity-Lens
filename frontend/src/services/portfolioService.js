@@ -20,28 +20,18 @@ export const getPerformanceHistory = async () => {
   return response.data;
 };
 
+/**@param {any}  accountType*/
 export const setAccountType = async (accountType) => {
   const response = await api.patch('/portfolio/account-type', { account_type: accountType });
   return response.data;
 };
-
-export const getTaxAnalysis = async () => {
-  const response = await api.get('/portfolio/tax-analysis');
-  return response.data;
-};
-
-export const getTfsaRoom = async () => {
-  const response = await api.get('/portfolio/tfsa-room');
-  return response.data;
-};
-
 
 export const getMarketContext = async () => {
   const response = await api.get('/portfolio/market-context');
   return response.data;
 };
 
-
+/**@param {any}  sector*/
 export const simulateSectorInvestment = async (sector) => {
   const response = await api.post('/portfolio/simulate-sector-investment', { sector });
   return response.data;
@@ -65,5 +55,25 @@ export const saveHealthConfig = async (body) => {
 
 export const clearHealthConfig = async () => {
   const response = await api.delete('/portfolio/health-config');
+  return response.data;
+};
+
+/** @param {{ period?: string, k?: number }} [params] */
+export const getPortfolioEvents = async (params = {}) => {
+  const response = await api.get('/portfolio/events', { params });
+  return response.data;
+};
+
+/** @param {string} ticker @param {string} date */
+export const getEventDetail = async (ticker, date) => {
+  const response = await api.get(`/portfolio/events/${encodeURIComponent(ticker)}/${date}`);
+  return response.data;
+};
+
+/** @param {string[]} tickers @param {string} [period] */
+export const getHoldingSeries = async (tickers, period = '1y') => {
+  const response = await api.get('/portfolio/holdings/series', {
+    params: { tickers: tickers.join(','), period },
+  });
   return response.data;
 };

@@ -1,6 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
+
 import GlassSelect from './GlassSelect';
 
 const sampleOptions = [
@@ -19,7 +20,7 @@ describe('GlassSelect', () => {
 
   it('renders trigger button with placeholder when no value is provided', () => {
     render(<GlassSelect {...defaultProps} placeholder="Choose an item" />);
-    
+
     const trigger = screen.getByRole('button', { name: /choose an item/i });
     expect(trigger).toBeInTheDocument();
     expect(trigger).toHaveAttribute('aria-expanded', 'false');
@@ -27,7 +28,7 @@ describe('GlassSelect', () => {
 
   it('renders selected option label when matching value is passed', () => {
     render(<GlassSelect {...defaultProps} value="option-2" />);
-    
+
     expect(screen.getByRole('button')).toHaveTextContent('Option 2');
   });
 
@@ -62,24 +63,24 @@ describe('GlassSelect', () => {
   });
 
   it('navigates through options using arrow keys', async () => {
-  const user = userEvent.setup();
-  render(<GlassSelect {...defaultProps} value={null} />);
+    const user = userEvent.setup();
+    render(<GlassSelect {...defaultProps} value={null} />);
 
-  const trigger = screen.getByRole('button');
-  
-  trigger.focus();
+    const trigger = screen.getByRole('button');
 
-  await user.keyboard('{ArrowDown}');
-  expect(screen.getByRole('listbox')).toBeInTheDocument();
-  expect(trigger).toHaveAttribute('aria-activedescendant', 'test-select-option-0');
+    trigger.focus();
 
-  await user.keyboard('{ArrowDown}');
-  expect(trigger).toHaveAttribute('aria-activedescendant', 'test-select-option-1');
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    expect(trigger).toHaveAttribute('aria-activedescendant', 'test-select-option-0');
 
-  await user.keyboard('{Enter}');
-  expect(defaultProps.onChange).toHaveBeenCalledWith('option-2');
-  expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
-});
+    await user.keyboard('{ArrowDown}');
+    expect(trigger).toHaveAttribute('aria-activedescendant', 'test-select-option-1');
+
+    await user.keyboard('{Enter}');
+    expect(defaultProps.onChange).toHaveBeenCalledWith('option-2');
+    expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
+  });
 
   it('closes dropdown when pressing Escape', async () => {
     const user = userEvent.setup();
@@ -100,7 +101,7 @@ describe('GlassSelect', () => {
       <div>
         <GlassSelect {...defaultProps} />
         <button id="outside-btn">Outside</button>
-      </div>
+      </div>,
     );
 
     await user.click(screen.getByRole('button', { name: /select…/i }));

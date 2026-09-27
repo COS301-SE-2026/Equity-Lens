@@ -5,9 +5,9 @@ from app.services.instruments import KIND_ETF
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass(frozen=True)
 class HealthConfig:
-
     weight_sector_concentration: float
     weight_single_position: float
     weight_breadth: float
@@ -15,6 +15,7 @@ class HealthConfig:
     concentration_high: float
     hhi_well_spread: float
     breadth_target_n: float
+
 
 WEIGHT_MIN = 0.05
 WEIGHT_MAX = 0.70
@@ -127,6 +128,51 @@ PRESETS: dict[str, HealthPreset] = {
             concentration_high=50,
             hhi_well_spread=0.25,
             breadth_target_n=6,
+        ),
+    ),
+    "institutional": HealthPreset(
+        key="institutional",
+        name="Institutional (5/10/40)",
+        description=(
+            "Modelled on the UCITS diversification rule European funds are held to: no more "
+            "than 10% of net assets in any one issuer, and positions above 5% may not add up "
+            "to more than 40% of the fund between them. EquityLens only approximates the "
+            "first half of that. The 40% aggregate limb depends on how many positions sit "
+            "above 5% at once, which none of these three subscores can express, so it is not "
+            "checked at all - this preset tightens the issuer limit and asks for sixteen "
+            "effective positions, and is not a compliance test."
+        ),
+        config=HealthConfig(
+            weight_sector_concentration=0.35,
+            weight_single_position=0.40,
+            weight_breadth=0.25,
+            concentration_low=10,
+            concentration_high=20,
+            hhi_well_spread=0.10,
+            breadth_target_n=16,
+        ),
+    ),
+    "core_satellite": HealthPreset(
+        key="core_satellite",
+        name="Core / satellite",
+        description=(
+            "For a book built as one large index fund with small conviction positions around "
+            "it. A core that dominates is the design rather than a fault, so the "
+            "single-position bar moves well out and sector HHI is expected to read as "
+            "concentrated - a broad index fund lands in one sector bucket here. Breadth "
+            "carries half the score because the thing that can actually go wrong is a "
+            "satellite going to zero. Where the core is an ETF the single-position factor "
+            "already relabels itself Fund Concentration, which is the normal case for this "
+            "shape of portfolio."
+        ),
+        config=HealthConfig(
+            weight_sector_concentration=0.20,
+            weight_single_position=0.30,
+            weight_breadth=0.50,
+            concentration_low=40,
+            concentration_high=65,
+            hhi_well_spread=0.30,
+            breadth_target_n=7,
         ),
     ),
     "concentrated": HealthPreset(
@@ -309,7 +355,8 @@ def _sector_concentration_subscore(
     sector_count = len(sector_weights)
     detail = (
         f"{top_sector} is {top_weight * 100:.0f}% of your book "
-        f"(Herfindahl index {hhi:.2f} across {sector_count} sector{'s' if sector_count != 1 else ''})."
+        f"(Herfindahl index {hhi:.2f} across {sector_count} " 
+        f"sector{'s' if sector_count != 1 else ''})."
     )
     if any(not h["priced_live"] for h in priced_holdings):
         detail += " Weights include holdings priced at cost, so they're partially stale."
@@ -319,7 +366,7 @@ def _sector_concentration_subscore(
         if score >= 7
         else f"Adding exposure outside {top_sector} would bring this HHI down and spread the risk."
     )
-    
+
     equivalent_sectors = round(1 / config.hhi_well_spread)
     return {
         "key": "sectorConcentration",
@@ -335,12 +382,21 @@ def _sector_concentration_subscore(
     }
 
 
+def _top_weight_score(top_pct: float, config: HealthConfig) -> float:
+    low, high = config.concentration_low, config.concentration_high
+    if top_pct <= low:
+        return 10 - 3 * (top_pct / low)
+    if top_pct <= high:
+        return 7 - 3 * ((top_pct - low) / (high - low))
+    return 4 - 4 * ((top_pct - high) / (100 - high))
+
+
 def _single_position_subscore(
     priced_holdings: list[dict], total_value: float, config: HealthConfig
 ) -> dict:
     top = _top_holding(priced_holdings)
     top_pct = (top["value"] / total_value * 100) if total_value else 0.0
-    score = _clamp10(10 - top_pct / 10)
+    score = _clamp10(_top_weight_score(top_pct, config))
     ticker = top.get("ticker") or "Your largest holding"
 
     if top.get("kind") == KIND_ETF:
@@ -392,14 +448,16 @@ def _breadth_subscore(
 
     count = len(priced_holdings)
     detail = (
-        f"{count} position{'s' if count != 1 else ''} in your book, but weighted by size that's only "
-        f"{effective_n:.1f} effective position{'s' if round(effective_n, 1) != 1.0 else ''} - a raw "
+        f"{count} position{'s' if count != 1 else ''} in your book, but "
+        f"weighted by size that's only {effective_n:.1f} effective "
+        "position{'s' if round(effective_n, 1) != 1.0 else ''} - a raw "
         "count hides how much one holding can dominate."
     )
     improvement = (
         "Effective breadth is already in a healthy range."
         if effective_n >= config.breadth_target_n
-        else "Adding positions - or trimming the ones that dominate - raises effective breadth toward the target."
+        else ("Adding positions - or trimming the ones that dominate - " 
+              "raises effective breadth toward the target.")
     )
 
     return {

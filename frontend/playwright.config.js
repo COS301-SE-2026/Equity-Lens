@@ -2,8 +2,10 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: '.',
+  
+  forbidOnly: !!process.env.CI,
 
-  testMatch: ["tests/**/*.spec.js", "e2e/**/*.spec.js", "test/**/*.spec.js"],
+  testMatch: ['tests/**/*.spec.js', 'e2e/**/*.spec.js', 'test/**/*.spec.js'],
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
 
   //this will be used for all the pages
@@ -15,6 +17,6 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     port: 5173,
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
   },
 });

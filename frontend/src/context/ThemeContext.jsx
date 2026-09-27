@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+
 import { THEME_KEY } from '../utils/constants';
 
 /**@type {any} */
@@ -7,11 +8,21 @@ const ThemeContext = createContext(null);
 /**
  * @param {Object} object
  * @param {*} object.children
-*/
+ */
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(
-    () => localStorage.getItem(THEME_KEY) || 'light'
-  );
+  const [theme, setTheme] = useState(() => {
+    const painted = document.documentElement.getAttribute('data-theme');
+    if (painted === 'light' || painted === 'dark') return painted;
+
+    try {
+      const stored = localStorage.getItem(THEME_KEY);
+      if (stored === 'light' || stored === 'dark') return stored;
+    } catch {
+      //
+    }
+
+    return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  });
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -23,11 +34,7 @@ export const ThemeProvider = ({ children }) => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
 };
 
 export const useThemeContext = () => {

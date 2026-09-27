@@ -1,15 +1,24 @@
 import { Component } from 'react';
 
+/**
+ * @extends {Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }>}
+ */
 class ErrorBoundary extends Component {
+  /** @param {{ children: React.ReactNode }} props */
   constructor(props) {
     super(props);
     this.state = { hasError: false, error: null };
   }
 
+  /** @param {Error} error */
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
 
+  /**
+   * @param {Error} error
+   * @param {React.ErrorInfo} info
+   */
   componentDidCatch(error, info) {
     console.error('Uncaught render error:', error, info?.componentStack);
   }
@@ -30,15 +39,12 @@ class ErrorBoundary extends Component {
       >
         <div className="glass-surface w-full max-w-md rounded-2xl p-8 text-center">
           <p
-            className="mb-2 font-mono text-[11px] tracking-widest"
+            className="mb-2 font-mono text-[12px] tracking-widest"
             style={{ color: 'var(--signal-negative)' }}
           >
             SOMETHING WENT WRONG
           </p>
-          <h1
-            className="mb-2 text-lg font-semibold"
-            style={{ color: 'var(--text-primary)' }}
-          >
+          <h1 className="mb-2 text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
             Unexpected error occurred
           </h1>
           <p className="mb-6 text-sm" style={{ color: 'var(--text-secondary)' }}>

@@ -10,6 +10,7 @@ import { validateEmail } from '../../utils/validators';
 
 /** @param {{ email: string }} values */
 const validate = (values) => {
+  /** @type {Record<string, string>} */
   const errors = {};
   const emailError = validateEmail(values.email);
   if (emailError) errors.email = emailError;
@@ -19,7 +20,9 @@ const validate = (values) => {
 const ForgotPassword = () => {
   const { requestPasswordReset } = useAuth();
   const navigate = useNavigate();
-  const [status, setStatus] = useState({ type: null, message: '' }); // 'error' | 'success'
+  const [status, setStatus] = useState(
+    /** @type {{ type: 'error' | 'success' | null, message: string }} */ ({ type: null, message: '' }),
+  ); // 'error' | 'success'
 
   const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm(
     { email: '' },
@@ -31,24 +34,24 @@ const ForgotPassword = () => {
     setStatus({ type: null, message: '' });
     try {
       await requestPasswordReset(formValues.email);
-      } catch (err) {
-        const msg = err instanceof Error ? err.message.toLowerCase() : '';
-        if (msg.includes('limitexceeded') || msg.includes('too many')) {
-          setStatus({
-            type: 'error',
-            message: 'Too many attempts. Please wait a while before trying again.',
-          });
-          return;
-        }
-        if (msg.includes('not confirmed') || msg.includes('unconfirmed')) {
-          setStatus({
-            type: 'error',
-            message:
-              'This account has not verified its email yet - check your inbox for a verification code, or register again.',
-          });
-          return;
-        }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message.toLowerCase() : '';
+      if (msg.includes('limitexceeded') || msg.includes('too many')) {
+        setStatus({
+          type: 'error',
+          message: 'Too many attempts. Please wait a while before trying again.',
+        });
+        return;
       }
+      if (msg.includes('not confirmed') || msg.includes('unconfirmed')) {
+        setStatus({
+          type: 'error',
+          message:
+            'This account has not verified its email yet - check your inbox for a verification code, or register again.',
+        });
+        return;
+      }
+    }
     setStatus({
       type: 'success',
       message: `If an account exists for ${formValues.email}, a reset code has been sent. Redirecting...`,

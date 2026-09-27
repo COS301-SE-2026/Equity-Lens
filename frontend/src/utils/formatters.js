@@ -6,8 +6,7 @@ export const formatCurrency = (value) =>
   }).format(value);
 
 /** @param {number} value */
-export const formatPercent = (value) =>
-  `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+export const formatPercent = (value) => `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
 
 /** @param {number} value */
 export const formatShortCurrency = (value) => {
@@ -40,5 +39,4 @@ export const formatMonthYear = (dateStr) => {
 };
 
 /** @param {number} value */
-export const formatNumber = (value) =>
-  new Intl.NumberFormat('en-ZA').format(value);
+export const formatNumber = (value) => new Intl.NumberFormat('en-ZA').format(value);

@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as auth from 'aws-amplify/auth';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 import {
   register,
   confirmRegistration,
@@ -23,10 +24,16 @@ describe('authService', () => {
 
   it('delegates pass-through actions to amplify SDK', () => {
     confirmRegistration('jane@example.com', '123456');
-    expect(auth.confirmSignUp).toHaveBeenCalledWith({ username: 'jane@example.com', confirmationCode: '123456' });
+    expect(auth.confirmSignUp).toHaveBeenCalledWith({
+      username: 'jane@example.com',
+      confirmationCode: '123456',
+    });
 
     login('jane@example.com', 'pw123456');
-    expect(auth.signIn).toHaveBeenCalledWith({ username: 'jane@example.com', password: 'pw123456' });
+    expect(auth.signIn).toHaveBeenCalledWith({
+      username: 'jane@example.com',
+      password: 'pw123456',
+    });
 
     respondToMFA('654321');
     expect(auth.confirmSignIn).toHaveBeenCalledWith({ challengeResponse: '654321' });
@@ -40,7 +47,7 @@ describe('authService', () => {
 
   describe('register', () => {
     it('formats sign-up payload and returns user info', async () => {
-      vi.mocked(auth.signUp).mockResolvedValueOnce({ userId: 'abc-123' });
+      vi.mocked(auth.signUp).mockResolvedValueOnce(/** @type {any} */({ userId: 'abc-123' }));
 
       const result = await register('Jane Doe', 'jane@example.com', 'pw123456');
 
@@ -54,7 +61,9 @@ describe('authService', () => {
 
     it('propagates errors on failure', async () => {
       vi.mocked(auth.signUp).mockRejectedValueOnce(new Error('email already registered'));
-      await expect(register('Jane', 'jane@example.com', 'pw')).rejects.toThrow('email already registered');
+      await expect(register('Jane', 'jane@example.com', 'pw')).rejects.toThrow(
+        'email already registered',
+      );
     });
   });
 
@@ -76,17 +85,17 @@ describe('authService', () => {
 
   describe('getToken', () => {
     it('returns access token string when session is valid', async () => {
-      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce({
+      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce(/** @type {any} */({
         tokens: { accessToken: { toString: () => 'the-access-token' } },
-      });
+      }));
       await expect(getToken()).resolves.toBe('the-access-token');
-    });
+    }); 
 
     it('returns null on missing session, missing token, or errors', async () => {
       vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce({});
       await expect(getToken()).resolves.toBeNull();
 
-      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce({ tokens: null });
+      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce(/** @type {any} */({ tokens: null }));
       await expect(getToken()).resolves.toBeNull();
 
       vi.mocked(auth.fetchAuthSession).mockRejectedValueOnce(new Error('network error'));
@@ -96,10 +105,10 @@ describe('authService', () => {
 
   describe('isAuthenticated', () => {
     it('returns true only when valid access token exists', async () => {
-      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce({ tokens: { accessToken: 'x' } });
+      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce(/** @type {any} */({ tokens: { accessToken: 'x' } }));
       await expect(isAuthenticated()).resolves.toBe(true);
 
-      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce({ tokens: {} });
+      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce(/** @type {any} */({ tokens: {} }));
       await expect(isAuthenticated()).resolves.toBe(false);
 
       vi.mocked(auth.fetchAuthSession).mockRejectedValueOnce(new Error('network error'));
@@ -109,10 +118,10 @@ describe('authService', () => {
 
   describe('getCurrentUserProfile', () => {
     it('constructs user profile from session tokens with fallbacks', async () => {
-      vi.mocked(auth.getCurrentUser).mockResolvedValue({ userId: 'user-1' });
-      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce({
+      vi.mocked(auth.getCurrentUser).mockResolvedValue(/** @type {any} */({ userId: 'user-1' }));
+      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce(/** @type {any} */({
         tokens: { idToken: { payload: { email: 'jane@example.com', name: 'Jane Doe' } } },
-      });
+      }));
 
       await expect(getCurrentUserProfile()).resolves.toEqual({
         sub: 'user-1',
@@ -120,8 +129,7 @@ describe('authService', () => {
         full_name: 'Jane Doe',
       });
 
-      
-      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce({ tokens: {} });
+      vi.mocked(auth.fetchAuthSession).mockResolvedValueOnce(/** @type {any} */({ tokens: {} }));
       await expect(getCurrentUserProfile()).resolves.toEqual({
         sub: 'user-1',
         email: '',

@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+
 import Topbar from './Topbar';
 
 const mockLogoutFake = vi.fn();
@@ -37,7 +38,6 @@ describe('Topbar', () => {
     expect(screen.queryByText(/Abdul/i)).not.toBeInTheDocument();
   });
 
-  
   it('calls logout', () => {
     render(<Topbar onMenuClick={() => {}} />);
 
@@ -69,35 +69,42 @@ describe('Topbar', () => {
 
       fireEvent.click(screen.getByLabelText('Blur monetary values'));
 
-      expect(mockToggleBlurMoneyFake).toHaveBeenCalled();});
+      expect(mockToggleBlurMoneyFake).toHaveBeenCalled();
+    });
 
     it('blur is a security measure', () => {
       mockBlurMoney = false;
       render(<Topbar onMenuClick={() => {}} />);
       const toggle = screen.getByLabelText('Blur monetary values');
       expect(toggle.title.toLowerCase()).toContain('selectable');
-      expect(toggle.title.toLowerCase()).not.toContain('secure');});});
+      expect(toggle.title.toLowerCase()).not.toContain('secure');
+    });
+  });
 
   describe('hamburger nav trigger', () => {
-    it("marks  button data-nav-trigger", () => {
+    it('marks  button data-nav-trigger', () => {
       render(<Topbar onMenuClick={() => {}} sidebarOpen={false} />);
       const trigger = screen.getByLabelText('Open navigation menu');
-      expect(trigger).toHaveAttribute('data-nav-trigger', 'true');});
+      expect(trigger).toHaveAttribute('data-nav-trigger', 'true');
+    });
 
     it('shows the closed state', () => {
       render(<Topbar onMenuClick={() => {}} sidebarOpen={false} />);
       const trigger = screen.getByLabelText('Open navigation menu');
-      expect(trigger).toHaveAttribute('aria-expanded', 'false');});
+      expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    });
 
     it('shows the open state', () => {
       render(<Topbar onMenuClick={() => {}} sidebarOpen={true} />);
       const trigger = screen.getByLabelText('Close navigation menu');
-      expect(trigger).toHaveAttribute('aria-expanded', 'true');});
+      expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    });
 
     it('calls onMenuClick', () => {
       const onMenuClick = vi.fn();
       render(<Topbar onMenuClick={onMenuClick} sidebarOpen={false} />);
       fireEvent.click(screen.getByLabelText('Open navigation menu'));
       expect(onMenuClick).toHaveBeenCalled();
-    });});
+    });
+  });
 });

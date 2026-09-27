@@ -1,62 +1,60 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import useIndicators from "./useIndicators";
+import { renderHook, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import useIndicators from './useIndicators';
 
-vi.mock("../utils/constants", () => ({
-  API_BASE_URL: "http://localhost:8000",
+vi.mock('../utils/constants', () => ({
+  API_BASE_URL: 'http://localhost:8000',
 }));
 
-vi.mock("../services/indicatorService", () => ({
+vi.mock('../services/indicatorService', () => ({
   getIndicatorData: vi.fn(),
 }));
 
-import { getIndicatorData } from "../services/indicatorService";
+import { getIndicatorData } from '../services/indicatorService';
 
 const mockStocks = [
-  { ticker: "AAPL", name: "Apple Inc." },
-  { ticker: "MSFT", name: "Microsoft Corp." },
+  { ticker: 'AAPL', name: 'Apple Inc.' },
+  { ticker: 'MSFT', name: 'Microsoft Corp.' },
 ];
 
 beforeEach(() => {
   vi.clearAllMocks();
-  getIndicatorData.mockResolvedValue(mockStocks);
+  vi.mocked(getIndicatorData).mockResolvedValue(mockStocks);
 });
 
-describe("useIndicators", () => {
-  
-
-  it("returns stockData keyed by ticker after loading", async () => {
+describe('useIndicators', () => {
+  it('returns stockData keyed by ticker after loading', async () => {
     const { result } = renderHook(() => useIndicators());
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.stockData).toHaveProperty("AAPL");
-    expect(result.current.stockData).toHaveProperty("MSFT");
+    expect(result.current.stockData).toHaveProperty('AAPL');
+    expect(result.current.stockData).toHaveProperty('MSFT');
   });
 
-  it("maps each stock into a results object", async () => {
+  it('maps each stock into a results object', async () => {
     const { result } = renderHook(() => useIndicators());
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.stockData["AAPL"].results).toEqual(mockStocks[0]);
-    expect(result.current.stockData["AAPL"].loading).toBe(false);
+    expect(result.current.stockData['AAPL'].results).toEqual(mockStocks[0]);
+    expect(result.current.stockData['AAPL'].loading).toBe(false);
   });
 
-  it("has no error on successful fetch", async () => {
+  it('has no error on successful fetch', async () => {
     const { result } = renderHook(() => useIndicators());
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.error).toBeNull();
   });
 
-  it("sets error when getMockIndicatorData throws", async () => {
-    getIndicatorData.mockRejectedValue(new Error("Service failed"));
+  it('sets error when getMockIndicatorData throws', async () => {
+    vi.mocked(getIndicatorData).mockRejectedValue(new Error('Service failed'));
     const { result } = renderHook(() => useIndicators());
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.error).toBe("Service failed");
+    expect(result.current.error).toBe('Service failed');
   });
 
-  it("sets a fallback error message when the error has no message", async () => {
-    getIndicatorData.mockRejectedValue({});
+  it('sets a fallback error message when the error has no message', async () => {
+    vi.mocked(getIndicatorData).mockRejectedValue({});
     const { result } = renderHook(() => useIndicators());
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.error).toBe("Failed to load indicators");
+    expect(result.current.error).toBe('Failed to load indicators');
   });
 });

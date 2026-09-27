@@ -1,20 +1,24 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import useAuth from '../../hooks/useAuth';
-import useForm from '../../hooks/useForm';
+
+import Button from '../../components/common/Button/Button';
 import FormInput from '../../components/forms/FormInput/FormInput';
 import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
-import Button from '../../components/common/Button/Button';
-import { Card } from './Login';
+import useAuth from '../../hooks/useAuth';
+import useForm from '../../hooks/useForm';
+import { ROUTES } from '../../utils/constants';
 import {
   validateEmail,
   validatePassword,
   validateConfirmPassword,
   validateName,
 } from '../../utils/validators';
-import { ROUTES } from '../../utils/constants';
 
+import { Card } from './Login';
+
+/** @param {{ fullName: string, email: string, password: string, confirmPassword: string }} values */
 const validate = (values) => {
+  /** @type {Record<string, string>} */
   const errors = {};
   const nameError = validateName(values.fullName);
   const emailError = validateEmail(values.email);
@@ -30,36 +34,37 @@ const validate = (values) => {
 const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [serverError, setServerError] = useState(null);
+  const [serverError, setServerError] = useState(/** @type {string | null} */ (null));
   const [success, setSuccess] = useState(false);
   const [registeredEmail, setRegisteredEmail] = useState('');
 
-  const {
-    values,
-    errors,
-    touched,
-    isSubmitting,
-    handleChange,
-    handleBlur,
-    handleSubmit,
-  } = useForm(
+  const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm(
     { fullName: '', email: '', password: '', confirmPassword: '' },
-    validate
+    validate,
   );
 
+  /** @param {{ fullName: string, email: string, password: string, confirmPassword: string }} formValues */
   const onSubmit = async (formValues) => {
     setServerError(null);
     try {
       await register(formValues.fullName, formValues.email, formValues.password);
       setRegisteredEmail(formValues.email);
       setSuccess(true);
-      setTimeout(() => navigate(ROUTES.CONFIRM_EMAIL, { state: { email: formValues.email }}), 1500);
+      setTimeout(
+        () => navigate(ROUTES.CONFIRM_EMAIL, { state: { email: formValues.email } }),
+        1500,
+      );
     } catch (err) {
-      const msg = err.message?.toLowerCase() || '';
-      if (msg.includes('already exists') || msg.includes('already registered') || msg.includes('usernameexists')) {
+      const message = err instanceof Error ? err.message : '';
+      const msg = message.toLowerCase();
+      if (
+        msg.includes('already exists') ||
+        msg.includes('already registered') ||
+        msg.includes('usernameexists')
+      ) {
         setServerError('An account with this email already exists. Sign in instead.');
       } else {
-        setServerError(err.message || 'Registration failed.');
+        setServerError(message || 'Registration failed.');
       }
     }
   };
@@ -80,11 +85,7 @@ const Register = () => {
         </div>
       )}
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        noValidate
-        aria-label="Registration form"
-      >
+      <form onSubmit={handleSubmit(onSubmit)} noValidate aria-label="Registration form">
         <div className="flex flex-col gap-5">
           <FormInput
             label="Full Name"

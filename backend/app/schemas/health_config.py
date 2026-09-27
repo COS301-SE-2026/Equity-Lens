@@ -29,7 +29,7 @@ class HealthConfigRequest(BaseModel):
     config: dict | None = Field(
         default=None,
         description="all seven HealthConfigValues fields, each inside the published "
-                    "bounds, with the three weights summing to 1",
+        "bounds, with the three weights summing to 1",
     )
 
     @model_validator(mode="after")

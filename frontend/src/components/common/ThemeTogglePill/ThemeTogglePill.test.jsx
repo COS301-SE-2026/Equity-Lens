@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+
 import ThemeTogglePill from './ThemeTogglePill';
 
 const mockToggleTheme = vi.fn();
@@ -17,7 +18,8 @@ describe('ThemeTogglePill', () => {
     mockTheme = 'dark';
     render(<ThemeTogglePill />);
     fireEvent.click(screen.getByRole('button'));
-    expect(mockToggleTheme).toHaveBeenCalled();});
+    expect(mockToggleTheme).toHaveBeenCalled();
+  });
 
   it('changes when clicked to show light option', () => {
     mockTheme = 'dark';
@@ -25,11 +27,14 @@ describe('ThemeTogglePill', () => {
 
     expect(screen.getByText('Dark')).toBeInTheDocument();
     expect(screen.getByLabelText('Switch to light mode')).toBeInTheDocument();
-    expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');});
+    expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'true');
+  });
 
   it('changes when clicked to show dark option', () => {
     mockTheme = 'light';
     render(<ThemeTogglePill />);
     expect(screen.getByText('Light')).toBeInTheDocument();
     expect(screen.getByLabelText('Switch to dark mode')).toBeInTheDocument();
-    expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'false');});});
+    expect(screen.getByRole('button')).toHaveAttribute('aria-pressed', 'false');
+  });
+});

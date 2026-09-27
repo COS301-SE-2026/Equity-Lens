@@ -1,9 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       fontFamily: {
@@ -20,7 +17,7 @@ export default {
         'glass-border': 'var(--glass-border)',
       },
       gridTemplateColumns: {
-        'bento': 'repeat(12, 1fr)',
+        bento: 'repeat(12, 1fr)',
       },
       gridColumn: {
         'span-3': 'span 3 / span 3',
@@ -32,4 +29,4 @@ export default {
     },
   },
   plugins: [],
-}
+};

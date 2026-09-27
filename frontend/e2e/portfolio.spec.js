@@ -1,20 +1,17 @@
-import { expect, test } from "@playwright/test";
-import { bypassAuth } from "./helpers/auth";
+import { expect, test } from '@playwright/test';
 
-test.describe("portfolio e2e testing", () => {
+import { bypassAuth } from './helpers/auth';
 
+test.describe('portfolio e2e testing', () => {
   test.beforeEach(async ({ page }) => {
     await bypassAuth(page);
   });
 
-  test("should go to portfolio page and show upload UI", async ({ page }) => {
-    await page.goto("/portfolio", { waitUntil: "domcontentloaded" });
+  test('should go to portfolio page and show upload UI', async ({ page }) => {
+    await page.goto('/portfolio', { waitUntil: 'domcontentloaded' });
 
     await expect(page).toHaveURL(/portfolio/i);
 
-    await expect(
-      page.locator("body")
-    ).toContainText(/Upload Portfolio/i);
+    await expect(page.locator('body')).toContainText(/Upload Portfolio/i);
   });
-
 });

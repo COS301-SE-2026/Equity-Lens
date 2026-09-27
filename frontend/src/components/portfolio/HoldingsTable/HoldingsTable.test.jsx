@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { describe, it, expect } from 'vitest';
+
 import HoldingsTable from './HoldingsTable';
 
 describe('HoldingsTable', () => {
@@ -24,9 +25,5 @@ describe('HoldingsTable', () => {
     expect(screen.getByText('TestName')).toBeInTheDocument();
     expect(screen.getByText('TestSector')).toBeInTheDocument();
     expect(screen.getByText('10')).toBeInTheDocument();
-
   });
-
-
-
 });

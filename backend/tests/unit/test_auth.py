@@ -1,9 +1,7 @@
 from unittest.mock import patch
 
-import pytest
-
-
 # router tests — cognito is mocked
+
 
 def test_register_new_user_success(client, sample_user_data):
     with patch("app.routers.auth.cognito.cognito_register") as mock_register:

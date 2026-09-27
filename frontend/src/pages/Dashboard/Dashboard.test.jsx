@@ -1,9 +1,19 @@
 import { render, screen, fireEvent, act, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi } from 'vitest';
+
 import Dashboard from './Dashboard';
+vi.mock('../../context/ChatContext', () => ({
+  useChatContext: () => ({ openDock: vi.fn() }),
+}));
+
 vi.mock('../../services/api', () => ({
-  default: { get: vi.fn().mockResolvedValue({ data: [] }), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  default: {
+    get: vi.fn().mockResolvedValue({ data: [] }),
+    post: vi.fn(),
+    put: vi.fn(),
+    delete: vi.fn(),
+  },
 }));
 
 vi.mock('recharts', async () => {
@@ -11,7 +21,9 @@ vi.mock('recharts', async () => {
   return {
     ...actual,
     /** @param {{ children?: import('react').ReactNode }} props */
-    ResponsiveContainer: ({ children }) => <div>{children}</div>,};});
+    ResponsiveContainer: ({ children }) => <div>{children}</div>,
+  };
+});
 
 vi.mock('../../hooks/useAuth', () => ({
   default: () => ({ user: { full_name: 'Steven Schormann' } }),
@@ -44,29 +56,48 @@ vi.mock('../../hooks/usePortfolio', () => ({
           sector: 'Financials',
         },
       ],
-      summary: { total_value: 77000, total_gain_loss: 4700, total_gain_loss_pct: 6.5, daily_change_pct: 0, daily_change_value: 0 },
+      summary: {
+        total_value: 77000,
+        total_gain_loss: 4700,
+        total_gain_loss_pct: 6.5,
+        daily_change_pct: 0,
+        daily_change_value: 0,
+      },
       returns: { time_weighted_return_pct: 7.244430379746836, history_days: 62 },
       health: {
         score: 4.4,
         label: 'Needs attention',
         subscores: [
           {
-            key: 'sectorConcentration', label: 'Sector Concentration', weight: 0.4, value: 5.7,
+            key: 'sectorConcentration',
+            label: 'Sector Concentration',
+            weight: 0.4,
+            value: 5.7,
             detail: 'Technology is 58% of your book (Herfindahl index 0.51 across 2 sectors).',
             target: 'HHI at or below 0.15 (roughly 7+ evenly-weighted sectors)',
-            improvement: 'Adding exposure outside Technology would bring this HHI down and spread the risk.',
+            improvement:
+              'Adding exposure outside Technology would bring this HHI down and spread the risk.',
           },
           {
-            key: 'singleStockRisk', label: 'Single-Stock Risk', weight: 0.35, value: 4.2,
+            key: 'singleStockRisk',
+            label: 'Single-Stock Risk',
+            weight: 0.35,
+            value: 4.2,
             detail: 'NPN is 58% of your book. High concentration.',
             target: 'Under 25% in any one holding',
-            improvement: 'Trim NPN or build up other positions so no single stock dominates your return.',
+            improvement:
+              'Trim NPN or build up other positions so no single stock dominates your return.',
           },
           {
-            key: 'portfolioBreadth', label: 'Portfolio Breadth', weight: 0.25, value: 2.4,
-            detail: "2 positions in your book, but weighted by size that's only 1.9 effective positions - a raw count hides how much one holding can dominate.",
+            key: 'portfolioBreadth',
+            label: 'Portfolio Breadth',
+            weight: 0.25,
+            value: 2.4,
+            detail:
+              "2 positions in your book, but weighted by size that's only 1.9 effective positions - a raw count hides how much one holding can dominate.",
             target: '8+ effective positions',
-            improvement: 'Adding positions - or trimming the ones that dominate - raises effective breadth toward the target.',
+            improvement:
+              'Adding positions - or trimming the ones that dominate - raises effective breadth toward the target.',
           },
         ],
       },
@@ -84,7 +115,13 @@ vi.mock('../../hooks/usePortfolio', () => ({
 vi.mock('../../hooks/useWatchlist', () => ({
   default: () => ({
     watchlist: [
-      { id: 'w1', ticker: 'ABG', company_name: 'Absa Group', current_price: 182.5, change_percent: 1.2 },
+      {
+        id: 'w1',
+        ticker: 'ABG',
+        company_name: 'Absa Group',
+        current_price: 182.5,
+        change_percent: 1.2,
+      },
     ],
     loading: false,
     error: null,
@@ -107,16 +144,21 @@ describe('Dashboard', () => {
     expect(screen.getAllByText(/needs attention/i).length).toBeGreaterThanOrEqual(1);
   });
 
-  it('surfaces the missing-sector opportunity in Today\'s Insights', async () => {
+  it("caps Today's Insights at two sector items, so the missing-sector nudge gives way", async () => {
+    // PER_CATEGORY_CAP in dashboardInsights keeps a category to two cards. this book has two
+    // sector warnings, which outrank the healthcare opportunity, so it is not shown
     renderDashboard();
-    expect(await screen.findByText('Today\'s Insights')).toBeInTheDocument();
-    expect(await screen.findByText(/you have no healthcare exposure/i)).toBeInTheDocument();
+    expect(await screen.findByText('Portfolio Insights')).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Show \d+ more/));
+    expect(screen.getByText(/Your whole book sits in 2 sectors/)).toBeInTheDocument();
+    expect(screen.getByText(/above your 45% sector ceiling/)).toBeInTheDocument();
+    expect(screen.queryByText(/you have no healthcare exposure/i)).not.toBeInTheDocument();
     expect(screen.queryByText('Rebalancing Insights')).not.toBeInTheDocument();
   });
 
   it('no longer carries Goal Progress or Tax Analysis - both moved to the Plan page', async () => {
     renderDashboard();
-    expect(await screen.findByText('Today\'s Insights')).toBeInTheDocument();
+    expect(await screen.findByText('Portfolio Insights')).toBeInTheDocument();
     expect(screen.queryByText('Goal Progress')).not.toBeInTheDocument();
     expect(screen.queryByText('Set Your Goal')).not.toBeInTheDocument();
     expect(screen.queryByText('Tax Analysis')).not.toBeInTheDocument();
@@ -128,7 +170,11 @@ describe('Dashboard', () => {
     expect(screen.getByText('Sector Concentration')).toBeInTheDocument();
     expect(screen.getByText('40% weight')).toBeInTheDocument();
     expect(screen.queryByText('Benchmark Performance')).not.toBeInTheDocument();
-    expect(screen.queryByText(/adding a few more positions reduces how much any one holding drives your return/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /adding a few more positions reduces how much any one holding drives your return/i,
+      ),
+    ).not.toBeInTheDocument();
     const breadthRow = within(screen.getByTestId('health-factor-portfolioBreadth'));
     fireEvent.click(breadthRow.getByText('Why'));
     expect(breadthRow.getByText(/adding positions.*raises effective breadth/i)).toBeInTheDocument();
@@ -152,6 +198,7 @@ describe('Dashboard', () => {
   it('splits sector allocation and all positions into two independent cards', () => {
     renderDashboard();
     const sectorPanel = document.getElementById('sector-allocation');
+    if (!sectorPanel) throw new Error('expected the sector-allocation panel to render');
     expect(within(sectorPanel).getAllByText('Sectors').length).toBeGreaterThan(0);
     expect(screen.getByText('All Positions')).toBeInTheDocument();
     expect(screen.getByTitle(/High concentration - \d+\.\d% of your book/i)).toBeInTheDocument();
@@ -171,7 +218,9 @@ describe('Dashboard', () => {
   it.skip('expands a news row to show position-impact detail', () => {
     renderDashboard();
     const explainButtons = screen.getAllByText('Explain This Move');
-    expect(screen.queryByText(/isn't currently in your portfolio, showing as a market-wide move/i)).not.toBeInTheDocument();
+    expect(
+      screen.queryByText(/isn't currently in your portfolio, showing as a market-wide move/i),
+    ).not.toBeInTheDocument();
     fireEvent.click(explainButtons[0]);
     expect(screen.getByText(/at your current npn position size/i)).toBeInTheDocument();
   });
@@ -179,14 +228,16 @@ describe('Dashboard', () => {
   it("renders Today's Insights with today's move, not since-purchase/since-inception content", () => {
     renderDashboard();
     expect(screen.getByText(/npn is today's biggest gainer, up 1\.2%/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByText(/Show \d+ more/));
     expect(screen.getByText(/77% of today's gain came from npn/i)).toBeInTheDocument();
     expect(screen.queryByText(/today's biggest drag/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/since you started investing/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/since purchase/i)).not.toBeInTheDocument();
 
-    const whyButtons = screen.getAllByText('Why?');
-    fireEvent.click(whyButtons[0]);
-    expect(screen.getByText(/within typical movement/i)).toBeInTheDocument();
+    const gainerCard = screen.getByText(/npn is today's biggest gainer, up 1\.2%/i).closest('div');
+    if (!gainerCard) throw new Error('expected the gainer card to render');
+    fireEvent.click(within(gainerCard).getByText('Why?'));
+    expect(within(gainerCard).getByText(/within typical movement/i)).toBeInTheDocument();
   });
 
   it('renders the watchlist as a floating toggle, not an always-visible card', async () => {

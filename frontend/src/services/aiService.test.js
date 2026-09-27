@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+
 import { normalize, getMockResponse } from './aiService';
 
 describe('normalize', () => {
@@ -32,7 +33,6 @@ describe('normalize', () => {
 });
 
 describe('getMockResponse', () => {
-
   describe('greeting responses', () => {
     it('responds to hi', () => {
       const result = getMockResponse('hi');
@@ -62,11 +62,13 @@ describe('getMockResponse', () => {
     });
 
     it('returns all 4 ticker cards', () => {
+      /** @type {any} */
       const result = getMockResponse('cards');
       expect(result.cards).toHaveLength(4);
     });
 
     it('card objects have required fields', () => {
+      /** @type {any} */
       const result = getMockResponse('cards');
       const card = result.cards[0];
       expect(card).toHaveProperty('ticker');

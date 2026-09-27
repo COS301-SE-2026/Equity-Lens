@@ -14,7 +14,7 @@ import SecondaryButton from '../shared/SecondaryButton';
 const SOURCE_LABEL = {
   custom: 'your own settings',
   preset: 'your choice',
-  derived: 'matched to your goal',
+  derived: 'matched to your portfolio',
   default: 'the EquityLens default',
 };
 
@@ -37,18 +37,16 @@ const HealthYardstick = ({ onChanged }) => {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    try 
-    {
+    try {
       const data = await getHealthConfig();
       setState({ loading: false, error: null, data });
-    } 
-    catch (err) {
+    } catch (err) {
       console.warn('health config fetch failed:', err);
       setState({ loading: false, error: "Couldn't load your scoring settings.", data: null });
-    }}, []);
+    }
+  }, []);
 
-  useEffect(() => 
-    {
+  useEffect(() => {
     load();
   }, [load]);
 
@@ -59,14 +57,13 @@ const HealthYardstick = ({ onChanged }) => {
       const data = await run();
       setState({ loading: false, error: null, data });
       onChanged?.();
-    } catch (err) 
-    {
+    } catch (err) {
       console.warn('health config save failed:', err);
       setState((prev) => ({ ...prev, error: "Couldn't save that. Your settings are unchanged." }));
-    } finally 
-    {
+    } finally {
       setSaving(false);
-    }};
+    }
+  };
 
   const data = state.data;
   if (state.loading || !data) return null;
@@ -81,7 +78,7 @@ const HealthYardstick = ({ onChanged }) => {
   return (
     <div className="mt-3 border-t pt-3" style={{ borderColor: 'var(--border-subtle)' }}>
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-[10px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+        <span className="text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
           Measured against{' '}
           <span style={{ color: 'var(--text-secondary)' }}>
             {active ? active.name : 'custom settings'}
@@ -98,7 +95,10 @@ const HealthYardstick = ({ onChanged }) => {
               style={{
                 transform: open ? 'rotate(180deg)' : 'none',
                 transition: 'transform 0.2s ease',
-              }}/>}>
+              }}
+            />
+          }
+        >
           Change
         </SecondaryButton>
       </div>
@@ -107,8 +107,9 @@ const HealthYardstick = ({ onChanged }) => {
         <div className="mt-2 space-y-2">
           <label
             htmlFor="health-preset-picker"
-            className="block text-[10px] font-semibold"
-            style={{ color: 'var(--text-primary)' }}>
+            className="block text-[11px] font-semibold"
+            style={{ color: 'var(--text-primary)' }}
+          >
             Score my portfolio as
           </label>
           <GlassSelect
@@ -118,14 +119,16 @@ const HealthYardstick = ({ onChanged }) => {
             value={activeKey}
             placeholder="Custom settings"
             onChange={(key) => apply(() => saveHealthConfig({ preset_key: String(key) }))}
-            options={presets.map((p) => ({ value: p.key, label: p.name }))}/>
+            options={presets.map((p) => ({ value: p.key, label: p.name }))}
+          />
 
           {active && (
-            <p className="text-[10px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+            <p className="text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
               {active.description}
-            </p>)}
+            </p>
+          )}
 
-          <p className="text-[10px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
+          <p className="text-[11px] leading-snug" style={{ color: 'var(--text-ghost)' }}>
             Presets change what your portfolio is compared to, not how much risk it carries. The
             underlying percentages above stay the same whichever you pick.
           </p>
@@ -135,8 +138,9 @@ const HealthYardstick = ({ onChanged }) => {
               <SecondaryButton
                 size="sm"
                 disabled={saving}
-                onClick={() => apply(() => clearHealthConfig())}>
-                Use the one matched to my goal{derived ? ` (${derived.name})` : ''}
+                onClick={() => apply(() => clearHealthConfig())}
+              >
+                Use the one matched to my portfolio{derived ? ` (${derived.name})` : ''}
               </SecondaryButton>
             )}
             {activeKey !== data.default_preset_key && (
@@ -145,16 +149,18 @@ const HealthYardstick = ({ onChanged }) => {
                 disabled={saving}
                 onClick={() =>
                   apply(() => saveHealthConfig({ preset_key: data.default_preset_key }))
-                }>
+                }
+              >
                 Reset to EquityLens
               </SecondaryButton>
-            )}</div>
+            )}
+          </div>
 
-          {state.error && (
-            <p className="text-[10px]" style={{ color: 'var(--signal-negative)' }}>
+          <AnimatedReveal show={Boolean(state.error)}>
+            <p className="text-[11px]" style={{ color: 'var(--signal-negative)' }}>
               {state.error}
             </p>
-          )}
+          </AnimatedReveal>
         </div>
       </AnimatedReveal>
     </div>
