@@ -842,25 +842,25 @@ const Portfolio = () => {
 
   return (
     <div className="p-6">
-      <div className="mx-auto max-w-6xl rounded-3xl border border-gray-800 bg-gray-950/80 p-6 md:p-8">
+      <div className="mx-auto max-w-6xl rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-6 md:p-8">
         <div className="mb-8 text-center">
-          <h2 className="mb-2 text-3xl font-bold text-white md:text-4xl">
-            Upload <span className="text-orange-500">Portfolio</span>
+          <h2 className="mb-2 text-3xl font-bold text-[var(--text-primary)] md:text-4xl">
+            Upload <span className="text-[var(--accent-primary)]">Portfolio</span>
           </h2>
 
-          <p className="mx-auto max-w-2xl text-sm text-gray-400 md:text-base">
+          <p className="mx-auto max-w-2xl text-sm text-[var(--text-secondary)] md:text-base">
             Import your EasyEquities portfolio using your statement or our Excel template
           </p>
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
 
-          <div className="flex min-h-[380px] flex-col rounded-2xl border border-gray-700 bg-gray-900/70 p-6">
+          <div className="flex min-h-[380px] flex-col rounded-2xl border border-[var(--border-mid)] bg-[var(--surface-card)] p-6">
             <div className="mb-5 flex items-center gap-3">
 
               <div>
-                <h3 className="text-lg font-semibold text-white">My Portfolios</h3>
-                <p className="text-sm text-gray-400">Select one of your existing portfolios</p>
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">My Portfolios</h3>
+                <p className="text-sm text-[var(--text-secondary)]">Select one of your existing portfolios</p>
               </div>
             </div>
 
@@ -869,24 +869,24 @@ const Portfolio = () => {
           /** @param {any} portfolio*/(portfolio, index) => (
                   <div
                     key={index}
-                    className="mb-3 rounded-xl border border-gray-700 bg-gray-950/40 p-4 transition hover:border-blue-500/50"
+                    className="mb-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-inset)] p-4 transition hover:border-blue-500/50"
                   >
                     <div className="mb-1 flex items-center justify-between gap-3">
-                      <p className="font-semibold text-white">{portfolio.portfolio_name}</p>
+                      <p className="font-semibold text-[var(--text-primary)]">{portfolio.portfolio_name}</p>
 
                       <span className="rounded-md bg-purple-500/15 px-2 py-1 text-xs font-semibold text-purple-400">
                         {accountTypeLabel(portfolio.account_type)}
                       </span>
                     </div>
 
-                    <p className="text-sm text-gray-400">Account: {portfolio.account_number}</p>
+                    <p className="text-sm text-[var(--text-secondary)]">Account: {portfolio.account_number}</p>
 
-                    <p className="text-sm text-gray-400">{statementPeriod(portfolio)}</p>
+                    <p className="text-sm text-[var(--text-secondary)]">{statementPeriod(portfolio)}</p>
 
                     <button
                       type="button"
                       onClick={() => ViewSummary(portfolio.id)}
-                      className="mt-3 text-sm font-medium text-blue-400 transition hover:text-blue-300 hover:underline"
+                      className="mt-3 text-sm font-medium text-[var(--signal-info)] transition hover:underline"
                     >
                       View Summary
                     </button>
@@ -898,18 +898,18 @@ const Portfolio = () => {
             <button
               type="button"
               onClick={() => setShowPortfolios(true)}
-              className="mt-3 text-sm font-medium text-orange-400 transition hover:text-orange-300"
+              className="mt-3 text-sm font-medium text-[var(--accent-primary)] transition hover:text-[var(--accent-hover)]"
             >
               View all portfolios
             </button>
           </div>
 
-          <div className="flex min-h-[380px] flex-col rounded-2xl border-gray-700 bg-gray-900/70 p-6 shadow-lg shadow-orange-500/5">
+          <div className="flex min-h-[380px] flex-col rounded-2xl border border-[var(--border-mid)] bg-[var(--surface-card)] p-6 shadow-lg shadow-orange-500/5">
             <div className="mb-5 flex items-center gap-3">
 
               <div>
-                <h3 className="text-lg font-semibold text-white">Upload your statement</h3>
-                <p className="text-sm text-gray-400">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Upload your statement</h3>
+                <p className="text-sm text-[var(--text-secondary)]">
                   Upload your EasyEquities PDF or complete the Excel template
                 </p>
               </div>
@@ -918,7 +918,7 @@ const Portfolio = () => {
             <div className="mb-5">
               <label
                 htmlFor="account-type-select"
-                className="mb-2 block text-sm font-medium text-gray-300"
+                className="mb-2 block text-sm font-medium text-[var(--text-secondary)]"
               >
                 Account Type
               </label>
@@ -927,7 +927,7 @@ const Portfolio = () => {
                 id="account-type-select"
                 value={accountType}
                 onChange={(event) => setAccountType(event.target.value)}
-                className="w-full rounded-xl border border-gray-700 bg-gray-800 p-3 text-white outline-none transition focus:border-orange-500"
+                className="w-full rounded-xl border border-[var(--border-mid)] bg-[var(--surface-inset)] p-3 text-[var(--text-primary)] outline-none transition focus:border-orange-500"
               >
                 <option value="">Select account type</option>
 
@@ -1000,15 +1000,15 @@ const Portfolio = () => {
               />
             </label>
 
-            <p className="mt-3 text-center text-sm text-gray-500">PDF or XLSX</p>
+            <p className="mt-3 text-center text-sm text-[var(--text-dim)]">PDF or XLSX</p>
           </div>
 
-          <div className="flex min-h-[380px] flex-col rounded-2xl border border-gray-700 bg-gray-900/70 p-6">
+          <div className="flex min-h-[380px] flex-col rounded-2xl border border-[var(--border-mid)] bg-[var(--surface-card)] p-6">
             <div className="mb-5 flex items-center gap-3">
 
               <div>
-                <h3 className="text-lg font-semibold text-white">Excel Template</h3>
-                <p className="text-sm text-gray-400">
+                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Excel Template</h3>
+                <p className="text-sm text-[var(--text-secondary)]">
                   Don&apos;t have a supported PDF? Use our template instead.
                 </p>
               </div>
@@ -1018,12 +1018,12 @@ const Portfolio = () => {
               <button
                 type="button"
                 onClick={DownloadEXCEL}
-                className="w-full rounded-xl border border-orange-500 py-3 font-semibold text-orange-400 transition hover:bg-orange-500 hover:text-white"
+                className="w-full rounded-xl border border-[var(--accent-primary)] py-3 font-semibold text-[var(--accent-primary)] transition hover:bg-orange-500 hover:text-white"
               >
                 Download Template
               </button>
 
-              <p className="mt-3 text-center text-sm text-gray-500">
+               <p className="mt-3 text-center text-sm text-[var(--text-dim)]">
                 EquityLens Excel Template
               </p>
             </div>
@@ -1032,12 +1032,12 @@ const Portfolio = () => {
       </div>
 
       {showPortfolios && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-gray-800 bg-gray-950 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-gray-800 px-6 py-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--scrim)] px-4">
+          <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-6 py-5">
               <div>
-                <h3 className="text-xl font-bold text-white">My Portfolios</h3>
-                <p className="mt-1 text-sm text-gray-400">
+                <h3 className="text-xl font-bold text-[var(--text-primary)]">My Portfolios</h3>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">
                   Select a portfolio to view its summary
                 </p>
               </div>
@@ -1045,7 +1045,7 @@ const Portfolio = () => {
               <button
                 type="button"
                 onClick={() => setShowPortfolios(false)}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-700 text-gray-400 transition hover:border-gray-600 hover:bg-gray-800 hover:text-white"
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border-mid)] text-[var(--text-secondary)] transition hover:border-[var(--border-strong)] hover:bg-[var(--surface-hover)] hover:text-[var(--text-primary)]"
               >
                 ×
               </button>
@@ -1057,19 +1057,20 @@ const Portfolio = () => {
           /** @param {any} portfolio */(portfolio) => (
                     <div
                       key={portfolio.id}
-                      className="rounded-2xl border border-gray-800 bg-gray-900/70 p-5 transition hover:border-gray-700 hover:bg-gray-900"
+                      className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-5 transition hover:border-[var(--border-mid)]"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="min-w-0">
-                          <p className="truncate text-base font-semibold text-white">
+                          <p className="truncate text-base font-semibold text-[var(--text-primary)]">
                             {portfolio.portfolio_name}
                           </p>
 
-                          <p className="mt-2 text-sm text-gray-400">
+                          <p className="mt-2 text-sm text-[var(--text-secondary)]">
                             Account: {portfolio.account_number}
                           </p>
 
-                          <p className="mt-1 text-sm text-gray-400">
+                          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+
                             {statementPeriod(portfolio)}
                           </p>
                         </div>
@@ -1079,7 +1080,7 @@ const Portfolio = () => {
                         </span>
                       </div>
 
-                      <div className="mt-4 border-t border-gray-800 pt-4">
+                      <div className="mt-4 border-t border-[var(--border-subtle)] pt-4">
                         <button
                           type="button"
                           onClick={() => {
@@ -1380,22 +1381,22 @@ const Portfolio = () => {
         )}
 
       {showPasswordModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-3xl border border-gray-800 bg-gray-950 p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--scrim)] px-4">
+          <div className="w-full max-w-md rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-6 shadow-2xl">
 
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white">
-                PDF <span className="text-orange-500">Password</span>
+              <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+                PDF <span className="text-[var(--accent-primary)]">Password</span>
               </h2>
 
-              <p className="mt-2 text-sm text-gray-400">
+              <p className="mt-2 text-sm text-[var(--text-secondary)]">
                 Enter the password for your EasyEquities statement.
               </p>
             </div>
 
             <label
               htmlFor="pdf-password"
-              className="mb-2 block text-sm font-medium text-gray-300"
+              className="mb-2 block text-sm font-medium text-[var(--text-secondary)]"
             >
               Password
             </label>
@@ -1408,7 +1409,7 @@ const Portfolio = () => {
                 setPdfPassword(event.target.value);
               }}
               placeholder="Enter PDF password"
-              className="w-full rounded-xl border border-gray-700 bg-gray-900 px-4 py-3 text-white outline-none transition placeholder:text-gray-600 focus:border-orange-500"
+              className="w-full rounded-xl border border-[var(--border-mid)] bg-[var(--surface-inset)] px-4 py-3 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-disabled)] focus:border-orange-500"
             />
 
 
@@ -1420,7 +1421,7 @@ const Portfolio = () => {
                   setPendingPdfFile(null);
                   setPdfPassword('');
                 }}
-                className="flex-1 rounded-xl border border-gray-700 py-3 font-semibold text-gray-300 transition hover:bg-gray-800"
+                className="flex-1 rounded-xl border border-[var(--border-mid)] py-3 font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)]"
               >
                 Cancel
               </button>
@@ -1468,15 +1469,15 @@ const Portfolio = () => {
         </div>
       )}
       {showErrorModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-md rounded-3xl border border-gray-800 bg-gray-950 p-6 shadow-2xl">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[var(--scrim)] px-4">
+          <div className="w-full max-w-md rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-elevated)] p-6 shadow-2xl">
 
             <div className="mb-6">
-              <h2 className="text-2xl font-bold text-white">
-                Something <span className="text-orange-500">went wrong</span>
+              <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+                Something <span className="text-[var(--accent-primary)]">went wrong</span>
               </h2>
 
-              <p className="mt-3 text-sm leading-6 text-gray-400">
+              <p className="mt-3 text-sm leading-6 text-[var(--text-secondary)]">
                 {errorMessage}
               </p>
             </div>

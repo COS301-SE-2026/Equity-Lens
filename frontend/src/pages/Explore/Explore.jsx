@@ -1,7 +1,8 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
+
 import { ExposureChart } from '../../components/charts/ExposureChart/ExposureChart';
-import { API_BASE_URL } from '../../utils/constants';
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
+import { API_BASE_URL } from '../../utils/constants';
 
 const SECTION_LABEL_STYLE = {
   fontSize: '11px',
@@ -48,6 +49,7 @@ export default function Explore() {
   const [data, setData] = useState(/** @type {ExploreResponse | null} */ (null));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(/** @type {string | null} */ (null));
+  const dialogRef = useRef(/** @type {HTMLDialogElement | null} */ (null));
 
   useEffect(() => {
     let active = true;
@@ -60,7 +62,8 @@ export default function Explore() {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
-        if (res.status === 503) throw new Error('market data is temporarily unavailable. Try again shortly.');
+        if (res.status === 503)
+          throw new Error('market data is temporarily unavailable. Try again shortly.');
         if (!res.ok) throw new Error(`HTTP error ${res.status}`);
         return res.json();
       })
@@ -101,12 +104,29 @@ export default function Explore() {
             fontWeight: 600,
             color: 'var(--text-page)',
             lineHeight: 1.3,
-            marginBottom: '32px',
+            marginBottom: '8px',
           }}
         >
           More of what you like
         </h1>
-
+        <button
+          type="button"
+          onClick={() => dialogRef.current?.showModal()}
+          style={{
+            display: 'block',
+            background: 'none',
+            border: 'none',
+            padding: 0,
+            marginBottom: '32px',
+            fontSize: '13px',
+            color: 'var(--accent-primary)',
+            textDecoration: 'underline',
+            textUnderlineOffset: '3px',
+            cursor: 'pointer',
+          }}
+        >
+          How it works
+        </button>
         {loading && (
           <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0' }}>
             <LoadingSpinner size="md" />
@@ -131,12 +151,26 @@ export default function Explore() {
           </div>
         )}
 
-                {data && !data.eligible && (
+        {data && !data.eligible && (
           <div className="glass-surface" style={{ ...GLASS_PANEL_STYLE, maxWidth: '560px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 8px' }}>
+            <h2
+              style={{
+                fontSize: '18px',
+                fontWeight: 600,
+                color: 'var(--text-primary)',
+                margin: '0 0 8px',
+              }}
+            >
               Explore isn&apos;t available for this portfolio
             </h2>
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6, margin: 0 }}>
+            <p
+              style={{
+                fontSize: '14px',
+                color: 'var(--text-secondary)',
+                lineHeight: 1.6,
+                margin: 0,
+              }}
+            >
               {UNAVAILABLE_MESSAGES[data.reason]}
             </p>
             {data.excluded?.length > 0 && (
@@ -227,6 +261,84 @@ export default function Explore() {
           </>
         )}
       </div>
+      <dialog
+        ref={dialogRef}
+        aria-labelledby="explore-how-title"
+        className="m-auto w-[min(90vw,520px)] rounded-2xl p-6 backdrop:bg-black/60"
+        style={{
+          background: 'var(--surface-base)',
+          color: 'var(--text-page)',
+          border: '1px solid var(--accent-subtle)',
+        }}
+      >
+        <h2
+          id="explore-how-title"
+          style={{ fontSize: '18px', fontWeight: 600, margin: '0 0 12px' }}
+        >
+          How recommendations work
+        </h2>
+        <ol
+          style={{
+            fontSize: '14px',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.6,
+            margin: '0 0 16px',
+            paddingLeft: '20px',
+            listStyle: 'decimal',
+          }}
+        >
+          <li>
+            We look at the JSE-listed shares in your portfolio. Shares from other exchanges are
+            skipped.
+          </li>
+          <li>
+            Every share on the JSE is described by four traits: market cap, free float %, sector and
+            dividend yield.
+          </li>
+          <li>
+            We match each recommendation to the holding it&apos;s most similar to, with a match
+            percentage, and show you the nine best matches.
+          </li>
+          <li>
+            The map plots your holdings and the recommendations against the rest of the JSE. Arrows
+            point from each holding to the shares that resemble it.
+          </li>
+        </ol>
+        <p
+          style={{
+            fontSize: '13px',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.6,
+            margin: '0 0 8px',
+          }}
+        >
+          For example, if you hold a large bank with a high dividend yield, you&apos;ll likely see
+          other large, high-yield financial shares.
+        </p>
+        <p
+          style={{
+            fontSize: '13px',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.6,
+            margin: '0 0 20px',
+          }}
+        >
+          Similar doesn&apos;t mean better. These are ideas to research, not financial advice.
+        </p>
+        <button
+          type="button"
+          onClick={() => dialogRef.current?.close()}
+          className="rounded-lg px-4 py-2 text-sm font-medium"
+          style={{
+            background: 'var(--accent-subtle)',
+            color: 'var(--accent-primary)',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Got it
+        </button>
+      </dialog>
     </div>
   );
 }

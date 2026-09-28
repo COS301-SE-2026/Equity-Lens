@@ -211,14 +211,13 @@ class TestMergeTopKCandidates:
             ],
         }
 
-    def test_candidate_retains_closest_holding_relationship(self, candidate_matches):
-        merged = {
-            item["ticker"]: item
-            for item in explore._merge_top_k(candidate_matches, k=10, exclude=set())
-        }
+    def test_shared_candidate_appears_once(self, candidate_matches):
+        merged = explore._merge_top_k(candidate_matches, k=10, exclude=set())
+        slm = [item for item in merged if item["ticker"] == "SLM"]
 
-        assert merged["SLM"]["similar_to"] == "MTN"
-        assert merged["SLM"]["distance"] == 0.3
+        assert len(slm) == 1
+        assert slm[0]["similar_to"] == "MTN"
+        assert slm[0]["distance"] == 0.3
 
     def test_excluded_tickers_filtered_from_merged_output(self, candidate_matches):
         merged = explore._merge_top_k(candidate_matches, k=10, exclude={"NED"})
@@ -236,3 +235,32 @@ class TestMergeTopKCandidates:
         merged = explore._merge_top_k(candidate_matches, k=10, exclude=set())
 
         assert all("gaps" in item for item in merged)
+
+    def test_every_holding_represented_before_any_gets_a_second(self, make_recommendation):
+        matches = {
+            "SBK": [
+                make_recommendation("NED", 0.1),
+                make_recommendation("ABG", 0.15),
+                make_recommendation("SLM", 0.2),
+            ],
+            "MTN": [make_recommendation("NPN", 0.5)],
+        }
+
+        merged = explore._merge_top_k(matches, k=2, exclude=set())
+
+        assert {item["similar_to"] for item in merged} == {"SBK", "MTN"}
+        assert [item["ticker"] for item in merged] == ["NED", "NPN"]
+
+    def test_shared_candidate_credited_to_first_holding_to_reach_it(self, make_recommendation):
+        matches = {
+            "SBK": [make_recommendation("NED", 0.1), make_recommendation("SLM", 0.5)],
+            "MTN": [make_recommendation("ABG", 0.3), make_recommendation("SLM", 0.35)],
+        }
+
+        merged = {
+            item["ticker"]: item
+            for item in explore._merge_top_k(matches, k=10, exclude=set())
+        }
+
+        assert merged["SLM"]["similar_to"] == "SBK"
+        assert merged["SLM"]["distance"] == 0.5

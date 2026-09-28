@@ -74,15 +74,29 @@ def get_recommendations(
  
  
 def _merge_top_k(recs_by_holding: dict[str, list[dict]], k: int, exclude: set[str]) -> list[dict]:
-    best: dict[str, dict] = {}
-    for source_ticker, recs in recs_by_holding.items():
-        for rec in recs:
-            if rec["ticker"] in exclude:
+    queues = {
+        src: sorted(
+            (r for r in recs if r["ticker"] not in exclude),
+            key=lambda r: r["distance"],
+        )
+        for src, recs in recs_by_holding.items()
+    }
+    queues = {src: q for src, q in queues.items() if q}
+    turn_order = sorted(queues, key=lambda s: queues[s][0]["distance"])
+    chosen: dict[str, dict] = {}
+    while turn_order and len(chosen) < k:
+        for src in list(turn_order):
+            q = queues[src]
+            while q and q[0]["ticker"] in chosen:
+                q.pop(0)
+            if not q:
+                turn_order.remove(src)
                 continue
-            existing = best.get(rec["ticker"])
-            if existing is None or rec["distance"] < existing["distance"]:
-                best[rec["ticker"]] = {**rec, "similar_to": source_ticker}
-    return sorted(best.values(), key=lambda r: r["distance"])[:k]
+            rec = q.pop(0)
+            chosen[rec["ticker"]] = {**rec, "similar_to": src}
+            if len(chosen) >= k:
+                break
+    return sorted(chosen.values(), key=lambda r: r["distance"])
  
  
 def _to_point(f: exposure_engine.Feature, highlighted: bool = False) -> dict:

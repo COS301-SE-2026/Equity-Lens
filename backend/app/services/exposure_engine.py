@@ -22,16 +22,17 @@ class NormalizedFeature:
     z_local_float: float
     z_div_yield: float
  
-# The sector-mismatch penalty (0.4) was set empirically
-# rather than assumed: measured across the seed universe,
-# same-sector stock pairs had a median feature-space
-# distance of 1.906 versus 1.522 for the closest quartile
-# of different-sector pairs, so 0.4 keeps a typical same-sector
-# match ranked above a strong cross-sector one while remaining small
-# enough not to suppress genuine cross-sector matches - 
-# such as Nedbank and Sibanye-Stillwater, which sit at a raw distance
-# of 0.071 despite belonging to Financial Services and Basic Materials respectively.
-SECTOR_MISMATCH_PENALTY = 0.4
+# Derived from real data, not guessed: across the 120-stock JSE screener
+# universe, same-sector pairs had median distance 1.925 and different-sector
+# pairs had p25 distance 1.500 (1,001 same-sector pairs, 6,139
+# different-sector pairs). For a typical same-sector match to still beat a
+# strong cross-sector match, the penalty must exceed 1.925 - 1.500 = 0.425.
+# Set with small headroom above that, deliberately not much higher, so
+# genuine cross-sector matches still surface instead of being hard-filtered
+# away. The earlier 0.4 was derived the same way on a 30-stock seed list and
+# fell just below this threshold once the universe grew. Re-run the
+# measurement and re-derive this if the universe changes substantially.
+SECTOR_MISMATCH_PENALTY = 0.45
 YIELD_CAP = 15.0
 # Expected distance between 2 random stocks
 RANDOM_PAIR_DISTANCE = 2.26
