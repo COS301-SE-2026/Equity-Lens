@@ -1,6 +1,7 @@
 import * as d3 from 'd3';
 import { useEffect, useRef, useState } from 'react';
 
+import InfoTooltip from '../../common/InfoToolTip/InfoTooltip';
 
 /**
  * @typedef {{ ticker: string, name?: string, sector: string, market_cap: number,
@@ -47,6 +48,15 @@ const BACKGROUND_OPACITY = 0.35;
 const DIMMED_OPACITY = 0.08;
 const FOCUS_MS = 150;
 
+const METRIC_HELP = {
+  marketCap:
+    "The total value of a company's shares: share price x number of shares. A R50 share with 1 billion shares in issue has a market cap of R50bn. The map uses a log scale, so each step to the right multiplies the value (R10bn, R20bn, R50bn) rather than adding a fixed amount.",
+  freeFloat:
+    'The percentage of shares available for ordinary investors to trade, excluding stakes held by founders, governments or strategic owners. A low free float means fewer shares change hands, so the price can move more sharply.',
+  dividendYield:
+    'Yearly dividends as a percentage of the share price. A R100 share paying R5 a year has a 5% yield. Bigger bubbles pay higher yields.',
+};
+
 /**
  * @param {number} min
  * @param {number} max
@@ -83,10 +93,12 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
 
     const heldTickers = new Set(portfolio.map((p) => p.ticker));
     const universeTickers = new Set(universe.map((u) => u.ticker));
-    const points = [...universe, ...portfolio.filter((p) => !universeTickers.has(p.ticker))].map((p) => ({
-      ...p,
-      highlighted: heldTickers.has(p.ticker),
-    }));
+    const points = [...universe, ...portfolio.filter((p) => !universeTickers.has(p.ticker))].map(
+      (p) => ({
+        ...p,
+        highlighted: heldTickers.has(p.ticker),
+      }),
+    );
 
     const width = 720;
     const height = 460;
@@ -101,8 +113,14 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     const yMax = (d3.max(points, (d) => d.local_float_pct) || 100) * 1.1;
     const yieldMax = Math.min(d3.max(points, (d) => d.dividend_yield) || 10, 15);
 
-    const x = d3.scaleLog().domain([xMin, xMax]).range([margin.left, width - margin.right]);
-    const y = d3.scaleLinear().domain([0, yMax]).range([height - margin.bottom, margin.top]);
+    const x = d3
+      .scaleLog()
+      .domain([xMin, xMax])
+      .range([margin.left, width - margin.right]);
+    const y = d3
+      .scaleLinear()
+      .domain([0, yMax])
+      .range([height - margin.bottom, margin.top]);
     const r = d3.scaleSqrt().domain([0, yieldMax]).range([5, 24]).clamp(true);
 
     const yTicks = y.ticks(5);
@@ -137,7 +155,12 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     const xAxis = svg
       .append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
-      .call(d3.axisBottom(x).tickValues(xTicks).tickFormat((v) => `R${Math.round(Number(v))}bn`));
+      .call(
+        d3
+          .axisBottom(x)
+          .tickValues(xTicks)
+          .tickFormat((v) => `R${Math.round(Number(v))}bn`),
+      );
 
     xAxis.selectAll('text').style('fill', 'var(--chart-axis-text)').style('font-size', '11px');
     xAxis.selectAll('path, line').style('stroke', 'var(--border-subtle)');
@@ -145,7 +168,12 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     const yAxis = svg
       .append('g')
       .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(y).ticks(5).tickFormat((v) => `${Math.round(Number(v))}%`));
+      .call(
+        d3
+          .axisLeft(y)
+          .ticks(5)
+          .tickFormat((v) => `${Math.round(Number(v))}%`),
+      );
 
     yAxis.selectAll('text').style('fill', 'var(--chart-axis-text)').style('font-size', '11px');
     yAxis.selectAll('path, line').style('stroke', 'var(--border-subtle)');
@@ -259,7 +287,6 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
         if (tooltip) tooltip.style.opacity = '0';
       });
 
-        
     const defs = svg.append('defs');
     [
       ['rec-arrow', 'var(--text-secondary)'],
@@ -310,7 +337,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
         };
       })
       .filter((l) => l !== null);
-    
+
     const linkLayer = svg.append('g').style('pointer-events', 'none');
     const linkGroups = linkLayer.selectAll('g').data(links).join('g').attr('opacity', 0.8);
 
@@ -361,7 +388,9 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
       stocks
         .transition()
         .duration(FOCUS_MS)
-        .attr('fill-opacity', (d) => (!related ? baseOpacity(d) : related.has(d.ticker) ? KEY_OPACITY : DIMMED_OPACITY))
+        .attr('fill-opacity', (d) =>
+          !related ? baseOpacity(d) : related.has(d.ticker) ? KEY_OPACITY : DIMMED_OPACITY,
+        )
         .attr('stroke-opacity', (d) => (!related || related.has(d.ticker) ? 1 : 0.15))
         .attr('stroke-width', (d) => {
           const base = d.highlighted ? 2.5 : 2;
@@ -385,16 +414,18 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
         .attr('stroke', (l) => (active(l) ? 'var(--text-primary)' : 'var(--text-secondary)'))
         .attr('stroke-width', (l) => (active(l) ? 1.8 : 1.2));
 
-      
       if (related) stocks.filter((d) => related.has(d.ticker)).raise();
       linkLayer.raise();
 
-            const pairs = ticker
+      const pairs = ticker
         ? recommended.filter((rec) => rec.similar_to === ticker || rec.ticker === ticker)
         : [];
       const isHolding = ticker !== null && universeMap.get(ticker)?.highlighted;
       const lines = pairs.length
-        ? pairs.map((rec) => `${rec.similar_to} → ${rec.ticker} (${Math.round((rec.closeness ?? 0) * 100)}%)`)
+        ? pairs.map(
+            (rec) =>
+              `${rec.similar_to} → ${rec.ticker} (${Math.round((rec.closeness ?? 0) * 100)}%)`,
+          )
         : isHolding
           ? [`${ticker}: no close matches in the JSE universe`]
           : [];
@@ -452,7 +483,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
 
   return (
     <div style={{ position: 'relative' }}>
-            <div
+      <div
         role="group"
         aria-label="Your holdings"
         style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}
@@ -482,9 +513,8 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
         })}
       </div>
       <p style={{ margin: '0 0 8px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-        Select a holding or recommendation to see how they connect.
-        Select it again, or anywhere else on the map,
-        to reset.
+        Select a holding or recommendation to see how they connect. Select it again, or anywhere
+        else on the map, to reset.
       </p>
       <svg
         ref={svgRef}
@@ -505,8 +535,15 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
           color: 'var(--text-secondary)',
         }}
       >
-        <span>Size: dividend yield</span>
-
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          Across: <InfoTooltip label="Market cap" text={METRIC_HELP.marketCap} />
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          Height: <InfoTooltip label="Free float %" text={METRIC_HELP.freeFloat} />
+        </span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+          Size: <InfoTooltip label="Dividend yield" text={METRIC_HELP.dividendYield} />
+        </span>
         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <span
             style={{

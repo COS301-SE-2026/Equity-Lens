@@ -79,7 +79,7 @@ describe('Help page', () => {
   it('renders a collapsed button for every FAQ entry', () => {
     loadPage();
 
-    expect(screen.getAllByRole('button')).toHaveLength(3);
+    expect(screen.getAllByRole('button')).toHaveLength(9);
     expect(
       screen.queryByText('Excel, using the template below, or a PDF statement from your broker.'),
     ).not.toBeInTheDocument();

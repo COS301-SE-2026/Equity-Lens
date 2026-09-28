@@ -148,7 +148,7 @@ const SHOWCASE = [
       'Positions, quantities, cost basis',
       'Multiple brokers supported',
     ],
-    src: '/screens/PORTFOLIOV2.png',
+    src: '/screens/PORTFOLIOV3.png',
     alt: 'Portfolio import flow with broker statement upload',
   },
   {
@@ -161,7 +161,7 @@ const SHOWCASE = [
       'True underlying weightings',
       'Sector-level concentration risk',
     ],
-    src: '/screens/DASH2V2.png',
+    src: '/screens/DASH2V3.png',
     alt: 'Look-through exposure showing flattened ETF holdings',
   },
   {
@@ -170,7 +170,7 @@ const SHOWCASE = [
     heading: 'Track performance. Monitor health. See why it moved.',
     body: "See everything that matters in one place, from performance and portfolio health to the drivers behind today's returns.",
     bullets: ['Live market overview', 'Portfolio health score', 'Interactive portfolio insights'],
-    src: '/screens/DASHV2.png',
+    src: '/screens/DASHV3.png',
     alt: 'Portfolio dashboard with net worth, health score, and holdings table',
   },
   {
@@ -196,7 +196,7 @@ const SHOWCASE = [
       'Direct news-to-price correlation',
       'Cross-referenced on the timeline',
     ],
-    src: '/screens/NEWSV2.png',
+    src: '/screens/NEWSV3.png',
     alt: 'News feed correlated with portfolio anomalies',
   },
   {
@@ -209,7 +209,7 @@ const SHOWCASE = [
       'Explains financial concepts',
       'Your own intelligent assistant',
     ],
-    src: '/screens/AIV2.png',
+    src: '/screens/AIV4.png',
     alt: 'AI assistant answering a portfolio question',
   },
 ];
@@ -962,9 +962,9 @@ const ShowcaseFrame = ({ src, alt }) => {
         className="pointer-events-none absolute -inset-8 rounded-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(250,204,21,0.12),transparent_65%)] opacity-60 blur-3xl transition-opacity duration-300 group-hover:opacity-80"
       />
       <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-transform duration-300 ease-out group-hover:-translate-y-1">
-        <div className="relative flex aspect-[16/10] items-center justify-center overflow-hidden bg-zinc-900/60">
+        <div className="relative overflow-hidden bg-zinc-900/60">
           {hasError ? (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-zinc-500 bg-zinc-900">
+            <div className="flex aspect-[16/10] w-full flex-col items-center justify-center gap-2 text-zinc-500 bg-zinc-900">
               <span className="font-mono text-xs text-zinc-400">Preview Unavailable</span>
             </div>
           ) : (
@@ -973,7 +973,7 @@ const ShowcaseFrame = ({ src, alt }) => {
                 src={src}
                 alt={alt}
                 loading="lazy"
-                className="h-full w-full object-cover object-top"
+                className="block h-auto w-full"
                 onError={() => {
                   console.warn('showcase image missing:', src);
                   setHasError(true);
