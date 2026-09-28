@@ -381,7 +381,7 @@ const NewsInvestment = () => {
                     return (
                       <div
                         key={article.article_id}
-                        className="flex items-center gap-5 rounded-xl border border-gray-700 bg-gray-900/40 p-4 transition hover:border-gray-600 hover:bg-gray-900/70"
+                        className="flex items-center gap-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-4 transition hover:border-[var(--border-mid)]"
                       >
                         <div className="shrink-0">
                           <img
@@ -420,7 +420,7 @@ const NewsInvestment = () => {
               /** @param {string} category */(category) => (
                               <span
                                 key={category}
-                                className="rounded-full bg-blue-500/20 px-3 py-1 text-xs font-medium text-blue-400"
+                                className="rounded-full bg-[var(--signal-info-bg)] px-3 py-1 text-xs font-medium text-[var(--signal-info)]"
                               >
                                 {category}
                               </span>
@@ -429,9 +429,9 @@ const NewsInvestment = () => {
 
                           <span
                             className={`flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium capitalize ${article.sentiment === 'positive'
-                              ? 'bg-green-500/20 text-green-400'
+                              ? 'bg-[var(--signal-positive-bg)] text-[var(--signal-positive)]'
                               : article.sentiment === 'negative'
-                                ? 'bg-red-500/20 text-red-400'
+                                ? 'bg-[var(--signal-negative-bg)] text-[var(--signal-negative)]'
                                 : 'bg-purple-500/20 text-purple-400'
                               }`}
                           >
@@ -516,7 +516,7 @@ const NewsInvestment = () => {
                   return (
                     <div
                       key={article.article_id}
-                      className="flex items-center gap-5 rounded-xl border border-gray-700 bg-gray-900/40 p-4 transition hover:border-gray-600 hover:bg-gray-900/70"
+                      className="flex items-center gap-5 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-4 transition hover:border-[var(--border-mid)]"
                     >
                       <div className="shrink-0">
                         <img
@@ -554,7 +554,7 @@ const NewsInvestment = () => {
               /** @param {string} category */(category) => (
                             <span
                               key={category}
-                              className="rounded-full bg-blue-500/20 px-3 py-1 text-xs font-medium text-blue-400"
+                              className="rounded-full bg-[var(--signal-info-bg)] px-3 py-1 text-xs font-medium text-[var(--signal-info)]"
                             >
                               {category}
                             </span>
