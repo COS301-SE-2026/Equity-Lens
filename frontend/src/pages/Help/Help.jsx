@@ -54,8 +54,32 @@ const QNA = [
     a: 'Excel, using the template below, or a PDF statement from your broker.',
   },
   {
+    q: 'Which brokers are supported for PDF import?',
+    a: 'Easy Equities statements are currently supported. For other brokers, use the Excel template.',
+  },
+  {
+    q: 'Which stocks and exchanges are supported?',
+    a: 'EquityLens focuses on JSE-listed shares and ETFs. US-listed stocks are supported as well, but their prices are shown in US dollars. The Explore page covers JSE stocks only.',
+  },
+  {
+    q: 'Where does market data come from?',
+    a: 'Prices and fundamentals come from Yahoo Finance and Alpha Vantage.'
+  },
+  {
+    q: 'Can I choose which indicators I see for a stock?',
+    a: 'Yes. Edit the inficators on any stock. Your choices are saved in this browser, so they will not cary over to another device.'
+  },
+  {
+    q: 'How does the Explore page choose stocks?',
+    a: 'It finds JSE stocks similar to your holdings based on market cap, free float, sector and dividend yield.',
+  },
+  {
     q: 'Can the AI Assistant see my portfolio?',
     a: 'Yes. Its answers are based on the portfolio you uploaded.',
+  },
+  {
+    q: 'Will the AI Assistant tell me what to buy or sell?',
+    a: 'No. It can explain how your holdings are performing, but it does not make buy or sell recommendations.',
   },
   {
     q: 'Is this financial advice?',

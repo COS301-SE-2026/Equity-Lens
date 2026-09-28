@@ -34,6 +34,7 @@ _STOCKS = {
     "BHP Group": ("BHG.JO", "Basic Materials", REGION_SA),
     "Remgro": ("REM.JO", "Financial Services", REGION_SA),
     "Aspen Pharmacare Holdings": ("APN.JO", "Healthcare", REGION_SA),
+    "Sasol": ("SOL.JO", "Basic Materials", REGION_SA)
 }
 
 _ETFS = {
@@ -164,9 +165,19 @@ KNOWN_INSTRUMENTS: dict[str, Instrument] = {
     **_build_table(_ETFS, KIND_ETF),
 }
 
+_COMPANY_SUFFIXES = ("limited", "ltd")
+
+def _strip_suffix(key: str) -> str:
+    for suffix in _COMPANY_SUFFIXES:
+        if key.endswith(suffix) and len(key) > len(suffix):
+            return key[: -len(suffix)]
+    return key
+
+_BY_STRIPPED_KEY = {_strip_suffix(k): v for k, v in KNOWN_INSTRUMENTS.items()}
 
 def resolve_known_instrument(instrument_name: str) -> Instrument | None:
-    return KNOWN_INSTRUMENTS.get(_canonical(instrument_name))
+    key = _canonical(instrument_name)
+    return KNOWN_INSTRUMENTS.get(key) or _BY_STRIPPED_KEY.get(_strip_suffix(key))
 
 
 def looks_like_fund(instrument_name: str) -> bool:

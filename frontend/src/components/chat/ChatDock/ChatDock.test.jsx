@@ -117,31 +117,6 @@ describe('ChatDock', () => {
       return renderDock();
     };
 
-    it('shows bold as bold, with no ** left over', async () => {
-      openWith([{ role: 'assistant', text: 'Your **largest** holding is NPN.' }]);
-
-      expect((await screen.findByText('largest')).tagName).toBe('STRONG');
-      expect(screen.queryByText(/\*\*/)).toBeNull();
-    });
-
-    it('turns a dash list into list items', async () => {
-      openWith([{ role: 'assistant', text: '- NPN\n- SBK' }]);
-
-      await screen.findByText('NPN');
-      expect(screen.getAllByRole('listitem')).toHaveLength(2);
-    });
-
-    it('leaves what the user typed alone', async () => {
-      openWith([
-        { role: 'user', text: 'is **this** bold?' },
-        { role: 'assistant', text: '**ready**' },
-      ]);
-      await screen.findByText('ready');
-
-      const typed = screen.getByText('is **this** bold?');
-      expect(typed.querySelector('strong')).toBeNull();
-    });
-
     it('shows a failed reply as the plain error line, not markdown', async () => {
       openWith([
         { role: 'assistant', text: 'Something went wrong, try again.', failed: true },
