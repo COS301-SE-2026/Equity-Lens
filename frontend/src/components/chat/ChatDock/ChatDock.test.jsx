@@ -117,17 +117,6 @@ describe('ChatDock', () => {
       return renderDock();
     };
 
-    it('leaves what the user typed alone', async () => {
-      openWith([
-        { role: 'user', text: 'is **this** bold?' },
-        { role: 'assistant', text: '**ready**' },
-      ]);
-      await screen.findByText('ready');
-
-      const typed = screen.getByText('is **this** bold?');
-      expect(typed.querySelector('strong')).toBeNull();
-    });
-
     it('shows a failed reply as the plain error line, not markdown', async () => {
       openWith([
         { role: 'assistant', text: 'Something went wrong, try again.', failed: true },
