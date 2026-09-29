@@ -14,10 +14,11 @@ const WatchlistPanel = () => {
   const { watchlist, loading, error, addTicker, removeTicker } = useWatchlist();
   const [adding, setAdding] = useState(false);
   const [ticker, setTicker] = useState('');
+  const [selectedTicker, setSelectedTicker] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [addError, setAddError] = useState(/** @type {string|null} */ (null));
+  const [addError, setAddError] = useState(/** @type {string|null} */(null));
   const [suggestions, setSuggestions] = useState(
-    /** @type {{symbol:string, name:string}[]} */ ([]),
+    /** @type {{symbol:string, name:string}[]} */([]),
   );
   const [suggestStatus, setSuggestStatus] = useState('idle'); // idle | loading | done | no-results | error
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -74,6 +75,8 @@ const WatchlistPanel = () => {
   /** @param {{symbol:string, name:string}} suggestion */
   const selectSuggestion = (suggestion) => {
     setTicker(suggestion.symbol);
+    setSelectedTicker(true);
+    setAddError(null);
     resetSuggestions();
     tickerInputRef.current?.focus();
   };
@@ -100,11 +103,16 @@ const WatchlistPanel = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!ticker.trim() || submitting) return;
+    if (!selectedTicker) {
+      setAddError('Please select a stock from the dropdown.');
+      return;
+    }
     setSubmitting(true);
     setAddError(null);
     try {
       await addTicker(ticker);
       setTicker('');
+      setSelectedTicker(false);
       setAdding(false);
       resetSuggestions();
     } catch (err) {
@@ -153,6 +161,7 @@ const WatchlistPanel = () => {
                 value={ticker}
                 onChange={(e) => {
                   setTicker(e.target.value);
+                  setSelectedTicker(false);
                   setAddError(null);
                 }}
                 onKeyDown={handleTickerKeyDown}
@@ -231,7 +240,7 @@ const WatchlistPanel = () => {
 
             <button
               type="submit"
-              disabled={submitting || !ticker.trim()}
+              disabled={submitting || !ticker.trim() || !selectedTicker}
               className="rounded-md px-3 font-mono text-[12px] font-medium disabled:opacity-40"
               style={{ background: 'var(--accent-primary)', color: 'var(--text-on-accent)' }}
             >
