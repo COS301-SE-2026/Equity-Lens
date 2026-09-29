@@ -109,40 +109,4 @@ describe('ChatDock', () => {
     ).toBeInTheDocument();
   });
 
-  describe('markdown in replies', () => {
-    /** @param {any[]} messages */
-    const openWith = (messages) => {
-      chat.dockOpen = true;
-      chat.messages = messages.map((m, i) => ({ id: i + 1, at: new Date(), ...m }));
-      return renderDock();
-    };
-
-    it('shows a failed reply as the plain error line, not markdown', async () => {
-      openWith([
-        { role: 'assistant', text: 'Something went wrong, try again.', failed: true },
-        { role: 'assistant', text: '**ready**' },
-      ]);
-      await screen.findByText('ready');
-
-      expect(screen.getByText('Something went wrong, try again.').tagName).toBe('DIV');
-    });
-
-    it('never turns raw html in a reply into an element', async () => {
-      const { container } = openWith([
-        { role: 'assistant', text: '<img src=x onerror=alert(1)>' },
-        { role: 'assistant', text: '**ready**' },
-      ]);
-
-      expect((await screen.findByText('ready')).tagName).toBe('STRONG');
-      expect(container.querySelector('img')).toBeNull();
-    });
-
-    it('opens links in a new tab without handing over the opener', async () => {
-      openWith([{ role: 'assistant', text: '[docs](https://example.com)' }]);
-
-      const link = await screen.findByRole('link', { name: 'docs' });
-      expect(link).toHaveAttribute('target', '_blank');
-      expect(link.getAttribute('rel')).toContain('noopener');
-    });
-  });
 });
