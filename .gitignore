@@ -10,6 +10,11 @@ backend/**/__pycache__/
 dist/
 build/
 .eggs/
+backend/.venv/
+.venv/
+venv/
+env/
+ENV/
 
 .env
 .env.local
