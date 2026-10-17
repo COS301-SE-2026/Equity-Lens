@@ -234,15 +234,18 @@ const AIChat = () => {
   const {
     messages, isThinking, conversationId, conversations, regeneratingId,
     sendMessageStreaming, regenerate, loadConversation, startNewChat, renameConversation,
-    deleteConversation, portfolios, portfolioId, setPortfolioId,
+    deleteConversation, portfolios, portfolioId, setPortfolioId, refreshPortfolios,
   } = /**@type {{messages: ChatMessage[], isThinking: boolean, conversationId: number|null,
         conversations: Conversation[], regeneratingId: string|number|null,
         sendMessageStreaming: Function, regenerate: Function, loadConversation: Function,
         startNewChat: Function, renameConversation: Function, deleteConversation: Function,
         portfolios: {id: string, label: string, portfolio_name: string}[],
-        portfolioId: string|null, setPortfolioId: Function}}*/ (useChat());
+        portfolioId: string|null, setPortfolioId: Function, refreshPortfolios: Function}}*/ (useChat());
   const [pickerOpen, setPickerOpen] = useState(false);
   const activePortfolio = portfolios.find((p) => p.id === portfolioId) ?? null;
+  useEffect(() => {
+     refreshPortfolios();
+  }, []);  
   const [searchParams, setSearchParams] = useSearchParams();
   /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const bottomRef = useRef(null);
@@ -820,7 +823,7 @@ const AIChat = () => {
                   </div>
                 )}
 
-                <button type="button" onClick={() => setPickerOpen((open) => !open)}
+                <button type="button" onClick={() => { if (!pickerOpen) refreshPortfolios(); setPickerOpen((open) => !open); }}
                   aria-label="Choose a portfolio to chat about"
                   aria-expanded={pickerOpen}
                   className={`rounded-lg p-1 ${HOVER}`}

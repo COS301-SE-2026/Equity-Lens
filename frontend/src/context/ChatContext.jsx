@@ -126,11 +126,13 @@ export const ChatProvider = ({ children }) => {
       return next;
     });
 
-  useEffect(() => {
+  const refreshPortfolios = () =>
     api
       .get('/ai_chat/portfolios/')
       .then((res) => setPortfolios(res.data))
       .catch(() => {});
+  useEffect(() => {
+    refreshPortfolios();
   }, []);
 
   useEffect(() => {
@@ -455,8 +457,8 @@ export const ChatProvider = ({ children }) => {
         portfolios,
         portfolioId,
         setPortfolioId,
+        refreshPortfolios,
         sendMessageStreaming,
-        // the dashboard dock sends through the same streaming path as the chat page
         sendMessage: sendMessageStreaming,
         regenerate,
         loadConversation,
