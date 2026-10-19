@@ -251,6 +251,7 @@ const AIChat = () => {
   const bottomRef = useRef(null);
   /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const scrollRef = useRef(null);
+  const stickToBottom = useRef(true);
   const lastMessage = messages[messages.length - 1];
   const streamingText = lastMessage?.streaming ? lastMessage.text : '';
   const [editingId, setEditingId] = useState(/**@type {number | null}*/(null));
@@ -307,13 +308,25 @@ const AIChat = () => {
     cursor: locked ? 'not-allowed' : 'pointer',
   });
 
-  useEffect(() => {
+  const handleScroll = () => {
     const el = scrollRef.current;
     if (!el) {return;}
-    if (el.scrollHeight - el.scrollTop - el.clientHeight > 140) {return;}
-    bottomRef.current?.scrollIntoView({
-      behavior: streamingText ? 'auto' : 'smooth', block: 'end' });
+    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  };
+
+  useEffect(() => {
+    stickToBottom.current = true;
+  }, [conversationId]);
+  useEffect(() => {
+    if (lastMessage?.role === 'user') {stickToBottom.current = true;}
+  }, [messages.length, lastMessage?.role]);
+    
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !stickToBottom.current) {return;}
+    el.scrollTop = el.scrollHeight;
   }, [messages.length, isThinking, streamingText]);
+
 
   useEffect(() => {
     if (cooldownUntil === 0) 
@@ -668,7 +681,7 @@ const AIChat = () => {
           </header>
 
           <style>{CARET_CSS}</style>
-          <div ref = {scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+          <div ref={scrollRef} onScroll={handleScroll} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center px-4 text-center">
                 <div className={CONTENT_MAX}>
