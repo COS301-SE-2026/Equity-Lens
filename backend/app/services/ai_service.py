@@ -9,7 +9,7 @@ import pandas as pd
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.models.chat import ChatConversation, ChatMessages, UserMemory
+from app.models.chat import AiDailyUsage, ChatConversation, ChatMessages, UserMemory
 from app.models.portfolio import Document, Holdings, Portfolios
 from app.repositories.news_repository import NewsRepository
 from app.services.ai_context import build_history, fit_to_budget
@@ -1175,6 +1175,13 @@ def chat(
 
     return reply, _persist_turn(db, chat_conversation, logged_in_user_id, user_message, reply)
 
+def _count_usage(db: Session, user_id) -> None:
+    today = datetime.now(UTC).date()
+    usage = db.get(AiDailyUsage, (user_id, today))
+    if usage is None:
+        db.add(AiDailyUsage(user_id=user_id, day=today, count=1))
+    else:
+        usage.count += 1
 
 def _persist_turn(db: Session, chat_conversation, user_id, user_message: str, reply: str):
     if chat_conversation is None:
@@ -1187,6 +1194,8 @@ def _persist_turn(db: Session, chat_conversation, user_id, user_message: str, re
                         created_at=asked_at))
     db.add(ChatMessages(conversation_id=chat_conversation.id, role="assistant", content=reply,
                         created_at=asked_at + timedelta(microseconds=1)))
+
+    _count_usage(db, user_id)
 
     chat_conversation.updated_at = datetime.now(UTC)
     db.commit()

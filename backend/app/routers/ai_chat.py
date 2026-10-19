@@ -1,18 +1,17 @@
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import SessionLocal, get_db
 from app.dependencies import get_current_user
-from app.models.chat import ChatConversation, ChatMessages, UserMemory
+from app.models.chat import AiDailyUsage, ChatConversation, ChatMessages, UserMemory
 from app.models.portfolio import Portfolios
 from app.schemas.auth import UserResponse
 from app.services.ai_service import chat, chat_stream, run_post_turn
@@ -49,19 +48,8 @@ class ChangeConversationName(BaseModel):
 
 
 def _messages_today(db: Session, user_id) -> int:
-    start = datetime.now(UTC).replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
-
-    return (
-        db.query(func.count(ChatMessages.id))
-        .join(ChatConversation, ChatMessages.conversation_id == ChatConversation.id)
-        .filter(
-            ChatConversation.user_id == user_id,
-            ChatMessages.role == "user",
-            ChatMessages.created_at >= start,
-        )
-        .scalar()
-        or 0
-    )
+    usage = db.get(AiDailyUsage, (user_id, datetime.now(UTC).date()))
+    return usage.count if usage else 0
 
 
 def enforce_limit(
@@ -190,6 +178,20 @@ async def get_chat_portfolios(
         for i, p in enumerate(portfolios, start=1)
     ]
 
+
+@router.get("/usage/")
+async def get_usage(
+    db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)
+):
+    used = _messages_today(db, current_user.id)
+    limit = settings.ai_daily_limit
+    midnight = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    return {
+        "used": min(used, limit),
+        "limit": limit,
+        "remaining": max(0, limit - used),
+        "resets_at": (midnight + timedelta(days=1)).isoformat(),
+    }
 
 # now to return all conversations for the logged user
 @router.get("/conversations/")

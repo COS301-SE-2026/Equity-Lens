@@ -1,7 +1,7 @@
 import uuid
 from datetime import UTC, datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, String, Text
+from sqlalchemy import Column, Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
@@ -62,3 +62,14 @@ class ChatMessages(Base):
 
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))
+
+class AiDailyUsage(Base):
+    __tablename__ = "ai_daily_usage"
+
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete = "CASCADE"),
+        primary_key = True,
+    )
+    day = Column(Date, primary_key = True)
+    count = Column(Integer, nullable = False, default = 0)
