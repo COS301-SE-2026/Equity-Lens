@@ -12,6 +12,7 @@ import PerformanceVsBenchmark, {
   IndexTooltip,
   endMarker,
   eventDots,
+  lateBenchmarkStart,
 } from './PerformanceVsBenchmark';
 
 vi.mock('../../../services/portfolioService', () => ({ getHoldingSeries: vi.fn() }));
@@ -696,5 +697,30 @@ describe('the open event card', () => {
 
     view.unmount();
     expect(disconnect).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('a benchmark that starts late', () => {
+  /** @param {string} benchmarkFrom */
+  const rows = (benchmarkFrom) => [
+    { date: '2026-03-02', name: 'Mar 02', value: 100000, twr_index: 100 },
+    { date: benchmarkFrom, name: 'start', value: 104000, benchmark: 100000, twr_index: 104 },
+    { date: '2026-05-04', name: 'May 04', value: 106000, benchmark: 101000, twr_index: 106 },
+  ];
+
+  it('says where the benchmark line begins when it starts weeks after the portfolio', () => {
+    renderChart({ series: rows('2026-04-13'), historyDays: 63 });
+    expect(screen.getByText('Benchmark data starts on 13 April 2026')).toBeInTheDocument();
+  });
+
+  it('stays quiet when the benchmark starts with the portfolio', () => {
+    renderChart({ series: SERIES, historyDays: 31 });
+    expect(screen.queryByText(/Benchmark data starts on/)).not.toBeInTheDocument();
+  });
+
+  it('allows a week for weekends and holidays and no more', () => {
+    expect(lateBenchmarkStart(rows('2026-03-09'))).toBeNull();
+    expect(lateBenchmarkStart(rows('2026-03-10'))).toBe('2026-03-10');
+    expect(lateBenchmarkStart([{ date: '2026-03-02', value: 1 }])).toBeNull();
   });
 });

@@ -60,6 +60,8 @@ const RANGES = ['1D', '1W', '1M', '3M', '1Y', 'ALL'];
 const MAX_DOTS = 8;
 const DOT_RADIUS = 5;
 const CHART_PAD = 20;
+const LATE_BENCHMARK_DAYS = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
 const POPOVER_GAP = 12;
 const GROUP_METHOD_HELP =
   "A group line is a fixed-weight index. Each member's weight is what it was worth on the " +
@@ -285,6 +287,18 @@ export function eventDots({ rows, events }) {
         Math.abs(b.event.z_score ?? 0) - Math.abs(a.event.z_score ?? 0),
     )
     .slice(0, MAX_DOTS);
+}
+
+/**
+ * @param {{ date: string, value?: number|null, benchmark?: number|null }[]} rows
+ * @returns {string|null} the benchmark's first date when it starts well after the portfolio
+ */
+export function lateBenchmarkStart(rows) {
+  const firstValue = rows.find((row) => typeof row.value === 'number');
+  const firstBenchmark = rows.find((row) => typeof row.benchmark === 'number');
+  if (!firstValue || !firstBenchmark) return null;
+  const gap = (Date.parse(firstBenchmark.date) - Date.parse(firstValue.date)) / DAY_MS;
+  return gap > LATE_BENCHMARK_DAYS ? firstBenchmark.date : null;
 }
 
 /**
@@ -834,6 +848,7 @@ const PerformanceVsBenchmark = ({
     : 'Groups are weighted by what each holding was worth on the first day of the range.';
 
   const note = markerNote({ events, loading: eventsLoading, failed: eventsFailed });
+  const benchmarkStart = lateBenchmarkStart(visibleSeries);
   const hasDots = eventDots({ rows: indexed ? chartRows : visibleSeries, events }).length > 0;
   const showsReconstructed =
     historyPref.source === 'reconstructed' &&
@@ -1051,6 +1066,15 @@ const PerformanceVsBenchmark = ({
                 Values before {longDate(/** @type {string} */ (importedAt))} are reconstructed from
                 your statement.
                 <HelpTooltip text="Before you uploaded, your value each day is worked out backwards from the transactions on your statement and the closing prices we have cached. It assumes the statement's transaction list is complete, carries the last known price across days it has no price for, cannot see a position you opened and closed before the statement period, and does not adjust for corporate actions." />
+              </div>
+            )}
+
+            {benchmarkStart && (
+              <div
+                className="px-5 pb-1 font-mono text-[11px]"
+                style={{ color: 'var(--text-ghost)' }}
+              >
+                Benchmark data starts on {longDate(benchmarkStart)}
               </div>
             )}
 
