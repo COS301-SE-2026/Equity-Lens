@@ -117,8 +117,8 @@ def import_Pdf_data(database, user_id, data):
     }
 
 
-def save_portfolios_import(database, user_id, data):
-    document = save_portfolios(database, user_id, data)
+def save_portfolios_import(database, user_id, data, is_guest=False):
+    document = save_portfolios(database, user_id, data, is_guest=is_guest)
 
     return {
         "Success": True,

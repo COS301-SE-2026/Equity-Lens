@@ -13,7 +13,7 @@ from app.services.ai_service import (
 
 
 @patch("app.services.ai_service.requests.get")
-def test_news_headlines(mock_get):
+def test_news_headlines(mock_get, db_session):
     response = MagicMock()
     response.json.return_value = {"data":
         [
@@ -46,7 +46,7 @@ def test_news_headlines(mock_get):
     mock_get.return_value = response
 
     with patch.object(ai_service.settings, "market_api_key", "test-key"):
-        output = get_market_news_tool()
+        output = get_market_news_tool(db_session)
 
     assert "Recent market news:" in output
     assert "Rates held steady" in output

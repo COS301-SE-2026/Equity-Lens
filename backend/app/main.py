@@ -10,8 +10,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from app.config import settings
-from app.database import create_tables
+from app.config import guest_mode_available, settings
+from app.database import SessionLocal, create_tables
 
 # imported for their side effect: create_tables() only creates tables whose models are loaded
 from app.models import market_data, news_event, user  # noqa: F401
@@ -29,7 +29,7 @@ from app.routers import (
 )
 from app.routers import market_data as market_data_router
 from app.schemas.responses import STATUS_ERROR_CODES
-from app.services import token_verifier
+from app.services import guest_service, token_verifier
 
 logging.basicConfig(
     level=logging.INFO,
@@ -46,9 +46,24 @@ ALWAYS_ALLOWED_ORIGINS = [
 ALLOWED_ORIGINS = list(dict.fromkeys([*ALWAYS_ALLOWED_ORIGINS, *settings.cors_origins]))
 
 
+def _purge_guests_at_startup() -> None:
+    db = SessionLocal()
+    try:
+        guest_service.purge_expired_guests(db)
+        db.commit()
+    except Exception as exc:
+        db.rollback()
+        logger.warning("guest purge at startup failed: %s", type(exc).__name__)
+    finally:
+        db.close()
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     create_tables()
+    _purge_guests_at_startup()
+    if settings.guest_mode_enabled and not guest_mode_available():
+        logger.error("GUEST_MODE_ENABLED is set but GUEST_TOKEN_SECRET is missing or too short")
     to_thread.current_default_thread_limiter().total_tokens = 16
     app.state.jwks_reachable = token_verifier.prefetch_jwks()
     yield

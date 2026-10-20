@@ -48,7 +48,7 @@ def add_watchlist(
     db: Session = Depends(get_db),
     CurrentUser: UserResponse = Depends(get_current_user),
 ):
-    return add_watchlist_service(db, CurrentUser.id, data)
+    return add_watchlist_service(db, CurrentUser.id, data, is_guest=bool(CurrentUser.is_guest))
 
 
 @router.get("/", response_model=WatchlisResponse)

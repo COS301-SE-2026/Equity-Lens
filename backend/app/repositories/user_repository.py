@@ -45,7 +45,7 @@ class UserRepository:
 
         # a user who signed up before cognito, or whose sub changed, keeps their existing row
         user = self.get_by_email(email)
-        if user:
+        if user and not user.is_guest:
             user.cognito_sub = cognito_sub
             if not user.full_name:
                 user.full_name = full_name
@@ -67,7 +67,7 @@ class UserRepository:
             # two first requests from the same new identity raced us to the insert
             self.db.rollback()
             existing = self.get_by_cognito_sub(cognito_sub) or self.get_by_email(email)
-            if existing is None:
+            if existing is None or existing.is_guest:
                 raise
             return existing
 

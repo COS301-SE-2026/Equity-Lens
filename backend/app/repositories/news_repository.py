@@ -1,7 +1,7 @@
 import json
 from datetime import UTC, date, datetime, timedelta
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.dialects.postgresql import insert as postgres_insert
 from sqlalchemy.dialects.sqlite import insert as sqlite_insert
 from sqlalchemy.orm import Session
@@ -100,6 +100,18 @@ class NewsRepository:
             .distinct()
             .limit(limit)
         )
+        return list(self.db.scalars(stmt).all())
+
+    def recent_articles(
+        self, since: datetime, word: str | None = None, limit: int = 3
+    ) -> list[NewsArticle]:
+        stmt = select(NewsArticle).where(NewsArticle.published_at >= since)
+        if word:
+            pattern = f"%{word}%"
+            stmt = stmt.where(
+                or_(NewsArticle.title.ilike(pattern), NewsArticle.description.ilike(pattern))
+            )
+        stmt = stmt.order_by(NewsArticle.published_at.desc()).limit(limit)
         return list(self.db.scalars(stmt).all())
 
     def articles_in_window(

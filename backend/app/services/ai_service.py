@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import time
 from datetime import UTC, datetime, timedelta
 from functools import lru_cache
@@ -12,6 +13,9 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.chat import ChatConversation, ChatMessages, UserMemory
 from app.models.portfolio import Document, Holdings, Portfolios
+from app.repositories.news_repository import NewsRepository
+from app.routers.news import _breaker_open
+from app.services import news_ingest
 from app.services.ai_context import build_history, fit_to_budget
 from app.services.ai_memory import MAX_FACTS_PER_USER, extract_facts, summarise_dropped
 from app.services.health_config_service import resolve_health_config
@@ -546,6 +550,11 @@ def get_stock_data_tool(ticker: str) -> str:
 MAX_NEWS_ARTICLES = 3
 MARKETAUX_URL = "https://api.marketaux.com/v1/news/all"
 SENTIMENT_DEADBAND = 0.15
+NEWS_TOOL_CACHE_SECONDS = 3600
+NEWS_TOOL_CACHE_MAX_KEYS = 200
+SAVED_HEADLINE_DAYS = 14
+_NEWS_TOOL_CACHE: dict[str, tuple[float, str]] = {}
+_NEWS_TOOL_LOCK = Lock()
 
 
 def _sentiment_label(score) -> str:
@@ -584,11 +593,43 @@ def _describe_article(article: dict) -> str:
     return line
 
 
-def get_market_news_tool(query: str = "") -> str:
+def _saved_headlines(repo: NewsRepository, query: str) -> str:
+    words = [word for word in re.findall(r"[a-z]+", query) if len(word) >= 4]
+    since = datetime.now(UTC) - timedelta(days=SAVED_HEADLINE_DAYS)
+    rows = repo.recent_articles(since, max(words, key=len) if words else None, MAX_NEWS_ARTICLES)
+
+    lines = [
+        line
+        for line in (
+            _describe_article({
+                "title": row.title,
+                "source": row.source_name,
+                "published_at": row.published_at.isoformat(),
+                "description": row.description,
+            })
+            for row in rows
+        )
+        if line
+    ]
+    if not lines:
+        return "Live news is paused for today and no saved headlines match."
+    return "Live news is paused for today, so these are saved headlines:\n" + "\n".join(lines)
+
+
+def get_market_news_tool(db: Session, query: str = "") -> str:
     if not settings.market_api_key:
         return "News is not on this server."
 
-    query = (query or "").strip()
+    query = (query or "").strip().lower()
+    now = time.monotonic()
+    with _NEWS_TOOL_LOCK:
+        cached = _NEWS_TOOL_CACHE.get(query)
+        if cached and cached[0] > now:
+            return cached[1]
+
+    repo = NewsRepository(db)
+    if news_ingest.calls_used_today(repo) >= settings.news_daily_request_budget or _breaker_open():
+        return _saved_headlines(repo, query)
 
     params = {
         "api_token": settings.market_api_key,
@@ -600,18 +641,26 @@ def get_market_news_tool(query: str = "") -> str:
         params["filter_entities"] = "true"
 
     response = requests.get(MARKETAUX_URL, params=params, timeout=6)
+    articles = (response.json().get("data") or []) if response.ok else []
+    repo.record_fetch(f"ai:{query[:80]}", news_ingest.SOURCE, len(articles), ok=bool(response.ok))
+    db.commit()
     response.raise_for_status()
-    articles = response.json().get("data") or []
 
     if not articles:
-        return (
+        reply = (
             f"No recent news has been found for '{query}'."
             if query
             else "No recent market news found."
         )
+    else:
+        lines = [line for line in (_describe_article(a) for a in articles) if line]
+        reply = "Recent market news:\n" + "\n".join(lines)
 
-    lines = [line for line in (_describe_article(a) for a in articles) if line]
-    return "Recent market news:\n" + "\n".join(lines)
+    with _NEWS_TOOL_LOCK:
+        if len(_NEWS_TOOL_CACHE) >= NEWS_TOOL_CACHE_MAX_KEYS:
+            _NEWS_TOOL_CACHE.pop(min(_NEWS_TOOL_CACHE, key=lambda k: _NEWS_TOOL_CACHE[k][0]))
+        _NEWS_TOOL_CACHE[query] = (now + NEWS_TOOL_CACHE_SECONDS, reply)
+    return reply
 
 
 INDICATOR_LABELS = {
@@ -812,7 +861,7 @@ def run_tool(name: str, tool_input: dict, db: Session, user_id, portfolio_id=Non
     if name == "get_stock_data":
         return get_stock_data_tool(tool_input.get("ticker", ""))
     if name == "get_market_news":
-        return get_market_news_tool(tool_input.get("query", ""))
+        return get_market_news_tool(db, tool_input.get("query", ""))
     if name == "get_indicators":
         return get_indicators_tool(tool_input.get("ticker", ""))
     if name == "get_goal_projection":

@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Column, DateTime, String, func, text
+from sqlalchemy import Boolean, Column, DateTime, String, false, func, text
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.database import Base
@@ -16,6 +16,8 @@ class User(Base):
     full_name = Column(String(255), nullable=False)
     is_active = Column(Boolean, nullable=False, server_default=text("TRUE"), default=True)
     cognito_sub = Column(String(255), unique=True, index=True, nullable=True)
+    is_guest = Column(Boolean, nullable=True, server_default=false())
+    guest_expires_at = Column(DateTime(timezone=True), nullable=True, index=True)
     created_at = Column(
         DateTime(timezone=True),
         nullable=False,

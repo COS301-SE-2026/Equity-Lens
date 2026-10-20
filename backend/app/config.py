@@ -33,6 +33,18 @@ class Settings(BaseSettings):
     news_refresh_floor_hours: int = 6
     news_daily_request_budget: int = 80
     news_nightly_request_budget: int = 60
+    event_news_per_user_daily: int = 10
+    guest_mode_enabled: bool = False
+    guest_token_secret: str | None = None
+    guest_session_hours: int = 4
+    guest_max_active: int = 150
+    guest_max_portfolios: int = 3
+    guest_max_watchlist: int = 10
+    guest_create_per_ip: int = 30
+    guest_ai_daily_limit: int = 20
+    guest_ai_global_daily_limit: int = 300
+    guest_snapshot_pdf_limit: int = 3
+    pdf_max_concurrent: int = 2
 
 
 @lru_cache
@@ -41,3 +53,11 @@ def get_settings() -> Settings:
 
 
 settings = get_settings()
+
+GUEST_SECRET_MIN_LENGTH = 32
+
+
+def guest_mode_available() -> bool:
+    # a short secret could be brute-forced into a forged guest token, so it counts as off
+    secret = settings.guest_token_secret or ""
+    return settings.guest_mode_enabled and len(secret) >= GUEST_SECRET_MIN_LENGTH

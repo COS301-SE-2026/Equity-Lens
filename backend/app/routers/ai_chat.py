@@ -14,6 +14,7 @@ from app.database import SessionLocal, get_db
 from app.dependencies import get_current_user
 from app.models.chat import ChatConversation, ChatMessages, UserMemory
 from app.models.portfolio import Portfolios
+from app.models.user import User
 from app.schemas.auth import UserResponse
 from app.services.ai_service import chat, chat_stream, run_post_turn
 from app.utils.ai_rate_limit import check_limit
@@ -64,21 +65,58 @@ def _messages_today(db: Session, user_id) -> int:
     )
 
 
+def _guest_messages_today(db: Session) -> int:
+    start = datetime.now(UTC).replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+
+    return (
+        db.query(func.count(ChatMessages.id))
+        .join(ChatConversation, ChatMessages.conversation_id == ChatConversation.id)
+        .join(User, ChatConversation.user_id == User.id)
+        .filter(
+            User.is_guest.is_(True),
+            ChatMessages.role == "user",
+            ChatMessages.created_at >= start,
+        )
+        .scalar()
+        or 0
+    )
+
+
+def _seconds_to_midnight() -> int:
+    midnight = datetime.now(UTC).replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+    now = datetime.now(UTC).replace(tzinfo=None)
+    return max(1, int(86400 - (now - midnight).total_seconds()))
+
+
 def enforce_limit(
     db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)
 ):
+    is_guest = bool(current_user.is_guest)
+    daily_limit = settings.guest_ai_daily_limit if is_guest else settings.ai_daily_limit
     used = _messages_today(db, current_user.id)
-    if used >= settings.ai_daily_limit:
-        midnight = datetime.now(UTC).replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
-        now = datetime.now(UTC).replace(tzinfo=None)
-        retry_after = max(1, int(86400 - (now - midnight).total_seconds()))
+    if used >= daily_limit:
+        retry_after = _seconds_to_midnight()
         logger.info("daily cap hit: user %s used %s", current_user.id, used)
         raise HTTPException(
             status_code=429,
             detail={
                 "message": (
-                    f"You have reached your daily limit of {settings.ai_daily_limit} messages. "
+                    f"You have reached your daily limit of {daily_limit} messages. "
                     "It resets at midnight UTC."
+                ),
+                "retry_after": retry_after,
+            },
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    if is_guest and _guest_messages_today(db) >= settings.guest_ai_global_daily_limit:
+        retry_after = _seconds_to_midnight()
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "message": (
+                    "The guest demo has used today's AI allowance. "
+                    "Create an account to keep chatting."
                 ),
                 "retry_after": retry_after,
             },
