@@ -8,7 +8,7 @@ import useBlur from '../../../hooks/useBlur';
  * @param {boolean} [props.sidebarOpen]
  */
 const Topbar = ({ onMenuClick, sidebarOpen }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, isGuest } = useAuth();
   const { blurMoney, toggleBlurMoney } = useBlur();
 
   const initials = user?.full_name
@@ -135,7 +135,7 @@ const Topbar = ({ onMenuClick, sidebarOpen }) => {
             borderRadius: '9999px',
           }}
         >
-          Sign out
+          {isGuest ? 'End session' : 'Sign out'}
         </button>
 
         <div

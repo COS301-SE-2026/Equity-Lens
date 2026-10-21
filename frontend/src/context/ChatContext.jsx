@@ -1,7 +1,7 @@
-import { fetchAuthSession } from 'aws-amplify/auth';
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 import api from '../services/api';
+import { getAccessToken } from '../services/guestSession';
 import { API_BASE_URL } from '../utils/constants';
 
 /**
@@ -232,8 +232,7 @@ export const ChatProvider = ({ children }) => {
     draw();
 
     try {
-      const session = await fetchAuthSession();
-      const token = session.tokens?.accessToken?.toString();
+      const token = await getAccessToken();
 
       const response = await fetch(`${API_BASE_URL}/ai_chat/stream/`, {
         method: 'POST',

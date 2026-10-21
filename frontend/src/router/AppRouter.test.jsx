@@ -218,3 +218,42 @@ describe('a page that throws', () => {
     expect(screen.queryByText('Dashboard Page')).not.toBeInTheDocument();
   });
 });
+
+describe('guest session', () => {
+  afterEach(() => {
+    sessionStorage.clear();
+  });
+
+  it('gives a guest the normal layout plus the guest banner', async () => {
+    sessionStorage.setItem(
+      'equitylens.guest',
+      JSON.stringify({
+        access_token: 'guest-token',
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        user: { id: 'guest-1', full_name: 'Guest', is_guest: true },
+      }),
+    );
+    const logout = vi.fn();
+    mockUseAuth.mockReturnValue({
+      user: { full_name: 'Guest', is_guest: true },
+      isAuthenticated: true,
+      isGuest: true,
+      loading: false,
+      logout,
+    });
+    renderAt(ROUTES.DASHBOARD);
+
+    expect(await screen.findByText('Dashboard Page')).toBeInTheDocument();
+    expect(screen.getByTestId('app-layout')).toBeInTheDocument();
+    expect(await screen.findByText(/guest session - your data is deleted when you end the session - ends in 1h 0m/i)).toBeInTheDocument();
+    expect(logout).not.toHaveBeenCalled();
+  });
+
+  it('shows no banner to a registered user', async () => {
+    mockUseAuth.mockReturnValue({ user: { name: 'Test' }, isAuthenticated: true, loading: false });
+    renderAt(ROUTES.DASHBOARD);
+
+    expect(await screen.findByText('Dashboard Page')).toBeInTheDocument();
+    expect(screen.queryByText(/guest demo/i)).not.toBeInTheDocument();
+  });
+});

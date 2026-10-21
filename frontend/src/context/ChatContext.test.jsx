@@ -82,6 +82,30 @@ describe('shared conversation across navigation', () => {
       );
   });
 
+  it('streams with the guest token when a guest session is in the tab', async () => {
+    sessionStorage.setItem(
+      'equitylens.guest',
+      JSON.stringify({
+        access_token: 'guest-token',
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        user: { id: 'guest-1', full_name: 'Guest', is_guest: true },
+      }),
+    );
+    try {
+      render(<Harness initialPath="/ai" />);
+      fireEvent.change(screen.getByPlaceholderText('Ask the assistant...'), {
+        target: { value: 'hello' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /send/i }));
+
+      await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+      const headers = /** @type {any} */ (globalThis.fetch).mock.calls[0][1].headers;
+      expect(headers.Authorization).toBe('Bearer guest-token');
+    } finally {
+      sessionStorage.clear();
+    }
+  });
+
   it('a follow-up message on /ai reuses the conversation_id the first reply returned', async () => {
     render(<Harness initialPath="/ai" />);
 

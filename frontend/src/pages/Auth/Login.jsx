@@ -1,12 +1,13 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import Button from '../../components/common/Button/Button';
 import FormInput from '../../components/forms/FormInput/FormInput';
 import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
 import useAuth from '../../hooks/useAuth';
 import useForm from '../../hooks/useForm';
+import { getGuestModeStatus } from '../../services/authService';
 import { ROUTES } from '../../utils/constants';
 import { validateEmail } from '../../utils/validators';
 
@@ -48,9 +49,12 @@ export const Card = ({ title, subtitle, serverError, children }) => (
   </div>
 );
 
+const GUEST_ENDED = 'Your guest session ended. Start a new one or create an account.';
+
 const Login = () => {
-  const { login, submitMFACode, activateTOTP } = useAuth();
+  const { login, submitMFACode, activateTOTP, startGuest } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [view, setView] = useState('login');
   const [serverError, setServerError] = useState(/** @type {string | null} */ (null));
@@ -60,6 +64,8 @@ const Login = () => {
     /** @type {{ secret: string | null, uri: string | null }} */ ({ secret: null, uri: null }),
   );
   const [email, setEmail] = useState('');
+  const [guestAvailable, setGuestAvailable] = useState(false);
+  const [isGuestLoading, setIsGuestLoading] = useState(false);
 
   useEffect(() => {
     const storedErr = sessionStorage.getItem('login_error');
@@ -67,6 +73,22 @@ const Login = () => {
       setServerError(storedErr);
       sessionStorage.removeItem('login_error');
     }
+  }, []);
+
+  useEffect(() => {
+    if (searchParams.get('guest') === 'ended') setServerError(GUEST_ENDED);
+  }, [searchParams]);
+
+  useEffect(() => {
+    let active = true;
+    const checkGuestMode = async () => {
+      const enabled = await getGuestModeStatus();
+      if (active) setGuestAvailable(enabled);
+    };
+    checkGuestMode();
+    return () => {
+      active = false;
+    };
   }, []);
 
   const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm(
@@ -103,6 +125,28 @@ const Login = () => {
       const msg = 'Incorrect email or password';
       sessionStorage.setItem('login_error', msg);
       setServerError(msg);
+    }
+  };
+
+  const handleGuestStart = async () => {
+    setServerError(null);
+    setIsGuestLoading(true);
+    try {
+      await startGuest();
+      navigate(ROUTES.DASHBOARD, { replace: true });
+    } catch (err) {
+      const status = /** @type {any} */ (err)?.response?.status;
+      if (status === 404) {
+        setGuestAvailable(false);
+      } else if (status === 429) {
+        setServerError('Too many guest sessions from this network, wait a few minutes.');
+      } else if (status === 503) {
+        setServerError('The demo is busy, try again in a minute.');
+      } else {
+        setServerError('Could not start a guest session, try again.');
+      }
+    } finally {
+      setIsGuestLoading(false);
     }
   };
 
@@ -289,6 +333,23 @@ const Login = () => {
           Create one
         </Link>
       </p>
+      {guestAvailable && (
+        <div className="mt-6">
+          <div className="flex items-center gap-3 mb-4" aria-hidden="true">
+            <span className="flex-1 h-px bg-[var(--border-subtle)]" />
+            <span className="text-xs text-[var(--text-secondary)]">or</span>
+            <span className="flex-1 h-px bg-[var(--border-subtle)]" />
+          </div>
+          <Button
+            variant="secondary"
+            fullWidth
+            loading={isGuestLoading}
+            onClick={handleGuestStart}
+          >
+            Continue as guest
+          </Button>
+        </div>
+      )}
     </Card>
   );
 };

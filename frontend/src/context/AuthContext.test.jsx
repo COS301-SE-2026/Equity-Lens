@@ -1,8 +1,9 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import * as authService from '../services/authService';
+import { saveGuestSession } from '../services/guestSession';
 
 import { AuthProvider, useAuthContext } from './AuthContext';
 
@@ -17,6 +18,7 @@ function TestConsumer({ onAction }) {
       <span data-testid="auth">{String(ctx.isAuthenticated)}</span>
       <span data-testid="email">{ctx.user?.email || ''}</span>
       <span data-testid="mfa">{ctx.mfaState?.type || ''}</span>
+      <span data-testid="guest">{String(ctx.isGuest)}</span>
       <button onClick={() => onAction?.(ctx)}>run</button>
     </div>
   );
@@ -135,5 +137,72 @@ describe('AuthContext', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
 
     expect(() => render(<Component />)).toThrow('useAuthContext must be used in AuthProvider');
+  });
+});
+
+describe('AuthContext guest sessions', () => {
+  const session = {
+    access_token: 'guest-token',
+    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    user: { id: 'guest-1', full_name: 'Guest', is_guest: /** @type {true} */ (true) },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+    vi.mocked(authService.isAuthenticated).mockResolvedValue(false);
+  });
+
+  afterEach(() => {
+    sessionStorage.clear();
+  });
+
+  it('restores a guest from the tab without asking cognito', async () => {
+    saveGuestSession(session);
+    renderAuth();
+
+    await waitFor(() => expect(screen.getByTestId('guest')).toHaveTextContent('true'));
+    expect(screen.getByTestId('auth')).toHaveTextContent('true');
+    expect(authService.isAuthenticated).not.toHaveBeenCalled();
+  });
+
+  it('starts a guest session', async () => {
+    vi.mocked(authService.startGuestSession).mockResolvedValue(session);
+    const user = userEvent.setup();
+    renderAuth((ctx) => ctx.startGuest());
+
+    await waitFor(() => expect(screen.getByTestId('loading')).toHaveTextContent('false'));
+    await user.click(screen.getByText('run'));
+
+    await waitFor(() => expect(screen.getByTestId('guest')).toHaveTextContent('true'));
+    expect(authService.startGuestSession).toHaveBeenCalledTimes(1);
+  });
+
+  it('ends a guest session on logout instead of signing out of cognito', async () => {
+    saveGuestSession(session);
+    const user = userEvent.setup();
+    renderAuth((ctx) => ctx.logout());
+
+    await waitFor(() => expect(screen.getByTestId('guest')).toHaveTextContent('true'));
+    await user.click(screen.getByText('run'));
+
+    await waitFor(() => expect(screen.getByTestId('auth')).toHaveTextContent('false'));
+    expect(authService.endGuestSession).toHaveBeenCalledTimes(1);
+    expect(authService.logout).not.toHaveBeenCalled();
+  });
+
+  it('clears a leftover guest session before a real sign-in', async () => {
+    vi.mocked(authService.login).mockResolvedValue(
+      /** @type {any} */ ({ nextStep: { signInStep: 'CONFIRM_SIGN_IN_WITH_TOTP_CODE' } }),
+    );
+    const user = userEvent.setup();
+    renderAuth((ctx) => ctx.login('jane@example.com', 'pw'));
+    await waitFor(() => expect(screen.getByTestId('loading')).toHaveTextContent('false'));
+
+    saveGuestSession(session);
+    await user.click(screen.getByText('run'));
+
+    expect(sessionStorage.getItem('equitylens.guest')).toBeNull();
+    expect(authService.login).toHaveBeenCalledWith('jane@example.com', 'pw');
   });
 });
