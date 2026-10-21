@@ -26,6 +26,7 @@ from app.services.instruments import (
     KIND_ETF,
     KIND_STOCK,
     REGION_BENCHMARKS,
+    REGION_SA,
     REGION_UNKNOWN,
     get_look_through_note,
     is_region_benchmark,
@@ -36,6 +37,7 @@ from app.services.instruments import (
     resolve_known_instrument,
 )
 from app.services.market_data_service import get_current_price
+from app.services.news_ingest import fetch_event_window
 from app.services.news_ranking import (
     MAX_DAYS_AFTER,
     MAX_DAYS_BEFORE,
@@ -320,7 +322,9 @@ def _history_period(since: date) -> str:
         return "1y"
     if days <= 700:
         return "2y"
-    return "5y"
+    if days <= 1800:
+        return "5y"
+    return "10y"
 
 
 def _closes_by_day(history) -> tuple[list[date], list[float]]:
@@ -343,7 +347,9 @@ def _index_levels(
     ticker: str, currency: str, since: date, target_currency: str = "ZAR"
 ) -> dict[date, float] | None:
     try:
-        history = get_cached_price_history(ticker, period=_history_period(since), force_live=True)
+        history = get_cached_price_history(
+            ticker, period=_history_period(since), force_live=True, start=since
+        )
     except Exception as exc:
         logger.warning(f"benchmark history fetch failed for {ticker}: {exc}")
         return None
@@ -357,8 +363,9 @@ def _index_levels(
             logger.warning(f"cannot convert {ticker} from {currency} to {target_currency}")
             return None
         try:
+            # a rate is needed for every day, a late fx series would start the line late too
             fx = get_cached_price_history(
-                "USDZAR=X", period=_history_period(since), force_live=True
+                "USDZAR=X", period=_history_period(since), force_live=True, start=since
             )
         except Exception as exc:
             logger.warning(f"USDZAR history fetch failed, cannot convert {ticker}: {exc}")
@@ -1501,34 +1508,50 @@ class PortfolioService:
         if holding is None:
             return {"available": False, "reason": "not_held", "ticker": ticker}
 
-        if is_region_benchmark(ticker, holding["region"]):
+        region = holding["region"]
+        if region == REGION_UNKNOWN and is_zar_listed(ticker) and holding["kind"] == KIND_STOCK:
+            region = REGION_SA
+
+        if is_region_benchmark(ticker, region):
             return {
                 "available": False,
                 "reason": "benchmark_is_self",
                 "ticker": ticker,
                 "name": holding.get("name"),
                 "date": event_date.isoformat(),
-                "benchmark_label": REGION_BENCHMARKS[holding["region"]][1],
+                "benchmark_label": REGION_BENCHMARKS[region][1],
                 "move_type": "market",
-                "possible_explanations": self._possible_explanations(
-                    ticker, holding.get("name") or "", event_date
+                "possible_explanations": self._card_news(
+                    user_id, holding, ticker, region, event_date
                 ),
             }
 
         stock_series = single_ticker_closes(ticker, period=EVENT_STUDY_PERIOD)
         if not stock_series:
-            return {"available": False, "reason": "no_price_history", "ticker": ticker}
+            return {
+                "available": False,
+                "reason": "no_price_history",
+                "ticker": ticker,
+                "name": holding.get("name"),
+                "date": event_date.isoformat(),
+                "possible_explanations": self._card_news(
+                    user_id, holding, ticker, region, event_date
+                ),
+            }
 
         since = event_date - timedelta(days=BENCHMARK_LOOKBACK_DAYS)
-        benchmark = benchmark_levels(
-            holding["region"], since, quote_currency(ticker, holding["region"]) or "ZAR"
-        )
+        benchmark = benchmark_levels(region, since, quote_currency(ticker, region) or "ZAR")
         if benchmark is None:
             return {
                 "available": False,
                 "reason": "no_benchmark_for_region",
                 "ticker": ticker,
-                "region": holding["region"],
+                "name": holding.get("name"),
+                "date": event_date.isoformat(),
+                "region": region,
+                "possible_explanations": self._card_news(
+                    user_id, holding, ticker, region, event_date
+                ),
             }
 
         label, levels = benchmark
@@ -1567,8 +1590,8 @@ class PortfolioService:
             )
             if decomposition
             else "unknown",
-            "possible_explanations": self._possible_explanations(
-                ticker, holding.get("name") or "", event_date
+            "possible_explanations": self._card_news(
+                user_id, holding, ticker, region, event_date
             ),
             "same_day": self._same_day(ticker, event_date, detected),
             "note": (
@@ -1577,6 +1600,14 @@ class PortfolioService:
             ),
         }
         return payload
+
+    def _card_news(
+        self, user_id: UUID, holding: dict, ticker: str, region: str, event_date: date
+    ) -> list[dict]:
+        # only a share has its own news, a fund or the benchmark itself would waste a call
+        if holding["kind"] == KIND_STOCK and not is_region_benchmark(ticker, region):
+            fetch_event_window(self.db, ticker, event_date, user_id)
+        return self._possible_explanations(ticker, holding.get("name") or "", event_date)
 
     def _same_day(self, ticker: str, event_date: date, log_return: float | None) -> dict | None:
         repo = NewsRepository(self.db)

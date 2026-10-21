@@ -17,6 +17,7 @@ from app.repositories.news_repository import NewsRepository
 from app.services import news_ingest
 from app.services.event_detection import K_SIGMA, MAX_GAP_DAYS, band_for, score_series
 from app.services.instruments import REGION_BENCHMARKS, looks_like_fund
+from app.services.news_ingest import WINDOW_DAYS_AFTER, WINDOW_DAYS_BEFORE
 from app.services.news_ranking import (
     MAX_DAYS_AFTER,
     MAX_DAYS_BEFORE,
@@ -43,8 +44,6 @@ SEED_UNIVERSE = [
 ]
 
 
-WINDOW_DAYS_BEFORE = 4
-WINDOW_DAYS_AFTER = 2
 DEFAULT_BUDGET = 60
 EVENT_HISTORY_PERIOD = "1y"
 
