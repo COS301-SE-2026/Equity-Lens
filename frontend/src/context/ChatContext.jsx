@@ -103,6 +103,8 @@ export const ChatProvider = ({ children }) => {
   /** @typedef {{id: string, fact: string, created_at?: string|null}} Memory */
   const [memories, setMemories] = useState(/** @type {Memory[]} */ ([]));
   /** @typedef {{id: string, label: string, portfolio_name: string, account_number: string}} ChatPortfolio */
+  /** @typedef {{used: number, limit: number, remaining: number, resets_at: string}} Usage */
+  const [usage, setUsage] = useState(/** @type {Usage|null} */ (null));
   const [portfolios, setPortfolios] = useState(/** @type {ChatPortfolio[]} */ ([]));
   const [portfolioId, setPortfolioId] = useState(/** @type {string|null} */ (null));
   const [savedScopes] = useState(readScopes);
@@ -126,11 +128,13 @@ export const ChatProvider = ({ children }) => {
       return next;
     });
 
-  useEffect(() => {
+  const refreshPortfolios = () =>
     api
       .get('/ai_chat/portfolios/')
       .then((res) => setPortfolios(res.data))
       .catch(() => {});
+  useEffect(() => {
+    refreshPortfolios();
   }, []);
 
   useEffect(() => {
@@ -155,6 +159,15 @@ export const ChatProvider = ({ children }) => {
       .get('/ai_chat/memories/')
       .then((res) => setMemories(res.data))
       .catch(() => {});
+
+  const refreshUsage = () =>
+    api
+      .get('/ai_chat/usage/')
+      .then((res) => setUsage(res.data))
+      .catch(() => {});
+  useEffect(() => {
+    refreshUsage();
+  }, []);
 
   /** @param {string} memoryId */
   const deleteMemory = (memoryId) => {
@@ -316,6 +329,7 @@ export const ChatProvider = ({ children }) => {
       return retryAfter;
     } finally {
       markBusy(streamKey, false);
+      refreshUsage();
       if (replyStatus === 'streaming') {
         replyStatus = 'done';
         draw();
@@ -372,7 +386,10 @@ export const ChatProvider = ({ children }) => {
         }
         return retryAfter;
       })
-      .finally(() => setRegeneratingId(null));
+      .finally(() => {
+        setRegeneratingId(null);
+        refreshUsage();
+      });
   };
 
   /** @param {Conversation} convo */
@@ -451,11 +468,12 @@ export const ChatProvider = ({ children }) => {
         closeDock,
         clearPendingQuestion,
         memories,
+        usage,
         portfolios,
         portfolioId,
         setPortfolioId,
+        refreshPortfolios,
         sendMessageStreaming,
-        // the dashboard dock sends through the same streaming path as the chat page
         sendMessage: sendMessageStreaming,
         regenerate,
         loadConversation,
@@ -463,6 +481,7 @@ export const ChatProvider = ({ children }) => {
         renameConversation,
         deleteConversation,
         refreshMemories,
+        refreshUsage,
         deleteMemory,
       }}
     >
