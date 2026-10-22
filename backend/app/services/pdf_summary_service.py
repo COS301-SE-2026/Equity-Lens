@@ -9,6 +9,8 @@ from app.models.portfolio import (
     Portfolios,
     TransactionExpenses,
 )
+from app.services.portfolio_service import BUY_MARKERS, SELL_MARKERS
+HOLDING_VALUE = func.coalesce(Holdings.statement_value, Holdings.total_cost)
 
 
 def checkPortfolioID(database, portfolioID, user_id):
@@ -55,6 +57,29 @@ def get_summary_import_PDF(database, portfolioID, user_id):
         .scalar()
         or 0
     )
+    StatementValue = (
+        database.query(func.sum(HOLDING_VALUE))
+        .filter(Holdings.portfolio_id == portfolioID)
+        .scalar()
+        or 0
+    )
+    WithStatementValue = (
+        database.query(Holdings)
+        .filter(Holdings.portfolio_id == portfolioID, Holdings.statement_value.isnot(None))
+        .count()
+    )
+    StatementDate = (
+        database.query(Portfolios.statement_end_date)
+        .filter(Portfolios.id == portfolioID)
+        .scalar()
+    )
+
+    if TotalHoldings and WithStatementValue == TotalHoldings:
+        ValueBasis = "statement"
+    elif WithStatementValue:
+        ValueBasis = "mixed"
+    else:
+        ValueBasis = "cost"
 
     return {
         "PortfolioValue": float(PortfolioValue),
@@ -65,23 +90,45 @@ def get_summary_import_PDF(database, portfolioID, user_id):
         "TotalDividendsAndWithholdingTax": float(TotalDividendsAndWithholdingTax),
         "TotalTransactionInterest": 0,
         "TotalTransactionExpenses": float(TotalTransactionExpenses),
+        "StatementValue": float(StatementValue),
+        "StatementDate": StatementDate.isoformat() if StatementDate else None,
+        "ValueBasis": ValueBasis,
     }
+
+
+def _value_total(database, portfolioID):
+    return float(
+        database.query(func.sum(HOLDING_VALUE))
+        .filter(Holdings.portfolio_id == portfolioID)
+        .scalar()
+        or 0
+    )
+
+
+def _percent_of(value, total):
+    return round(float(value or 0) / total * 100, 2) if total else None
 
 
 def get_the_top_holdings_import_PDF(database, portfolioID, user_id):
     checkPortfolioID(database, portfolioID, user_id)
+    # ranked on the same value the card shows, cost alone could disagree with the allocation
     getInfo = (
-        database.query(Holdings.instrument_name, Holdings.total_cost)
+        database.query(Holdings.instrument_name, HOLDING_VALUE.label("value"))
         .filter(Holdings.portfolio_id == portfolioID)
-        .order_by(Holdings.total_cost.desc())
+        .order_by(HOLDING_VALUE.desc())
         .all()
     )
+    total = _value_total(database, portfolioID)
 
     returnAllArray = []
 
     for allItems in getInfo:
         returnAllArray.append(
-            {"name": allItems.instrument_name, "value": float(allItems.total_cost or 0)}
+            {
+                "name": allItems.instrument_name,
+                "value": float(allItems.value or 0),
+                "weight_percentage": _percent_of(allItems.value, total),
+            }
         )
 
     return returnAllArray
@@ -90,9 +137,9 @@ def get_the_top_holdings_import_PDF(database, portfolioID, user_id):
 def get_the_lowest_holdings_import_PDF(database, portfolioID, user_id):
     checkPortfolioID(database, portfolioID, user_id)
     getInfo = (
-        database.query(Holdings.instrument_name, Holdings.total_cost)
+        database.query(Holdings.instrument_name, HOLDING_VALUE.label("value"))
         .filter(Holdings.portfolio_id == portfolioID)
-        .order_by(Holdings.total_cost.asc())
+        .order_by(HOLDING_VALUE.asc())
         .first()
     )
 
@@ -100,21 +147,24 @@ def get_the_lowest_holdings_import_PDF(database, portfolioID, user_id):
         return {
             "name": None,
             "value": 0,
+            "weight_percentage": None,
         }
     return {
         "name": getInfo.instrument_name,
-        "value": float(getInfo.total_cost),
+        "value": float(getInfo.value or 0),
+        "weight_percentage": _percent_of(getInfo.value, _value_total(database, portfolioID)),
     }
 
 
 def get_the_top_allocation_import_PDF(database, portfolioID, user_id):
     checkPortfolioID(database, portfolioID, user_id)
     getInfo = (
-        database.query(Holdings.instrument_name, Holdings.weight_percentage)
+        database.query(Holdings.instrument_name, HOLDING_VALUE.label("value"))
         .filter(Holdings.portfolio_id == portfolioID)
-        .order_by(Holdings.weight_percentage.desc())
+        .order_by(HOLDING_VALUE.desc())
         .all()
     )
+    total = _value_total(database, portfolioID)
 
     returnAllArray = []
 
@@ -122,7 +172,8 @@ def get_the_top_allocation_import_PDF(database, portfolioID, user_id):
         returnAllArray.append(
             {
                 "name": allItems.instrument_name,
-                "weight_percentage": float(allItems.weight_percentage or 0),
+                # 0 rather than null keeps the pdf's empty-allocation guard working
+                "weight_percentage": _percent_of(allItems.value, total) or 0.0,
             }
         )
 
@@ -144,9 +195,24 @@ def get_trading_activity_import_PDF(database, portfolioID, user_id):
     returnAllArray = []
 
     for allItems in getInfo:
-        returnAllArray.append({"name": allItems.transaction_name, "value": float(allItems[1] or 0)})
+        returnAllArray.append(
+            {
+                "name": allItems.transaction_name,
+                "value": float(allItems[1] or 0),
+                "side": _trade_side(allItems.transaction_name),
+            }
+        )
 
     return returnAllArray
+
+
+def _trade_side(transaction_name):
+    name = (transaction_name or "").lower()
+    if any(marker in name for marker in SELL_MARKERS):
+        return "sell"
+    if any(marker in name for marker in BUY_MARKERS):
+        return "buy"
+    return None
 
 
 def get_cash_flow_import_PDF(database, portfolioID, user_id):
