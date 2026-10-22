@@ -137,4 +137,15 @@ test.describe('guest session', () => {
     const stored = await page.evaluate(() => sessionStorage.getItem('equitylens.guest'));
     expect(stored).toBeNull();
   });
+
+  // the landing page's sign-up buttons all go to /register
+  test('a guest can start from the register page too', async ({ page }) => {
+    await mockApi(page);
+
+    await page.goto('/register', { waitUntil: 'domcontentloaded' });
+    await page.getByRole('button', { name: 'Continue as guest' }).click();
+
+    await expect(page).toHaveURL(/dashboard/i);
+    await expect(page.getByText(/Guest session - your data is deleted when you end the session/i)).toBeVisible();
+  });
 });
