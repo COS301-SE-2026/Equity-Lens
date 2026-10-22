@@ -29,6 +29,7 @@ const ChatDock = () => {
   /** @type {React.MutableRefObject<HTMLDivElement | null>} */
   const listRef = useRef(null);
   const sentQuestionRef = useRef(/** @type {string|null} */ (null));
+  const stickToBottom = useRef(true);
   const shouldReduceMotion = useReducedMotion();
 
   useEffect(() => {
@@ -43,8 +44,20 @@ const ChatDock = () => {
     if (dockOpen) inputRef.current?.focus();
   }, [dockOpen]);
 
+  const handleListScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  };
+
   useEffect(() => {
-    if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
+    if (messages[messages.length - 1]?.role === 'user') stickToBottom.current = true;
+  }, [messages]);
+
+  useEffect(() => {
+    if (listRef.current && stickToBottom.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
   }, [messages, isThinking]);
 
   const handleClose = () => {
@@ -127,7 +140,7 @@ const ChatDock = () => {
               Answers are AI-generated and can be wrong. Informational only, not financial advice.
             </p>
 
-            <div ref={listRef} className="flex-1 space-y-2 overflow-y-auto p-3">
+            <div ref={listRef} onScroll={handleListScroll} className="flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
               {messages.length === 0 && !isThinking && (
                 <p className="p-2 text-[13px]" style={{ color: 'var(--text-ghost)' }}>
                   Ask about your portfolio, a holding, or anything on this page.
