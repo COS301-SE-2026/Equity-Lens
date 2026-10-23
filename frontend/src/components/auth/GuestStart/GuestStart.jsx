@@ -1,58 +1,18 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-import useAuth from '../../../hooks/useAuth';
-import { getGuestModeStatus } from '../../../services/authService';
-import { ROUTES } from '../../../utils/constants';
 import Button from '../../common/Button/Button';
 
+import useGuestStart from './useGuestStart';
+
 /**
+ * shared by Login and Register, errors go to the page's own alert
  * @param {{
  *   onError: (message: string | null) => void,
  *   disabled?: boolean,
  * }} props
  */
 const GuestStart = ({ onError, disabled = false }) => {
-  const { startGuest } = useAuth();
-  const navigate = useNavigate();
-  const [guestAvailable, setGuestAvailable] = useState(false);
-  const [isGuestLoading, setIsGuestLoading] = useState(false);
+  const { available, loading, start } = useGuestStart(onError);
 
-  useEffect(() => {
-    let active = true;
-    const checkGuestMode = async () => {
-      const enabled = await getGuestModeStatus();
-      if (active) setGuestAvailable(enabled);
-    };
-    checkGuestMode();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const handleGuestStart = async () => {
-    onError(null);
-    setIsGuestLoading(true);
-    try {
-      await startGuest();
-      navigate(ROUTES.DASHBOARD, { replace: true });
-    } catch (err) {
-      const status = /** @type {any} */ (err)?.response?.status;
-      if (status === 404) {
-        setGuestAvailable(false);
-      } else if (status === 429) {
-        onError('Too many guest sessions from this network, wait a few minutes.');
-      } else if (status === 503) {
-        onError('The demo is busy, try again in a minute.');
-      } else {
-        onError('Could not start a guest session, try again.');
-      }
-    } finally {
-      setIsGuestLoading(false);
-    }
-  };
-
-  if (!guestAvailable) return null;
+  if (!available) return null;
 
   return (
     <div className="mt-6">
@@ -61,13 +21,7 @@ const GuestStart = ({ onError, disabled = false }) => {
         <span className="text-xs text-[var(--text-secondary)]">or</span>
         <span className="flex-1 h-px bg-[var(--border-subtle)]" />
       </div>
-      <Button
-        variant="secondary"
-        fullWidth
-        loading={isGuestLoading}
-        disabled={disabled}
-        onClick={handleGuestStart}
-      >
+      <Button variant="secondary" fullWidth loading={loading} disabled={disabled} onClick={start}>
         Continue as guest
       </Button>
     </div>
