@@ -1,13 +1,13 @@
 """add guest columns to users
 
 Revision ID: c0d1e2f3a4b5
-Revises: b8c9d0e1f2a3
+Revises: f40d828e59ba
 """
 from alembic import op
 import sqlalchemy as sa
 
 revision = "c0d1e2f3a4b5"
-down_revision = "b8c9d0e1f2a3"
+down_revision = "f40d828e59ba"
 branch_labels = None
 depends_on = None
 
