@@ -206,6 +206,35 @@ export function rebaseBenchmarkToSlice(series) {
   });}
 
 /**
+ * @template {{ value?: number, benchmark?: number, net_flow?: number }} T
+ * @param {T[]} rows
+ * @returns {(T & { mirror: number | null, exhausted: boolean })[]}
+ */
+export function mirrorForRange(rows) {
+  if (!Array.isArray(rows)) return [];
+
+  let units = /** @type {number | null} */ (null);
+  return rows.map((row) => {
+    const level = num(row.benchmark);
+    if (level === null || level <= 0) return { ...row, mirror: null, exhausted: false };
+
+    let held;
+    let exhausted = false;
+    if (units === null) {
+      held = num(row.value) ?? 0;
+    } else {
+      held = units * level + (num(row.net_flow) ?? 0);
+      // a cent of float noise is not a real overdraw
+      if (held < -0.005) exhausted = true;
+      held = Math.max(held, 0);
+    }
+
+    units = held / level;
+    return { ...row, mirror: held, exhausted };
+  });
+}
+
+/**
  * @param {Record<string, any>[]} visible
  * @param {{ ticker: string, points?: { date: string, close: number }[] }[]} holdings
  * @returns {Record<string, (number | null)[]>}

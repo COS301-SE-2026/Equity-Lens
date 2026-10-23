@@ -99,6 +99,9 @@ DASHBOARD_EXAMPLE = {
             "value": 9020.0,
             "benchmark": 9020.0,
             "twr_index": 100.0,
+            "net_flow": 0.0,
+            "benchmark_mirror": 9020.0,
+            "mirror_exhausted": False,
         }
     ],
     "historyQuality": {

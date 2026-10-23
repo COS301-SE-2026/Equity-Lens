@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
+from matplotlib.axes import Axes
 from PIL import Image
 
 from app.models.portfolio import Holdings, Portfolios
@@ -571,6 +572,56 @@ def test_a_late_benchmark_start_is_noted():
     assert "Benchmark data starts" not in dashboard._benchmark_note(
         SA_DEMO["snapshot"]["dashboard"]["performanceHistory"], "Satrix 40"
     )
+
+
+def dashed_line(history):
+    drawn = []
+    real_plot = Axes.plot
+
+    def spy(ax, *args, **kwargs):
+        drawn.append((args, kwargs))
+        return real_plot(ax, *args, **kwargs)
+
+    with patch.object(Axes, "plot", spy):
+        dashboard._performance_chart(history, "Satrix 40")
+    dashed = [(args[1], kwargs["label"]) for args, kwargs in drawn
+              if kwargs.get("linestyle") == "--"]
+    return dashed[0]
+
+
+def with_mirror(history):
+    return [
+        {**point, "net_flow": 0.0, "benchmark_mirror": point["benchmark"] + 100,
+         "mirror_exhausted": False}
+        for point in history
+    ]
+
+
+@pytest.mark.usefixtures("news_images")
+def test_the_pdf_draws_the_same_money_line_when_the_snapshot_has_it():
+    snapshot = copy.deepcopy(SA_DEMO["snapshot"])
+    history = with_mirror(snapshot["dashboard"]["performanceHistory"])
+    snapshot["dashboard"]["performanceHistory"] = history
+
+    values, label = dashed_line(history)
+    text = pdf_text(build(snapshot))
+
+    assert values == [point["benchmark_mirror"] for point in history]
+    assert label == "Same money in Satrix 40"
+    assert "the same money invested in Satrix 40 (JSE Top 40 proxy) on the same days." in text
+
+
+@pytest.mark.usefixtures("news_images")
+def test_an_older_snapshot_keeps_the_rebased_benchmark_line():
+    history = SA_DEMO["snapshot"]["dashboard"]["performanceHistory"]
+
+    values, label = dashed_line(history)
+    text = pdf_text(build())
+
+    assert values == [point["benchmark"] for point in history]
+    assert label == "Satrix 40"
+    assert "Dashed line: Satrix 40 (JSE Top 40 proxy)." in text
+    assert "same money" not in text
 
 
 @pytest.mark.parametrize("count", [5, 7])

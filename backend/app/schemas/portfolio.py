@@ -91,6 +91,23 @@ class PerformancePoint(BaseModel):
         "growth. Null when there are fewer than two snapshots to link",
         examples=[100.0],
     )
+    net_flow: float | None = Field(
+        default=None,
+        description="rand bought less rand sold since the previous row. 0 on the first row",
+        examples=[0.0],
+    )
+    benchmark_mirror: float | None = Field(
+        default=None,
+        description="the same rand put into the benchmark on the same days, starting at the "
+        "first day's value. Null before the benchmark starts",
+        examples=[9020.0],
+    )
+    mirror_exhausted: bool | None = Field(
+        default=None,
+        description="true on a day a sale was bigger than the benchmark version held, so it "
+        "was emptied to zero",
+        examples=[False],
+    )
 
 
 class BenchmarkComponent(BaseModel):

@@ -48,7 +48,9 @@ from app.services.news_ranking import (
 )
 from app.services.returns import (
     average_cost_realised_gain,
+    benchmark_mirror,
     pct_return,
+    period_flows,
     time_weighted_index,
     time_weighted_return_pct,
     xirr,
@@ -1287,12 +1289,12 @@ class PortfolioService:
         base_value = portfolio_series[first_day]
         benchmark_series, components = _benchmark_series(priced_holdings, first_day, base_value)
 
-        twr = dict(
-            time_weighted_index(
-                sorted(portfolio_series.items()), _invested_flows(classified_txns or [])
-            )
-        )
+        flows = _invested_flows(classified_txns or [])
+        twr = dict(time_weighted_index(sorted(portfolio_series.items()), flows))
         benchmark_days = sorted(benchmark_series)
+        days = sorted(portfolio_series)
+        # buys and sales per row, in the same window the twr uses, for the same-money line
+        net_flows = period_flows(days, flows)
 
         history = [
             {
@@ -1301,11 +1303,12 @@ class PortfolioService:
                 "value": portfolio_series[day],
                 "benchmark": _nearest_benchmark(benchmark_series, benchmark_days, day),
                 "twr_index": twr.get(day),
+                "net_flow": round(net_flow, 2),
             }
-            for day in sorted(portfolio_series)
+            for day, net_flow in zip(days, net_flows, strict=True)
         ]
 
-        return history, components
+        return benchmark_mirror(history), components
 
     def get_performance_history(self, user_id: UUID) -> list[dict]:
         priced_holdings, portfolio_ids = self._get_priced_holdings(user_id)

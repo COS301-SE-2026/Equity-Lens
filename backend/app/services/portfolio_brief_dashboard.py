@@ -227,7 +227,12 @@ def _performance_chart(history, benchmark_label):
         linewidth=1.6,
         label="Your portfolio",
     )
-    benchmark = [p.get("benchmark") for p in points]
+    label = benchmark_label or "Benchmark"
+    if any("benchmark_mirror" in p for p in points):
+        benchmark = [p.get("benchmark_mirror") for p in points]
+        label = f"Same money in {label}"
+    else:
+        benchmark = [p.get("benchmark") for p in points]
     if any(b is not None for b in benchmark):
         ax.plot(
             days,
@@ -235,7 +240,7 @@ def _performance_chart(history, benchmark_label):
             color=DIM,
             linewidth=1.2,
             linestyle="--",
-            label=benchmark_label or "Benchmark",
+            label=label,
         )
     ax.legend(fontsize=8, frameon=False, loc="lower left", bbox_to_anchor=(0, 1.0), ncols=2,
               labelcolor=SECONDARY)
@@ -248,7 +253,14 @@ def _performance_chart(history, benchmark_label):
 
 
 def _benchmark_note(history, benchmark_label):
-    caption = f"Solid line: your portfolio. Dashed line: {benchmark_label or 'the benchmark'}."
+    label = benchmark_label or "the benchmark"
+    if any("benchmark_mirror" in p for p in history):
+        caption = (
+            f"Solid line: your portfolio. Dashed line: the same money invested in {label} "
+            "on the same days."
+        )
+    else:
+        caption = f"Solid line: your portfolio. Dashed line: {label}."
     dated = [p for p in history if p.get("value") is not None and p.get("date")]
     benchmarked = [p for p in dated if p.get("benchmark") is not None]
     if not benchmarked:
