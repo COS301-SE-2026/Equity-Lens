@@ -1,5 +1,5 @@
-from unittest.mock import MagicMock, patch
 from datetime import UTC, datetime
+from unittest.mock import MagicMock, patch
 import pandas as pd
 
 from app.models.chat import ChatMessages
@@ -13,7 +13,7 @@ from app.services.ai_service import (
 
 
 @patch("app.services.news_ingest.requests.get")
-def test_news_headlines(mock_get):
+def test_news_headlines(mock_get, db_session):
     response = MagicMock()
     response.status_code = 200
     response.json.return_value = {"data":
@@ -47,7 +47,7 @@ def test_news_headlines(mock_get):
     mock_get.return_value = response
 
     with patch.object(ai_service.settings, "market_api_key", "test-key"):
-        output = get_market_news_tool(db_session)
+        output = get_market_news_tool(db=db_session)
 
     assert "News from the last 30 days, newest first:" in output
     assert "Rates held steady" in output
