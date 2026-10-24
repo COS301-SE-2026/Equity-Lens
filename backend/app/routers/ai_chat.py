@@ -1,9 +1,10 @@
 import json
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func
@@ -16,7 +17,7 @@ from app.models.chat import AiDailyUsage, ChatConversation, ChatMessages, UserMe
 from app.models.portfolio import Portfolios
 from app.models.user import User
 from app.schemas.auth import UserResponse
-from app.services.ai_service import chat, chat_stream, run_post_turn
+from app.services.ai_service import chat, chat_stream, load_event, run_post_turn
 from app.utils.ai_rate_limit import check_limit
 from app.utils.exceptions import ConversationNotFoundException
 
@@ -25,11 +26,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/ai_chat", tags=["ai_chat"])
 
 
+class EventRef(BaseModel):
+    ticker: str = Field(min_length=1, max_length=20)
+    date: date
+
+
 class ChatRequest(BaseModel):
     message: str
     conversation_id: UUID | None = None
     portfolio_id: UUID | None = None
     replace_last: bool = False
+    # set by "Explore possible causes" on an event card, for that one message only
+    event: EventRef | None = None
 
     @field_validator("message")
     @classmethod
@@ -69,6 +77,15 @@ def _guest_messages_today(db: Session) -> int:
         .scalar()
         or 0
     )
+
+
+def _event_or_404(db: Session, user_id, ref: EventRef | None) -> dict | None:
+    if ref is None:
+        return None
+    event = load_event(db, user_id, ref.ticker, ref.date)
+    if event is None:
+        raise HTTPException(status_code=404, detail=f"{ref.ticker} is not in this portfolio")
+    return event
 
 
 def _seconds_to_midnight() -> int:
@@ -141,6 +158,7 @@ def ai_chat(
     current_user: UserResponse = Depends(enforce_limit),
 ):
     try:
+        event = _event_or_404(db, current_user.id, request.event)
         reply, conversation_id = chat(
             request.message,
             db,
@@ -148,6 +166,7 @@ def ai_chat(
             request.conversation_id,
             request.portfolio_id,
             request.replace_last,
+            event,
         )
         background_tasks.add_task(run_post_turn, conversation_id, current_user.id, request.message)
         return ChatResponse(reply=reply, conversation_id=conversation_id)
@@ -164,21 +183,25 @@ def ai_chat(
 
 
 @router.post("/stream/")
-async def ai_chat_stream(request: ChatRequest, current_user: UserResponse = Depends(enforce_limit)):
+async def ai_chat_stream(request: ChatRequest, db: Session = Depends(get_db), current_user: UserResponse = Depends(enforce_limit),
+):
+    event = await run_in_threadpool(_event_or_404, db, current_user.id, request.event)
+
     def event_source():
         db = SessionLocal()
         conversation_id = None
         try:
-            for event in chat_stream(
+            for chunk in chat_stream(
                 request.message,
                 db,
                 current_user.id,
                 request.conversation_id,
                 request.portfolio_id,
+                event,
             ):
-                if event["type"] == "done":
-                    conversation_id = event["conversation_id"]
-                yield f"data: {json.dumps(event)}\n\n"
+                if chunk["type"] == "done":
+                    conversation_id = chunk["conversation_id"]
+                yield f"data: {json.dumps(chunk)}\n\n"
         except ConversationNotFoundException:
             yield f"data: {json.dumps({'type': 'error', 'value': 'Conversation not found'})}\n\n"
         except Exception as e:

@@ -9,7 +9,7 @@ from app.config import settings
 from app.models.news_event import NewsArticle, NewsArticleTicker, NewsFetchLog
 from app.models.portfolio import Holdings, Portfolios, Watchlist
 from app.routers import news
-from app.services import ai_service
+from app.services import news_ingest
 from app.services.ai_service import get_market_news_tool
 from app.services.watchlist import get_watchlist_service
 from app.utils import stock_cache
@@ -45,7 +45,7 @@ SNAPSHOT_SECTIONS = {
 
 def marketaux_response(articles):
     response = MagicMock()
-    response.ok = True
+    response.status_code = 200
     response.json.return_value = {"data": articles}
     return response
 
@@ -169,10 +169,10 @@ def test_an_empty_answer_is_not_cached(client, auth_headers):
 def test_the_same_question_within_an_hour_costs_one_call(db_session):
     article = {"title": "JSE rallies", "source": "Reuters", "published_at": "2026-10-15"}
 
-    with patch.object(ai_service.requests, "get",
+    with patch.object(news_ingest.requests, "get",
                       return_value=marketaux_response([article])) as provider:
-        first = get_market_news_tool(db_session, "Naspers")
-        second = get_market_news_tool(db_session, "  naspers ")
+        first = get_market_news_tool("Naspers", db_session)
+        second = get_market_news_tool("  naspers ", db_session)
 
     assert first == second
     assert "JSE rallies" in first
@@ -181,13 +181,17 @@ def test_the_same_question_within_an_hour_costs_one_call(db_session):
 
 @pytest.mark.usefixtures("keys")
 def test_every_live_call_is_written_to_the_shared_ledger(db_session):
-    with patch.object(ai_service.requests, "get", return_value=marketaux_response([])):
-        get_market_news_tool(db_session, "capitec")
-        get_market_news_tool(db_session, "anglo")
+    with patch.object(news_ingest.requests, "get",
+                      return_value=marketaux_response([])) as provider:
+        get_market_news_tool("capitec", db_session)
+        get_market_news_tool("anglo", db_session)
 
     rows = db_session.scalars(select(NewsFetchLog).order_by(NewsFetchLog.scope)).all()
+    assert provider.call_count == 4
     assert [(row.scope, row.source, row.ok) for row in rows] == [
         ("ai:anglo", "marketaux", True),
+        ("ai:anglo", "marketaux", True),
+        ("ai:capitec", "marketaux", True),
         ("ai:capitec", "marketaux", True),
     ]
 
@@ -201,8 +205,8 @@ def test_a_spent_budget_falls_back_to_saved_headlines(db_session, monkeypatch):
     _stored_article(db_session, "MTN.JO", "MTN expands fibre")
     _stored_article(db_session, "SBK.JO", "Standard Bank old story", days_ago=30)
 
-    with patch.object(ai_service.requests, "get", side_effect=AssertionError("marketaux")):
-        reply = get_market_news_tool(db_session, "standard bank")
+    with patch.object(news_ingest.requests, "get", side_effect=AssertionError("marketaux")):
+        reply = get_market_news_tool("standard bank", db_session)
 
     assert reply.startswith("Live news is paused for today, so these are saved headlines:")
     assert "Standard Bank lifts dividend" in reply
@@ -215,8 +219,8 @@ def test_an_open_breaker_also_falls_back(db_session, monkeypatch):
     _stored_article(db_session, "NPN.JO", "Naspers results")
     monkeypatch.setattr(news, "_breaker_open_until", time.monotonic() + 600)
 
-    with patch.object(ai_service.requests, "get", side_effect=AssertionError("marketaux")):
-        reply = get_market_news_tool(db_session, "")
+    with patch.object(news_ingest.requests, "get", side_effect=AssertionError("marketaux")):
+        reply = get_market_news_tool("", db_session)
 
     assert "Naspers results" in reply
     assert db_session.scalar(select(func.count(NewsFetchLog.id))) == 0

@@ -1723,6 +1723,7 @@ class PortfolioService:
                     "fetched_at": a.fetched_at,
                     "match_score": link.match_score,
                     "highlight": link.highlight,
+                    "sentiment_score": link.sentiment_score,
                 }
                 for a in candidates
                 for link in a.tickers
@@ -1738,6 +1739,7 @@ class PortfolioService:
             {
                 "article_id": row["article"]["external_id"],
                 "title": row["article"]["title"],
+                "description": row["article"]["description"],
                 "url": row["article"]["url"],
                 "source_name": row["article"]["source_name"],
                 "published_at": row["article"]["published_at"].isoformat(),
@@ -1754,6 +1756,7 @@ class PortfolioService:
                     "provider_match_score": row["article"]["match_score"],
                     "days_from_event": row["days_from_event"],
                     "highlight": row["article"]["highlight"],
+                    "sentiment_score": row["article"]["sentiment_score"],
                     "ingest_mode": row["article"]["ingest_mode"],
                     "collected_at": (
                         row["article"]["fetched_at"].isoformat() + "Z"
