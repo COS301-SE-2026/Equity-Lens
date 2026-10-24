@@ -1,11 +1,44 @@
-# The Big Five (TB5) | EquityLens
+# EquityLens
 
-EquityLens is a web-based platform aimed at bridging the gap between retail investors 
-and investment analytics by providing the user with the ability to import their own portfolio, 
-run institutional-grade financial analysis, track how stock movements relate to news events, 
-and engage with a trained AI-powered assistant to make smarter and safer investment decisions.
+<p align="center">
+  <img src="https://img.shields.io/badge/Status-Active-success" alt="Status" />
+  <img src="https://img.shields.io/badge/Platform-Web%20App-blue" alt="Platform" />
+  <img src="https://img.shields.io/badge/Stack-FastAPI%20%2B%20React-9cf" alt="Stack" />
+</p>
 
-**Live app:** [equitylens.co.za](https://equitylens.co.za/)
+EquityLens is a web-based investment intelligence platform that helps retail investors make smarter, safer financial decisions. It brings portfolio imports, institutional-grade analysis, AI-powered guidance, and market/news context into one streamlined experience.
+
+Live app: [equitylens.co.za](https://equitylens.co.za/)
+
+[![Build](https://github.com/COS301-SE-2026/Equity-Lens/actions/workflows/ci.yml/badge.svg)](https://github.com/COS301-SE-2026/Equity-Lens/actions)
+[![codecov](https://codecov.io/gh/COS301-SE-2026/Equity-Lens/graph/badge.svg?token=K5WIIJ0VXC)](https://codecov.io/gh/COS301-SE-2026/Equity-Lens)
+![Requirements](https://img.shields.io/badge/requirements-up%20to%20date-brightgreen)
+[![GitHub Issues](https://img.shields.io/github/issues/COS301-SE-2026/Equity-Lens)](https://github.com/COS301-SE-2026/Equity-Lens/issues)
+[![Uptime](https://img.shields.io/uptimerobot/status/m803628024-a58c2adb71aaf80c9f7ccc71?label=uptime)](https://stats.uptimerobot.com/NXrIxg9iOy)
+[![Uptime Ratio](https://img.shields.io/uptimerobot/ratio/m803628024-a58c2adb71aaf80c9f7ccc71?label=30-day%20uptime)](https://stats.uptimerobot.com/NXrIxg9iOy)
+
+---
+
+## Overview
+
+EquityLens gives users the ability to:
+
+- Import and manage their own investment portfolio
+- Run institutional-grade financial analysis on holdings
+- Track how stock movements relate to relevant news events
+- Explore insights from an AI-assisted investment companion
+- Make more informed, structured investment decisions
+
+---
+
+## Key Features
+
+- Portfolio upload from CSV or Excel statements
+- Financial analysis and portfolio-level insights
+- News-linked market event tracking
+- AI-powered chat assistant for investment questions
+- Secure AWS Cognito authentication and MFA support
+- Dockerized local development workflow
 
 ---
 
@@ -18,17 +51,16 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 ---
 
-
 ## Documentation
 
-| | Link |
+| Document | Link |
 |---|---|
 | Software Requirement Specification (SRS) | [View SRS](./Documentation/Demo_4/SRS.pdf) |
 | Software Architecture Specification (SAS) | [View SAS](./Documentation/Demo_4/SAS.pdf) |
 | Coding Standards | [View](./Documentation/Demo_4/Coding_Standards.pdf) |
 | Testing Policy | [View](./Documentation/Demo_4/Testing_Policy.pdf) |
 | User Manual | [View](./Documentation/Demo_4/User_Manual.pdf) |
-| Brand Style Guide | live at `/brand` in the running app ([source](./frontend/src/pages/BrandStyleGuide/BrandStyleGuide.jsx)) |
+| Brand Style Guide | Live at `/brand` in the running app ([source](./frontend/src/pages/BrandStyleGuide/BrandStyleGuide.jsx)) |
 | GitHub Project Board | [View Board](https://github.com/orgs/COS301-SE-2026/projects/45) |
 | Design Document (Demo 1) | [View Design Doc](./Documentation/Demo_1/DESIGN_DOCUMENT.pdf) |
 | Wireframes (Demo 1) | [View Wireframes](./Documentation/Demo_1/Wireframes.pdf) |
@@ -37,100 +69,49 @@ and engage with a trained AI-powered assistant to make smarter and safer investm
 
 ---
 
-## Project Status
-
-[![Build](https://github.com/COS301-SE-2026/Equity-Lens/actions/workflows/ci.yml/badge.svg)](https://github.com/COS301-SE-2026/Equity-Lens/actions)
-[![codecov](https://codecov.io/gh/COS301-SE-2026/Equity-Lens/graph/badge.svg?token=K5WIIJ0VXC)](https://codecov.io/gh/COS301-SE-2026/Equity-Lens)
-![Requirements](https://img.shields.io/badge/requirements-up%20to%20date-brightgreen)
-[![GitHub Issues](https://img.shields.io/github/issues/COS301-SE-2026/Equity-Lens)](https://github.com/COS301-SE-2026/Equity-Lens/issues)
-[![Uptime](https://img.shields.io/uptimerobot/status/m803628024-a58c2adb71aaf80c9f7ccc71?label=uptime)](https://stats.uptimerobot.com/NXrIxg9iOy)
-[![Uptime Ratio](https://img.shields.io/uptimerobot/ratio/m803628024-a58c2adb71aaf80c9f7ccc71?label=30-day%20uptime)](https://stats.uptimerobot.com/NXrIxg9iOy)
-
-
-## The Team
-
-### Abdulrahman Sabah
-**Student Number:** u24566170
-
-Final-year Computer Science student at the University of Pretoria with a strong foundation in software engineering and cybersecurity. Holds certifications from IBM, Cisco, Microsoft Azure, and Amazon.
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/abdulrahman-sabah-a240aa39b)
-[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/Abdulrahman-Sabah)
-
----
-
-### Joshua Heath
-**Student Number:** u23541475
-
-Third-year Computer Science student at the University of Pretoria with full-stack development experience across academic and personal projects.
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/joshua-heath-a910b5367)
-[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/Josh-Heath123)
-
----
-
-### Antony van Straten
-**Student Number:** u24590739
-
-BSc Computer Science student in their third year at the University of Pretoria, deeply passionate about Machine Learning, Artificial Intelligence and building in general. Gained full-stack experience through personal and academic projects.
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/antony-van-straten/)
-[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/antonyvs05)
-
----
-
-### Jonty Honey
-**Student Number:** u23536862
-
-Third-year BSc Computer Science student at the University of Pretoria with a passion for data science, full-stack development and game development.
-
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/jonty-honey/)
-[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/jonty282)
-
----
-
 ## Tech Stack
 
 | Layer | Technology |
-|-------|------------|
-| Frontend | React 19 + Vite 7 (JSX only, no TypeScript), TailwindCSS, Recharts, aws-amplify (Cognito), framer-motion, react-hook-form |
-| Backend | FastAPI (Python 3.11), SQLAlchemy + Alembic, pandas + numpy (indicator calculations) |
-| Auth | AWS Cognito (email verification + TOTP MFA) |
-| Database | PostgreSQL 16 (AWS RDS in production),server side market-data cache
-| AI | AWS Bedrock (Claude models) |
-| Market Data | yfinance, Alpha Vantage
+|---|---|
+| Frontend | React 19 + Vite 7, TailwindCSS, Recharts, AWS Amplify Cognito, Framer Motion, React Hook Form |
+| Backend | FastAPI (Python 3.11), SQLAlchemy, Alembic, pandas, numpy |
+| Auth | AWS Cognito with email verification and TOTP MFA |
+| Database | PostgreSQL 16 in production, server-side market-data cache |
+| AI | AWS Bedrock with Claude models |
+| Market Data | yfinance, Alpha Vantage |
 | News | NewsData |
-| File Handling | pdfjs-dist (client-side PDF statement parsing), SheetJS/xlsx (client-side Excel import) |
-| CI/CD | GitHub Actions (Docker build → Amazon ECR → AWS SSM Run Command deploy to EC2), infrastructure as Terraform |
+| File Handling | pdfjs-dist, SheetJS/xlsx |
+| CI/CD | GitHub Actions, Docker, Terraform, Amazon ECR, EC2 deployment |
 
 ---
 
-## Branching Strategy
+## Project Workflow
 
-### Branch Hierarchy
+### Branching Strategy
 
-```
+```text
 main
-└── dev
+└──dev
     └── feature/*, fix/*, docs/*, test/*, refactor/*, chore/*
 ```
 
-### Rules
+Rules:
 
-- `main` - always deployable and demo-ready. Only merged into from `dev` before each demo.
-- `dev` - primary integration branch. All feature branches merge here first.
-- Never commit directly to `main` or `dev` - always via a Pull Request.
-- All PRs into `dev` require at least two approved reviews and a passing CI pipeline before merging.
-- Delete the branch after merging.
+- `main` is always demo-ready and deployable
+- `dev` is the primary integration branch
+- All work must be merged through pull requests
+- PRs into `dev` require at least two approvals and a passing CI pipeline
+- Branches should be deleted after merge
 
 ### Branch Naming Convention
 
-```
+```text
 [type]/[description]/[INITIALS]
 ```
 
-**Examples:**
-```
+Examples:
+
+```text
 feature/portfolio-csv-import/JH
 feature/dashboard-sector-chart/AVS
 fix/jwt-token-expiry/AS
@@ -142,45 +123,44 @@ chore/update-dependencies/JKH
 ### Branch Types
 
 | Type | Purpose |
-|------|---------|
+|---|---|
 | `feature` | New functionality |
 | `fix` | Bug fix |
 | `docs` | Documentation only |
 | `test` | Adding or updating tests |
 | `refactor` | Code restructure without behaviour change |
-| `chore` | Dependencies, config, tooling updates |
+| `chore` | Dependencies and tooling updates |
 
 ### Team Initials
 
 | Member | Initials |
-|--------|----------|
+|---|---|
 | Abdulrahman Sabah | AS |
 | Joshua Heath | JH |
 | Jonty Honey | JKH |
 | Antony van Straten | AVS |
 
----
+### PR Naming Convention
 
-## PR Naming Convention
-
-```
+```text
 [INITIALS] : short description of what this PR does
 ```
 
-**Examples:**
-```
+Examples:
+
+```text
 JH : feat: add portfolio CSV import endpoint
 AS : fix: resolve JWT token expiry bug
 AVS : docs: update SRS functional requirements
 JKH : chore: update dependencies
 ```
 
-### PR Rules
+PR rules:
 
-- PRs must reference the related GitHub Issue using `Closes #[issue number]` in the description
-- At least two team members must review and approve before merging
-- CI pipeline must pass before any merge is allowed
-- Delete the branch after merging
+- Include a reference to the related GitHub issue using `Closes #[issue number]`
+- Require at least two team approvals
+- Ensure CI passes before merging
+- Delete the branch after merge
 
 ---
 
@@ -188,26 +168,24 @@ JKH : chore: update dependencies
 
 ### Prerequisites
 
-- Docker Desktop (required)
-- Node.js 22+ (Node 22.22.0 is what CI runs against; needed for running frontend tests locally)
-- Python 3.11+ (for running backend tests locally)
+- Docker Desktop
+- Node.js 22+
+- Python 3.11+
 
 ### Environment Setup
 
-Copy the example env files before first run - Docker Compose will fail to start without `backend/.env`:
+Copy the example environment files before starting the project:
 
 ```bash
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
 
-Fill in `AWS_COGNITO_USER_POOL_ID`/`AWS_COGNITO_CLIENT_ID` (backend) and `VITE_COGNITO_*` (frontend) with the team's dev Cognito pool values, and `NEWSDATA_API_KEY` for the News page to return real results. `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` are also required in `backend/.env` - both Cognito auth and the AI assistant (Bedrock) construct their boto3 clients with these explicitly, so login and AI chat won't work without them.
+> By default, the backend serves cached/local data only. Live market data fetches are gated behind `ALLOW_LIVE_MARKET_FALLBACK=true` in `backend/.env`. Add this flag if you need live prices during local development. `ALPHA_VANTAGE_API_KEY` is optional and only affects non-JSE ticker history.
 
-> By default the backend serves cached/local price data only - live market data fetches (yfinance) are gated behind `ALLOW_LIVE_MARKET_FALLBACK=true` in `backend/.env`, which isn't set by `.env.example`. Add it if you need live prices during local development. `ALPHA_VANTAGE_API_KEY` is also optional and only affects non-JSE ticker history.
+### Run the Project
 
-### Running the Project
-
-The entire stack (frontend, backend, database) runs via Docker Compose.
+The full stack runs with Docker Compose:
 
 ```bash
 # Start all services
@@ -217,7 +195,7 @@ docker-compose up
 docker-compose down
 docker-compose up --build
 
-# Wipes the database
+# Wipe the database and rebuild
 docker-compose down -v
 docker-compose up --build
 ```
@@ -230,13 +208,13 @@ Once running:
 | Backend API | http://localhost:8000 |
 | API Docs (Swagger) | http://localhost:8000/docs |
 
-> Docker Desktop must be running before executing any of the above commands.
+> Docker Desktop must be running before executing the commands above.
 
 ---
 
 ## Testing
 
-### Frontend unit and integration test
+### Frontend
 
 ```bash
 cd frontend
@@ -250,7 +228,7 @@ cd frontend
 npm run coverage
 ```
 
-### Backend unit and integration test
+### Backend
 
 ```bash
 cd backend
@@ -264,10 +242,46 @@ cd backend
 python -m pytest --cov=app --cov-report=xml
 ```
 
-### e2e testing 
+### End-to-End Testing
 
 ```bash
 cd frontend
 npx playwright install
 npm run test:e2e
 ```
+
+---
+
+## Team
+
+### Abdulrahman Sabah
+**Student Number:** u24566170
+
+Final-year Computer Science student at the University of Pretoria with a strong foundation in software engineering and cybersecurity. Holds certifications from IBM, Cisco, Microsoft Azure, and Amazon.
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/abdulrahman-sabah-a240aa39b)
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/Abdulrahman-Sabah)
+
+### Joshua Heath
+**Student Number:** u23541475
+
+Third-year Computer Science student at the University of Pretoria with full-stack development experience across academic and personal projects.
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/joshua-heath-a910b5367)
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/Josh-Heath123)
+
+### Antony van Straten
+**Student Number:** u24590739
+
+BSc Computer Science student in their third year at the University of Pretoria, deeply passionate about Machine Learning, Artificial Intelligence and building in general. Gained full-stack experience through personal and academic projects.
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/antony-van-straten/)
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/antonyvs05)
+
+### Jonty Honey
+**Student Number:** u23536862
+
+Third-year BSc Computer Science student at the University of Pretoria with a passion for data science, full-stack development and game development.
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/jonty-honey/)
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/jonty282)
