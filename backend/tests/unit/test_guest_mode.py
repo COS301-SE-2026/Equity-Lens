@@ -17,7 +17,7 @@ from sqlalchemy.pool import StaticPool
 from app.config import settings
 from app.database import Base, get_db
 from app.main import app
-from app.models.chat import ChatConversation, ChatMessages, UserMemory
+from app.models.chat import AiDailyUsage, ChatConversation, ChatMessages, UserMemory
 from app.models.news_event import NewsArticle
 from app.models.portfolio import (
     ContributionsAndWithdrawals,
@@ -658,6 +658,12 @@ def _messages(db_session, user_id, how_many):
     db_session.flush()
     for i in range(how_many):
         db_session.add(ChatMessages(conversation_id=conversation.id, role="user", content=str(i)))
+    today = datetime.now(UTC).date()
+    usage = db_session.get(AiDailyUsage, (user_id, today))
+    if usage is None:
+        db_session.add(AiDailyUsage(user_id=user_id, day=today, count=how_many))
+    else:
+        usage.count += how_many
     db_session.commit()
 
 

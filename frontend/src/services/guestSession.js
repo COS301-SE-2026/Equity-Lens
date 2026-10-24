@@ -13,7 +13,8 @@ const STORAGE_KEY = 'equitylens.guest';
 export const clearGuestSession = () => {
   try {
     sessionStorage.removeItem(STORAGE_KEY);
-  } catch { }
+  } catch {//
+  }
 };
 
 /** @param {GuestSession} session */
