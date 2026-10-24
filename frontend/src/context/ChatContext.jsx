@@ -8,6 +8,7 @@ import { API_BASE_URL } from '../utils/constants';
  * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean, savedFacts?: string[], streaming?: boolean}} ChatMessage
  * @typedef {{id: string, title: string}} Conversation
  * @typedef {{id: string, role: 'user'|'assistant', content: string, created_at?: string|null}} ApiMessage
+ * @typedef {{ticker: string, date: string}} EventRef
  */
 const ChatContext = createContext(/** @type {any} */ (null));
 
@@ -92,14 +93,21 @@ export const ChatProvider = ({ children }) => {
   const [conversations, setConversations] = useState(/** @type {Conversation[]} */ ([]));
   const [dockOpen, setDockOpen] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState(/** @type {string|null} */ (null));
+  const [pendingEvent, setPendingEvent] = useState(/** @type {EventRef|null} */ (null));
 
-  /** @param {string} [question] */
-  const openDock = (question) => {
+  /** @param {string} [question] @param {EventRef} [event] the card the question came from */
+  const openDock = (question, event) => {
     setDockOpen(true);
-    if (question) setPendingQuestion(question);
+    if (question) {
+      setPendingQuestion(question);
+      setPendingEvent(event ?? null);
+    }
   };
   const closeDock = () => setDockOpen(false);
-  const clearPendingQuestion = () => setPendingQuestion(null);
+  const clearPendingQuestion = () => {
+    setPendingQuestion(null);
+    setPendingEvent(null);
+  };
   /** @typedef {{id: string, fact: string, created_at?: string|null}} Memory */
   const [memories, setMemories] = useState(/** @type {Memory[]} */ ([]));
   /** @typedef {{id: string, label: string, portfolio_name: string, account_number: string}} ChatPortfolio */
@@ -181,9 +189,10 @@ export const ChatProvider = ({ children }) => {
 
   /**
    * @param {string} rawText
+   * @param {EventRef|null} [eventRef]
    * @returns {Promise<number>|undefined}
    */
-  const sendMessageStreaming = (rawText) => {
+  const sendMessageStreaming = (rawText, eventRef = null) => {
     if (isThinking) {
       return;
     }
@@ -191,14 +200,15 @@ export const ChatProvider = ({ children }) => {
     if (!text) {
       return;
     }
-    return runStream(text);
+    return runStream(text, eventRef);
   };
 
   /**
    * @param {string} text
+   * @param {EventRef|null} eventRef only on the message an event card sent
    * @returns {Promise<number>}
    */
-  const runStream = async (text) => {
+  const runStream = async (text, eventRef) => {
     const stamp = Date.now();
     const startedIn = conversationId;
     const scope = portfolioId;
@@ -253,7 +263,12 @@ export const ChatProvider = ({ children }) => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ message: text, conversation_id: startedIn, portfolio_id: scope }),
+        body: JSON.stringify({
+          message: text,
+          conversation_id: startedIn,
+          portfolio_id: scope,
+          ...(eventRef ? { event: eventRef } : {}),
+        }),
       });
 
       if (!response.ok) {
@@ -464,6 +479,7 @@ export const ChatProvider = ({ children }) => {
         conversations,
         dockOpen,
         pendingQuestion,
+        pendingEvent,
         openDock,
         closeDock,
         clearPendingQuestion,

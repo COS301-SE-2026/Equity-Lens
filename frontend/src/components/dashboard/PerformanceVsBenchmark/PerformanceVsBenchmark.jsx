@@ -646,7 +646,7 @@ const PerfChart = ({
  *   eventDetails?: Record<string, any>,
  *   eventPendingKey?: string|null,
  *   onExpandEvent?: (ticker: string, date: string) => void,
- *   onAskAboutEvent?: (question: string) => void,
+ *   onAskAboutEvent?: (question: string, event: { ticker: string, date: string }) => void,
  *   importedAt?: string|null,
  *   benchmarkComposition?: { region: string, label: string, weight: number }[],
  *   historyQuality?: any,
