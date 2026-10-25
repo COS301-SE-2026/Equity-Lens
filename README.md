@@ -144,7 +144,7 @@ All project specifications, design decisions and user resources in one place.
 | **Software Requirements Specification** | [Read SRS](./Documentation/Demo_4/SRS.pdf) |
 | **Software Architecture Specification** | [Read SAS](./Documentation/Demo_4/SAS.pdf) |
 | **User Manual** | [Open User Manual](./Documentation/Demo_4/User_Manual.pdf) |
-| **Brand Style Guide** | [View in App](https://equitylens.co.za/brand) · [Source](./frontend/src/pages/BrandStyleGuide/BrandStyleGuide.jsx) |
+| **Brand Style Guide** | [Source](./frontend/src/pages/BrandStyleGuide/BrandStyleGuide.jsx) |
 
 <details>
 <summary><strong>API contracts and earlier designs documents</strong></summary>
