@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./frontend/public/logo.png" alt="EquityLens logo" width="105" />
+<img src="./frontend/public/assets/logo.svg" alt="EquityLens logo" width="105" />
 
 # EquityLens
 
@@ -181,6 +181,12 @@ Copy the example env files before first run - Docker Compose will fail to start 
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env
 ```
+
+Fill in `AWS_COGNITO_USER_POOL_ID` and `AWS_COGNITO_CLIENT_ID` in the backend env file, and the `VITE_COGNITO_*` variables in the frontend env file, with the team's development Cognito pool values. Set `NEWSDATA_API_KEY` for the News page to return real results.
+
+`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are also required in `backend/.env`. Both Cognito authentication and the AI assistant (Bedrock) construct their boto3 clients with these credentials explicitly, so login and AI chat will not work without them.
+
+> By default, the backend serves cached/local price data only. Live market data fetches (yfinance) are gated behind `ALLOW_LIVE_MARKET_FALLBACK=true` in `backend/.env`, which is not set in `.env.example`. Add it if you need live prices during local development. `ALPHA_VANTAGE_API_KEY` is optional and only provides live data for non-JSE ticker symbols.
 
 ### Running the Project
 
