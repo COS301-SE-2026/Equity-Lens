@@ -86,7 +86,7 @@ EquityLens helps retail investors turn fragmented portfolio statements and marke
 
 Final-year Computer Science student at the University of Pretoria with a strong foundation in software engineering and cybersecurity. Holds certifications from IBM, Cisco, Microsoft Azure, and Amazon.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/abdulrahman-sabah-a240aa39b) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/Abdulrahman-Sabah)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/abdulrahman-sabah-a240aa39b) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/Abdulrahman-Sabah) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Abdulrahman_Sabah_CV.pdf)
 
 </details>
 
@@ -97,7 +97,7 @@ Final-year Computer Science student at the University of Pretoria with a strong 
 
 Third-year Computer Science student at the University of Pretoria with full-stack development experience across academic and personal projects.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/joshua-heath-a910b5367) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/Josh-Heath123)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/joshua-heath-a910b5367) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/Josh-Heath123) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Joshua_Heath_CV.pdf)
 
 </details>
 
@@ -108,7 +108,7 @@ Third-year Computer Science student at the University of Pretoria with full-stac
 
 Third-year BSc Computer Science student at the University of Pretoria, passionate about machine learning, artificial intelligence and building software. Gained full-stack experience through personal and academic projects.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/antony-van-straten/) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/antonyvs05)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/antony-van-straten/) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/antonyvs05) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Antony_van_Straten_CV.pdf)
 
 </details>
 
@@ -119,7 +119,7 @@ Third-year BSc Computer Science student at the University of Pretoria, passionat
 
 Third-year BSc Computer Science student at the University of Pretoria with a passion for data science, full-stack development and game development.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/jonty-honey/) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/jonty282)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/jonty-honey/) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/jonty282) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Jonty_Honey_CV.pdf)
 
 </details>
 
