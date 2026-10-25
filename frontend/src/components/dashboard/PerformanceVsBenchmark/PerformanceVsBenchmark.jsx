@@ -26,6 +26,7 @@ import {
 import { headlineFor, longDate, rowLabel } from '../../../utils/eventNarrative';
 import {
   buildGroupSeries,
+  mirrorForRange,
   rebaseBenchmarkToSlice,
   rebaseForRange,
 } from '../../../utils/portfolioStats';
@@ -60,6 +61,8 @@ const RANGES = ['1D', '1W', '1M', '3M', '1Y', 'ALL'];
 const MAX_DOTS = 8;
 const DOT_RADIUS = 5;
 const CHART_PAD = 20;
+const LATE_BENCHMARK_DAYS = 7;
+const DAY_MS = 24 * 60 * 60 * 1000;
 const POPOVER_GAP = 12;
 const GROUP_METHOD_HELP =
   "A group line is a fixed-weight index. Each member's weight is what it was worth on the " +
@@ -86,9 +89,15 @@ function takeaway(stats, benchmarkLabel) {
   return `Your portfolio has ${word} the ${benchmarkLabel} by ${Math.abs(stats.diffPct).toFixed(1)}% over the selected period.`;
 }
 
+/** @param {number} amount */
+const signedZar = (amount) => `${amount >= 0 ? '+' : '-'}${zar(Math.abs(amount))}`;
+
 /** @param {{ active?: boolean, payload?: any[], label?: string, benchmarkLabel: string }} props */
 export const PerfTooltip = ({ active, payload, label, benchmarkLabel }) => {
   if (!active || !payload?.length) return null;
+  const row = payload[0].payload ?? {};
+  const gap =
+    typeof row.value === 'number' && typeof row.mirror === 'number' ? row.value - row.mirror : null;
   return (
     <div
       className="rounded-lg px-3 py-2 font-mono text-[12px]"
@@ -102,7 +111,7 @@ export const PerfTooltip = ({ active, payload, label, benchmarkLabel }) => {
         if (p.dataKey === 'value') {
           who = 'you';
         } else {
-          who = benchmarkLabel;
+          who = `Same money in ${benchmarkLabel}`;
         }
         return (
           <div key={p.dataKey} className="flex items-center gap-3 py-0.5">
@@ -114,6 +123,20 @@ export const PerfTooltip = ({ active, payload, label, benchmarkLabel }) => {
           </div>
         );
       })}
+      {gap !== null && (
+        <div
+          className="mt-1 flex items-center gap-3 border-t pt-1"
+          style={{ borderColor: 'var(--border-subtle)' }}
+        >
+          <span style={{ color: 'var(--text-secondary)' }}>difference</span>
+          <Money
+            className="ml-auto font-semibold"
+            style={{ color: gap >= 0 ? 'var(--signal-positive)' : 'var(--signal-negative)' }}
+          >
+            {signedZar(gap)}
+          </Money>
+        </div>
+      )}
     </div>
   );
 };
@@ -172,8 +195,17 @@ export const IndexAxisTick = ({ x, y, payload }) => (
   </text>
 );
 
-/** @param {{ label: string, value: string, tone: 'good'|'bad'|'neutral', help?: string, loading?: boolean }} props */
-const Stat = ({ label, value, tone, help, loading }) => {
+/**
+ * @param {{
+ *   label: string,
+ *   value: import('react').ReactNode,
+ *   tone: 'good'|'bad'|'neutral',
+ *   help?: string,
+ *   loading?: boolean,
+ *   sub?: import('react').ReactNode,
+ * }} props
+ */
+const Stat = ({ label, value, tone, help, loading, sub }) => {
   let color;
   if (tone === 'good') {
     color = 'var(--signal-positive)';
@@ -209,6 +241,11 @@ const Stat = ({ label, value, tone, help, loading }) => {
         {help && <HelpTooltip text={help} />}
       </div>
       {valueDisplay}
+      {sub && !loading && (
+        <div className="mt-0.5 font-mono text-[11px]" style={{ color }}>
+          {sub}
+        </div>
+      )}
     </div>
   );
 };
@@ -285,6 +322,18 @@ export function eventDots({ rows, events }) {
         Math.abs(b.event.z_score ?? 0) - Math.abs(a.event.z_score ?? 0),
     )
     .slice(0, MAX_DOTS);
+}
+
+/**
+ * @param {{ date: string, value?: number|null, benchmark?: number|null }[]} rows
+ * @returns {string|null} the benchmark's first date when it starts well after the portfolio
+ */
+export function lateBenchmarkStart(rows) {
+  const firstValue = rows.find((row) => typeof row.value === 'number');
+  const firstBenchmark = rows.find((row) => typeof row.benchmark === 'number');
+  if (!firstValue || !firstBenchmark) return null;
+  const gap = (Date.parse(firstBenchmark.date) - Date.parse(firstValue.date)) / DAY_MS;
+  return gap > LATE_BENCHMARK_DAYS ? firstBenchmark.date : null;
 }
 
 /**
@@ -480,7 +529,7 @@ const PerfChart = ({
         />
         <Line
           type="monotone"
-          dataKey="benchmark"
+          dataKey={indexed ? 'benchmark' : 'mirror'}
           stroke="var(--text-secondary)"
           strokeWidth={1.5}
           strokeDasharray="5 5"
@@ -597,7 +646,7 @@ const PerfChart = ({
  *   eventDetails?: Record<string, any>,
  *   eventPendingKey?: string|null,
  *   onExpandEvent?: (ticker: string, date: string) => void,
- *   onAskAboutEvent?: (question: string) => void,
+ *   onAskAboutEvent?: (question: string, event: { ticker: string, date: string }) => void,
  *   importedAt?: string|null,
  *   benchmarkComposition?: { region: string, label: string, weight: number }[],
  *   historyQuality?: any,
@@ -712,6 +761,8 @@ const PerformanceVsBenchmark = ({
     [chosenSeries, range],
   );
 
+  const mirrored = useMemo(() => mirrorForRange(visibleSeries), [visibleSeries]);
+
   const individualSeries = useMemo(
     () => holdingSeries.filter((/** @type {any} */ h) => selected.includes(h.ticker)),
     [holdingSeries, selected],
@@ -815,7 +866,7 @@ const PerformanceVsBenchmark = ({
   ) : (
     <PerfChart
       groups={drawnGroups}
-      rows={indexed ? chartRows : visibleSeries}
+      rows={indexed ? chartRows : mirrored}
       indexed={indexed}
       drawn={rebased.drawn}
       selected={selected}
@@ -833,7 +884,15 @@ const PerformanceVsBenchmark = ({
     ? 'Groups are weighted by what each holding is worth today, held constant across the range.'
     : 'Groups are weighted by what each holding was worth on the first day of the range.';
 
+  const lastRow = mirrored[mirrored.length - 1];
+  const sameMoney =
+    lastRow && typeof lastRow.mirror === 'number' && typeof lastRow.value === 'number'
+      ? { mirror: lastRow.mirror, gap: lastRow.value - lastRow.mirror }
+      : null;
+  const emptiedOn = mirrored.find((row) => row.exhausted)?.date ?? null;
+
   const note = markerNote({ events, loading: eventsLoading, failed: eventsFailed });
+  const benchmarkStart = lateBenchmarkStart(visibleSeries);
   const hasDots = eventDots({ rows: indexed ? chartRows : visibleSeries, events }).length > 0;
   const showsReconstructed =
     historyPref.source === 'reconstructed' &&
@@ -870,7 +929,11 @@ const PerformanceVsBenchmark = ({
               <span className="flex items-center gap-1">
                 <LegendKey
                   color="var(--text-secondary)"
-                  label={shortBenchmarkLabel(benchmarkComposition, benchmarkLabel)}
+                  label={
+                    indexed
+                      ? shortBenchmarkLabel(benchmarkComposition, benchmarkLabel)
+                      : `Same money in ${shortBenchmarkLabel(benchmarkComposition, benchmarkLabel)}`
+                  }
                   variant="dashed"
                 />
                 <HelpTooltip text={benchmarkHelp} />
@@ -981,7 +1044,7 @@ const PerformanceVsBenchmark = ({
             </div>
 
             <div
-              className="grid grid-cols-3 gap-4 px-5 py-3"
+              className={`grid gap-4 px-5 py-3 ${indexed ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}
               style={{ borderBottom: '1px solid var(--border-subtle)' }}
             >
               <Stat
@@ -1005,6 +1068,23 @@ const PerformanceVsBenchmark = ({
                 loading={!stats.benchAvailable}
                 help={`How your portfolio's return compares to the ${benchmarkLabel} over the selected period.`}
               />
+              {!indexed && (
+                <Stat
+                  label="Same money in benchmark"
+                  value={sameMoney ? <Money>{zar(sameMoney.mirror)}</Money> : '-'}
+                  sub={
+                    sameMoney && (
+                      <>
+                        <Money>{zar(Math.abs(sameMoney.gap))}</Money>{' '}
+                        {sameMoney.gap >= 0 ? 'ahead' : 'behind'}
+                      </>
+                    )
+                  }
+                  tone={sameMoney && sameMoney.gap < 0 ? 'bad' : 'good'}
+                  loading={!stats.benchAvailable}
+                  help={`What your actual buys and sales would be worth today had the same rand gone into the ${benchmarkLabel} on the same days. The % figures are time-weighted, so they ignore when you added money; this one does not.`}
+                />
+              )}
             </div>
 
             {takeaway(stats, benchmarkLabel) && (
@@ -1051,6 +1131,25 @@ const PerformanceVsBenchmark = ({
                 Values before {longDate(/** @type {string} */ (importedAt))} are reconstructed from
                 your statement.
                 <HelpTooltip text="Before you uploaded, your value each day is worked out backwards from the transactions on your statement and the closing prices we have cached. It assumes the statement's transaction list is complete, carries the last known price across days it has no price for, cannot see a position you opened and closed before the statement period, and does not adjust for corporate actions." />
+              </div>
+            )}
+
+            {!indexed && emptiedOn && (
+              <div
+                className="px-5 pb-1 font-mono text-[11px]"
+                style={{ color: 'var(--text-ghost)' }}
+              >
+                On {longDate(emptiedOn)} you took out more than the benchmark version held, so it
+                starts again from zero.
+              </div>
+            )}
+
+            {benchmarkStart && (
+              <div
+                className="px-5 pb-1 font-mono text-[11px]"
+                style={{ color: 'var(--text-ghost)' }}
+              >
+                Benchmark data starts on {longDate(benchmarkStart)}
               </div>
             )}
 

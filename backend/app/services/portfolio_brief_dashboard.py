@@ -1,14 +1,18 @@
 import io
+import math
+import re
+from datetime import date
 from html import escape
 
-import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
+from matplotlib.ticker import FuncFormatter, MaxNLocator
 from reportlab.lib import colors
 from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.platypus import (
+    CondPageBreak,
     Image,
     KeepTogether,
-    PageBreak,
     Paragraph,
     Spacer,
     Table,
@@ -18,8 +22,23 @@ from reportlab.platypus import (
 from app.services.instruments import KIND_ETF, get_look_through_note
 from app.services.portfolio_insights import LITTLE_EFFECT_PCT
 
-SECTION_COLOUR = "#2563EB"
+INK = "#141414"
+SECONDARY = "#424242"
+DIM = "#5C5C5C"
+HAIRLINE = "#E6E6E6"
+RULE = "#D6D6D6"
+TINT = "#F4F4F2"
+ACCENT = "#FF6A00"
+ACCENT_TEXT = "#B34700"
+POSITIVE = "#00875A"
+NEGATIVE = "#C62828"
+WARNING = "#9A5B00"
+INFO = "#1D5FBF"
+
+SECTION_COLOUR = ACCENT
 MAX_CONTRIBUTION_ROWS = 10
+FRAME_WIDTH = 180 * mm
+SECTION_MIN_SPACE = 70 * mm
 
 CGT_REASONS = {
     "tfsa_exempt": "This is a tax-free savings account, so its gains are exempt from CGT.",
@@ -30,31 +49,38 @@ CGT_REASONS = {
     "cost_basis_incomplete": "The statement is missing the purchase cost for a holding.",
 }
 
+TABLE_PADDING = [
+    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+    ("LEFTPADDING", (0, 0), (-1, -1), 6),
+    ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+    ("TOPPADDING", (0, 0), (-1, -1), 5),
+    ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+]
 KEY_VALUE_STYLE = [
-    ("BACKGROUND", (0, 0), (0, -1), colors.HexColor("#F3F4F6")),
-    ("FONTNAME", (0, 0), (0, -1), "Helvetica-Bold"),
-    ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#D1D5DB")),
-    ("LEFTPADDING", (0, 0), (-1, -1), 8),
-    ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-    ("TOPPADDING", (0, 0), (-1, -1), 7),
-    ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ("FONTNAME", (0, 0), (-1, -1), "Helvetica"),
+    ("FONTSIZE", (0, 0), (-1, -1), 9),
+    ("TEXTCOLOR", (0, 0), (0, -1), colors.HexColor(SECONDARY)),
+    ("TEXTCOLOR", (1, 0), (1, -1), colors.HexColor(INK)),
+    ("ALIGN", (1, 0), (1, -1), "RIGHT"),
+    ("LINEBELOW", (0, 0), (-1, -1), 0.5, colors.HexColor(HAIRLINE)),
+    *TABLE_PADDING,
 ]
 
 GRID_STYLE = [
-    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#E5E7EB")),
+    ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor(TINT)),
     ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-    ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#D1D5DB")),
-    ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-    ("LEFTPADDING", (0, 0), (-1, -1), 8),
-    ("RIGHTPADDING", (0, 0), (-1, -1), 8),
-    ("TOPPADDING", (0, 0), (-1, -1), 7),
-    ("BOTTOMPADDING", (0, 0), (-1, -1), 7),
+    ("FONTSIZE", (0, 0), (-1, -1), 9),
+    ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor(SECONDARY)),
+    ("TEXTCOLOR", (0, 1), (-1, -1), colors.HexColor(INK)),
+    ("LINEBELOW", (0, 0), (-1, 0), 0.8, colors.HexColor(RULE)),
+    ("LINEBELOW", (0, 1), (-1, -1), 0.5, colors.HexColor(HAIRLINE)),
+    *TABLE_PADDING,
 ]
 
 NOT_ADVICE = "This assessment is descriptive and is not investment or tax advice."
 
 MAX_HOLDING_ROWS = 15
-HEALTH_COLOURS = [(8.5, "#16A34A"), (7.0, "#0D9488"), (5.0, "#D97706"), (0.0, "#DC2626")]
+HEALTH_COLOURS = [(8.5, POSITIVE), (7.0, INFO), (5.0, WARNING), (0.0, NEGATIVE)]
 ACCOUNT_LABELS = {
     "zar": "Rand (ZAR) account",
     "tfsa": "Tax-free savings account",
@@ -62,13 +88,16 @@ ACCOUNT_LABELS = {
 }
 PRICE_SOURCE_LABELS = {"live": "Live", "statement": "Statement", "cost": "At cost"}
 
-CELL_STYLE = ParagraphStyle("DashboardCell", fontSize=8, leading=10)
+CELL_STYLE = ParagraphStyle(
+    "DashboardCell", fontSize=8.5, leading=10.5, textColor=colors.HexColor(INK)
+)
+BODY_CELL = ParagraphStyle(
+    "DashboardBodyCell", fontSize=9, leading=11.5, textColor=colors.HexColor(INK)
+)
 HOLDINGS_TABLE_STYLE = [
-    ("FONTSIZE", (0, 0), (-1, -1), 9),
-    ("LEFTPADDING", (0, 0), (-1, -1), 4),
-    ("RIGHTPADDING", (0, 0), (-1, -1), 4),
-    ("ALIGN", (2, 1), (4, -1), "RIGHT"),
+    ("ALIGN", (2, 0), (4, -1), "RIGHT"),
 ]
+NUMBER_CELL = re.compile(r"^[-+]?(R )?[-+]?\d")
 
 def _rand(value):
     if value is None:
@@ -88,14 +117,29 @@ def _text(value):
 
 
 def _key_value_table(rows):
-    table = Table(rows, colWidths=[90 * mm, 70 * mm])
+    table = Table(rows, colWidths=[100 * mm, 80 * mm])
     table.setStyle(TableStyle(KEY_VALUE_STYLE))
     return table
 
 
+def _is_number(cell):
+    return isinstance(cell, str) and bool(NUMBER_CELL.match(cell))
+
+
+def number_columns(rows):
+    body = rows[1:]
+    return [
+        col for col in range(len(rows[0]))
+        if any(_is_number(row[col]) for row in body)
+        and all(_is_number(row[col]) or row[col] in ("N/A", "-") for row in body)
+    ]
+
+
 def _grid_table(rows, col_widths):
-    table = Table(rows, colWidths=col_widths, repeatRows=1)
-    table.setStyle(TableStyle(GRID_STYLE))
+    scale = FRAME_WIDTH / sum(col_widths)
+    table = Table(rows, colWidths=[width * scale for width in col_widths], repeatRows=1)
+    right = [("ALIGN", (col, 0), (col, -1), "RIGHT") for col in number_columns(rows)]
+    table.setStyle(TableStyle([*GRID_STYLE, *right]))
     return table
 
 
@@ -103,10 +147,25 @@ def _section(story, heading, *flowables):
     story.append(KeepTogether([heading, Spacer(1, 8), *flowables]))
 
 
+def _subheading_paragraph(text, styles):
+    return Paragraph(
+        _text(text),
+        ParagraphStyle(
+            "DashboardSubheading",
+            parent=styles["BodyText"],
+            fontName="Helvetica-Bold",
+            fontSize=10.5,
+            leading=13,
+            textColor=colors.HexColor(INK),
+            spaceBefore=14,
+            spaceAfter=6,
+            keepWithNext=1,
+        ),
+    )
+
+
 def _subheading(story, text, styles):
-    story.append(Spacer(1, 15))
-    story.append(Paragraph(f"<b>{text}</b>", styles["BodyText"]))
-    story.append(Spacer(1, 6))
+    story.append(_subheading_paragraph(text, styles))
 
 def _note_style(styles):
     return ParagraphStyle(
@@ -114,8 +173,40 @@ def _note_style(styles):
         parent=styles["BodyText"],
         fontSize=8.5,
         leading=11,
-        textColor=colors.HexColor("#64748B"),
+        textColor=colors.HexColor(DIM),
     )
+
+
+def rand_tick(value, _position=None):
+    size = abs(value)
+    if size >= 1_000_000:
+        text = f"{size / 1_000_000:.1f}m"
+    elif size >= 10_000:
+        text = f"{size / 1_000:.0f}k"
+    elif size >= 1_000:
+        text = f"{size / 1_000:.1f}k"
+    else:
+        text = f"{size:.0f}"
+    return f"{'-' if value < 0 else ''}R {text.replace('.0', '')}"
+
+
+def chart_title(ax, text):
+    ax.set_title(text, loc="left", fontsize=10, fontweight="bold", color=INK, pad=8)
+
+
+def style_chart(ax, grid="y", money=True):
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    for side in ("left", "bottom"):
+        ax.spines[side].set_color(RULE)
+    ax.tick_params(colors=SECONDARY, labelsize=8, length=0, pad=4)
+    ax.xaxis.label.set(color=SECONDARY, fontsize=8)
+    ax.yaxis.label.set(color=SECONDARY, fontsize=8)
+    ax.set_axisbelow(True)
+    if grid:
+        ax.grid(axis=grid, color=HAIRLINE, linewidth=0.6)
+    if money:
+        (ax.yaxis if grid == "y" else ax.xaxis).set_major_formatter(FuncFormatter(rand_tick))
 
 def _health_colour(score):
     for floor, colour in HEALTH_COLOURS:
@@ -125,35 +216,94 @@ def _health_colour(score):
 
 def _performance_chart(history, benchmark_label):
     points = [p for p in history if p.get("value") is not None]
-    fig, ax = plt.subplots(figsize=(6, 3))
-    ax.plot([p["name"] for p in points], [p["value"] for p in points], label="Your portfolio")
-    benchmark = [p.get("benchmark") for p in points]
+    fig = Figure(figsize=(6.5, 2.8))
+    ax = fig.subplots()
+    names = [p["name"] for p in points]
+    days = range(len(points))
+    ax.plot(
+        days,
+        [p["value"] for p in points],
+        color=ACCENT,
+        linewidth=1.6,
+        label="Your portfolio",
+    )
+    label = benchmark_label or "Benchmark"
+    if any("benchmark_mirror" in p for p in points):
+        benchmark = [p.get("benchmark_mirror") for p in points]
+        label = f"Same money in {label}"
+    else:
+        benchmark = [p.get("benchmark") for p in points]
     if any(b is not None for b in benchmark):
         ax.plot(
-            [p["name"] for p in points],
+            days,
             benchmark,
+            color=DIM,
+            linewidth=1.2,
             linestyle="--",
-            label=benchmark_label or "Benchmark",
+            label=label,
         )
-    ax.set_ylabel("Value (ZAR)")
-    ax.legend(fontsize=8)
-    ax.xaxis.set_major_locator(plt.MaxNLocator(6))
+    ax.legend(fontsize=8, frameon=False, loc="lower left", bbox_to_anchor=(0, 1.0), ncols=2,
+              labelcolor=SECONDARY)
+    ax.xaxis.set_major_locator(MaxNLocator(6, integer=True))
+    ax.xaxis.set_major_formatter(
+        FuncFormatter(lambda day, _pos: names[int(day)] if 0 <= day < len(names) else "")
+    )
+    style_chart(ax)
     return _png(fig)
 
-PIE_LABEL_MIN_PCT = 5.0
+
+def _benchmark_note(history, benchmark_label):
+    label = benchmark_label or "the benchmark"
+    if any("benchmark_mirror" in p for p in history):
+        caption = (
+            f"Solid line: your portfolio. Dashed line: the same money invested in {label} "
+            "on the same days."
+        )
+    else:
+        caption = f"Solid line: your portfolio. Dashed line: {label}."
+    dated = [p for p in history if p.get("value") is not None and p.get("date")]
+    benchmarked = [p for p in dated if p.get("benchmark") is not None]
+    if not benchmarked:
+        return caption
+    first = date.fromisoformat(dated[0]["date"][:10])
+    start = date.fromisoformat(benchmarked[0]["date"][:10])
+    if (start - first).days > 7:
+        caption += f" Benchmark data starts on {start.day} {start:%b %Y}."
+    return caption
+
+PIE_COLOURS = [ACCENT, INFO, POSITIVE, WARNING, DIM, RULE]
+
+def _share_bars(ax, values, labels, title):
+    total = sum(values)
+    rows = sorted(zip(values, labels, strict=True), key=lambda row: row[0])
+    shares = [value / total * 100 for value, _name in rows]
+    ax.barh([_short(name) for _value, name in rows], shares, color=ACCENT, height=0.6)
+    for row, share in enumerate(shares):
+        ax.text(share, row, f" {share:.1f}%", va="center", fontsize=8, color=INK)
+    ax.margins(x=0.12)
+    style_chart(ax, grid="x", money=False)
+    ax.xaxis.set_major_formatter(FuncFormatter(lambda value, _pos: f"{value:.0f}%"))
+    chart_title(ax, title)
 
 def pie_with_legend(ax, values, labels, title):
+    if any(math.isnan(v) for v in values) or sum(values) <= 0:
+        ax.text(0.5, 0.5, "Allocation data not available", ha="center", va="center",
+                color=DIM, fontsize=9)
+        ax.axis("off")
+        chart_title(ax, title)
+        return
+
+    if len(values) > len(PIE_COLOURS):
+        _share_bars(ax, values, labels, title)
+        return
+
     total = sum(values) or 1
-    colours = plt.get_cmap("tab20").colors
-    wedges, _, _ = ax.pie(
+    wedges, _ = ax.pie(
         values,
-        colors=[colours[i % len(colours)] for i in range(len(values))],
+        colors=PIE_COLOURS[:len(values)],
         startangle=90,
         counterclock=False,
-        autopct=lambda pct: f"{pct:.1f}%" if pct >= PIE_LABEL_MIN_PCT else "",
-        pctdistance=0.72,
-        wedgeprops={"linewidth": 1, "edgecolor": "white"},
-        textprops={"fontsize": 8},
+        wedgeprops={"linewidth": 1.5, "edgecolor": "white", "width": 0.42},
     )
     ax.legend(
         wedges,
@@ -163,16 +313,18 @@ def pie_with_legend(ax, values, labels, title):
         bbox_to_anchor=(1.0, 0.5),
         fontsize=8,
         frameon=False,
+        labelcolor=INK,
     )
-    ax.set_title(title)
+    chart_title(ax, title)
 
 def _sector_chart(sectors):
-    fig, ax = plt.subplots(figsize=(6, 3.5))
+    fig = Figure(figsize=(6.5, 2.8))
+    ax = fig.subplots()
     pie_with_legend(
         ax,
         [s["percentage"] for s in sectors],
         [s["sector"] for s in sectors],
-        "Sector Allocation (live value)",
+        "",
     )
     return _png(fig)
 
@@ -180,13 +332,15 @@ def _sector_chart(sectors):
 def _subscore_chart(subscores):
     labels = [s["label"] for s in subscores]
     values = [s["value"] for s in subscores]
-    fig, ax = plt.subplots(figsize=(6, 2.2))
-    ax.barh(labels, values, color=[_health_colour(v) for v in values])
+    fig = Figure(figsize=(6.5, 2.0))
+    ax = fig.subplots()
+    ax.barh(labels, values, color=[_health_colour(v) for v in values], height=0.55)
     ax.set_xlim(0, 10)
     ax.invert_yaxis()
     ax.set_xlabel("Score out of 10")
     for row, value in enumerate(values):
-        ax.text(value + 0.15, row, f"{value:.1f}", va="center", fontsize=9)
+        ax.text(value + 0.15, row, f"{value:.1f}", va="center", fontsize=8, color=INK)
+    style_chart(ax, grid="x", money=False)
     return _png(fig)
 
 def _glance(story, snapshot, styles, heading):
@@ -208,8 +362,8 @@ def _glance(story, snapshot, styles, heading):
         heading,
         _key_value_table(
             [
-                ["Live value", _rand(summary.get("total_value"))],
-                ["Invested (cost)", _rand(summary.get("total_cost"))],
+                ["Value today (live prices)", _rand(summary.get("total_value"))],
+                ["Cost basis", _rand(summary.get("total_cost"))],
                 ["Unrealised gain / loss", f"{gain} ({_pct(summary.get('total_gain_loss_pct'))})"],
                 ["Today's move", todays_move],
                 ["Holdings priced live", priced_live],
@@ -243,15 +397,22 @@ def _glance(story, snapshot, styles, heading):
     history = dashboard.get("performanceHistory") or []
     if len(history) >= 2:
         chart = _performance_chart(history, dashboard.get("benchmarkLabel"))
-        story.append(Spacer(1, 12))
-        story.append(Image(chart, width=160 * mm, height=80 * mm, kind="proportional"))
+        story.append(KeepTogether([
+            _subheading_paragraph("Performance", styles),
+            Image(chart, width=FRAME_WIDTH, height=90 * mm, kind="proportional"),
+            Spacer(1, 4),
+            Paragraph(
+                _text(_benchmark_note(history, dashboard.get("benchmarkLabel"))),
+                _note_style(styles),
+            ),
+        ]))
 
     sectors = dashboard.get("sectorAllocation") or []
     if sectors:
-        story.append(Spacer(1, 8))
-        story.append(
-            Image(_sector_chart(sectors), width=150 * mm, height=85 * mm, kind="proportional")
-        )
+        story.append(KeepTogether([
+            _subheading_paragraph("Sector allocation (live value)", styles),
+            Image(_sector_chart(sectors), width=FRAME_WIDTH, height=85 * mm, kind="proportional"),
+        ]))
 
 def _health(story, snapshot, styles, heading):
     dashboard = snapshot["dashboard"]
@@ -264,19 +425,22 @@ def _health(story, snapshot, styles, heading):
         return
 
     banner = Table(
-        [[f"{score:.1f} / 10", health.get("label") or ""]], colWidths=[55 * mm, 105 * mm]
+        [[f"{score:.1f} / 10", health.get("label") or ""]], colWidths=[45 * mm, 135 * mm]
     )
     banner.setStyle(
         TableStyle(
             [
-                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor(_health_colour(score))),
-                ("TEXTCOLOR", (0, 0), (-1, -1), colors.white),
+                ("TEXTCOLOR", (0, 0), (0, 0), colors.HexColor(INK)),
+                ("TEXTCOLOR", (1, 0), (1, 0), colors.HexColor(_health_colour(score))),
                 ("FONTNAME", (0, 0), (-1, -1), "Helvetica-Bold"),
                 ("FONTSIZE", (0, 0), (0, 0), 22),
-                ("FONTSIZE", (1, 0), (1, 0), 14),
+                ("FONTSIZE", (1, 0), (1, 0), 13),
+                ("LEADING", (0, 0), (0, 0), 26),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
-                ("TOPPADDING", (0, 0), (-1, -1), 12),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 12),
+                ("LINEBELOW", (0, 0), (-1, -1), 0.5, colors.HexColor(HAIRLINE)),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("TOPPADDING", (0, 0), (-1, -1), 4),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
             ]
         )
     )
@@ -287,7 +451,7 @@ def _health(story, snapshot, styles, heading):
     if subscores:
         story.append(Spacer(1, 10))
         story.append(
-           Image(_subscore_chart(subscores), width=150 * mm, height=55 * mm, kind="proportional")
+           Image(_subscore_chart(subscores), width=FRAME_WIDTH, height=55 * mm, kind="proportional")
         )
         story.append(Spacer(1, 8))
 
@@ -303,7 +467,7 @@ def _health(story, snapshot, styles, heading):
                     Paragraph(
                         f"{_text(sub['detail'])}<br/><i>Target: {_text(sub['target'])}.</i> "
                         f"{_text(sub['improvement'])}",
-                        styles["BodyText"],
+                        BODY_CELL,
                     ),
                 ]
             )
@@ -336,7 +500,7 @@ def _holdings_table(holdings, total_value):
             ]
         )
     table = Table(
-        rows, colWidths=[52 * mm, 30 * mm, 28 * mm, 16 * mm, 18 * mm, 16 * mm], repeatRows=1
+        rows, colWidths=[60 * mm, 32 * mm, 30 * mm, 18 * mm, 22 * mm, 18 * mm], repeatRows=1
     )
     table.setStyle(TableStyle([*GRID_STYLE, *HOLDINGS_TABLE_STYLE]))
     return table
@@ -445,26 +609,26 @@ def _risk_overview(story, snapshot, styles, heading):
                     _rand(var["value"]),
                     Paragraph(
                         f"On 1 day in 20, a loss bigger than this ({var['pct']:.2f}%)",
-                        styles["BodyText"],
+                        BODY_CELL,
                     ),
                 ],
                 [
                     "Downside Risk",
                     f"{risk['downside_deviation_pct']:.1f}%",
-                    Paragraph("Yearly volatility of the losing days only", styles["BodyText"]),
+                    Paragraph("Yearly volatility of the losing days only", BODY_CELL),
                 ],
                 [
                     "Maximum Drawdown",
                     f"{drawdown['max_drawdown_pct']:.1f}%",
                     Paragraph(
                         "Biggest fall from a peak over the past year, replaying today's holdings",
-                        styles["BodyText"],
+                        BODY_CELL,
                     ),
                 ],
                 [
                     "HHI Concentration",
                     f"{concentration['hhi']:.2f}",
-                    Paragraph(_text(concentration["assessment"]), styles["BodyText"]),
+                    Paragraph(_text(concentration["assessment"]), BODY_CELL),
                 ],
             ],
             [50 * mm, 30 * mm, 80 * mm],
@@ -524,7 +688,7 @@ def _drivers_and_tax(story, snapshot, styles, heading):
         for row in risk["contributions"][:MAX_CONTRIBUTION_ROWS]:
             rows.append(
                 [
-                    Paragraph(_text(row["name"]), styles["BodyText"]),
+                    Paragraph(_text(row["name"]), BODY_CELL),
                     f"{row['weight_pct']:.1f}%",
                     f"{row['contribution_pct']:.1f}%",
                     row["flag"],
@@ -556,8 +720,6 @@ def _drivers_and_tax(story, snapshot, styles, heading):
 
 
 
-POSITIVE = "#16A34A"
-NEGATIVE = "#DC2626"
 MAX_HOLDING_BARS = 8
 MAX_NAME_CHARS = 28
 
@@ -594,7 +756,6 @@ def _reaction_of(row):
 def _png(fig):
     buffer = io.BytesIO()
     fig.savefig(buffer, format="png", dpi=160, bbox_inches="tight")
-    plt.close(fig)
     buffer.seek(0)
     return buffer
 
@@ -615,19 +776,22 @@ def _holdings_chart(holdings):
     bars = _holding_bars(holdings)[::-1] 
     values = [value for _name, value in bars]
 
-    fig, ax = plt.subplots(figsize=(6.5, 0.4 * len(bars) + 1.0))
+    fig = Figure(figsize=(6.5, 0.32 * len(bars) + 1.0))
+    ax = fig.subplots()
     ax.barh(
         [name for name, _value in bars],
         values,
         color=[POSITIVE if value >= 0 else NEGATIVE for value in values],
+        height=0.6,
     )
     for index, value in enumerate(values):
         ax.text(value, index, f" {_points(value)} ", va="center",
-                ha="left" if value >= 0 else "right", fontsize=8)
-    ax.axvline(0, color="#64748B", linewidth=0.8)
+                ha="left" if value >= 0 else "right", fontsize=8, color=INK)
+    ax.axvline(0, color=SECONDARY, linewidth=0.8)
     ax.set_xlabel("Share of your return (percentage points)")
-    ax.set_title("Which holdings made the money")
+    chart_title(ax, "Which holdings made the money")
     ax.margins(x=0.25)
+    style_chart(ax, grid="x", money=False)
     return _png(fig), fig.get_figheight() / fig.get_figwidth()
 
 
@@ -698,12 +862,12 @@ def _reaction_lines(rows, shock):
     return lines
 
 
-def _scenario_table(scenarios, styles):
+def _scenario_table(scenarios, _styles):
     rows = [["If...", "Your portfolio", "In rand", "Likely range"]]
     for scenario in scenarios:
         rows.append(
             [
-                Paragraph(_text(scenario["name"]), styles["BodyText"]),
+                Paragraph(_text(scenario["name"]), BODY_CELL),
                 _signed(scenario["effect_pct"]),
                 _rand(scenario["effect_value"]),
                 f"{_signed(scenario['low_pct'])} to {_signed(scenario['high_pct'])}",
@@ -734,7 +898,7 @@ def _market_drivers(story, snapshot, styles, heading):
         chart, aspect = _holdings_chart(holdings)
         flowables += [
             Spacer(1, 8),
-            Image(chart, width=160 * mm, height=160 * mm * aspect, kind="proportional"),
+            Image(chart, width=FRAME_WIDTH, height=FRAME_WIDTH * aspect, kind="proportional"),
         ]
     _section(story, heading, *flowables)
     story.append(Spacer(1, 6))
@@ -745,12 +909,8 @@ def _market_drivers(story, snapshot, styles, heading):
 
     scenarios = drivers.get("scenarios")
     if scenarios:
-        story.append(Spacer(1, 15))
-        story.append(KeepTogether([
-            Paragraph("<b>What if...?</b>", styles["BodyText"]),
-            Spacer(1, 6),
-            _scenario_table(scenarios, styles),
-        ]))
+        _subheading(story, "What if...?", styles)
+        story.append(_scenario_table(scenarios, styles))
 
     story.append(Spacer(1, 8))
     story.append(Paragraph(
@@ -781,10 +941,11 @@ def _sections(snapshot):
 
 
 def dashboard_toc_rows(snapshot):
-    return [[f"{number}.", title] for number, (title, _) in enumerate(_sections(snapshot), 1)]
+    return [[f"{number:02d}", title] for number, (title, _) in enumerate(_sections(snapshot), 1)]
 
 
 def add_dashboard_pages(story, snapshot, styles, heading):
     for number, (title, render) in enumerate(_sections(snapshot), 1):
+        story.append(CondPageBreak(SECTION_MIN_SPACE))
         render(story, snapshot, styles, heading(number, title, SECTION_COLOUR))
-        story.append(PageBreak())
+        story.append(Spacer(1, 16))

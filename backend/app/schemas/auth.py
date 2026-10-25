@@ -63,6 +63,16 @@ class UserResponse(BaseModel):
         "when the Cognito account was registered",
         examples=["2026-07-14T08:32:11Z"],
     )
+    is_guest: bool = Field(
+        default=False,
+        description="true for a short-lived guest demo session, whose email is always empty",
+        examples=[False],
+    )
+
+    @field_validator("is_guest", mode="before")
+    @classmethod
+    def null_means_registered(cls, v):
+        return bool(v)
 
     class Config:
         from_attributes = True
@@ -109,6 +119,31 @@ class TokenResponse(BaseModel):
         description="outlives the other two and buys a new access_token",
         examples=["eyJjdHkiOiJKV1Qi..."],
     )
+
+
+class GuestModeStatusResponse(BaseModel):
+    enabled: bool = Field(
+        description="whether the login page should offer Continue as guest", examples=[True]
+    )
+
+
+class GuestUserResponse(BaseModel):
+    id: UUID = Field(examples=["6f9619ff-8b86-d011-b42d-00cf4fc964ff"])
+    full_name: str = Field(examples=["Guest"])
+    is_guest: bool = Field(examples=[True])
+
+
+class GuestSessionResponse(BaseModel):
+    access_token: str = Field(
+        description="send as the bearer token on every other route until expires_at",
+        examples=["eyJhbGciOiJIUzI1NiIs..."],
+    )
+    token_type: str = Field(default="bearer", examples=["bearer"])
+    expires_at: datetime = Field(
+        description="when the session and every row it owns stop existing, in UTC",
+        examples=["2026-10-17T12:00:00Z"],
+    )
+    user: GuestUserResponse
 
 
 class TotpSecretResponse(BaseModel):

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import GuestStart from '../../components/auth/GuestStart/GuestStart';
 import Button from '../../components/common/Button/Button';
 import FormInput from '../../components/forms/FormInput/FormInput';
 import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
@@ -150,6 +151,7 @@ const Register = () => {
           Sign in
         </Link>
       </p>
+      <GuestStart onError={setServerError} disabled={success || isSubmitting} />
     </Card>
   );
 };

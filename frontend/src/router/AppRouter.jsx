@@ -40,11 +40,13 @@ const ResetPassword = lazyWithRetry(() => import('../pages/Auth/ResetPassword'))
 const Landing = lazyWithRetry(() => import('../pages/Landing/Landing'));
 const BrandStyleGuide = lazyWithRetry(() => import('../pages/BrandStyleGuide/BrandStyleGuide'));
 const Settings = lazyWithRetry(() => import('../pages/Settings/Settings'));
+const GuestBanner = lazyWithRetry(() => import('../components/common/GuestBanner/GuestBanner'));
 
 /** @param {{ children: React.ReactNode }} props */
 const AppLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { pathname } = useLocation();
+  const { isGuest } = useAuth();
   return (
     <ChatProvider>
       <div data-testid="app-layout" className="flex flex-col h-screen overflow-hidden">
@@ -60,6 +62,11 @@ const AppLayout = ({ children }) => {
           Skip to main content
         </a>
         <Topbar onMenuClick={() => setSidebarOpen((open) => !open)} sidebarOpen={sidebarOpen} />
+        {isGuest && (
+          <Suspense fallback={null}>
+            <GuestBanner />
+          </Suspense>
+        )}
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
         <main id="main-content" className="flex-1 overflow-auto p-4">
           <CardErrorBoundary key={pathname} label="This page">

@@ -1,0 +1,4826 @@
+{
+ "snapshot_hash": "10ac4bc4b96a725bf6ba0d78c094bfd2a1735d607338a765c1156e24d26c8664",
+ "snapshot": {
+  "version": 1,
+  "summary": {
+   "PortfolioValue": 226905.1,
+   "TotalHoldings": 7,
+   "TotalPurchasesAndSales": 240475.5,
+   "TotalTransactionCosts": 0,
+   "TotalContributionsAndWithdrawals": 226367.9,
+   "TotalDividendsAndWithholdingTax": 3597.11,
+   "TotalTransactionInterest": 0,
+   "TotalTransactionExpenses": 601.2
+  },
+  "holdings": {
+   "top": [
+    {
+     "name": "Naspers Limited",
+     "value": 96247.97
+    },
+    {
+     "name": "Aspen Pharmacare Holdings",
+     "value": 29971.2
+    },
+    {
+     "name": "Standard Bank Group",
+     "value": 25974.0
+    },
+    {
+     "name": "MTN Group",
+     "value": 20774.94
+    },
+    {
+     "name": "Capitec Bank Holdings",
+     "value": 19635.15
+    },
+    {
+     "name": "Anglo American",
+     "value": 18761.84
+    },
+    {
+     "name": "FirstRand",
+     "value": 15540.0
+    }
+   ],
+   "allocation": [
+    {
+     "name": "Naspers Limited",
+     "weight_percentage": 42.42
+    },
+    {
+     "name": "Aspen Pharmacare Holdings",
+     "weight_percentage": 13.21
+    },
+    {
+     "name": "Standard Bank Group",
+     "weight_percentage": 11.45
+    },
+    {
+     "name": "MTN Group",
+     "weight_percentage": 9.16
+    },
+    {
+     "name": "Capitec Bank Holdings",
+     "weight_percentage": 8.65
+    },
+    {
+     "name": "Anglo American",
+     "weight_percentage": 8.27
+    },
+    {
+     "name": "FirstRand",
+     "weight_percentage": 6.85
+    }
+   ],
+   "lowest": {
+    "name": "FirstRand",
+    "value": 15540.0
+   }
+  },
+  "activity": {
+   "trading": [
+    {
+     "name": "Buy",
+     "value": 233121.1
+    },
+    {
+     "name": "Sell",
+     "value": 7354.4
+    }
+   ],
+   "cash_flow": [
+    {
+     "name": "Contribution",
+     "value": 233703.91
+    },
+    {
+     "name": "Withdrawal",
+     "value": -7336.01
+    }
+   ],
+   "dividend_income": [
+    {
+     "name": "Anglo American",
+     "gross_dividend": 184.18,
+     "withholding_tax": 36.83,
+     "net_dividend": 147.35
+    },
+    {
+     "name": "Capitec Bank Holdings",
+     "gross_dividend": 268.0,
+     "withholding_tax": 53.6,
+     "net_dividend": 214.4
+    },
+    {
+     "name": "FirstRand",
+     "gross_dividend": 1416.8,
+     "withholding_tax": 283.36,
+     "net_dividend": 1133.44
+    },
+    {
+     "name": "MTN Group",
+     "gross_dividend": 705.0,
+     "withholding_tax": 141.0,
+     "net_dividend": 564.0
+    },
+    {
+     "name": "Standard Bank Group",
+     "gross_dividend": 1922.4,
+     "withholding_tax": 384.48,
+     "net_dividend": 1537.92
+    }
+   ]
+  },
+  "news": {
+   "portfolio": [],
+   "market": [
+    {
+     "title": "Market headline 0",
+     "description": "Story 0 about the JSE.",
+     "source": "Business Day",
+     "published_at": "2026-10-15 08:00:00",
+     "image_url": "https://img.example/news-0.jpg",
+     "url": "https://news.example/0"
+    },
+    {
+     "title": "Market headline 1",
+     "description": "Story 1 about the JSE.",
+     "source": "Business Day",
+     "published_at": "2026-10-15 08:00:00",
+     "image_url": "https://img.example/news-1.jpg",
+     "url": "https://news.example/1"
+    },
+    {
+     "title": "Market headline 2",
+     "description": "Story 2 about the JSE.",
+     "source": "Business Day",
+     "published_at": "2026-10-15 08:00:00",
+     "image_url": "https://img.example/news-2.jpg",
+     "url": "https://news.example/2"
+    },
+    {
+     "title": "Market headline 3",
+     "description": "Story 3 about the JSE.",
+     "source": "Business Day",
+     "published_at": "2026-10-15 08:00:00",
+     "image_url": "https://img.example/news-3.jpg",
+     "url": "https://news.example/3"
+    },
+    {
+     "title": "Market headline 4",
+     "description": "Story 4 about the JSE.",
+     "source": "Business Day",
+     "published_at": "2026-10-15 08:00:00",
+     "image_url": "https://img.example/news-4.jpg",
+     "url": "https://news.example/4"
+    }
+   ]
+  },
+  "analytics": [
+   {
+    "ticker": "NPN.JO",
+    "name": "Naspers Limited",
+    "status": "ok",
+    "live_fetch": false,
+    "capm": {
+     "status": "ok",
+     "value": 0.021812972459962478,
+     "unit": "%"
+    },
+    "pe_ratio": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "altman_z": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "beta": {
+     "status": "ok",
+     "value": 0.030216207666041266,
+     "unit": ""
+    },
+    "rsi": {
+     "status": "ok",
+     "value": 38.99509821500085,
+     "unit": ""
+    },
+    "sharpe": {
+     "status": "ok",
+     "value": 1.6164016714604168,
+     "unit": ""
+    },
+    "sortino": {
+     "status": "ok",
+     "value": 2.968260885261621,
+     "unit": ""
+    }
+   },
+   {
+    "ticker": "SBK.JO",
+    "name": "Standard Bank Group",
+    "status": "ok",
+    "live_fetch": false,
+    "capm": {
+     "status": "ok",
+     "value": 0.015023176572381315,
+     "unit": "%"
+    },
+    "pe_ratio": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "altman_z": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "beta": {
+     "status": "ok",
+     "value": -0.08294705712697807,
+     "unit": ""
+    },
+    "rsi": {
+     "status": "ok",
+     "value": 58.353293255906884,
+     "unit": ""
+    },
+    "sharpe": {
+     "status": "ok",
+     "value": -0.5979145183136103,
+     "unit": ""
+    },
+    "sortino": {
+     "status": "ok",
+     "value": -1.023319743913282,
+     "unit": ""
+    }
+   },
+   {
+    "ticker": "CPI.JO",
+    "name": "Capitec Bank Holdings",
+    "status": "ok",
+    "live_fetch": false,
+    "capm": {
+     "status": "ok",
+     "value": 0.017561000397156874,
+     "unit": "%"
+    },
+    "pe_ratio": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "altman_z": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "beta": {
+     "status": "ok",
+     "value": -0.04064999338071879,
+     "unit": ""
+    },
+    "rsi": {
+     "status": "ok",
+     "value": 39.0220992377521,
+     "unit": ""
+    },
+    "sharpe": {
+     "status": "ok",
+     "value": 1.1301329574313028,
+     "unit": ""
+    },
+    "sortino": {
+     "status": "ok",
+     "value": 1.8430082506416796,
+     "unit": ""
+    }
+   },
+   {
+    "ticker": "FSR.JO",
+    "name": "FirstRand",
+    "status": "ok",
+    "live_fetch": false,
+    "capm": {
+     "status": "ok",
+     "value": 0.01894241522304678,
+     "unit": "%"
+    },
+    "pe_ratio": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "altman_z": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "beta": {
+     "status": "ok",
+     "value": -0.01762641294922036,
+     "unit": ""
+    },
+    "rsi": {
+     "status": "ok",
+     "value": 54.00280866631942,
+     "unit": ""
+    },
+    "sharpe": {
+     "status": "ok",
+     "value": -1.3189852798002595,
+     "unit": ""
+    },
+    "sortino": {
+     "status": "ok",
+     "value": -2.135946016046901,
+     "unit": ""
+    }
+   },
+   {
+    "ticker": "MTN.JO",
+    "name": "MTN Group",
+    "status": "ok",
+    "live_fetch": false,
+    "capm": {
+     "status": "ok",
+     "value": 0.01694148934565042,
+     "unit": "%"
+    },
+    "pe_ratio": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "altman_z": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "beta": {
+     "status": "ok",
+     "value": -0.05097517757249303,
+     "unit": ""
+    },
+    "rsi": {
+     "status": "ok",
+     "value": 42.341348604138716,
+     "unit": ""
+    },
+    "sharpe": {
+     "status": "ok",
+     "value": 1.3747168424727148,
+     "unit": ""
+    },
+    "sortino": {
+     "status": "ok",
+     "value": 2.4477694712195484,
+     "unit": ""
+    }
+   },
+   {
+    "ticker": "APN.JO",
+    "name": "Aspen Pharmacare Holdings",
+    "status": "ok",
+    "live_fetch": false,
+    "capm": {
+     "status": "ok",
+     "value": 0.018348277348787183,
+     "unit": "%"
+    },
+    "pe_ratio": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "altman_z": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "beta": {
+     "status": "ok",
+     "value": -0.027528710853546953,
+     "unit": ""
+    },
+    "rsi": {
+     "status": "ok",
+     "value": 59.51457067803096,
+     "unit": ""
+    },
+    "sharpe": {
+     "status": "ok",
+     "value": 0.6382532493465535,
+     "unit": ""
+    },
+    "sortino": {
+     "status": "ok",
+     "value": 0.975451225756062,
+     "unit": ""
+    }
+   },
+   {
+    "ticker": "AGL.JO",
+    "name": "Anglo American",
+    "status": "ok",
+    "live_fetch": false,
+    "capm": {
+     "status": "ok",
+     "value": 0.014249012770546823,
+     "unit": "%"
+    },
+    "pe_ratio": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "altman_z": {
+     "status": "insufficient_data",
+     "reason": "Data could not be retrieved."
+    },
+    "beta": {
+     "status": "ok",
+     "value": -0.09584978715755295,
+     "unit": ""
+    },
+    "rsi": {
+     "status": "ok",
+     "value": 52.81171239900427,
+     "unit": ""
+    },
+    "sharpe": {
+     "status": "ok",
+     "value": 1.8253581546912547,
+     "unit": ""
+    },
+    "sortino": {
+     "status": "ok",
+     "value": 3.125886534998728,
+     "unit": ""
+    }
+   }
+  ],
+  "dashboard": {
+   "summary": {
+    "total_value": 3073.53,
+    "total_cost": 226905.1,
+    "total_gain_loss": -223831.57,
+    "total_gain_loss_pct": -98.65,
+    "num_holdings": 7,
+    "daily_change_pct": 0.45,
+    "daily_change_value": 13.69
+   },
+   "holdings": [
+    {
+     "ticker": "NPN.JO",
+     "txn_key": "NPN.JO",
+     "name": "Naspers Limited",
+     "sector": "Technology",
+     "kind": "stock",
+     "region": "South Africa",
+     "priced_live": true,
+     "price_source": "live",
+     "quantity": 113.0,
+     "avg_cost": 851.75,
+     "total_cost": 96247.97,
+     "current_price": 13.3235,
+     "value": 1505.56,
+     "gain_loss": -94742.41,
+     "gain_loss_pct": -98.44,
+     "daily_change_pct": 0.45,
+     "quote_currency": "ZAR",
+     "fx_rate": null,
+     "daily_change_is_local": false,
+     "first_purchase_date": "2026-03-02"
+    },
+    {
+     "ticker": "APN.JO",
+     "txn_key": "APN.JO",
+     "name": "Aspen Pharmacare Holdings",
+     "sector": "Healthcare",
+     "kind": "stock",
+     "region": "South Africa",
+     "priced_live": true,
+     "price_source": "live",
+     "quantity": 223.0,
+     "avg_cost": 134.4,
+     "total_cost": 29971.2,
+     "current_price": 1.587,
+     "value": 353.9,
+     "gain_loss": -29617.3,
+     "gain_loss_pct": -98.82,
+     "daily_change_pct": 0.1,
+     "quote_currency": "ZAR",
+     "fx_rate": null,
+     "daily_change_is_local": false,
+     "first_purchase_date": "2026-03-02"
+    },
+    {
+     "ticker": "AGL.JO",
+     "txn_key": "AGL.JO",
+     "name": "Anglo American",
+     "sector": "Materials",
+     "kind": "stock",
+     "region": "South Africa",
+     "priced_live": true,
+     "price_source": "live",
+     "quantity": 29.0,
+     "avg_cost": 646.96,
+     "total_cost": 18761.84,
+     "current_price": 10.6861,
+     "value": 309.9,
+     "gain_loss": -18451.94,
+     "gain_loss_pct": -98.35,
+     "daily_change_pct": 1.85,
+     "quote_currency": "ZAR",
+     "fx_rate": null,
+     "daily_change_is_local": false,
+     "first_purchase_date": "2025-10-01"
+    },
+    {
+     "ticker": "MTN.JO",
+     "txn_key": "MTN.JO",
+     "name": "MTN Group",
+     "sector": "Telecommunications",
+     "kind": "stock",
+     "region": "South Africa",
+     "priced_live": true,
+     "price_source": "live",
+     "quantity": 141.0,
+     "avg_cost": 147.34,
+     "total_cost": 20774.94,
+     "current_price": 2.1519,
+     "value": 303.42,
+     "gain_loss": -20471.52,
+     "gain_loss_pct": -98.54,
+     "daily_change_pct": 0.78,
+     "quote_currency": "ZAR",
+     "fx_rate": null,
+     "daily_change_is_local": false,
+     "first_purchase_date": "2025-10-01"
+    },
+    {
+     "ticker": "CPI.JO",
+     "txn_key": "CPI.JO",
+     "name": "Capitec Bank Holdings",
+     "sector": "Financials",
+     "kind": "stock",
+     "region": "South Africa",
+     "priced_live": true,
+     "price_source": "live",
+     "quantity": 5.0,
+     "avg_cost": 3927.03,
+     "total_cost": 19635.15,
+     "current_price": 54.7609,
+     "value": 273.8,
+     "gain_loss": -19361.35,
+     "gain_loss_pct": -98.61,
+     "daily_change_pct": -1.73,
+     "quote_currency": "ZAR",
+     "fx_rate": null,
+     "daily_change_is_local": false,
+     "first_purchase_date": "2025-12-01"
+    },
+    {
+     "ticker": "SBK.JO",
+     "txn_key": "SBK.JO",
+     "name": "Standard Bank Group",
+     "sector": "Financials",
+     "kind": "stock",
+     "region": "South Africa",
+     "priced_live": true,
+     "price_source": "live",
+     "quantity": 108.0,
+     "avg_cost": 240.5,
+     "total_cost": 25974.0,
+     "current_price": 2.0468,
+     "value": 221.05,
+     "gain_loss": -25752.95,
+     "gain_loss_pct": -99.15,
+     "daily_change_pct": 1.81,
+     "quote_currency": "ZAR",
+     "fx_rate": null,
+     "daily_change_is_local": false,
+     "first_purchase_date": "2025-10-01"
+    },
+    {
+     "ticker": "FSR.JO",
+     "txn_key": "FSR.JO",
+     "name": "FirstRand",
+     "sector": "Financials",
+     "kind": "stock",
+     "region": "South Africa",
+     "priced_live": true,
+     "price_source": "live",
+     "quantity": 200.0,
+     "avg_cost": 77.7,
+     "total_cost": 15540.0,
+     "current_price": 0.5295,
+     "value": 105.9,
+     "gain_loss": -15434.1,
+     "gain_loss_pct": -99.32,
+     "daily_change_pct": -0.76,
+     "quote_currency": "ZAR",
+     "fx_rate": null,
+     "daily_change_is_local": false,
+     "first_purchase_date": "2025-10-01"
+    }
+   ],
+   "sectorAllocation": [
+    {
+     "sector": "Technology",
+     "value": 1505.56,
+     "percentage": 48.98
+    },
+    {
+     "sector": "Financials",
+     "value": 600.75,
+     "percentage": 19.55
+    },
+    {
+     "sector": "Healthcare",
+     "value": 353.9,
+     "percentage": 11.51
+    },
+    {
+     "sector": "Materials",
+     "value": 309.9,
+     "percentage": 10.08
+    },
+    {
+     "sector": "Telecommunications",
+     "value": 303.42,
+     "percentage": 9.87
+    }
+   ],
+   "performanceHistory": [
+    {
+     "date": "2025-10-01",
+     "name": "Oct 01",
+     "value": 906.76,
+     "benchmark": 906.76,
+     "twr_index": 100.0
+    },
+    {
+     "date": "2025-10-02",
+     "name": "Oct 02",
+     "value": 917.97,
+     "benchmark": 894.39,
+     "twr_index": 101.23626979575633
+    },
+    {
+     "date": "2025-10-03",
+     "name": "Oct 03",
+     "value": 923.56,
+     "benchmark": 907.98,
+     "twr_index": 101.85275045215934
+    },
+    {
+     "date": "2025-10-06",
+     "name": "Oct 06",
+     "value": 919.66,
+     "benchmark": 899.13,
+     "twr_index": 101.42264766862235
+    },
+    {
+     "date": "2025-10-07",
+     "name": "Oct 07",
+     "value": 925.52,
+     "benchmark": 903.33,
+     "twr_index": 102.06890467157794
+    },
+    {
+     "date": "2025-10-08",
+     "name": "Oct 08",
+     "value": 927.84,
+     "benchmark": 896.04,
+     "twr_index": 102.32476068639996
+    },
+    {
+     "date": "2025-10-09",
+     "name": "Oct 09",
+     "value": 924.0,
+     "benchmark": 889.94,
+     "twr_index": 101.90127486876352
+    },
+    {
+     "date": "2025-10-10",
+     "name": "Oct 10",
+     "value": 934.45,
+     "benchmark": 865.49,
+     "twr_index": 103.05372976311263
+    },
+    {
+     "date": "2025-10-13",
+     "name": "Oct 13",
+     "value": 939.51,
+     "benchmark": 873.7,
+     "twr_index": 103.61176055406061
+    },
+    {
+     "date": "2025-10-14",
+     "name": "Oct 14",
+     "value": 917.94,
+     "benchmark": 872.49,
+     "twr_index": 101.23296131280604
+    },
+    {
+     "date": "2025-10-15",
+     "name": "Oct 15",
+     "value": 919.42,
+     "benchmark": 867.18,
+     "twr_index": 101.39617980502007
+    },
+    {
+     "date": "2025-10-16",
+     "name": "Oct 16",
+     "value": 932.53,
+     "benchmark": 872.95,
+     "twr_index": 102.84198685429442
+    },
+    {
+     "date": "2025-10-17",
+     "name": "Oct 17",
+     "value": 931.11,
+     "benchmark": 871.72,
+     "twr_index": 102.68538532798095
+    },
+    {
+     "date": "2025-10-20",
+     "name": "Oct 20",
+     "value": 926.87,
+     "benchmark": 872.5,
+     "twr_index": 102.21778640434074
+    },
+    {
+     "date": "2025-10-21",
+     "name": "Oct 21",
+     "value": 926.58,
+     "benchmark": 876.12,
+     "twr_index": 102.18580440248799
+    },
+    {
+     "date": "2025-10-22",
+     "name": "Oct 22",
+     "value": 930.73,
+     "benchmark": 883.34,
+     "twr_index": 102.64347787727735
+    },
+    {
+     "date": "2025-10-23",
+     "name": "Oct 23",
+     "value": 925.65,
+     "benchmark": 874.79,
+     "twr_index": 102.08324143102917
+    },
+    {
+     "date": "2025-10-24",
+     "name": "Oct 24",
+     "value": 932.11,
+     "benchmark": 885.61,
+     "twr_index": 102.79566809299044
+    },
+    {
+     "date": "2025-10-27",
+     "name": "Oct 27",
+     "value": 916.75,
+     "benchmark": 891.45,
+     "twr_index": 101.10172482244475
+    },
+    {
+     "date": "2025-10-28",
+     "name": "Oct 28",
+     "value": 916.97,
+     "benchmark": 884.16,
+     "twr_index": 101.12598703074683
+    },
+    {
+     "date": "2025-10-29",
+     "name": "Oct 29",
+     "value": 925.02,
+     "benchmark": 875.5,
+     "twr_index": 102.01376328907317
+    },
+    {
+     "date": "2025-10-30",
+     "name": "Oct 30",
+     "value": 936.84,
+     "benchmark": 888.0,
+     "twr_index": 103.31730557148529
+    },
+    {
+     "date": "2025-10-31",
+     "name": "Oct 31",
+     "value": 926.92,
+     "benchmark": 890.03,
+     "twr_index": 102.22330054259119
+    },
+    {
+     "date": "2025-11-03",
+     "name": "Nov 03",
+     "value": 926.42,
+     "benchmark": 875.47,
+     "twr_index": 102.16815916008646
+    },
+    {
+     "date": "2025-11-04",
+     "name": "Nov 04",
+     "value": 919.96,
+     "benchmark": 858.57,
+     "twr_index": 101.4557324981252
+    },
+    {
+     "date": "2025-11-05",
+     "name": "Nov 05",
+     "value": 923.48,
+     "benchmark": 885.8,
+     "twr_index": 101.84392783095859
+    },
+    {
+     "date": "2025-11-06",
+     "name": "Nov 06",
+     "value": 933.95,
+     "benchmark": 872.28,
+     "twr_index": 102.99858838060788
+    },
+    {
+     "date": "2025-11-07",
+     "name": "Nov 07",
+     "value": 943.67,
+     "benchmark": 862.98,
+     "twr_index": 104.07053685650007
+    },
+    {
+     "date": "2025-11-10",
+     "name": "Nov 10",
+     "value": 949.62,
+     "benchmark": 861.01,
+     "twr_index": 104.7267193083065
+    },
+    {
+     "date": "2025-11-11",
+     "name": "Nov 11",
+     "value": 955.66,
+     "benchmark": 847.46,
+     "twr_index": 105.3928272089638
+    },
+    {
+     "date": "2025-11-12",
+     "name": "Nov 12",
+     "value": 964.84,
+     "benchmark": 870.57,
+     "twr_index": 106.40522299175088
+    },
+    {
+     "date": "2025-11-13",
+     "name": "Nov 13",
+     "value": 978.33,
+     "benchmark": 859.39,
+     "twr_index": 107.89293749172883
+    },
+    {
+     "date": "2025-11-14",
+     "name": "Nov 14",
+     "value": 985.56,
+     "benchmark": 847.41,
+     "twr_index": 108.69028188274739
+    },
+    {
+     "date": "2025-11-17",
+     "name": "Nov 17",
+     "value": 992.36,
+     "benchmark": 850.93,
+     "twr_index": 109.44020468481187
+    },
+    {
+     "date": "2025-11-18",
+     "name": "Nov 18",
+     "value": 993.29,
+     "benchmark": 839.02,
+     "twr_index": 109.54276765627068
+    },
+    {
+     "date": "2025-11-19",
+     "name": "Nov 19",
+     "value": 983.67,
+     "benchmark": 826.0,
+     "twr_index": 108.48184745687945
+    },
+    {
+     "date": "2025-11-20",
+     "name": "Nov 20",
+     "value": 983.52,
+     "benchmark": 835.86,
+     "twr_index": 108.46530504212804
+    },
+    {
+     "date": "2025-11-21",
+     "name": "Nov 21",
+     "value": 974.25,
+     "benchmark": 848.58,
+     "twr_index": 107.4429838104901
+    },
+    {
+     "date": "2025-11-24",
+     "name": "Nov 24",
+     "value": 970.03,
+     "benchmark": 868.0,
+     "twr_index": 106.97759054215008
+    },
+    {
+     "date": "2025-11-25",
+     "name": "Nov 25",
+     "value": 966.11,
+     "benchmark": 869.18,
+     "twr_index": 106.54528210331291
+    },
+    {
+     "date": "2025-11-26",
+     "name": "Nov 26",
+     "value": 957.9,
+     "benchmark": 858.62,
+     "twr_index": 105.63986060258503
+    },
+    {
+     "date": "2025-11-27",
+     "name": "Nov 27",
+     "value": 968.08,
+     "benchmark": 853.07,
+     "twr_index": 106.76253915038158
+    },
+    {
+     "date": "2025-11-28",
+     "name": "Nov 28",
+     "value": 965.43,
+     "benchmark": 842.91,
+     "twr_index": 106.47028982310644
+    },
+    {
+     "date": "2025-12-01",
+     "name": "Dec 01",
+     "value": 1200.18,
+     "benchmark": 844.64,
+     "twr_index": -2033.0594644668931
+    },
+    {
+     "date": "2025-12-02",
+     "name": "Dec 02",
+     "value": 1200.33,
+     "benchmark": 847.34,
+     "twr_index": -2033.3135587858035
+    },
+    {
+     "date": "2025-12-03",
+     "name": "Dec 03",
+     "value": 1198.42,
+     "benchmark": 842.54,
+     "twr_index": -2030.0780911250097
+    },
+    {
+     "date": "2025-12-04",
+     "name": "Dec 04",
+     "value": 1193.32,
+     "benchmark": 853.18,
+     "twr_index": -2021.4388842820515
+    },
+    {
+     "date": "2025-12-05",
+     "name": "Dec 05",
+     "value": 1186.57,
+     "benchmark": 861.45,
+     "twr_index": -2010.0046399310781
+    },
+    {
+     "date": "2025-12-08",
+     "name": "Dec 08",
+     "value": 1190.76,
+     "benchmark": 846.85,
+     "twr_index": -2017.1023412393122
+    },
+    {
+     "date": "2025-12-09",
+     "name": "Dec 09",
+     "value": 1197.54,
+     "benchmark": 865.93,
+     "twr_index": -2028.5874044540676
+    },
+    {
+     "date": "2025-12-10",
+     "name": "Dec 10",
+     "value": 1207.25,
+     "benchmark": 857.62,
+     "twr_index": -2045.035776698209
+    },
+    {
+     "date": "2025-12-11",
+     "name": "Dec 11",
+     "value": 1212.78,
+     "benchmark": 855.17,
+     "twr_index": -2054.403387255377
+    },
+    {
+     "date": "2025-12-12",
+     "name": "Dec 12",
+     "value": 1206.08,
+     "benchmark": 868.78,
+     "twr_index": -2043.0538410107065
+    },
+    {
+     "date": "2025-12-15",
+     "name": "Dec 15",
+     "value": 1198.39,
+     "benchmark": 875.74,
+     "twr_index": -2030.0272722612274
+    },
+    {
+     "date": "2025-12-16",
+     "name": "Dec 16",
+     "value": 1201.57,
+     "benchmark": 869.07,
+     "twr_index": -2035.4140718221302
+    },
+    {
+     "date": "2025-12-17",
+     "name": "Dec 17",
+     "value": 1208.36,
+     "benchmark": 873.5,
+     "twr_index": -2046.9160746581465
+    },
+    {
+     "date": "2025-12-18",
+     "name": "Dec 18",
+     "value": 1209.17,
+     "benchmark": 881.35,
+     "twr_index": -2048.2881839802635
+    },
+    {
+     "date": "2025-12-19",
+     "name": "Dec 19",
+     "value": 1201.52,
+     "benchmark": 869.95,
+     "twr_index": -2035.3293737158267
+    },
+    {
+     "date": "2025-12-22",
+     "name": "Dec 22",
+     "value": 1206.99,
+     "benchmark": 836.69,
+     "twr_index": -2044.5953465454306
+    },
+    {
+     "date": "2025-12-23",
+     "name": "Dec 23",
+     "value": 1204.28,
+     "benchmark": 854.99,
+     "twr_index": -2040.0047091837803
+    },
+    {
+     "date": "2025-12-24",
+     "name": "Dec 24",
+     "value": 1207.64,
+     "benchmark": 837.26,
+     "twr_index": -2045.6964219273762
+    },
+    {
+     "date": "2025-12-25",
+     "name": "Dec 25",
+     "value": 1195.74,
+     "benchmark": 834.24,
+     "twr_index": -2025.538272627141
+    },
+    {
+     "date": "2025-12-26",
+     "name": "Dec 26",
+     "value": 1198.91,
+     "benchmark": 863.38,
+     "twr_index": -2030.9081325667837
+    },
+    {
+     "date": "2025-12-29",
+     "name": "Dec 29",
+     "value": 1198.55,
+     "benchmark": 856.81,
+     "twr_index": -2030.2983062013982
+    },
+    {
+     "date": "2025-12-30",
+     "name": "Dec 30",
+     "value": 1205.1,
+     "benchmark": 866.49,
+     "twr_index": -2041.393758127158
+    },
+    {
+     "date": "2025-12-31",
+     "name": "Dec 31",
+     "value": 1206.25,
+     "benchmark": 853.47,
+     "twr_index": -2043.341814572139
+    },
+    {
+     "date": "2026-01-01",
+     "name": "Jan 01",
+     "value": 1197.82,
+     "benchmark": 878.81,
+     "twr_index": -2029.0617138493672
+    },
+    {
+     "date": "2026-01-02",
+     "name": "Jan 02",
+     "value": 1206.01,
+     "benchmark": 867.91,
+     "twr_index": -2042.935263661882
+    },
+    {
+     "date": "2026-01-05",
+     "name": "Jan 05",
+     "value": 1226.44,
+     "benchmark": 888.98,
+     "twr_index": -2077.5429098974955
+    },
+    {
+     "date": "2026-01-06",
+     "name": "Jan 06",
+     "value": 1228.48,
+     "benchmark": 889.98,
+     "twr_index": -2080.9985926346785
+    },
+    {
+     "date": "2026-01-07",
+     "name": "Jan 07",
+     "value": 1230.07,
+     "benchmark": 912.29,
+     "twr_index": -2083.69199241513
+    },
+    {
+     "date": "2026-01-08",
+     "name": "Jan 08",
+     "value": 1232.63,
+     "benchmark": 926.51,
+     "twr_index": -2088.02853545787
+    },
+    {
+     "date": "2026-01-09",
+     "name": "Jan 09",
+     "value": 1226.4,
+     "benchmark": 919.97,
+     "twr_index": -2077.4751514124528
+    },
+    {
+     "date": "2026-01-12",
+     "name": "Jan 12",
+     "value": 1223.2,
+     "benchmark": 910.39,
+     "twr_index": -2072.0544726090284
+    },
+    {
+     "date": "2026-01-13",
+     "name": "Jan 13",
+     "value": 1225.95,
+     "benchmark": 887.01,
+     "twr_index": -2076.712868455721
+    },
+    {
+     "date": "2026-01-14",
+     "name": "Jan 14",
+     "value": 1224.81,
+     "benchmark": 889.19,
+     "twr_index": -2074.781751632001
+    },
+    {
+     "date": "2026-01-15",
+     "name": "Jan 15",
+     "value": 1214.91,
+     "benchmark": 908.24,
+     "twr_index": -2058.0115265839067
+    },
+    {
+     "date": "2026-01-16",
+     "name": "Jan 16",
+     "value": 1231.44,
+     "benchmark": 906.89,
+     "twr_index": -2086.0127205278463
+    },
+    {
+     "date": "2026-01-19",
+     "name": "Jan 19",
+     "value": 1226.66,
+     "benchmark": 912.03,
+     "twr_index": -2077.915581565231
+    },
+    {
+     "date": "2026-01-20",
+     "name": "Jan 20",
+     "value": 1221.39,
+     "benchmark": 927.44,
+     "twr_index": -2068.988401160841
+    },
+    {
+     "date": "2026-01-21",
+     "name": "Jan 21",
+     "value": 1234.85,
+     "benchmark": 936.07,
+     "twr_index": -2091.789131377745
+    },
+    {
+     "date": "2026-01-22",
+     "name": "Jan 22",
+     "value": 1237.08,
+     "benchmark": 947.67,
+     "twr_index": -2095.5666669188813
+    },
+    {
+     "date": "2026-01-23",
+     "name": "Jan 23",
+     "value": 1236.87,
+     "benchmark": 957.59,
+     "twr_index": -2095.210934872407
+    },
+    {
+     "date": "2026-01-26",
+     "name": "Jan 26",
+     "value": 1242.66,
+     "benchmark": 949.31,
+     "twr_index": -2105.0189755823535
+    },
+    {
+     "date": "2026-01-27",
+     "name": "Jan 27",
+     "value": 1239.04,
+     "benchmark": 938.62,
+     "twr_index": -2098.8868326859792
+    },
+    {
+     "date": "2026-01-28",
+     "name": "Jan 28",
+     "value": 1238.92,
+     "benchmark": 939.54,
+     "twr_index": -2098.683557230851
+    },
+    {
+     "date": "2026-01-29",
+     "name": "Jan 29",
+     "value": 1228.56,
+     "benchmark": 930.32,
+     "twr_index": -2081.134109604764
+    },
+    {
+     "date": "2026-01-30",
+     "name": "Jan 30",
+     "value": 1222.85,
+     "benchmark": 933.15,
+     "twr_index": -2071.461585864903
+    },
+    {
+     "date": "2026-02-02",
+     "name": "Feb 02",
+     "value": 1213.04,
+     "benchmark": 912.07,
+     "twr_index": -2054.843817408155
+    },
+    {
+     "date": "2026-02-03",
+     "name": "Feb 03",
+     "value": 1221.8,
+     "benchmark": 916.41,
+     "twr_index": -2069.68292563253
+    },
+    {
+     "date": "2026-02-04",
+     "name": "Feb 04",
+     "value": 1225.09,
+     "benchmark": 931.12,
+     "twr_index": -2075.2560610273003
+    },
+    {
+     "date": "2026-02-05",
+     "name": "Feb 05",
+     "value": 1231.22,
+     "benchmark": 951.57,
+     "twr_index": -2085.6400488601107
+    },
+    {
+     "date": "2026-02-06",
+     "name": "Feb 06",
+     "value": 1231.0,
+     "benchmark": 952.85,
+     "twr_index": -2085.2673771923755
+    },
+    {
+     "date": "2026-02-09",
+     "name": "Feb 09",
+     "value": 1241.34,
+     "benchmark": 963.86,
+     "twr_index": -2102.782945575941
+    },
+    {
+     "date": "2026-02-10",
+     "name": "Feb 10",
+     "value": 1251.19,
+     "benchmark": 998.8,
+     "twr_index": -2119.468472517732
+    },
+    {
+     "date": "2026-02-11",
+     "name": "Feb 11",
+     "value": 1245.35,
+     "benchmark": 1018.74,
+     "twr_index": -2109.575733701482
+    },
+    {
+     "date": "2026-02-12",
+     "name": "Feb 12",
+     "value": 1249.24,
+     "benchmark": 1025.33,
+     "twr_index": -2116.165246371895
+    },
+    {
+     "date": "2026-02-13",
+     "name": "Feb 13",
+     "value": 1247.37,
+     "benchmark": 1012.35,
+     "twr_index": -2112.9975371961436
+    },
+    {
+     "date": "2026-02-16",
+     "name": "Feb 16",
+     "value": 1260.73,
+     "benchmark": 1021.03,
+     "twr_index": -2135.628871200441
+    },
+    {
+     "date": "2026-02-17",
+     "name": "Feb 17",
+     "value": 1253.4,
+     "benchmark": 1027.84,
+     "twr_index": -2123.2121288163466
+    },
+    {
+     "date": "2026-02-18",
+     "name": "Feb 18",
+     "value": 1245.3,
+     "benchmark": 1013.2,
+     "twr_index": -2109.4910355951783
+    },
+    {
+     "date": "2026-02-19",
+     "name": "Feb 19",
+     "value": 1249.44,
+     "benchmark": 1003.18,
+     "twr_index": -2116.504038797109
+    },
+    {
+     "date": "2026-02-20",
+     "name": "Feb 20",
+     "value": 1264.27,
+     "benchmark": 975.62,
+     "twr_index": -2141.6254971267294
+    },
+    {
+     "date": "2026-02-23",
+     "name": "Feb 23",
+     "value": 1263.97,
+     "benchmark": 991.55,
+     "twr_index": -2141.1173084889087
+    },
+    {
+     "date": "2026-02-24",
+     "name": "Feb 24",
+     "value": 1258.33,
+     "benchmark": 972.87,
+     "twr_index": -2131.5633620978724
+    },
+    {
+     "date": "2026-02-25",
+     "name": "Feb 25",
+     "value": 1248.3,
+     "benchmark": 1005.48,
+     "twr_index": -2114.572921973389
+    },
+    {
+     "date": "2026-02-26",
+     "name": "Feb 26",
+     "value": 1253.77,
+     "benchmark": 1001.95,
+     "twr_index": -2123.8388948029924
+    },
+    {
+     "date": "2026-02-27",
+     "name": "Feb 27",
+     "value": 1245.96,
+     "benchmark": 994.73,
+     "twr_index": -2110.609050598385
+    },
+    {
+     "date": "2026-03-02",
+     "name": "Mar 02",
+     "value": 2293.39,
+     "benchmark": 997.44,
+     "twr_index": 128960.60825400759
+    },
+    {
+     "date": "2026-03-03",
+     "name": "Mar 03",
+     "value": 2287.39,
+     "benchmark": 1003.88,
+     "twr_index": 128623.21965044516
+    },
+    {
+     "date": "2026-03-04",
+     "name": "Mar 04",
+     "value": 2278.57,
+     "benchmark": 1010.05,
+     "twr_index": 128127.25840320841
+    },
+    {
+     "date": "2026-03-05",
+     "name": "Mar 05",
+     "value": 2262.18,
+     "benchmark": 1001.04,
+     "twr_index": 127205.62520114367
+    },
+    {
+     "date": "2026-03-06",
+     "name": "Mar 06",
+     "value": 2274.37,
+     "benchmark": 985.44,
+     "twr_index": 127891.08638071468
+    },
+    {
+     "date": "2026-03-09",
+     "name": "Mar 09",
+     "value": 2265.78,
+     "benchmark": 977.06,
+     "twr_index": 127408.05836328116
+    },
+    {
+     "date": "2026-03-10",
+     "name": "Mar 10",
+     "value": 2265.84,
+     "benchmark": 977.94,
+     "twr_index": 127411.43224931677
+    },
+    {
+     "date": "2026-03-11",
+     "name": "Mar 11",
+     "value": 2268.91,
+     "benchmark": 968.77,
+     "twr_index": 127584.06275147288
+    },
+    {
+     "date": "2026-03-12",
+     "name": "Mar 12",
+     "value": 2283.22,
+     "benchmark": 975.89,
+     "twr_index": 128388.73457096929
+    },
+    {
+     "date": "2026-03-13",
+     "name": "Mar 13",
+     "value": 2271.18,
+     "benchmark": 991.95,
+     "twr_index": 127711.70810648735
+    },
+    {
+     "date": "2026-03-16",
+     "name": "Mar 16",
+     "value": 2272.35,
+     "benchmark": 998.38,
+     "twr_index": 127777.49888418202
+    },
+    {
+     "date": "2026-03-17",
+     "name": "Mar 17",
+     "value": 2273.11,
+     "benchmark": 1002.55,
+     "twr_index": 127820.2347739666
+    },
+    {
+     "date": "2026-03-18",
+     "name": "Mar 18",
+     "value": 2280.65,
+     "benchmark": 1015.85,
+     "twr_index": 128244.21978577673
+    },
+    {
+     "date": "2026-03-19",
+     "name": "Mar 19",
+     "value": 2257.9,
+     "benchmark": 1001.94,
+     "twr_index": 126964.95466393585
+    },
+    {
+     "date": "2026-03-20",
+     "name": "Mar 20",
+     "value": 2273.96,
+     "benchmark": 1008.38,
+     "twr_index": 127868.03149280461
+    },
+    {
+     "date": "2026-03-23",
+     "name": "Mar 23",
+     "value": 2276.89,
+     "benchmark": 1014.15,
+     "twr_index": 128032.78959421093
+    },
+    {
+     "date": "2026-03-24",
+     "name": "Mar 24",
+     "value": 2259.95,
+     "benchmark": 1039.1,
+     "twr_index": 127080.22910348632
+    },
+    {
+     "date": "2026-03-25",
+     "name": "Mar 25",
+     "value": 2264.72,
+     "benchmark": 1059.95,
+     "twr_index": 127348.45304331846
+    },
+    {
+     "date": "2026-03-26",
+     "name": "Mar 26",
+     "value": 2259.55,
+     "benchmark": 1054.2,
+     "twr_index": 127057.73652991552
+    },
+    {
+     "date": "2026-03-27",
+     "name": "Mar 27",
+     "value": 2263.53,
+     "benchmark": 1084.16,
+     "twr_index": 127281.53763694524
+    },
+    {
+     "date": "2026-03-30",
+     "name": "Mar 30",
+     "value": 2275.58,
+     "benchmark": 1068.5,
+     "twr_index": 127959.12641576644
+    },
+    {
+     "date": "2026-03-31",
+     "name": "Mar 31",
+     "value": 2275.78,
+     "benchmark": 1093.78,
+     "twr_index": 127970.37270255186
+    },
+    {
+     "date": "2026-04-01",
+     "name": "Apr 01",
+     "value": 2276.14,
+     "benchmark": 1098.66,
+     "twr_index": 127990.6160187656
+    },
+    {
+     "date": "2026-04-02",
+     "name": "Apr 02",
+     "value": 2259.59,
+     "benchmark": 1112.04,
+     "twr_index": 127059.98578727258
+    },
+    {
+     "date": "2026-04-03",
+     "name": "Apr 03",
+     "value": 2249.93,
+     "benchmark": 1111.16,
+     "twr_index": 126516.79013553706
+    },
+    {
+     "date": "2026-04-06",
+     "name": "Apr 06",
+     "value": 2264.77,
+     "benchmark": 1108.76,
+     "twr_index": 127351.26461501479
+    },
+    {
+     "date": "2026-04-07",
+     "name": "Apr 07",
+     "value": 2265.64,
+     "benchmark": 1087.77,
+     "twr_index": 127400.18596253135
+    },
+    {
+     "date": "2026-04-08",
+     "name": "Apr 08",
+     "value": 2257.87,
+     "benchmark": 1107.31,
+     "twr_index": 126963.267720918
+    },
+    {
+     "date": "2026-04-09",
+     "name": "Apr 09",
+     "value": 2256.23,
+     "benchmark": 1104.57,
+     "twr_index": 126871.04816927761
+    },
+    {
+     "date": "2026-04-10",
+     "name": "Apr 10",
+     "value": 2245.64,
+     "benchmark": 1117.93,
+     "twr_index": 126275.55728398991
+    },
+    {
+     "date": "2026-04-13",
+     "name": "Apr 13",
+     "value": 2246.02,
+     "benchmark": 1105.22,
+     "twr_index": 126296.9252288822
+    },
+    {
+     "date": "2026-04-14",
+     "name": "Apr 14",
+     "value": 2260.08,
+     "benchmark": 1124.47,
+     "twr_index": 127087.53918989682
+    },
+    {
+     "date": "2026-04-15",
+     "name": "Apr 15",
+     "value": 2248.79,
+     "benchmark": 1131.83,
+     "twr_index": 126452.68630086018
+    },
+    {
+     "date": "2026-04-16",
+     "name": "Apr 16",
+     "value": 2280.45,
+     "benchmark": 1127.41,
+     "twr_index": 128232.97349899125
+    },
+    {
+     "date": "2026-04-17",
+     "name": "Apr 17",
+     "value": 2293.78,
+     "benchmark": 1131.73,
+     "twr_index": 128982.53851323915
+    },
+    {
+     "date": "2026-04-20",
+     "name": "Apr 20",
+     "value": 2274.69,
+     "benchmark": 1128.32,
+     "twr_index": 127909.08043957136
+    },
+    {
+     "date": "2026-04-21",
+     "name": "Apr 21",
+     "value": 2272.09,
+     "benchmark": 1139.0,
+     "twr_index": 127762.87871136099
+    },
+    {
+     "date": "2026-04-22",
+     "name": "Apr 22",
+     "value": 2298.33,
+     "benchmark": 1168.76,
+     "twr_index": 129238.39153760734
+    },
+    {
+     "date": "2026-04-23",
+     "name": "Apr 23",
+     "value": 2293.81,
+     "benchmark": 1147.71,
+     "twr_index": 128984.22545625699
+    },
+    {
+     "date": "2026-04-24",
+     "name": "Apr 24",
+     "value": 2283.82,
+     "benchmark": 1111.67,
+     "twr_index": 128422.47343132556
+    },
+    {
+     "date": "2026-04-27",
+     "name": "Apr 27",
+     "value": 2303.81,
+     "benchmark": 1103.3,
+     "twr_index": 129546.5397955277
+    },
+    {
+     "date": "2026-04-28",
+     "name": "Apr 28",
+     "value": 2273.91,
+     "benchmark": 1084.01,
+     "twr_index": 127865.21992110825
+    },
+    {
+     "date": "2026-04-29",
+     "name": "Apr 29",
+     "value": 2264.18,
+     "benchmark": 1098.26,
+     "twr_index": 127318.08806899785
+    },
+    {
+     "date": "2026-04-30",
+     "name": "Apr 30",
+     "value": 2256.47,
+     "benchmark": 1080.38,
+     "twr_index": 126884.5437134201
+    },
+    {
+     "date": "2026-05-01",
+     "name": "May 01",
+     "value": 2246.11,
+     "benchmark": 1041.18,
+     "twr_index": 126301.98605793566
+    },
+    {
+     "date": "2026-05-04",
+     "name": "May 04",
+     "value": 2256.46,
+     "benchmark": 1037.47,
+     "twr_index": 126883.98139908086
+    },
+    {
+     "date": "2026-05-05",
+     "name": "May 05",
+     "value": 2262.94,
+     "benchmark": 1025.8,
+     "twr_index": 127248.36109092827
+    },
+    {
+     "date": "2026-05-06",
+     "name": "May 06",
+     "value": 2230.06,
+     "benchmark": 999.08,
+     "twr_index": 125399.47154340614
+    },
+    {
+     "date": "2026-05-07",
+     "name": "May 07",
+     "value": 2224.49,
+     "benchmark": 994.32,
+     "twr_index": 125086.26245643233
+    },
+    {
+     "date": "2026-05-08",
+     "name": "May 08",
+     "value": 2243.77,
+     "benchmark": 997.09,
+     "twr_index": 126170.40450254628
+    },
+    {
+     "date": "2026-05-11",
+     "name": "May 11",
+     "value": 2247.75,
+     "benchmark": 986.38,
+     "twr_index": 126394.20560957603
+    },
+    {
+     "date": "2026-05-12",
+     "name": "May 12",
+     "value": 2263.5,
+     "benchmark": 1004.0,
+     "twr_index": 127279.85069392741
+    },
+    {
+     "date": "2026-05-13",
+     "name": "May 13",
+     "value": 2254.4,
+     "benchmark": 998.52,
+     "twr_index": 126768.14464519107
+    },
+    {
+     "date": "2026-05-14",
+     "name": "May 14",
+     "value": 2250.86,
+     "benchmark": 1013.44,
+     "twr_index": 126569.08536908923
+    },
+    {
+     "date": "2026-05-15",
+     "name": "May 15",
+     "value": 2246.81,
+     "benchmark": 979.61,
+     "twr_index": 126341.34806168458
+    },
+    {
+     "date": "2026-05-18",
+     "name": "May 18",
+     "value": 2237.91,
+     "benchmark": 984.2,
+     "twr_index": 125840.88829973363
+    },
+    {
+     "date": "2026-05-19",
+     "name": "May 19",
+     "value": 2240.22,
+     "benchmark": 976.74,
+     "twr_index": 125970.78291210519
+    },
+    {
+     "date": "2026-05-20",
+     "name": "May 20",
+     "value": 2259.43,
+     "benchmark": 970.48,
+     "twr_index": 127050.98875784424
+    },
+    {
+     "date": "2026-05-21",
+     "name": "May 21",
+     "value": 2248.4,
+     "benchmark": 972.85,
+     "twr_index": 126430.75604162866
+    },
+    {
+     "date": "2026-05-22",
+     "name": "May 22",
+     "value": 2254.0,
+     "benchmark": 974.57,
+     "twr_index": 126745.65207162026
+    },
+    {
+     "date": "2026-05-25",
+     "name": "May 25",
+     "value": 2258.73,
+     "benchmark": 981.56,
+     "twr_index": 127011.62675409533
+    },
+    {
+     "date": "2026-05-26",
+     "name": "May 26",
+     "value": 2264.47,
+     "benchmark": 982.05,
+     "twr_index": 127334.3951848367
+    },
+    {
+     "date": "2026-05-27",
+     "name": "May 27",
+     "value": 2250.28,
+     "benchmark": 989.05,
+     "twr_index": 126536.47113741159
+    },
+    {
+     "date": "2026-05-28",
+     "name": "May 28",
+     "value": 2245.59,
+     "benchmark": 982.71,
+     "twr_index": 126272.74571229362
+    },
+    {
+     "date": "2026-05-29",
+     "name": "May 29",
+     "value": 2232.22,
+     "benchmark": 945.96,
+     "twr_index": 125520.93144068866
+    },
+    {
+     "date": "2026-06-01",
+     "name": "Jun 01",
+     "value": 2962.42,
+     "benchmark": 940.99,
+     "twr_index": -2521068.3000852214
+    },
+    {
+     "date": "2026-06-02",
+     "name": "Jun 02",
+     "value": 2963.62,
+     "benchmark": 914.29,
+     "twr_index": -2522089.5198852844
+    },
+    {
+     "date": "2026-06-03",
+     "name": "Jun 03",
+     "value": 2942.99,
+     "benchmark": 903.81,
+     "twr_index": -2504533.049489203
+    },
+    {
+     "date": "2026-06-04",
+     "name": "Jun 04",
+     "value": 2946.1,
+     "benchmark": 892.39,
+     "twr_index": -2507179.710804366
+    },
+    {
+     "date": "2026-06-05",
+     "name": "Jun 05",
+     "value": 2991.64,
+     "benchmark": 889.45,
+     "twr_index": -2545935.002216752
+    },
+    {
+     "date": "2026-06-08",
+     "name": "Jun 08",
+     "value": 2994.28,
+     "benchmark": 890.89,
+     "twr_index": -2548181.685776891
+    },
+    {
+     "date": "2026-06-09",
+     "name": "Jun 09",
+     "value": 2980.05,
+     "benchmark": 891.26,
+     "twr_index": -2536071.7209811453
+    },
+    {
+     "date": "2026-06-10",
+     "name": "Jun 10",
+     "value": 2957.72,
+     "benchmark": 884.32,
+     "twr_index": -2517068.522534975
+    },
+    {
+     "date": "2026-06-11",
+     "name": "Jun 11",
+     "value": 2923.34,
+     "benchmark": 892.54,
+     "twr_index": -2487810.575263174
+    },
+    {
+     "date": "2026-06-12",
+     "name": "Jun 12",
+     "value": 2977.81,
+     "benchmark": 886.14,
+     "twr_index": -2534165.444021028
+    },
+    {
+     "date": "2026-06-15",
+     "name": "Jun 15",
+     "value": 2987.26,
+     "benchmark": 868.15,
+     "twr_index": -2542207.5499465237
+    },
+    {
+     "date": "2026-06-16",
+     "name": "Jun 16",
+     "value": 2985.45,
+     "benchmark": 872.05,
+     "twr_index": -2540667.2100814283
+    },
+    {
+     "date": "2026-06-17",
+     "name": "Jun 17",
+     "value": 2967.88,
+     "benchmark": 859.01,
+     "twr_index": -2525714.850175508
+    },
+    {
+     "date": "2026-06-18",
+     "name": "Jun 18",
+     "value": 2949.97,
+     "benchmark": 863.62,
+     "twr_index": -2510473.1446595695
+    },
+    {
+     "date": "2026-06-19",
+     "name": "Jun 19",
+     "value": 2931.84,
+     "benchmark": 887.43,
+     "twr_index": -2495044.2155136196
+    },
+    {
+     "date": "2026-06-22",
+     "name": "Jun 22",
+     "value": 2897.97,
+     "benchmark": 887.3,
+     "twr_index": -2466220.2866568444
+    },
+    {
+     "date": "2026-06-23",
+     "name": "Jun 23",
+     "value": 2892.17,
+     "benchmark": 898.01,
+     "twr_index": -2461284.390956541
+    },
+    {
+     "date": "2026-06-24",
+     "name": "Jun 24",
+     "value": 2891.25,
+     "benchmark": 915.09,
+     "twr_index": -2460501.4557764926
+    },
+    {
+     "date": "2026-06-25",
+     "name": "Jun 25",
+     "value": 2912.39,
+     "benchmark": 914.59,
+     "twr_index": -2478491.9445876
+    },
+    {
+     "date": "2026-06-26",
+     "name": "Jun 26",
+     "value": 2905.05,
+     "benchmark": 903.48,
+     "twr_index": -2472245.4834772153
+    },
+    {
+     "date": "2026-06-29",
+     "name": "Jun 29",
+     "value": 2932.12,
+     "benchmark": 916.63,
+     "twr_index": -2495282.5001336336
+    },
+    {
+     "date": "2026-06-30",
+     "name": "Jun 30",
+     "value": 2937.35,
+     "benchmark": 928.05,
+     "twr_index": -2499733.3164289077
+    },
+    {
+     "date": "2026-07-01",
+     "name": "Jul 01",
+     "value": 2950.73,
+     "benchmark": 917.16,
+     "twr_index": -2511119.9171996084
+    },
+    {
+     "date": "2026-07-02",
+     "name": "Jul 02",
+     "value": 2951.49,
+     "benchmark": 927.03,
+     "twr_index": -2511766.6897396483
+    },
+    {
+     "date": "2026-07-03",
+     "name": "Jul 03",
+     "value": 2935.85,
+     "benchmark": 924.01,
+     "twr_index": -2498456.7916788287
+    },
+    {
+     "date": "2026-07-06",
+     "name": "Jul 06",
+     "value": 2975.79,
+     "benchmark": 919.28,
+     "twr_index": -2532446.3906909213
+    },
+    {
+     "date": "2026-07-07",
+     "name": "Jul 07",
+     "value": 2961.98,
+     "benchmark": 896.54,
+     "twr_index": -2520693.852825198
+    },
+    {
+     "date": "2026-07-08",
+     "name": "Jul 08",
+     "value": 2921.66,
+     "benchmark": 883.82,
+     "twr_index": -2486380.8675430855
+    },
+    {
+     "date": "2026-07-09",
+     "name": "Jul 09",
+     "value": 2949.94,
+     "benchmark": 890.45,
+     "twr_index": -2510447.614164567
+    },
+    {
+     "date": "2026-07-10",
+     "name": "Jul 10",
+     "value": 2972.62,
+     "benchmark": 870.61,
+     "twr_index": -2529748.6683857553
+    },
+    {
+     "date": "2026-07-13",
+     "name": "Jul 13",
+     "value": 2945.44,
+     "benchmark": 876.05,
+     "twr_index": -2506618.0399143314
+    },
+    {
+     "date": "2026-07-14",
+     "name": "Jul 14",
+     "value": 2963.19,
+     "benchmark": 886.47,
+     "twr_index": -2521723.582790261
+    },
+    {
+     "date": "2026-07-15",
+     "name": "Jul 15",
+     "value": 2992.85,
+     "benchmark": 868.67,
+     "twr_index": -2546964.732181815
+    },
+    {
+     "date": "2026-07-16",
+     "name": "Jul 16",
+     "value": 3016.47,
+     "benchmark": 902.07,
+     "twr_index": -2567065.7419130527
+    },
+    {
+     "date": "2026-07-17",
+     "name": "Jul 17",
+     "value": 2997.38,
+     "benchmark": 912.73,
+     "twr_index": -2550819.8369270526
+    },
+    {
+     "date": "2026-07-20",
+     "name": "Jul 20",
+     "value": 3012.98,
+     "benchmark": 899.03,
+     "twr_index": -2564095.69432787
+    },
+    {
+     "date": "2026-07-21",
+     "name": "Jul 21",
+     "value": 2982.73,
+     "benchmark": 901.98,
+     "twr_index": -2538352.4452012847
+    },
+    {
+     "date": "2026-07-22",
+     "name": "Jul 22",
+     "value": 2953.36,
+     "benchmark": 923.11,
+     "twr_index": -2513358.090594746
+    },
+    {
+     "date": "2026-07-23",
+     "name": "Jul 23",
+     "value": 2946.74,
+     "benchmark": 955.52,
+     "twr_index": -2507724.361364399
+    },
+    {
+     "date": "2026-07-24",
+     "name": "Jul 24",
+     "value": 2934.39,
+     "benchmark": 939.28,
+     "twr_index": -2497214.3075887524
+    },
+    {
+     "date": "2026-07-27",
+     "name": "Jul 27",
+     "value": 2936.57,
+     "benchmark": 948.38,
+     "twr_index": -2499069.5235588667
+    },
+    {
+     "date": "2026-07-28",
+     "name": "Jul 28",
+     "value": 2919.19,
+     "benchmark": 942.68,
+     "twr_index": -2484278.856787956
+    },
+    {
+     "date": "2026-07-29",
+     "name": "Jul 29",
+     "value": 2950.25,
+     "benchmark": 964.86,
+     "twr_index": -2510711.429279583
+    },
+    {
+     "date": "2026-07-30",
+     "name": "Jul 30",
+     "value": 2952.7,
+     "benchmark": 962.61,
+     "twr_index": -2512796.4197047115
+    },
+    {
+     "date": "2026-07-31",
+     "name": "Jul 31",
+     "value": 2954.93,
+     "benchmark": 965.43,
+     "twr_index": -2514694.1864998285
+    },
+    {
+     "date": "2026-08-03",
+     "name": "Aug 03",
+     "value": 2956.8,
+     "benchmark": 957.91,
+     "twr_index": -2516285.5873549264
+    },
+    {
+     "date": "2026-08-04",
+     "name": "Aug 04",
+     "value": 2963.25,
+     "benchmark": 986.45,
+     "twr_index": -2521774.643780264
+    },
+    {
+     "date": "2026-08-05",
+     "name": "Aug 05",
+     "value": 2996.78,
+     "benchmark": 973.91,
+     "twr_index": -2550309.2270270213
+    },
+    {
+     "date": "2026-08-06",
+     "name": "Aug 06",
+     "value": 2978.4,
+     "benchmark": 964.81,
+     "twr_index": -2534667.543756058
+    },
+    {
+     "date": "2026-08-07",
+     "name": "Aug 07",
+     "value": 3017.43,
+     "benchmark": 945.31,
+     "twr_index": -2567882.717753103
+    },
+    {
+     "date": "2026-08-10",
+     "name": "Aug 10",
+     "value": 3038.9,
+     "benchmark": 933.74,
+     "twr_index": -2586154.042009228
+    },
+    {
+     "date": "2026-08-11",
+     "name": "Aug 11",
+     "value": 3067.97,
+     "benchmark": 928.83,
+     "twr_index": -2610893.091665751
+    },
+    {
+     "date": "2026-08-12",
+     "name": "Aug 12",
+     "value": 3043.41,
+     "benchmark": 937.6,
+     "twr_index": -2589992.126424464
+    },
+    {
+     "date": "2026-08-13",
+     "name": "Aug 13",
+     "value": 3014.55,
+     "benchmark": 917.0,
+     "twr_index": -2565431.7902329518
+    },
+    {
+     "date": "2026-08-14",
+     "name": "Aug 14",
+     "value": 3056.02,
+     "benchmark": 911.77,
+     "twr_index": -2600723.4444901245
+    },
+    {
+     "date": "2026-08-17",
+     "name": "Aug 17",
+     "value": 3050.22,
+     "benchmark": 894.69,
+     "twr_index": -2595787.5487898206
+    },
+    {
+     "date": "2026-08-18",
+     "name": "Aug 18",
+     "value": 3062.22,
+     "benchmark": 900.55,
+     "twr_index": -2605999.7467904496
+    },
+    {
+     "date": "2026-08-19",
+     "name": "Aug 19",
+     "value": 3093.84,
+     "benchmark": 887.3,
+     "twr_index": -2632908.888522107
+    },
+    {
+     "date": "2026-08-20",
+     "name": "Aug 20",
+     "value": 3047.23,
+     "benchmark": 890.33,
+     "twr_index": -2593243.009454665
+    },
+    {
+     "date": "2026-08-21",
+     "name": "Aug 21",
+     "value": 3049.22,
+     "benchmark": 869.86,
+     "twr_index": -2594936.5322897686
+    },
+    {
+     "date": "2026-08-24",
+     "name": "Aug 24",
+     "value": 3099.36,
+     "benchmark": 881.84,
+     "twr_index": -2637606.4996023956
+    },
+    {
+     "date": "2026-08-25",
+     "name": "Aug 25",
+     "value": 3117.31,
+     "benchmark": 875.19,
+     "twr_index": -2652882.245778336
+    },
+    {
+     "date": "2026-08-26",
+     "name": "Aug 26",
+     "value": 3141.67,
+     "benchmark": 884.23,
+     "twr_index": -2673613.0077196127
+    },
+    {
+     "date": "2026-08-27",
+     "name": "Aug 27",
+     "value": 3161.22,
+     "benchmark": 881.71,
+     "twr_index": -2690250.3802956366
+    },
+    {
+     "date": "2026-08-28",
+     "name": "Aug 28",
+     "value": 3155.31,
+     "benchmark": 866.4,
+     "twr_index": -2685220.872780327
+    },
+    {
+     "date": "2026-08-31",
+     "name": "Aug 31",
+     "value": 3174.63,
+     "benchmark": 864.92,
+     "twr_index": -2701662.5115613397
+    },
+    {
+     "date": "2026-09-01",
+     "name": "Sep 01",
+     "value": 3199.4,
+     "benchmark": 883.38,
+     "twr_index": -2722742.190267638
+    },
+    {
+     "date": "2026-09-02",
+     "name": "Sep 02",
+     "value": 3186.23,
+     "benchmark": 877.47,
+     "twr_index": -2711534.302961948
+    },
+    {
+     "date": "2026-09-03",
+     "name": "Sep 03",
+     "value": 3201.29,
+     "benchmark": 874.27,
+     "twr_index": -2724350.6114527364
+    },
+    {
+     "date": "2026-09-04",
+     "name": "Sep 04",
+     "value": 3199.51,
+     "benchmark": 881.67,
+     "twr_index": -2722835.8020826434
+    },
+    {
+     "date": "2026-09-07",
+     "name": "Sep 07",
+     "value": 3227.02,
+     "benchmark": 869.11,
+     "twr_index": -2746247.265999085
+    },
+    {
+     "date": "2026-09-08",
+     "name": "Sep 08",
+     "value": 3248.37,
+     "benchmark": 870.37,
+     "twr_index": -2764416.4682752034
+    },
+    {
+     "date": "2026-09-09",
+     "name": "Sep 09",
+     "value": 3245.59,
+     "benchmark": 864.2,
+     "twr_index": -2762050.642405058
+    },
+    {
+     "date": "2026-09-10",
+     "name": "Sep 10",
+     "value": 3283.93,
+     "benchmark": 875.46,
+     "twr_index": -2794678.6150170662
+    },
+    {
+     "date": "2026-09-11",
+     "name": "Sep 11",
+     "value": 3297.97,
+     "benchmark": 861.37,
+     "twr_index": -2806626.886677801
+    },
+    {
+     "date": "2026-09-14",
+     "name": "Sep 14",
+     "value": 3282.87,
+     "benchmark": 848.1,
+     "twr_index": -2793776.53752701
+    },
+    {
+     "date": "2026-09-15",
+     "name": "Sep 15",
+     "value": 3285.44,
+     "benchmark": 853.19,
+     "twr_index": -2795963.6499321447
+    },
+    {
+     "date": "2026-09-16",
+     "name": "Sep 16",
+     "value": 3256.05,
+     "benchmark": 857.24,
+     "twr_index": -2770952.274995605
+    },
+    {
+     "date": "2026-09-17",
+     "name": "Sep 17",
+     "value": 3243.73,
+     "benchmark": 856.37,
+     "twr_index": -2760467.7517149593
+    },
+    {
+     "date": "2026-09-18",
+     "name": "Sep 18",
+     "value": 3245.71,
+     "benchmark": 842.54,
+     "twr_index": -2762152.764385063
+    },
+    {
+     "date": "2026-09-21",
+     "name": "Sep 21",
+     "value": 3222.18,
+     "benchmark": 845.97,
+     "twr_index": -2742128.34613883
+    },
+    {
+     "date": "2026-09-22",
+     "name": "Sep 22",
+     "value": 3206.54,
+     "benchmark": 839.1,
+     "twr_index": -2728818.4480780107
+    },
+    {
+     "date": "2026-09-23",
+     "name": "Sep 23",
+     "value": 3205.46,
+     "benchmark": 852.98,
+     "twr_index": -2727899.350257954
+    },
+    {
+     "date": "2026-09-24",
+     "name": "Sep 24",
+     "value": 3207.92,
+     "benchmark": 838.07,
+     "twr_index": -2729992.8508480834
+    },
+    {
+     "date": "2026-09-25",
+     "name": "Sep 25",
+     "value": 3134.75,
+     "benchmark": 817.66,
+     "twr_index": -8926439.721524592
+    },
+    {
+     "date": "2026-09-28",
+     "name": "Sep 28",
+     "value": 3124.73,
+     "benchmark": 797.83,
+     "twr_index": -8897907.007269971
+    },
+    {
+     "date": "2026-09-29",
+     "name": "Sep 29",
+     "value": 3140.81,
+     "benchmark": 805.95,
+     "twr_index": -8943696.033738466
+    },
+    {
+     "date": "2026-09-30",
+     "name": "Sep 30",
+     "value": 3132.96,
+     "benchmark": 820.11,
+     "twr_index": -8921342.559996072
+    },
+    {
+     "date": "2026-10-01",
+     "name": "Oct 01",
+     "value": 3103.93,
+     "benchmark": 827.16,
+     "twr_index": -8838677.42079331
+    },
+    {
+     "date": "2026-10-02",
+     "name": "Oct 02",
+     "value": 3130.93,
+     "benchmark": 826.94,
+     "twr_index": -8915561.980162052
+    },
+    {
+     "date": "2026-10-05",
+     "name": "Oct 05",
+     "value": 3114.3,
+     "benchmark": 827.17,
+     "twr_index": -8868206.786743455
+    },
+    {
+     "date": "2026-10-06",
+     "name": "Oct 06",
+     "value": 3145.36,
+     "benchmark": 847.77,
+     "twr_index": -8956652.505780237
+    },
+    {
+     "date": "2026-10-07",
+     "name": "Oct 07",
+     "value": 3129.3,
+     "benchmark": 847.4,
+     "twr_index": -8910920.430837201
+    },
+    {
+     "date": "2026-10-08",
+     "name": "Oct 08",
+     "value": 3143.46,
+     "benchmark": 868.59,
+     "twr_index": -8951242.110861696
+    },
+    {
+     "date": "2026-10-09",
+     "name": "Oct 09",
+     "value": 3131.88,
+     "benchmark": 875.15,
+     "twr_index": -8918267.177621325
+    },
+    {
+     "date": "2026-10-12",
+     "name": "Oct 12",
+     "value": 3110.21,
+     "benchmark": 875.46,
+     "twr_index": -8856560.199787226
+    },
+    {
+     "date": "2026-10-13",
+     "name": "Oct 13",
+     "value": 3116.54,
+     "benchmark": 867.51,
+     "twr_index": -8874585.357594786
+    },
+    {
+     "date": "2026-10-14",
+     "name": "Oct 14",
+     "value": 3091.69,
+     "benchmark": 860.45,
+     "twr_index": -8803823.087212814
+    },
+    {
+     "date": "2026-10-15",
+     "name": "Oct 15",
+     "value": 3060.15,
+     "benchmark": 860.54,
+     "twr_index": -8714010.531565031
+    },
+    {
+     "date": "2026-10-16",
+     "name": "Oct 16",
+     "value": 3073.53,
+     "benchmark": 841.78,
+     "twr_index": -8752111.102096653
+    }
+   ],
+   "historyQuality": {
+    "first_day": "2025-10-01",
+    "priced_value_pct": 100.0,
+    "unpriced_tickers": [],
+    "ledger_conflicts": 0,
+    "suspect_dates": []
+   },
+   "benchmarkLabel": "Satrix 40 (JSE Top 40 proxy)",
+   "benchmarkComposition": [
+    {
+     "region": "South Africa",
+     "label": "Satrix 40 (JSE Top 40 proxy)",
+     "weight": 100.0
+    }
+   ],
+   "returns": {
+    "portfolio_value": 3073.53,
+    "invested_capital": 226905.1,
+    "net_contributions": 226367.9,
+    "unrealised_gain": -223831.57,
+    "realised_gain": 1138.4,
+    "total_costs": 601.2,
+    "simple_return_pct": -98.65,
+    "money_weighted_return_pct": -99.6,
+    "time_weighted_return_pct": -8752211.1,
+    "snapshot_count": 273,
+    "history_days": 380,
+    "holdings_count": 7,
+    "priced_live_count": 7,
+    "priced_count": 7
+   },
+   "health": {
+    "score": 5.6,
+    "label": "Mixed",
+    "subscores": [
+     {
+      "key": "sectorConcentration",
+      "label": "Sector Concentration",
+      "weight": 0.4,
+      "value": 8.1,
+      "detail": "Technology is 49% of your book (Herfindahl index 0.31 across 5 sectors).",
+      "target": "HHI at or below 0.15 (roughly 7+ evenly-weighted sectors)",
+      "improvement": "Sector spread is already reasonable."
+     },
+     {
+      "key": "singleStockRisk",
+      "label": "Single-Stock Risk",
+      "weight": 0.35,
+      "value": 3.7,
+      "detail": "NPN.JO is 49% of your book. High concentration.",
+      "target": "Under 25% in any one holding",
+      "improvement": "Trim NPN.JO or build up other positions so no single stock dominates your return."
+     },
+     {
+      "key": "portfolioBreadth",
+      "label": "Portfolio Breadth",
+      "weight": 0.25,
+      "value": 4.3,
+      "detail": "7 positions in your book, but weighted by size that's only 3.5 effective position{'s' if round(effective_n, 1) != 1.0 else ''} - a raw count hides how much one holding can dominate.",
+      "target": "8+ effective positions",
+      "improvement": "Adding positions - or trimming the ones that dominate - raises effective breadth toward the target."
+     }
+    ]
+   },
+   "thresholds": {
+    "concentration_low": 25,
+    "concentration_high": 45
+   },
+   "contributionsSeries": [
+    {
+     "date": "2025-10-01",
+     "name": "Oct 01",
+     "portfolio_value": 906.76,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87115.39
+    },
+    {
+     "date": "2025-10-02",
+     "name": "Oct 02",
+     "portfolio_value": 917.97,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87104.18
+    },
+    {
+     "date": "2025-10-03",
+     "name": "Oct 03",
+     "portfolio_value": 923.56,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87098.59
+    },
+    {
+     "date": "2025-10-06",
+     "name": "Oct 06",
+     "portfolio_value": 919.66,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87102.49
+    },
+    {
+     "date": "2025-10-07",
+     "name": "Oct 07",
+     "portfolio_value": 925.52,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87096.63
+    },
+    {
+     "date": "2025-10-08",
+     "name": "Oct 08",
+     "portfolio_value": 927.84,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87094.31
+    },
+    {
+     "date": "2025-10-09",
+     "name": "Oct 09",
+     "portfolio_value": 924.0,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87098.15
+    },
+    {
+     "date": "2025-10-10",
+     "name": "Oct 10",
+     "portfolio_value": 934.45,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87087.7
+    },
+    {
+     "date": "2025-10-13",
+     "name": "Oct 13",
+     "portfolio_value": 939.51,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87082.64
+    },
+    {
+     "date": "2025-10-14",
+     "name": "Oct 14",
+     "portfolio_value": 917.94,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87104.21
+    },
+    {
+     "date": "2025-10-15",
+     "name": "Oct 15",
+     "portfolio_value": 919.42,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87102.73
+    },
+    {
+     "date": "2025-10-16",
+     "name": "Oct 16",
+     "portfolio_value": 932.53,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87089.62
+    },
+    {
+     "date": "2025-10-17",
+     "name": "Oct 17",
+     "portfolio_value": 931.11,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87091.04
+    },
+    {
+     "date": "2025-10-20",
+     "name": "Oct 20",
+     "portfolio_value": 926.87,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87095.28
+    },
+    {
+     "date": "2025-10-21",
+     "name": "Oct 21",
+     "portfolio_value": 926.58,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87095.57
+    },
+    {
+     "date": "2025-10-22",
+     "name": "Oct 22",
+     "portfolio_value": 930.73,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87091.42
+    },
+    {
+     "date": "2025-10-23",
+     "name": "Oct 23",
+     "portfolio_value": 925.65,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87096.5
+    },
+    {
+     "date": "2025-10-24",
+     "name": "Oct 24",
+     "portfolio_value": 932.11,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87090.04
+    },
+    {
+     "date": "2025-10-27",
+     "name": "Oct 27",
+     "portfolio_value": 916.75,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87105.4
+    },
+    {
+     "date": "2025-10-28",
+     "name": "Oct 28",
+     "portfolio_value": 916.97,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87105.18
+    },
+    {
+     "date": "2025-10-29",
+     "name": "Oct 29",
+     "portfolio_value": 925.02,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87097.13
+    },
+    {
+     "date": "2025-10-30",
+     "name": "Oct 30",
+     "portfolio_value": 936.84,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87085.31
+    },
+    {
+     "date": "2025-10-31",
+     "name": "Oct 31",
+     "portfolio_value": 926.92,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87095.23
+    },
+    {
+     "date": "2025-11-03",
+     "name": "Nov 03",
+     "portfolio_value": 926.42,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87095.73
+    },
+    {
+     "date": "2025-11-04",
+     "name": "Nov 04",
+     "portfolio_value": 919.96,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87102.19
+    },
+    {
+     "date": "2025-11-05",
+     "name": "Nov 05",
+     "portfolio_value": 923.48,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87098.67
+    },
+    {
+     "date": "2025-11-06",
+     "name": "Nov 06",
+     "portfolio_value": 933.95,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87088.2
+    },
+    {
+     "date": "2025-11-07",
+     "name": "Nov 07",
+     "portfolio_value": 943.67,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87078.48
+    },
+    {
+     "date": "2025-11-10",
+     "name": "Nov 10",
+     "portfolio_value": 949.62,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87072.53
+    },
+    {
+     "date": "2025-11-11",
+     "name": "Nov 11",
+     "portfolio_value": 955.66,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87066.49
+    },
+    {
+     "date": "2025-11-12",
+     "name": "Nov 12",
+     "portfolio_value": 964.84,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87057.31
+    },
+    {
+     "date": "2025-11-13",
+     "name": "Nov 13",
+     "portfolio_value": 978.33,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87043.82
+    },
+    {
+     "date": "2025-11-14",
+     "name": "Nov 14",
+     "portfolio_value": 985.56,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87036.59
+    },
+    {
+     "date": "2025-11-17",
+     "name": "Nov 17",
+     "portfolio_value": 992.36,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87029.79
+    },
+    {
+     "date": "2025-11-18",
+     "name": "Nov 18",
+     "portfolio_value": 993.29,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87028.86
+    },
+    {
+     "date": "2025-11-19",
+     "name": "Nov 19",
+     "portfolio_value": 983.67,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87038.48
+    },
+    {
+     "date": "2025-11-20",
+     "name": "Nov 20",
+     "portfolio_value": 983.52,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87038.63
+    },
+    {
+     "date": "2025-11-21",
+     "name": "Nov 21",
+     "portfolio_value": 974.25,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87047.9
+    },
+    {
+     "date": "2025-11-24",
+     "name": "Nov 24",
+     "portfolio_value": 970.03,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87052.12
+    },
+    {
+     "date": "2025-11-25",
+     "name": "Nov 25",
+     "portfolio_value": 966.11,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87056.04
+    },
+    {
+     "date": "2025-11-26",
+     "name": "Nov 26",
+     "portfolio_value": 957.9,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87064.25
+    },
+    {
+     "date": "2025-11-27",
+     "name": "Nov 27",
+     "portfolio_value": 968.08,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87054.07
+    },
+    {
+     "date": "2025-11-28",
+     "name": "Nov 28",
+     "portfolio_value": 965.43,
+     "cumulative_net_contributions": 88022.15,
+     "cumulative_market_gain": -87056.72
+    },
+    {
+     "date": "2025-12-01",
+     "name": "Dec 01",
+     "portfolio_value": 1200.18,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106506.21
+    },
+    {
+     "date": "2025-12-02",
+     "name": "Dec 02",
+     "portfolio_value": 1200.33,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106506.06
+    },
+    {
+     "date": "2025-12-03",
+     "name": "Dec 03",
+     "portfolio_value": 1198.42,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106507.97
+    },
+    {
+     "date": "2025-12-04",
+     "name": "Dec 04",
+     "portfolio_value": 1193.32,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106513.07
+    },
+    {
+     "date": "2025-12-05",
+     "name": "Dec 05",
+     "portfolio_value": 1186.57,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106519.82
+    },
+    {
+     "date": "2025-12-08",
+     "name": "Dec 08",
+     "portfolio_value": 1190.76,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106515.63
+    },
+    {
+     "date": "2025-12-09",
+     "name": "Dec 09",
+     "portfolio_value": 1197.54,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106508.85
+    },
+    {
+     "date": "2025-12-10",
+     "name": "Dec 10",
+     "portfolio_value": 1207.25,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106499.14
+    },
+    {
+     "date": "2025-12-11",
+     "name": "Dec 11",
+     "portfolio_value": 1212.78,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106493.61
+    },
+    {
+     "date": "2025-12-12",
+     "name": "Dec 12",
+     "portfolio_value": 1206.08,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106500.31
+    },
+    {
+     "date": "2025-12-15",
+     "name": "Dec 15",
+     "portfolio_value": 1198.39,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106508.0
+    },
+    {
+     "date": "2025-12-16",
+     "name": "Dec 16",
+     "portfolio_value": 1201.57,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106504.82
+    },
+    {
+     "date": "2025-12-17",
+     "name": "Dec 17",
+     "portfolio_value": 1208.36,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106498.03
+    },
+    {
+     "date": "2025-12-18",
+     "name": "Dec 18",
+     "portfolio_value": 1209.17,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106497.22
+    },
+    {
+     "date": "2025-12-19",
+     "name": "Dec 19",
+     "portfolio_value": 1201.52,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106504.87
+    },
+    {
+     "date": "2025-12-22",
+     "name": "Dec 22",
+     "portfolio_value": 1206.99,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106499.4
+    },
+    {
+     "date": "2025-12-23",
+     "name": "Dec 23",
+     "portfolio_value": 1204.28,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106502.11
+    },
+    {
+     "date": "2025-12-24",
+     "name": "Dec 24",
+     "portfolio_value": 1207.64,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106498.75
+    },
+    {
+     "date": "2025-12-25",
+     "name": "Dec 25",
+     "portfolio_value": 1195.74,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106510.65
+    },
+    {
+     "date": "2025-12-26",
+     "name": "Dec 26",
+     "portfolio_value": 1198.91,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106507.48
+    },
+    {
+     "date": "2025-12-29",
+     "name": "Dec 29",
+     "portfolio_value": 1198.55,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106507.84
+    },
+    {
+     "date": "2025-12-30",
+     "name": "Dec 30",
+     "portfolio_value": 1205.1,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106501.29
+    },
+    {
+     "date": "2025-12-31",
+     "name": "Dec 31",
+     "portfolio_value": 1206.25,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106500.14
+    },
+    {
+     "date": "2026-01-01",
+     "name": "Jan 01",
+     "portfolio_value": 1197.82,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106508.57
+    },
+    {
+     "date": "2026-01-02",
+     "name": "Jan 02",
+     "portfolio_value": 1206.01,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106500.38
+    },
+    {
+     "date": "2026-01-05",
+     "name": "Jan 05",
+     "portfolio_value": 1226.44,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106479.95
+    },
+    {
+     "date": "2026-01-06",
+     "name": "Jan 06",
+     "portfolio_value": 1228.48,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106477.91
+    },
+    {
+     "date": "2026-01-07",
+     "name": "Jan 07",
+     "portfolio_value": 1230.07,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106476.32
+    },
+    {
+     "date": "2026-01-08",
+     "name": "Jan 08",
+     "portfolio_value": 1232.63,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106473.76
+    },
+    {
+     "date": "2026-01-09",
+     "name": "Jan 09",
+     "portfolio_value": 1226.4,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106479.99
+    },
+    {
+     "date": "2026-01-12",
+     "name": "Jan 12",
+     "portfolio_value": 1223.2,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106483.19
+    },
+    {
+     "date": "2026-01-13",
+     "name": "Jan 13",
+     "portfolio_value": 1225.95,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106480.44
+    },
+    {
+     "date": "2026-01-14",
+     "name": "Jan 14",
+     "portfolio_value": 1224.81,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106481.58
+    },
+    {
+     "date": "2026-01-15",
+     "name": "Jan 15",
+     "portfolio_value": 1214.91,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106491.48
+    },
+    {
+     "date": "2026-01-16",
+     "name": "Jan 16",
+     "portfolio_value": 1231.44,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106474.95
+    },
+    {
+     "date": "2026-01-19",
+     "name": "Jan 19",
+     "portfolio_value": 1226.66,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106479.73
+    },
+    {
+     "date": "2026-01-20",
+     "name": "Jan 20",
+     "portfolio_value": 1221.39,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106485.0
+    },
+    {
+     "date": "2026-01-21",
+     "name": "Jan 21",
+     "portfolio_value": 1234.85,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106471.54
+    },
+    {
+     "date": "2026-01-22",
+     "name": "Jan 22",
+     "portfolio_value": 1237.08,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106469.31
+    },
+    {
+     "date": "2026-01-23",
+     "name": "Jan 23",
+     "portfolio_value": 1236.87,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106469.52
+    },
+    {
+     "date": "2026-01-26",
+     "name": "Jan 26",
+     "portfolio_value": 1242.66,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106463.73
+    },
+    {
+     "date": "2026-01-27",
+     "name": "Jan 27",
+     "portfolio_value": 1239.04,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106467.35
+    },
+    {
+     "date": "2026-01-28",
+     "name": "Jan 28",
+     "portfolio_value": 1238.92,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106467.47
+    },
+    {
+     "date": "2026-01-29",
+     "name": "Jan 29",
+     "portfolio_value": 1228.56,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106477.83
+    },
+    {
+     "date": "2026-01-30",
+     "name": "Jan 30",
+     "portfolio_value": 1222.85,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106483.54
+    },
+    {
+     "date": "2026-02-02",
+     "name": "Feb 02",
+     "portfolio_value": 1213.04,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106493.35
+    },
+    {
+     "date": "2026-02-03",
+     "name": "Feb 03",
+     "portfolio_value": 1221.8,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106484.59
+    },
+    {
+     "date": "2026-02-04",
+     "name": "Feb 04",
+     "portfolio_value": 1225.09,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106481.3
+    },
+    {
+     "date": "2026-02-05",
+     "name": "Feb 05",
+     "portfolio_value": 1231.22,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106475.17
+    },
+    {
+     "date": "2026-02-06",
+     "name": "Feb 06",
+     "portfolio_value": 1231.0,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106475.39
+    },
+    {
+     "date": "2026-02-09",
+     "name": "Feb 09",
+     "portfolio_value": 1241.34,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106465.05
+    },
+    {
+     "date": "2026-02-10",
+     "name": "Feb 10",
+     "portfolio_value": 1251.19,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106455.2
+    },
+    {
+     "date": "2026-02-11",
+     "name": "Feb 11",
+     "portfolio_value": 1245.35,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106461.04
+    },
+    {
+     "date": "2026-02-12",
+     "name": "Feb 12",
+     "portfolio_value": 1249.24,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106457.15
+    },
+    {
+     "date": "2026-02-13",
+     "name": "Feb 13",
+     "portfolio_value": 1247.37,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106459.02
+    },
+    {
+     "date": "2026-02-16",
+     "name": "Feb 16",
+     "portfolio_value": 1260.73,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106445.66
+    },
+    {
+     "date": "2026-02-17",
+     "name": "Feb 17",
+     "portfolio_value": 1253.4,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106452.99
+    },
+    {
+     "date": "2026-02-18",
+     "name": "Feb 18",
+     "portfolio_value": 1245.3,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106461.09
+    },
+    {
+     "date": "2026-02-19",
+     "name": "Feb 19",
+     "portfolio_value": 1249.44,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106456.95
+    },
+    {
+     "date": "2026-02-20",
+     "name": "Feb 20",
+     "portfolio_value": 1264.27,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106442.12
+    },
+    {
+     "date": "2026-02-23",
+     "name": "Feb 23",
+     "portfolio_value": 1263.97,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106442.42
+    },
+    {
+     "date": "2026-02-24",
+     "name": "Feb 24",
+     "portfolio_value": 1258.33,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106448.06
+    },
+    {
+     "date": "2026-02-25",
+     "name": "Feb 25",
+     "portfolio_value": 1248.3,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106458.09
+    },
+    {
+     "date": "2026-02-26",
+     "name": "Feb 26",
+     "portfolio_value": 1253.77,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106452.62
+    },
+    {
+     "date": "2026-02-27",
+     "name": "Feb 27",
+     "portfolio_value": 1245.96,
+     "cumulative_net_contributions": 107706.39,
+     "cumulative_market_gain": -106460.43
+    },
+    {
+     "date": "2026-03-02",
+     "name": "Mar 02",
+     "portfolio_value": 2293.39,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184032.02
+    },
+    {
+     "date": "2026-03-03",
+     "name": "Mar 03",
+     "portfolio_value": 2287.39,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184038.02
+    },
+    {
+     "date": "2026-03-04",
+     "name": "Mar 04",
+     "portfolio_value": 2278.57,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184046.84
+    },
+    {
+     "date": "2026-03-05",
+     "name": "Mar 05",
+     "portfolio_value": 2262.18,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184063.23
+    },
+    {
+     "date": "2026-03-06",
+     "name": "Mar 06",
+     "portfolio_value": 2274.37,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184051.04
+    },
+    {
+     "date": "2026-03-09",
+     "name": "Mar 09",
+     "portfolio_value": 2265.78,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184059.63
+    },
+    {
+     "date": "2026-03-10",
+     "name": "Mar 10",
+     "portfolio_value": 2265.84,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184059.57
+    },
+    {
+     "date": "2026-03-11",
+     "name": "Mar 11",
+     "portfolio_value": 2268.91,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184056.5
+    },
+    {
+     "date": "2026-03-12",
+     "name": "Mar 12",
+     "portfolio_value": 2283.22,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184042.19
+    },
+    {
+     "date": "2026-03-13",
+     "name": "Mar 13",
+     "portfolio_value": 2271.18,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184054.23
+    },
+    {
+     "date": "2026-03-16",
+     "name": "Mar 16",
+     "portfolio_value": 2272.35,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184053.06
+    },
+    {
+     "date": "2026-03-17",
+     "name": "Mar 17",
+     "portfolio_value": 2273.11,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184052.3
+    },
+    {
+     "date": "2026-03-18",
+     "name": "Mar 18",
+     "portfolio_value": 2280.65,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184044.76
+    },
+    {
+     "date": "2026-03-19",
+     "name": "Mar 19",
+     "portfolio_value": 2257.9,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184067.51
+    },
+    {
+     "date": "2026-03-20",
+     "name": "Mar 20",
+     "portfolio_value": 2273.96,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184051.45
+    },
+    {
+     "date": "2026-03-23",
+     "name": "Mar 23",
+     "portfolio_value": 2276.89,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184048.52
+    },
+    {
+     "date": "2026-03-24",
+     "name": "Mar 24",
+     "portfolio_value": 2259.95,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184065.46
+    },
+    {
+     "date": "2026-03-25",
+     "name": "Mar 25",
+     "portfolio_value": 2264.72,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184060.69
+    },
+    {
+     "date": "2026-03-26",
+     "name": "Mar 26",
+     "portfolio_value": 2259.55,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184065.86
+    },
+    {
+     "date": "2026-03-27",
+     "name": "Mar 27",
+     "portfolio_value": 2263.53,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184061.88
+    },
+    {
+     "date": "2026-03-30",
+     "name": "Mar 30",
+     "portfolio_value": 2275.58,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184049.83
+    },
+    {
+     "date": "2026-03-31",
+     "name": "Mar 31",
+     "portfolio_value": 2275.78,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184049.63
+    },
+    {
+     "date": "2026-04-01",
+     "name": "Apr 01",
+     "portfolio_value": 2276.14,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184049.27
+    },
+    {
+     "date": "2026-04-02",
+     "name": "Apr 02",
+     "portfolio_value": 2259.59,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184065.82
+    },
+    {
+     "date": "2026-04-03",
+     "name": "Apr 03",
+     "portfolio_value": 2249.93,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184075.48
+    },
+    {
+     "date": "2026-04-06",
+     "name": "Apr 06",
+     "portfolio_value": 2264.77,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184060.64
+    },
+    {
+     "date": "2026-04-07",
+     "name": "Apr 07",
+     "portfolio_value": 2265.64,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184059.77
+    },
+    {
+     "date": "2026-04-08",
+     "name": "Apr 08",
+     "portfolio_value": 2257.87,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184067.54
+    },
+    {
+     "date": "2026-04-09",
+     "name": "Apr 09",
+     "portfolio_value": 2256.23,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184069.18
+    },
+    {
+     "date": "2026-04-10",
+     "name": "Apr 10",
+     "portfolio_value": 2245.64,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184079.77
+    },
+    {
+     "date": "2026-04-13",
+     "name": "Apr 13",
+     "portfolio_value": 2246.02,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184079.39
+    },
+    {
+     "date": "2026-04-14",
+     "name": "Apr 14",
+     "portfolio_value": 2260.08,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184065.33
+    },
+    {
+     "date": "2026-04-15",
+     "name": "Apr 15",
+     "portfolio_value": 2248.79,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184076.62
+    },
+    {
+     "date": "2026-04-16",
+     "name": "Apr 16",
+     "portfolio_value": 2280.45,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184044.96
+    },
+    {
+     "date": "2026-04-17",
+     "name": "Apr 17",
+     "portfolio_value": 2293.78,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184031.63
+    },
+    {
+     "date": "2026-04-20",
+     "name": "Apr 20",
+     "portfolio_value": 2274.69,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184050.72
+    },
+    {
+     "date": "2026-04-21",
+     "name": "Apr 21",
+     "portfolio_value": 2272.09,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184053.32
+    },
+    {
+     "date": "2026-04-22",
+     "name": "Apr 22",
+     "portfolio_value": 2298.33,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184027.08
+    },
+    {
+     "date": "2026-04-23",
+     "name": "Apr 23",
+     "portfolio_value": 2293.81,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184031.6
+    },
+    {
+     "date": "2026-04-24",
+     "name": "Apr 24",
+     "portfolio_value": 2283.82,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184041.59
+    },
+    {
+     "date": "2026-04-27",
+     "name": "Apr 27",
+     "portfolio_value": 2303.81,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184021.6
+    },
+    {
+     "date": "2026-04-28",
+     "name": "Apr 28",
+     "portfolio_value": 2273.91,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184051.5
+    },
+    {
+     "date": "2026-04-29",
+     "name": "Apr 29",
+     "portfolio_value": 2264.18,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184061.23
+    },
+    {
+     "date": "2026-04-30",
+     "name": "Apr 30",
+     "portfolio_value": 2256.47,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184068.94
+    },
+    {
+     "date": "2026-05-01",
+     "name": "May 01",
+     "portfolio_value": 2246.11,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184079.3
+    },
+    {
+     "date": "2026-05-04",
+     "name": "May 04",
+     "portfolio_value": 2256.46,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184068.95
+    },
+    {
+     "date": "2026-05-05",
+     "name": "May 05",
+     "portfolio_value": 2262.94,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184062.47
+    },
+    {
+     "date": "2026-05-06",
+     "name": "May 06",
+     "portfolio_value": 2230.06,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184095.35
+    },
+    {
+     "date": "2026-05-07",
+     "name": "May 07",
+     "portfolio_value": 2224.49,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184100.92
+    },
+    {
+     "date": "2026-05-08",
+     "name": "May 08",
+     "portfolio_value": 2243.77,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184081.64
+    },
+    {
+     "date": "2026-05-11",
+     "name": "May 11",
+     "portfolio_value": 2247.75,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184077.66
+    },
+    {
+     "date": "2026-05-12",
+     "name": "May 12",
+     "portfolio_value": 2263.5,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184061.91
+    },
+    {
+     "date": "2026-05-13",
+     "name": "May 13",
+     "portfolio_value": 2254.4,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184071.01
+    },
+    {
+     "date": "2026-05-14",
+     "name": "May 14",
+     "portfolio_value": 2250.86,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184074.55
+    },
+    {
+     "date": "2026-05-15",
+     "name": "May 15",
+     "portfolio_value": 2246.81,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184078.6
+    },
+    {
+     "date": "2026-05-18",
+     "name": "May 18",
+     "portfolio_value": 2237.91,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184087.5
+    },
+    {
+     "date": "2026-05-19",
+     "name": "May 19",
+     "portfolio_value": 2240.22,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184085.19
+    },
+    {
+     "date": "2026-05-20",
+     "name": "May 20",
+     "portfolio_value": 2259.43,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184065.98
+    },
+    {
+     "date": "2026-05-21",
+     "name": "May 21",
+     "portfolio_value": 2248.4,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184077.01
+    },
+    {
+     "date": "2026-05-22",
+     "name": "May 22",
+     "portfolio_value": 2254.0,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184071.41
+    },
+    {
+     "date": "2026-05-25",
+     "name": "May 25",
+     "portfolio_value": 2258.73,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184066.68
+    },
+    {
+     "date": "2026-05-26",
+     "name": "May 26",
+     "portfolio_value": 2264.47,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184060.94
+    },
+    {
+     "date": "2026-05-27",
+     "name": "May 27",
+     "portfolio_value": 2250.28,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184075.13
+    },
+    {
+     "date": "2026-05-28",
+     "name": "May 28",
+     "portfolio_value": 2245.59,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184079.82
+    },
+    {
+     "date": "2026-05-29",
+     "name": "May 29",
+     "portfolio_value": 2232.22,
+     "cumulative_net_contributions": 186325.41,
+     "cumulative_market_gain": -184093.19
+    },
+    {
+     "date": "2026-06-01",
+     "name": "Jun 01",
+     "portfolio_value": 2962.42,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231278.69
+    },
+    {
+     "date": "2026-06-02",
+     "name": "Jun 02",
+     "portfolio_value": 2963.62,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231277.49
+    },
+    {
+     "date": "2026-06-03",
+     "name": "Jun 03",
+     "portfolio_value": 2942.99,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231298.12
+    },
+    {
+     "date": "2026-06-04",
+     "name": "Jun 04",
+     "portfolio_value": 2946.1,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231295.01
+    },
+    {
+     "date": "2026-06-05",
+     "name": "Jun 05",
+     "portfolio_value": 2991.64,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231249.47
+    },
+    {
+     "date": "2026-06-08",
+     "name": "Jun 08",
+     "portfolio_value": 2994.28,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231246.83
+    },
+    {
+     "date": "2026-06-09",
+     "name": "Jun 09",
+     "portfolio_value": 2980.05,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231261.06
+    },
+    {
+     "date": "2026-06-10",
+     "name": "Jun 10",
+     "portfolio_value": 2957.72,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231283.39
+    },
+    {
+     "date": "2026-06-11",
+     "name": "Jun 11",
+     "portfolio_value": 2923.34,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231317.77
+    },
+    {
+     "date": "2026-06-12",
+     "name": "Jun 12",
+     "portfolio_value": 2977.81,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231263.3
+    },
+    {
+     "date": "2026-06-15",
+     "name": "Jun 15",
+     "portfolio_value": 2987.26,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231253.85
+    },
+    {
+     "date": "2026-06-16",
+     "name": "Jun 16",
+     "portfolio_value": 2985.45,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231255.66
+    },
+    {
+     "date": "2026-06-17",
+     "name": "Jun 17",
+     "portfolio_value": 2967.88,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231273.23
+    },
+    {
+     "date": "2026-06-18",
+     "name": "Jun 18",
+     "portfolio_value": 2949.97,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231291.14
+    },
+    {
+     "date": "2026-06-19",
+     "name": "Jun 19",
+     "portfolio_value": 2931.84,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231309.27
+    },
+    {
+     "date": "2026-06-22",
+     "name": "Jun 22",
+     "portfolio_value": 2897.97,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231343.14
+    },
+    {
+     "date": "2026-06-23",
+     "name": "Jun 23",
+     "portfolio_value": 2892.17,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231348.94
+    },
+    {
+     "date": "2026-06-24",
+     "name": "Jun 24",
+     "portfolio_value": 2891.25,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231349.86
+    },
+    {
+     "date": "2026-06-25",
+     "name": "Jun 25",
+     "portfolio_value": 2912.39,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231328.72
+    },
+    {
+     "date": "2026-06-26",
+     "name": "Jun 26",
+     "portfolio_value": 2905.05,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231336.06
+    },
+    {
+     "date": "2026-06-29",
+     "name": "Jun 29",
+     "portfolio_value": 2932.12,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231308.99
+    },
+    {
+     "date": "2026-06-30",
+     "name": "Jun 30",
+     "portfolio_value": 2937.35,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231303.76
+    },
+    {
+     "date": "2026-07-01",
+     "name": "Jul 01",
+     "portfolio_value": 2950.73,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231290.38
+    },
+    {
+     "date": "2026-07-02",
+     "name": "Jul 02",
+     "portfolio_value": 2951.49,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231289.62
+    },
+    {
+     "date": "2026-07-03",
+     "name": "Jul 03",
+     "portfolio_value": 2935.85,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231305.26
+    },
+    {
+     "date": "2026-07-06",
+     "name": "Jul 06",
+     "portfolio_value": 2975.79,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231265.32
+    },
+    {
+     "date": "2026-07-07",
+     "name": "Jul 07",
+     "portfolio_value": 2961.98,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231279.13
+    },
+    {
+     "date": "2026-07-08",
+     "name": "Jul 08",
+     "portfolio_value": 2921.66,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231319.45
+    },
+    {
+     "date": "2026-07-09",
+     "name": "Jul 09",
+     "portfolio_value": 2949.94,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231291.17
+    },
+    {
+     "date": "2026-07-10",
+     "name": "Jul 10",
+     "portfolio_value": 2972.62,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231268.49
+    },
+    {
+     "date": "2026-07-13",
+     "name": "Jul 13",
+     "portfolio_value": 2945.44,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231295.67
+    },
+    {
+     "date": "2026-07-14",
+     "name": "Jul 14",
+     "portfolio_value": 2963.19,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231277.92
+    },
+    {
+     "date": "2026-07-15",
+     "name": "Jul 15",
+     "portfolio_value": 2992.85,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231248.26
+    },
+    {
+     "date": "2026-07-16",
+     "name": "Jul 16",
+     "portfolio_value": 3016.47,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231224.64
+    },
+    {
+     "date": "2026-07-17",
+     "name": "Jul 17",
+     "portfolio_value": 2997.38,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231243.73
+    },
+    {
+     "date": "2026-07-20",
+     "name": "Jul 20",
+     "portfolio_value": 3012.98,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231228.13
+    },
+    {
+     "date": "2026-07-21",
+     "name": "Jul 21",
+     "portfolio_value": 2982.73,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231258.38
+    },
+    {
+     "date": "2026-07-22",
+     "name": "Jul 22",
+     "portfolio_value": 2953.36,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231287.75
+    },
+    {
+     "date": "2026-07-23",
+     "name": "Jul 23",
+     "portfolio_value": 2946.74,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231294.37
+    },
+    {
+     "date": "2026-07-24",
+     "name": "Jul 24",
+     "portfolio_value": 2934.39,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231306.72
+    },
+    {
+     "date": "2026-07-27",
+     "name": "Jul 27",
+     "portfolio_value": 2936.57,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231304.54
+    },
+    {
+     "date": "2026-07-28",
+     "name": "Jul 28",
+     "portfolio_value": 2919.19,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231321.92
+    },
+    {
+     "date": "2026-07-29",
+     "name": "Jul 29",
+     "portfolio_value": 2950.25,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231290.86
+    },
+    {
+     "date": "2026-07-30",
+     "name": "Jul 30",
+     "portfolio_value": 2952.7,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231288.41
+    },
+    {
+     "date": "2026-07-31",
+     "name": "Jul 31",
+     "portfolio_value": 2954.93,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231286.18
+    },
+    {
+     "date": "2026-08-03",
+     "name": "Aug 03",
+     "portfolio_value": 2956.8,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231284.31
+    },
+    {
+     "date": "2026-08-04",
+     "name": "Aug 04",
+     "portfolio_value": 2963.25,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231277.86
+    },
+    {
+     "date": "2026-08-05",
+     "name": "Aug 05",
+     "portfolio_value": 2996.78,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231244.33
+    },
+    {
+     "date": "2026-08-06",
+     "name": "Aug 06",
+     "portfolio_value": 2978.4,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231262.71
+    },
+    {
+     "date": "2026-08-07",
+     "name": "Aug 07",
+     "portfolio_value": 3017.43,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231223.68
+    },
+    {
+     "date": "2026-08-10",
+     "name": "Aug 10",
+     "portfolio_value": 3038.9,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231202.21
+    },
+    {
+     "date": "2026-08-11",
+     "name": "Aug 11",
+     "portfolio_value": 3067.97,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231173.14
+    },
+    {
+     "date": "2026-08-12",
+     "name": "Aug 12",
+     "portfolio_value": 3043.41,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231197.7
+    },
+    {
+     "date": "2026-08-13",
+     "name": "Aug 13",
+     "portfolio_value": 3014.55,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231226.56
+    },
+    {
+     "date": "2026-08-14",
+     "name": "Aug 14",
+     "portfolio_value": 3056.02,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231185.09
+    },
+    {
+     "date": "2026-08-17",
+     "name": "Aug 17",
+     "portfolio_value": 3050.22,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231190.89
+    },
+    {
+     "date": "2026-08-18",
+     "name": "Aug 18",
+     "portfolio_value": 3062.22,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231178.89
+    },
+    {
+     "date": "2026-08-19",
+     "name": "Aug 19",
+     "portfolio_value": 3093.84,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231147.27
+    },
+    {
+     "date": "2026-08-20",
+     "name": "Aug 20",
+     "portfolio_value": 3047.23,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231193.88
+    },
+    {
+     "date": "2026-08-21",
+     "name": "Aug 21",
+     "portfolio_value": 3049.22,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231191.89
+    },
+    {
+     "date": "2026-08-24",
+     "name": "Aug 24",
+     "portfolio_value": 3099.36,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231141.75
+    },
+    {
+     "date": "2026-08-25",
+     "name": "Aug 25",
+     "portfolio_value": 3117.31,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231123.8
+    },
+    {
+     "date": "2026-08-26",
+     "name": "Aug 26",
+     "portfolio_value": 3141.67,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231099.44
+    },
+    {
+     "date": "2026-08-27",
+     "name": "Aug 27",
+     "portfolio_value": 3161.22,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231079.89
+    },
+    {
+     "date": "2026-08-28",
+     "name": "Aug 28",
+     "portfolio_value": 3155.31,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231085.8
+    },
+    {
+     "date": "2026-08-31",
+     "name": "Aug 31",
+     "portfolio_value": 3174.63,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231066.48
+    },
+    {
+     "date": "2026-09-01",
+     "name": "Sep 01",
+     "portfolio_value": 3199.4,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231041.71
+    },
+    {
+     "date": "2026-09-02",
+     "name": "Sep 02",
+     "portfolio_value": 3186.23,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231054.88
+    },
+    {
+     "date": "2026-09-03",
+     "name": "Sep 03",
+     "portfolio_value": 3201.29,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231039.82
+    },
+    {
+     "date": "2026-09-04",
+     "name": "Sep 04",
+     "portfolio_value": 3199.51,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231041.6
+    },
+    {
+     "date": "2026-09-07",
+     "name": "Sep 07",
+     "portfolio_value": 3227.02,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231014.09
+    },
+    {
+     "date": "2026-09-08",
+     "name": "Sep 08",
+     "portfolio_value": 3248.37,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -230992.74
+    },
+    {
+     "date": "2026-09-09",
+     "name": "Sep 09",
+     "portfolio_value": 3245.59,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -230995.52
+    },
+    {
+     "date": "2026-09-10",
+     "name": "Sep 10",
+     "portfolio_value": 3283.93,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -230957.18
+    },
+    {
+     "date": "2026-09-11",
+     "name": "Sep 11",
+     "portfolio_value": 3297.97,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -230943.14
+    },
+    {
+     "date": "2026-09-14",
+     "name": "Sep 14",
+     "portfolio_value": 3282.87,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -230958.24
+    },
+    {
+     "date": "2026-09-15",
+     "name": "Sep 15",
+     "portfolio_value": 3285.44,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -230955.67
+    },
+    {
+     "date": "2026-09-16",
+     "name": "Sep 16",
+     "portfolio_value": 3256.05,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -230985.06
+    },
+    {
+     "date": "2026-09-17",
+     "name": "Sep 17",
+     "portfolio_value": 3243.73,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -230997.38
+    },
+    {
+     "date": "2026-09-18",
+     "name": "Sep 18",
+     "portfolio_value": 3245.71,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -230995.4
+    },
+    {
+     "date": "2026-09-21",
+     "name": "Sep 21",
+     "portfolio_value": 3222.18,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231018.93
+    },
+    {
+     "date": "2026-09-22",
+     "name": "Sep 22",
+     "portfolio_value": 3206.54,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231034.57
+    },
+    {
+     "date": "2026-09-23",
+     "name": "Sep 23",
+     "portfolio_value": 3205.46,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231035.65
+    },
+    {
+     "date": "2026-09-24",
+     "name": "Sep 24",
+     "portfolio_value": 3207.92,
+     "cumulative_net_contributions": 234241.11,
+     "cumulative_market_gain": -231033.19
+    },
+    {
+     "date": "2026-09-25",
+     "name": "Sep 25",
+     "portfolio_value": 3134.75,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223770.35
+    },
+    {
+     "date": "2026-09-28",
+     "name": "Sep 28",
+     "portfolio_value": 3124.73,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223780.37
+    },
+    {
+     "date": "2026-09-29",
+     "name": "Sep 29",
+     "portfolio_value": 3140.81,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223764.29
+    },
+    {
+     "date": "2026-09-30",
+     "name": "Sep 30",
+     "portfolio_value": 3132.96,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223772.14
+    },
+    {
+     "date": "2026-10-01",
+     "name": "Oct 01",
+     "portfolio_value": 3103.93,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223801.17
+    },
+    {
+     "date": "2026-10-02",
+     "name": "Oct 02",
+     "portfolio_value": 3130.93,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223774.17
+    },
+    {
+     "date": "2026-10-05",
+     "name": "Oct 05",
+     "portfolio_value": 3114.3,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223790.8
+    },
+    {
+     "date": "2026-10-06",
+     "name": "Oct 06",
+     "portfolio_value": 3145.36,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223759.74
+    },
+    {
+     "date": "2026-10-07",
+     "name": "Oct 07",
+     "portfolio_value": 3129.3,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223775.8
+    },
+    {
+     "date": "2026-10-08",
+     "name": "Oct 08",
+     "portfolio_value": 3143.46,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223761.64
+    },
+    {
+     "date": "2026-10-09",
+     "name": "Oct 09",
+     "portfolio_value": 3131.88,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223773.22
+    },
+    {
+     "date": "2026-10-12",
+     "name": "Oct 12",
+     "portfolio_value": 3110.21,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223794.89
+    },
+    {
+     "date": "2026-10-13",
+     "name": "Oct 13",
+     "portfolio_value": 3116.54,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223788.56
+    },
+    {
+     "date": "2026-10-14",
+     "name": "Oct 14",
+     "portfolio_value": 3091.69,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223813.41
+    },
+    {
+     "date": "2026-10-15",
+     "name": "Oct 15",
+     "portfolio_value": 3060.15,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223844.95
+    },
+    {
+     "date": "2026-10-16",
+     "name": "Oct 16",
+     "portfolio_value": 3073.53,
+     "cumulative_net_contributions": 226905.1,
+     "cumulative_market_gain": -223831.57
+    }
+   ],
+   "accountType": "zar",
+   "statementDate": "2026-09-29",
+   "importedAt": "2026-10-16",
+   "historyStartsAt": "2025-10-01",
+   "cgt": {
+    "available": true,
+    "reason": null,
+    "assumptions": {
+     "tax_year": "2026/2027",
+     "annual_exclusion": 50000.0,
+     "inclusion_rate": 0.4,
+     "cost_basis_method": "average_cost"
+    },
+    "net_unrealised_gain": -223831.57,
+    "taxable_capital_gain": null,
+    "assessed_capital_loss": 223831.57,
+    "holdings_from_statement_only": []
+   }
+  },
+  "risk": {
+   "available": true,
+   "score": 27,
+   "level": "Low",
+   "parts": [
+    {
+     "key": "max_drawdown_pct",
+     "label": "historical drawdown",
+     "reading": 5.6,
+     "weight": 0.25,
+     "points": 0.4
+    },
+    {
+     "key": "var_pct",
+     "label": "bad-day loss risk",
+     "reading": 1.105,
+     "weight": 0.2,
+     "points": 0.5
+    },
+    {
+     "key": "downside_deviation_pct",
+     "label": "downside volatility",
+     "reading": 7.711,
+     "weight": 0.2,
+     "points": 2.2
+    },
+    {
+     "key": "hhi",
+     "label": "concentration",
+     "reading": 0.287,
+     "weight": 0.2,
+     "points": 9.3
+    },
+    {
+     "key": "top_contribution_pct",
+     "label": "reliance on a single risk driver",
+     "reading": 82.4,
+     "weight": 0.15,
+     "points": 15.0
+    }
+   ],
+   "var": {
+    "confidence_pct": 95,
+    "pct": 1.1,
+    "value": 33.96
+   },
+   "downside_deviation_pct": 7.71,
+   "volatility_pct": 12.9,
+   "drawdown": {
+    "max_drawdown_pct": -5.6,
+    "peak_value": 3241.54,
+    "trough_value": 3059.88,
+    "peak_date": "2026-09-11",
+    "trough_date": "2026-10-15"
+   },
+   "concentration": {
+    "hhi": 0.287,
+    "largest_name": "Naspers Limited",
+    "largest_pct": 49.0,
+    "top_two_pct": 60.5,
+    "assessment": "Highly concentrated"
+   },
+   "contributions": [
+    {
+     "ticker": "NPN.JO",
+     "name": "Naspers Limited",
+     "weight_pct": 49.0,
+     "contribution_pct": 82.4,
+     "flag": "Main risk driver"
+    },
+    {
+     "ticker": "AGL.JO",
+     "name": "Anglo American",
+     "weight_pct": 10.1,
+     "contribution_pct": 5.1,
+     "flag": "Lower"
+    },
+    {
+     "ticker": "CPI.JO",
+     "name": "Capitec Bank Holdings",
+     "weight_pct": 8.9,
+     "contribution_pct": 4.0,
+     "flag": "Lower"
+    },
+    {
+     "ticker": "APN.JO",
+     "name": "Aspen Pharmacare Holdings",
+     "weight_pct": 11.5,
+     "contribution_pct": 3.3,
+     "flag": "Lower"
+    },
+    {
+     "ticker": "MTN.JO",
+     "name": "MTN Group",
+     "weight_pct": 9.9,
+     "contribution_pct": 2.5,
+     "flag": "Lower"
+    },
+    {
+     "ticker": "SBK.JO",
+     "name": "Standard Bank Group",
+     "weight_pct": 7.2,
+     "contribution_pct": 2.3,
+     "flag": "Lower"
+    },
+    {
+     "ticker": "FSR.JO",
+     "name": "FirstRand",
+     "weight_pct": 3.4,
+     "contribution_pct": 0.4,
+     "flag": "Lower"
+    }
+   ],
+   "flags": [
+    "Two holdings make up 60% of the portfolio.",
+    "The portfolio is highly concentrated by value.",
+    "Naspers Limited carries 82% of total risk but is only 49% of the value."
+   ],
+   "history_days": 300
+  },
+  "drivers": {
+   "available": true,
+   "weeks": 60,
+   "shock_pct": 10.0,
+   "r_squared": 0.024,
+   "total_return_pct": 44.94,
+   "own_picks_pct": 44.53,
+   "own_picks_clear": true,
+   "drivers": [
+    {
+     "key": "jse",
+     "ticker": "STX40.JO",
+     "label": "the JSE Top 40",
+     "beta": -0.073,
+     "sensitivity_pct": -0.7,
+     "t_stat": -1.2,
+     "clear": false,
+     "reaction": "little",
+     "factor_move_pct": -4.49,
+     "contribution_pct": 0.41
+    }
+   ],
+   "scenarios": [
+    {
+     "name": "The JSE Top 40 falls 20%",
+     "effect_pct": 1.65,
+     "low_pct": -1.78,
+     "high_pct": 5.21,
+     "effect_value": 50.8
+    },
+    {
+     "name": "The JSE Top 40 rises 10%",
+     "effect_pct": -0.7,
+     "low_pct": -3.41,
+     "high_pct": 2.09,
+     "effect_value": -21.45
+    }
+   ],
+   "holdings": [
+    {
+     "ticker": "NPN.JO",
+     "name": "Naspers Limited",
+     "weight_pct": 49.0,
+     "return_pct": 60.17,
+     "contribution_pct": 29.16
+    },
+    {
+     "ticker": "AGL.JO",
+     "name": "Anglo American",
+     "weight_pct": 10.1,
+     "return_pct": 67.36,
+     "contribution_pct": 6.5
+    },
+    {
+     "ticker": "MTN.JO",
+     "name": "MTN Group",
+     "weight_pct": 9.9,
+     "return_pct": 45.92,
+     "contribution_pct": 4.73
+    },
+    {
+     "ticker": "CPI.JO",
+     "name": "Capitec Bank Holdings",
+     "weight_pct": 8.9,
+     "return_pct": 39.64,
+     "contribution_pct": 3.86
+    },
+    {
+     "ticker": "APN.JO",
+     "name": "Aspen Pharmacare Holdings",
+     "weight_pct": 11.5,
+     "return_pct": 21.37,
+     "contribution_pct": 3.08
+    },
+    {
+     "ticker": "SBK.JO",
+     "name": "Standard Bank Group",
+     "weight_pct": 7.2,
+     "return_pct": -14.17,
+     "contribution_pct": -1.02
+    },
+    {
+     "ticker": "FSR.JO",
+     "name": "FirstRand",
+     "weight_pct": 3.4,
+     "return_pct": -31.35,
+     "contribution_pct": -1.38
+    }
+   ],
+   "holdings_return_pct": 44.93
+  },
+  "insights": [
+   {
+    "type": "largest_holdings",
+    "priority": 100,
+    "title": "Largest Holdings",
+    "data": {
+     "name": "Naspers Limited",
+     "value": 96247.97
+    }
+   },
+   {
+    "type": "health_score",
+    "priority": 95,
+    "title": "Portfolio Health",
+    "data": {
+     "score": 5.6,
+     "label": "Mixed"
+    }
+   },
+   {
+    "type": "risk_score",
+    "priority": 92,
+    "title": "Overall Risk Score",
+    "data": {
+     "score": 27,
+     "level": "Low"
+    }
+   },
+   {
+    "type": "portfolio_value",
+    "priority": 90,
+    "title": "Portfolio Value",
+    "data": 226905.1
+   },
+   {
+    "type": "cgt_estimate",
+    "priority": 70,
+    "title": "Capital Gains Tax Estimate",
+    "data": {
+     "net_unrealised_gain": -223831.57,
+     "taxable_capital_gain": null
+    }
+   },
+   {
+    "type": "smallest_holding",
+    "priority": 60,
+    "title": "Smallest Holding",
+    "data": {
+     "name": "FirstRand",
+     "value": 15540.0
+    }
+   }
+  ]
+ }
+}

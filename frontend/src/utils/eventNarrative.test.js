@@ -121,22 +121,30 @@ describe('longDate', () => {
 });
 
 describe('buildEventQuestion', () => {
-  it('carries every figure the assistant needs, and the instruction not to invent a cause', () => {
-    const q = buildEventQuestion(MTN, MTN_DETAIL);
-
-    expect(q).toContain('MTN.JO fell sharply: -10.8% on 31 July 2026.');
-    expect(q).toContain('about -0.2% of the move is what the market would predict');
-    expect(q).toContain('leaving -10.6% specific to MTN.JO');
-    expect(q).toContain('5.8 standard deviations out');
-    expect(q).toContain('Do not state a specific cause; you have not been given one.');
+  it('asks a short question about a fall, with the name, ticker and date', () => {
+    expect(buildEventQuestion(EVENT)).toBe(
+      'What in the news might explain the -8.4% move in Naspers (NPN.JO) on 14 August 2026?',
+    );
   });
 
-  it('drops the fitted figures rather than inventing them when there is no model', () => {
-    const q = buildEventQuestion(EVENT, { available: false, abnormal_returns: [], decomposition: null });
+  it('signs a rise as well', () => {
+    expect(buildEventQuestion({ ...EVENT, return_pct: 5.24 })).toBe(
+      'What in the news might explain the +5.2% move in Naspers (NPN.JO) on 14 August 2026?',
+    );
+  });
+
+  it('falls back to the ticker when there is no name', () => {
+    expect(buildEventQuestion(MTN)).toBe(
+      'What in the news might explain the -10.8% move in MTN.JO on 31 July 2026?',
+    );
+  });
+
+  it('leaves the model figures to the server, not the chat', () => {
+    const q = buildEventQuestion(MTN);
     expect(q).not.toContain('beta');
-    expect(q).toContain('3.4 standard deviations out');
-    expect(q).toContain('Do not state a specific cause; you have not been given one.');
-  });});
+    expect(q).not.toContain('standard deviations');
+  });
+});
 
 describe('buildWorkingRows', () => {
   it('quotes alpha in a unit a person can interpret', () => {

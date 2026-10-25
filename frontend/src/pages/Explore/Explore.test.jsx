@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import Explore from './Explore';
 import { ExposureChart } from '../../components/charts/ExposureChart/ExposureChart';
+import { getAccessToken } from '../../services/guestSession';
 
 vi.mock('../../components/charts/ExposureChart/ExposureChart', () => ({
   ExposureChart: vi.fn(() => <div data-testid="exposure-chart" />),
@@ -10,6 +11,10 @@ vi.mock('../../components/charts/ExposureChart/ExposureChart', () => ({
 
 vi.mock('../../components/common/LoadingSpinner/LoadingSpinner', () => ({
   default: () => <div data-testid="loading-spinner" />,
+}));
+
+vi.mock('../../services/guestSession', () => ({
+  getAccessToken: vi.fn(),
 }));
 
 vi.mock('../../utils/constants', () => ({
@@ -83,6 +88,7 @@ describe('Explore Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    vi.mocked(getAccessToken).mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -113,9 +119,8 @@ describe('Explore Component', () => {
   });
 
   describe('Data Fetching & Authorization', () => {
-    it('includes Cognito authorization token in API request', async () => {
-      localStorage.setItem('CognitoIdentityServiceProvider.client1.LastAuthUser', 'user1');
-      localStorage.setItem('CognitoIdentityServiceProvider.client1.user1.accessToken', 'token-123');
+    it('sends the token from getAccessToken, guest or cognito', async () => {
+      vi.mocked(getAccessToken).mockResolvedValue('token-123');
       const fetchMock = setupFetchMock(MOCK_ELIGIBLE_RESPONSE);
 
       render(<Explore />);

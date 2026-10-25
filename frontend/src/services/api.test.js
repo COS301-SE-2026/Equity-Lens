@@ -11,6 +11,7 @@ vi.mock('../utils/constants', () => ({
 }));
 
 import api from './api';
+import { saveGuestSession } from './guestSession';
 
 // the interceptors are read out of axios's handler list so they can be called directly
 const requestFulfilled = /** @type {(config: any) => Promise<any>} */ (
@@ -119,5 +120,44 @@ describe('api response interceptor', () => {
 
     expect(signOut).not.toHaveBeenCalled();
     expect(window.location.href).toBe('');
+  });
+});
+
+describe('api with a guest session', () => {
+  const originalLocation = window.location;
+  const win = /** @type {any} */ (window);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+    saveGuestSession({
+      access_token: 'guest-token',
+      expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+      user: { id: 'guest-1', full_name: 'Guest', is_guest: true },
+    });
+    delete win.location;
+    win.location = { ...originalLocation, href: '', pathname: '/dashboard' };
+  });
+
+  afterEach(() => {
+    win.location = originalLocation;
+    sessionStorage.clear();
+  });
+
+  it('sends the guest token without asking cognito', async () => {
+    const config = await requestFulfilled({ headers: {} });
+
+    expect(config.headers.Authorization).toBe('Bearer guest-token');
+    expect(fetchAuthSession).not.toHaveBeenCalled();
+  });
+
+  it('ends a rejected guest session without signing out of cognito', async () => {
+    const error = { response: { status: 401, data: { error_code: 'TOKEN_EXPIRED' } } };
+
+    await expect(responseRejected(error)).rejects.toBe(error);
+
+    expect(signOut).not.toHaveBeenCalled();
+    expect(window.location.href).toBe('/login?guest=ended');
+    expect(sessionStorage.getItem('equitylens.guest')).toBeNull();
   });
 });

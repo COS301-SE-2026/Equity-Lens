@@ -8,6 +8,7 @@ import {
   dailyReturnsFromIndex,
   maxDrawdown,
   buildGroupSeries,
+  mirrorForRange,
   movingAverage,
   rebaseBenchmarkToSlice,
   rebaseForRange,
@@ -430,5 +431,54 @@ describe('buildGroupSeries', () => {
     expect(buildGroupSeries([], [], [{ id: 'g1', name: 'X', members: [] }])).toEqual({
       columns: {}, drawn: [], undrawn: {}, weightBasis: {},
     });
+  });
+});
+
+describe('mirrorForRange', () => {
+  const ROWS = [
+    { date: '2026-03-02', value: 1000, benchmark: 100, net_flow: 0 },
+    { date: '2026-03-03', value: 1550, benchmark: 110, net_flow: 500 },
+    { date: '2026-03-04', value: 1500, benchmark: 121, net_flow: -300 },
+    { date: '2026-03-05', value: 1300, benchmark: 110, net_flow: 0 },
+  ];
+  /** @param {{ mirror: number | null }[]} rows */
+  const cents = (rows) =>
+    rows.map((r) => (r.mirror === null ? null : Math.round(r.mirror * 100) / 100));
+
+  it('puts the same rand into the benchmark on the same days', () => {
+    expect(cents(mirrorForRange(ROWS))).toEqual([1000, 1600, 1460, 1327.27]);
+  });
+
+  it('starts a range on its own first day instead of rescaling', () => {
+    expect(cents(mirrorForRange(ROWS.slice(1)))).toEqual([1550, 1405, 1277.27]);
+  });
+
+  it('empties when a sale is bigger than it holds, then starts again', () => {
+    const rows = [
+      { date: '2026-03-02', value: 1000, benchmark: 100, net_flow: 0 },
+      { date: '2026-03-03', value: 0, benchmark: 50, net_flow: -1100 },
+      { date: '2026-03-04', value: 200, benchmark: 60, net_flow: 200 },
+    ];
+    const result = mirrorForRange(rows);
+
+    expect(cents(result)).toEqual([1000, 0, 200]);
+    expect(result.map((r) => r.exhausted)).toEqual([false, true, false]);
+  });
+
+  it('matches the backend to the cent over the whole series', () => {
+    const fromApi = [1000, 1600, 1460, 1327.27];
+    mirrorForRange(ROWS).forEach((row, i) => {
+      expect(Math.abs(/** @type {number} */ (row.mirror) - fromApi[i])).toBeLessThan(0.005);
+    });
+  });
+
+  it('has nothing to say before the benchmark starts', () => {
+    const rows = [
+      { date: '2026-03-02', value: 1000, net_flow: 0 },
+      { date: '2026-03-03', value: 1100, benchmark: 50, net_flow: 100 },
+      { date: '2026-03-04', value: 1300, benchmark: 55, net_flow: 100 },
+    ];
+
+    expect(cents(mirrorForRange(rows))).toEqual([null, 1100, 1310]);
   });
 });

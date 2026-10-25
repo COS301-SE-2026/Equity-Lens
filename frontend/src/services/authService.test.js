@@ -1,6 +1,7 @@
 import * as auth from 'aws-amplify/auth';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import api from './api';
 import {
   register,
   confirmRegistration,
@@ -12,9 +13,16 @@ import {
   getToken,
   isAuthenticated,
   getCurrentUserProfile,
+  startGuestSession,
+  getGuestModeStatus,
+  endGuestSession,
 } from './authService';
+import { readGuestSession } from './guestSession';
 
 vi.mock('aws-amplify/auth');
+vi.mock('./api', () => ({
+  default: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
+}));
 
 describe('authService', () => {
   beforeEach(() => {
@@ -136,5 +144,49 @@ describe('authService', () => {
         full_name: '',
       });
     });
+  });
+});
+
+describe('guest session calls', () => {
+  const session = {
+    access_token: 'guest-token',
+    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    user: { id: 'guest-1', full_name: 'Guest', is_guest: true },
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+  });
+
+  it('keeps the session the server hands back', async () => {
+    vi.mocked(api.post).mockResolvedValue({ data: session });
+
+    expect(await startGuestSession()).toEqual(session);
+    expect(api.post).toHaveBeenCalledWith('/auth/guest');
+    expect(readGuestSession()).toEqual(session);
+  });
+
+  it('reads whether guest mode is on, and treats any failure as off', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({ data: { enabled: true } });
+    expect(await getGuestModeStatus()).toBe(true);
+
+    vi.mocked(api.get).mockResolvedValueOnce({ data: { enabled: false } });
+    expect(await getGuestModeStatus()).toBe(false);
+
+    vi.mocked(api.get).mockRejectedValueOnce(new Error('offline'));
+    expect(await getGuestModeStatus()).toBe(false);
+  });
+
+  it('clears the session even when the server cannot be told', async () => {
+    vi.mocked(api.post).mockResolvedValue({ data: session });
+    await startGuestSession();
+    vi.mocked(api.delete).mockRejectedValue(new Error('offline'));
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await endGuestSession();
+
+    expect(api.delete).toHaveBeenCalledWith('/auth/guest');
+    expect(readGuestSession()).toBeNull();
   });
 });

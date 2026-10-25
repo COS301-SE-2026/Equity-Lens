@@ -318,3 +318,41 @@ def test_presets_payload_structure():
 def test_config_guard_rails(invalid_config, error_pattern):
     with pytest.raises(ValueError, match=error_pattern):
         health_score.config_from_dict(invalid_config)
+
+
+def _breadth_detail(make_holding, values):
+    holdings = [make_holding(f"T{i}.JO", v, "Financials") for i, v in enumerate(values)]
+    res = health_score.compute_health_score(holdings)
+    return next(s for s in res["subscores"] if s["key"] == "portfolioBreadth")["detail"]
+
+
+@pytest.mark.parametrize(
+    "values",
+    [[1000], [500, 500], [750, 250], [100] * 9, [9200] + [100] * 8],
+    ids=["one", "two equal", "two skewed", "nine equal", "nine skewed"],
+)
+def test_breadth_detail_never_shows_template_braces(make_holding, values):
+    detail = _breadth_detail(make_holding, values)
+    assert "{" not in detail
+    assert "}" not in detail
+
+
+@pytest.mark.parametrize(
+    ("values", "expected"),
+    [
+        ([1000], "1 position in your book, so everything rides on that one holding."),
+        # equal weights: hhi = 2 x 0.25 = 0.5, so 1 / 0.5 = 2.0
+        ([500, 500], "2 positions in your book, and weighted by size they still count as 2.0"
+                     " - no single holding dominates."),
+        ([100] * 9, "9 positions in your book, and weighted by size they still count as 9.0"
+                    " - no single holding dominates."),
+        # 0.75^2 + 0.25^2 = 0.625, 1 / 0.625 = 1.6
+        ([750, 250], "2 positions in your book, but weighted by size that's only 1.6 effective"
+                     " positions - a raw count hides how much one holding can dominate."),
+        # 0.999^2 + 0.001^2 = 0.998002, 1 / 0.998002 rounds to 1.0, so singular
+        ([9990, 10], "2 positions in your book, but weighted by size that's only 1.0 effective"
+                     " position - a raw count hides how much one holding can dominate."),
+    ],
+)
+def test_breadth_detail_wording(make_holding, values, expected):
+    assert _breadth_detail(make_holding, values) == expected

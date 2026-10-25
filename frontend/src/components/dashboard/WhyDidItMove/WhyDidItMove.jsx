@@ -251,7 +251,7 @@ const Shell = ({ headline, onClose, children }) => (
  *   pending?: boolean,
  *   scan?: any,
  *   onClose?: () => void,
- *   onAsk?: (question: string) => void,
+ *   onAsk?: (question: string, event: { ticker: string, date: string }) => void,
  * }} props
  */
 const EventPopover = ({ event, detail = null, pending = false, scan = null, onClose, onAsk }) => {
@@ -320,7 +320,9 @@ const EventPopover = ({ event, detail = null, pending = false, scan = null, onCl
 
       <button
         type="button"
-        onClick={() => onAsk?.(buildEventQuestion(event, usable))}
+        onClick={() =>
+          onAsk?.(buildEventQuestion(event), { ticker: event.ticker, date: event.date })
+        }
         className={ASK_BUTTON_CLASS}
         style={ASK_BUTTON_STYLE}>
         Explore possible causes

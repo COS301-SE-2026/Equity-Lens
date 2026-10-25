@@ -63,7 +63,7 @@ def rank_insights(snapshot_data: dict):
         insights.append({
             "type": "portfolio_value",
             "priority": 90,
-            "title": "Portfolio Value",
+            "title": "Portfolio Value (at cost)",
             "data": summary.get("PortfolioValue"),
         })
 

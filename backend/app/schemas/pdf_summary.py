@@ -11,6 +11,9 @@ class ImportSummary(BaseModel):
     TotalDividendsAndWithholdingTax: float
     TotalTransactionInterest: float
     TotalTransactionExpenses: float
+    StatementValue: float
+    StatementDate: str | None = None
+    ValueBasis: str
 
 
 class NamedValue(BaseModel):

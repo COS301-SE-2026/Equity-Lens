@@ -66,7 +66,8 @@ const Dashboard = () => {
 
   const perfSeries = (portfolioData?.performanceHistory ?? []).map(
     /** @param {{ date?: string, name?: string, value: number, benchmark?: number,
-     *            twr_index?: number }} point
+     *            twr_index?: number, net_flow?: number, benchmark_mirror?: number | null,
+     *            mirror_exhausted?: boolean }} point
      *  @param {number} i */
     (point, i) => ({
       date: point.date,
@@ -74,6 +75,9 @@ const Dashboard = () => {
       value: point.value,
       benchmark: point.benchmark,
       twr_index: point.twr_index,
+      net_flow: point.net_flow,
+      benchmark_mirror: point.benchmark_mirror,
+      mirror_exhausted: point.mirror_exhausted,
     }),
   );
 

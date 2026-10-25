@@ -1,9 +1,10 @@
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import func
@@ -12,10 +13,11 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import SessionLocal, get_db
 from app.dependencies import get_current_user
-from app.models.chat import ChatConversation, ChatMessages, UserMemory
+from app.models.chat import AiDailyUsage, ChatConversation, ChatMessages, UserMemory
 from app.models.portfolio import Portfolios
+from app.models.user import User
 from app.schemas.auth import UserResponse
-from app.services.ai_service import chat, chat_stream, run_post_turn
+from app.services.ai_service import chat, chat_stream, load_event, run_post_turn
 from app.utils.ai_rate_limit import check_limit
 from app.utils.exceptions import ConversationNotFoundException
 
@@ -24,11 +26,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/ai_chat", tags=["ai_chat"])
 
 
+class EventRef(BaseModel):
+    ticker: str = Field(min_length=1, max_length=20)
+    date: date
+
+
 class ChatRequest(BaseModel):
     message: str
     conversation_id: UUID | None = None
     portfolio_id: UUID | None = None
     replace_last: bool = False
+    # set by "Explore possible causes" on an event card, for that one message only
+    event: EventRef | None = None
 
     @field_validator("message")
     @classmethod
@@ -49,13 +58,19 @@ class ChangeConversationName(BaseModel):
 
 
 def _messages_today(db: Session, user_id) -> int:
+    usage = db.get(AiDailyUsage, (user_id, datetime.now(UTC).date()))
+    return usage.count if usage else 0
+
+
+def _guest_messages_today(db: Session) -> int:
     start = datetime.now(UTC).replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
 
     return (
         db.query(func.count(ChatMessages.id))
         .join(ChatConversation, ChatMessages.conversation_id == ChatConversation.id)
+        .join(User, ChatConversation.user_id == User.id)
         .filter(
-            ChatConversation.user_id == user_id,
+            User.is_guest.is_(True),
             ChatMessages.role == "user",
             ChatMessages.created_at >= start,
         )
@@ -64,21 +79,50 @@ def _messages_today(db: Session, user_id) -> int:
     )
 
 
+def _event_or_404(db: Session, user_id, ref: EventRef | None) -> dict | None:
+    if ref is None:
+        return None
+    event = load_event(db, user_id, ref.ticker, ref.date)
+    if event is None:
+        raise HTTPException(status_code=404, detail=f"{ref.ticker} is not in this portfolio")
+    return event
+
+
+def _seconds_to_midnight() -> int:
+    midnight = datetime.now(UTC).replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
+    now = datetime.now(UTC).replace(tzinfo=None)
+    return max(1, int(86400 - (now - midnight).total_seconds()))
+
+
 def enforce_limit(
     db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)
 ):
+    is_guest = bool(current_user.is_guest)
+    daily_limit = settings.guest_ai_daily_limit if is_guest else settings.ai_daily_limit
     used = _messages_today(db, current_user.id)
-    if used >= settings.ai_daily_limit:
-        midnight = datetime.now(UTC).replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0)
-        now = datetime.now(UTC).replace(tzinfo=None)
-        retry_after = max(1, int(86400 - (now - midnight).total_seconds()))
+    if used >= daily_limit:
+        retry_after = _seconds_to_midnight()
         logger.info("daily cap hit: user %s used %s", current_user.id, used)
         raise HTTPException(
             status_code=429,
             detail={
                 "message": (
-                    f"You have reached your daily limit of {settings.ai_daily_limit} messages. "
+                    f"You have reached your daily limit of {daily_limit} messages. "
                     "It resets at midnight UTC."
+                ),
+                "retry_after": retry_after,
+            },
+            headers={"Retry-After": str(retry_after)},
+        )
+
+    if is_guest and _guest_messages_today(db) >= settings.guest_ai_global_daily_limit:
+        retry_after = _seconds_to_midnight()
+        raise HTTPException(
+            status_code=429,
+            detail={
+                "message": (
+                    "The guest demo has used today's AI allowance. "
+                    "Create an account to keep chatting."
                 ),
                 "retry_after": retry_after,
             },
@@ -114,6 +158,7 @@ def ai_chat(
     current_user: UserResponse = Depends(enforce_limit),
 ):
     try:
+        event = _event_or_404(db, current_user.id, request.event)
         reply, conversation_id = chat(
             request.message,
             db,
@@ -121,6 +166,7 @@ def ai_chat(
             request.conversation_id,
             request.portfolio_id,
             request.replace_last,
+            event,
         )
         background_tasks.add_task(run_post_turn, conversation_id, current_user.id, request.message)
         return ChatResponse(reply=reply, conversation_id=conversation_id)
@@ -137,21 +183,28 @@ def ai_chat(
 
 
 @router.post("/stream/")
-async def ai_chat_stream(request: ChatRequest, current_user: UserResponse = Depends(enforce_limit)):
+async def ai_chat_stream(
+       request: ChatRequest,
+       db: Session = Depends(get_db),
+       current_user: UserResponse = Depends(enforce_limit),
+   ):
+    event = await run_in_threadpool(_event_or_404, db, current_user.id, request.event)
+
     def event_source():
         db = SessionLocal()
         conversation_id = None
         try:
-            for event in chat_stream(
+            for chunk in chat_stream(
                 request.message,
                 db,
                 current_user.id,
                 request.conversation_id,
                 request.portfolio_id,
+                event,
             ):
-                if event["type"] == "done":
-                    conversation_id = event["conversation_id"]
-                yield f"data: {json.dumps(event)}\n\n"
+                if chunk["type"] == "done":
+                    conversation_id = chunk["conversation_id"]
+                yield f"data: {json.dumps(chunk)}\n\n"
         except ConversationNotFoundException:
             yield f"data: {json.dumps({'type': 'error', 'value': 'Conversation not found'})}\n\n"
         except Exception as e:
@@ -190,6 +243,20 @@ async def get_chat_portfolios(
         for i, p in enumerate(portfolios, start=1)
     ]
 
+
+@router.get("/usage/")
+async def get_usage(
+    db: Session = Depends(get_db), current_user: UserResponse = Depends(get_current_user)
+):
+    used = _messages_today(db, current_user.id)
+    limit = settings.ai_daily_limit
+    midnight = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+    return {
+        "used": min(used, limit),
+        "limit": limit,
+        "remaining": max(0, limit - used),
+        "resets_at": (midnight + timedelta(days=1)).isoformat(),
+    }
 
 # now to return all conversations for the logged user
 @router.get("/conversations/")

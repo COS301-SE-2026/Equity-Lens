@@ -113,7 +113,7 @@ def build_live_indicator_row(
         capm_value = None
         try:
             if beta is not None:
-                capm_value = calculate_capm(0.02, beta, 0.08)
+                capm_value = round(calculate_capm(0.02, beta, 0.08) * 100, 2)
         except Exception:
             logger.warning("CAPM calculation failed for %s", symbol, exc_info=True)
             capm_value = None

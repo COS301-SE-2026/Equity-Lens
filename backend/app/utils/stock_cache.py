@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import NamedTuple
 
 import pandas as pd
@@ -54,6 +54,9 @@ def _yfinance_globally_cooling_down() -> bool:
 
 
 PRICE_REFRESH_COOLDOWN_MINUTES = 10
+HISTORY_DEPTH_SLACK_DAYS = 7
+HISTORY_DEPTH_COOLDOWN_HOURS = 6
+_HISTORY_DEPTH_COOLDOWN_UNTIL: dict[str, datetime] = {}
 # weekly - comfortable time as eases rates on yfinance
 # and also short enough to where a company can release financials
 # on a random day mid-week and wont be long until the refresh to serve fresh data
@@ -208,6 +211,38 @@ def _save_price_history(ticker: str, history: pd.DataFrame) -> None:
         db.close()
 
 
+def _save_missing_history(ticker: str, history: pd.DataFrame) -> int:
+    if history.empty:
+        return 0
+    db = SessionLocal()
+    try:
+        stored = set(db.scalars(select(MarketData.date).where(MarketData.ticker == ticker.upper())))
+        added = 0
+        for timestamp, row in history.iterrows():
+            trade_date = timestamp.date()
+            if trade_date in stored or pd.isna(row["Close"]):
+                continue
+            prev_close = row.get("Prev Close")
+            db.add(
+                MarketData(
+                    ticker=ticker.upper(),
+                    date=trade_date,
+                    open=float(row["Open"]),
+                    high=float(row["High"]),
+                    low=float(row["Low"]),
+                    close=float(row["Close"]),
+                    prev_close=float(row["Close"] if pd.isna(prev_close) else prev_close),
+                    volume=float(row["Volume"]) if not pd.isna(row["Volume"]) else 0.0,
+                    fetched_at=datetime.now(UTC),
+                )
+            )
+            added += 1
+        db.commit()
+        return added
+    finally:
+        db.close()
+
+
 def _fetch_from_alpha_vantage(ticker: str) -> pd.DataFrame:
     response = requests.get(
         "https://www.alphavantage.co/query",
@@ -315,9 +350,39 @@ def _refresh_price_history(ticker: str, period: str, force_live: bool = False) -
 
 
 def get_cached_price_history(
-    ticker: str, period: str = "1y", force_live: bool = False
+    ticker: str, period: str = "1y", force_live: bool = False, start: date | None = None
 ) -> pd.DataFrame:
-    ticker = ticker.upper()
+    history = _recent_price_history(ticker.upper(), period, force_live)
+    if start is not None and (settings.allow_live_market_fallback or force_live):
+        history = _reach_back_to(ticker.upper(), history, start, period)
+    return history
+
+
+def _reach_back_to(ticker: str, history: pd.DataFrame, start: date, period: str) -> pd.DataFrame:
+    if history.empty or (history.index.min().date() - start).days <= HISTORY_DEPTH_SLACK_DAYS:
+        return history
+    cooldown_until = _HISTORY_DEPTH_COOLDOWN_UNTIL.get(ticker)
+    if cooldown_until and datetime.now(UTC) < cooldown_until:
+        return history
+    if ticker in _REFRESH_LOCKS or _yfinance_globally_cooling_down():
+        return history
+
+    _HISTORY_DEPTH_COOLDOWN_UNTIL[ticker] = datetime.now(UTC) + timedelta(
+        hours=HISTORY_DEPTH_COOLDOWN_HOURS
+    )
+    _REFRESH_LOCKS.add(ticker)
+    try:
+        added = _save_missing_history(ticker, _fetch_from_yfinance(ticker, period))
+    except Exception:
+        logger.warning("Older history fetch failed for %s", ticker, exc_info=True)
+        return history
+    finally:
+        _REFRESH_LOCKS.discard(ticker)
+    logger.info("Older history for %s: %s rows added", ticker, added)
+    return _load_local_price_history(ticker) if added else history
+
+
+def _recent_price_history(ticker: str, period: str, force_live: bool) -> pd.DataFrame:
     history = _load_local_price_history(ticker)
     if not history.empty and not _price_cache_is_stale(ticker):
         logger.debug("Local price hit: %s", ticker)

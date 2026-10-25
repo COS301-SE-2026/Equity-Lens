@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 
 import { ExposureChart } from '../../components/charts/ExposureChart/ExposureChart';
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
+import { getAccessToken } from '../../services/guestSession';
 import { API_BASE_URL } from '../../utils/constants';
 
 const SECTION_LABEL_STYLE = {
@@ -26,17 +27,6 @@ const UNAVAILABLE_MESSAGES = {
     "Explore finds JSE shares similar to the ones you hold. Your portfolio doesn't contain any JSE-listed shares yet.",
 };
 
-function getCognitoAccessToken() {
-  const authKey = Object.keys(localStorage).find(
-    (key) => key.startsWith('CognitoIdentityServiceProvider.') && key.endsWith('.LastAuthUser'),
-  );
-  if (!authKey) return null;
-
-  const prefix = authKey.replace('.LastAuthUser', '');
-  const sub = localStorage.getItem(authKey);
-  return localStorage.getItem(`${prefix}.${sub}.accessToken`);
-}
-
 /**
  * @typedef {import('../../components/charts/ExposureChart/ExposureChart').Stock} Stock
  * @typedef {import('../../components/charts/ExposureChart/ExposureChart').Recommendation} Recommendation
@@ -56,11 +46,11 @@ export default function Explore() {
     setLoading(true);
     setError(null);
 
-    const token = getCognitoAccessToken();
-
-    fetch(`${API_BASE_URL}/explore/recommendations?k=9`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    getAccessToken()
+      .then((token) =>
+        fetch(`${API_BASE_URL}/explore/recommendations?k=9`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),)
       .then((res) => {
         if (res.status === 503)
           throw new Error('market data is temporarily unavailable. Try again shortly.');

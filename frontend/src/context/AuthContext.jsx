@@ -10,7 +10,10 @@ import {
   respondToMFA,
   requestPasswordReset as requestPasswordResetService,
   confirmPasswordReset as confirmPasswordResetService,
+  startGuestSession,
+  endGuestSession,
 } from '../services/authService';
+import { clearGuestSession, readGuestSession } from '../services/guestSession';
 
 const AuthContext = createContext(/** @type {any} */ (null));
 
@@ -28,6 +31,12 @@ export const AuthProvider = ({ children }) => {
       const win = /** @type {any} */ (window);
       if (typeof window !== 'undefined' && win.__E2E_AUTH_BYPASS__) {
         setUser(win.__E2E_AUTH_BYPASS__);
+        setLoading(false);
+        return;
+      }
+      const guest = readGuestSession();
+      if (guest) {
+        setUser({ ...guest.user, is_guest: true });
         setLoading(false);
         return;
       }
@@ -80,8 +89,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const startGuest = async () => {
+    const session = await startGuestSession();
+    setUser({ ...session.user, is_guest: true });
+    setMfaState(null);
+  };
+
   /** @param {string} email @param {string} password */
   const login = async (email, password) => {
+    clearGuestSession();
     try {
       const { nextStep } = await loginService(email, password);
 
@@ -120,7 +136,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await logoutService();
+      if (user?.is_guest) {
+        await endGuestSession();
+      } else {
+        await logoutService();
+      }
     } catch (err) {
       console.error('Logout error:', err);
     } finally {
@@ -142,10 +162,12 @@ export const AuthProvider = ({ children }) => {
         requestPasswordReset,
         confirmPasswordReset,
         login,
+        startGuest,
         submitMFACode,
         activateTOTP: submitMFACode, //This is aliased to prevent breaking downstream UI
         logout,
         isAuthenticated: !!user,
+        isGuest: !!user?.is_guest,
       }}
     >
       {children}
