@@ -10,6 +10,7 @@ from app.models.portfolio import (
     TransactionExpenses,
 )
 from app.services.portfolio_service import BUY_MARKERS, SELL_MARKERS
+
 HOLDING_VALUE = func.coalesce(Holdings.statement_value, Holdings.total_cost)
 
 

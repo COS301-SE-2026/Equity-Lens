@@ -16,6 +16,7 @@ from app.models.user import User
 from app.schemas.responses import AppError
 from app.services import guest_service
 from app.utils import ai_rate_limit
+
 pytestmark = pytest.mark.skipif(
     not os.environ.get("DATABASE_URL", "").startswith("postgresql"), reason="needs postgres"
 )

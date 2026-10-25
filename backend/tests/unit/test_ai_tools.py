@@ -1,5 +1,6 @@
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
+
 import pandas as pd
 
 from app.models.chat import ChatMessages

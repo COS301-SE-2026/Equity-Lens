@@ -183,8 +183,11 @@ def ai_chat(
 
 
 @router.post("/stream/")
-async def ai_chat_stream(request: ChatRequest, db: Session = Depends(get_db), current_user: UserResponse = Depends(enforce_limit),
-):
+async def ai_chat_stream(
+       request: ChatRequest,
+       db: Session = Depends(get_db),
+       current_user: UserResponse = Depends(enforce_limit),
+   ):
     event = await run_in_threadpool(_event_or_404, db, current_user.id, request.event)
 
     def event_source():

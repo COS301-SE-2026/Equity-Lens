@@ -157,7 +157,7 @@ def traded_portfolio(db_session, test_user):
         index=pd.to_datetime(DAYS),
     )
 
-    def fake_history(symbol, period="1y", force_live=False, start=None):
+    def fake_history(symbol, **_):
         if symbol != "STX40.JO":
             raise ValueError(f"no data for {symbol}")
         return closes
