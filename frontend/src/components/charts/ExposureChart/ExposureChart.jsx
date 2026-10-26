@@ -50,6 +50,11 @@ const FOCUS_MS = 150;
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 4.5;
 
+/**
+ * @param {number} value
+ * @param {number} min
+ * @param {number} max
+ */
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 const METRIC_HELP = {
@@ -110,6 +115,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
   }, [selected]);
 
   const handleZoomAction = useCallback(
+    /** @param {number} direction */
     (direction, point = getSelectedNodePoint()) => {
       setZoomState((current) => {
         const nextScale = clamp(current.scale * direction, MIN_ZOOM, MAX_ZOOM);
@@ -136,6 +142,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
   );
 
   const handleWheel = useCallback(
+    /** @param {any} event */
     (event) => {
       event.preventDefault();
       if (!svgRef.current) return;
@@ -149,6 +156,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
   );
 
   const handleChartKeyDown = useCallback(
+    /** @param {any} event */
     (event) => {
       if (event.key === '+' || event.key === '=') {
         event.preventDefault();
@@ -164,7 +172,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     [getSelectedNodePoint, handleZoomAction],
   );
 
-  const handlePointerDown = useCallback((event) => {
+  const handlePointerDown = useCallback(/** @param {any} event */(event) => {
     if (event.button !== undefined && event.button !== 0) return;
     if (!svgRef.current) return;
     dragState.current = { x: event.clientX, y: event.clientY };
@@ -173,7 +181,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     svgRef.current.setPointerCapture?.(event.pointerId);
   }, []);
 
-  const handlePointerMove = useCallback((event) => {
+  const handlePointerMove = useCallback(/** @param {any} event */(event) => {
     if (!dragState.current) return;
     const dx = event.clientX - dragState.current.x;
     const dy = event.clientY - dragState.current.y;
@@ -181,7 +189,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     setZoomState((current) => ({ ...current, x: current.x + dx, y: current.y + dy }));
   }, []);
 
-  const handlePointerUp = useCallback((event) => {
+  const handlePointerUp = useCallback(/** @param {any} event */(event) => {
     if (!dragState.current && !isDragging) return;
     if (svgRef.current && typeof event.pointerId === 'number') {
       svgRef.current.releasePointerCapture?.(event.pointerId);

@@ -80,11 +80,11 @@ EquityLens helps retail investors turn fragmented portfolio statements and marke
 <p align="center"><sub>Select a member below to view their biography and links.</sub></p>
 
 <details>
-<summary><strong>Abdulrahman Sabah</strong> - Team Lead  Profile and links</summary>
+<summary><strong>Abdulrahman Sabah</strong> - Profile and links</summary>
 
 **Student number:** u24566170
 
-Final-year Computer Science student at the University of Pretoria with a strong foundation in software engineering and cybersecurity. Holds certifications from IBM, Cisco, Microsoft Azure, and Amazon.
+Final-year BSc Computer Science student at the University of Pretoria with a strong foundation in software engineering, full-stack development, cybersecurity, and cloud computing. Gained hands-on industry experience through an internship at Health Advance Institute (HAI), working on real-world software development, authentication security, and CI/CD pipelines. Holds professional certifications from Microsoft, IBM, Cisco, and Amazon, including Microsoft Azure Fundamentals (AZ-900, 2026). Passionate about developing secure, innovative, and reliable software solutions.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/abdulrahman-sabah-a240aa39b) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/Abdulrahman-Sabah) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Abdulrahman_Sabah_CV.pdf)
 
@@ -95,7 +95,7 @@ Final-year Computer Science student at the University of Pretoria with a strong 
 
 **Student number:** u23541475
 
-Third-year Computer Science student at the University of Pretoria with full-stack development experience across academic and personal projects.
+Third-year Computer Science student at the University of Pretoria, graduating at the end of 2026. Works across the full stack with a focus on data: building the pipeline, the API and the interface for a feature, then taking it all the way to production on AWS. Takes ownership beyond the code, covering testing, deployment and keeping systems stable under real users, and enjoys turning complex financial data into insight people can trust.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/joshua-heath-a910b5367) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/Josh-Heath123) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Joshua_Heath_CV.pdf)
 
@@ -106,9 +106,9 @@ Third-year Computer Science student at the University of Pretoria with full-stac
 
 **Student number:** u24590739
 
-Third-year BSc Computer Science student at the University of Pretoria, passionate about machine learning, artificial intelligence and building software. Gained full-stack experience through personal and academic projects.
+Antony is a final-year Computer Science student at the University of Pretoria specializing in App Development, Machine Learning, and Artificial Intelligence. He has a keen interest in quantitative finance, investing, and machine learning, which drives his passion for building data-focused financial tools. Outside of coursework, he is developing an independent mobile application using Flutter and Firebase designed to streamline the job-hunting process for individuals with disabilities. As an active EasyEquities investor with a diversified ETF portfolio, Antony combines his strong academic foundation in full-stack development with genuine enthusiasm for the FinTech space.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/antony-van-straten/) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/antonyvs05) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Antony_van_Straten_CV.pdf)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/antony-van-straten/) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/antonyvs05) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Antony_Van_Straten_CV.pdf.pdf)
 
 </details>
 
@@ -117,7 +117,7 @@ Third-year BSc Computer Science student at the University of Pretoria, passionat
 
 **Student number:** u23536862
 
-Third-year BSc Computer Science student at the University of Pretoria with a passion for data science, full-stack development and game development.
+I’m a final-year Bsc Computer Science student at the University of Pretoria. For my capstone, I helped build EquityLens, primarily working on the AI Assistant. I enjoy building practical products, from personal apps to data-driven projects. I am interested in full stack development and data analytics.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/jonty-honey/) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/jonty282) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Jonty_Honey_CV.pdf)
 

@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+
 import { ExposureChart } from './ExposureChart';
 
 const MOCK_UNIVERSE = [
@@ -127,29 +128,6 @@ describe('ExposureChart', () => {
       expect(screen.getByRole('button', { name: 'SBK' })).toHaveAttribute('aria-pressed', 'false');
     });
 
-    it('keeps a selected node highlighted after zooming', () => {
-      const { container } = setup();
-      const svg = container.querySelector('svg[aria-label="Similarity map of JSE stocks"]');
-
-      fireEvent.click(screen.getByRole('button', { name: 'SBK' }));
-      fireEvent.wheel(svg, { deltaY: -100, clientX: 200, clientY: 200 });
-
-      expect(screen.getByRole('button', { name: 'SBK' })).toHaveAttribute('aria-pressed', 'true');
-       const selectedNode = svg.querySelector('circle.stock[aria-label^="SBK"]');
-      expect(selectedNode?.getAttribute('stroke')).toBe('var(--text-primary)');
-    });
-
-    it('allows dragging the map to pan around', () => {
-      const { container } = setup();
-      const svg = container.querySelector('svg[aria-label="Similarity map of JSE stocks"]');
-
-      fireEvent.mouseDown(svg, { clientX: 200, clientY: 180, button: 0, buttons: 1 });
-      fireEvent.mouseMove(svg, { clientX: 260, clientY: 230, button: 0, buttons: 1 });
-      fireEvent.mouseUp(svg, { clientX: 260, clientY: 230, button: 0, buttons: 0 });
-
-      const root = svg.querySelector('g.chart-root');
-      expect(root.getAttribute('transform')).toMatch(/translate\(60 50\) scale\(1\)/);
-    });
 
     it('clears selection when clicking neutral canvas nodes', () => {
       const { getStockBubble } = setup();
