@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
@@ -17,6 +17,7 @@ const renderAnalytics = () =>
 
 describe('Analytics', () => {
   beforeEach(() => {
+    localStorage.clear();
     vi.mocked(useIndicators).mockReturnValue({
       stockData: {},
       loading: false,
@@ -92,6 +93,40 @@ describe('Analytics', () => {
     renderAnalytics();
     expect(screen.getByText('20.00%')).toBeInTheDocument();
     expect(screen.getByText('20% expected annual return for this risk level')).toBeInTheDocument();
+  });
+
+  it('shows the active preset on the page and highlights the matching preset in the editor', () => {
+    localStorage.setItem(
+      'analytics_indicator_pref',
+      JSON.stringify({ AAPL: ['capm', 'pe_ratio', 'sharpe', 'beta'] }),
+    );
+
+    vi.mocked(useIndicators).mockReturnValue({
+      stockData: {
+        AAPL: {
+          loading: false,
+          results: {
+            ticker: 'AAPL',
+            name: 'Apple Inc.',
+            capm: { status: 'ok', value: 12, unit: '%' },
+            pe_ratio: { status: 'ok', value: 18, unit: '' },
+            sharpe: { status: 'ok', value: 1.2, unit: '' },
+            beta: { status: 'ok', value: 1.1, unit: '' },
+          },
+        },
+      },
+      loading: false,
+      error: null,
+    });
+
+    renderAnalytics();
+
+    expect(screen.getByText('Preset: Most Popular')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /customize indicators for AAPL/i }));
+    expect(screen.getByRole('button', { name: 'Most Popular' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 
   it("renders the error cell when an indicator result has status 'error'", () => {

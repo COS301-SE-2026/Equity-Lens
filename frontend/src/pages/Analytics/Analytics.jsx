@@ -130,6 +130,18 @@ const presets = [
 const STORAGE_KEY = 'analytics_indicator_pref';
 const CUSTOM_PRESETS_KEY = 'analytics_custom_presets';
 
+/**
+ * @param {string[]} keys
+ * @param {{ label: string, keys: string[] }[]} presetList
+ */
+function getMatchingPresetName(keys, presetList) {
+  const normalized = [...keys].slice().sort().join('|');
+  const match = presetList.find(
+    (preset) => [...preset.keys].slice().sort().join('|') === normalized,
+  );
+  return match ? match.label : null;
+}
+
 /** @returns {Record<string, string[]>} */
 function loadIndicatorPrefs() {
   try {
@@ -310,6 +322,7 @@ const IndicatorCell = ({ indicatorKey, result, loading, onSelect }) => {
  *   index: number,
  *   onCellSelect: (indicatorKey: string, ticker: string) => void,
  *   visibleKeys: string[],
+ *   presetName: string | null,
  *   onEdit: () => void,
  *   onQuickRemove: (key: string) => void,
  * }} props
@@ -321,6 +334,7 @@ const StockRow = ({
   index,
   onCellSelect,
   visibleKeys,
+  presetName,
   onEdit,
   onQuickRemove,
 }) => (
@@ -344,6 +358,9 @@ const StockRow = ({
         </p>
         <p className="text-[10px]" style={{ color: 'var(--text-ghost)' }}>
           {stock.name}
+        </p>
+        <p className="text-[9px] mt-0.5" style={{ color: 'var(--text-ghost)' }}>
+          Preset: {presetName || 'None'}
         </p>
       </div>
       <button
@@ -614,6 +631,7 @@ const IndicatorPickerModal = ({
   const [draft, setDraft] = useState(selectedKeys);
   const [newPresetName, setNewPresetName] = useState('');
   const [applyToAll, setApplyToAll] = useState(false);
+  const activePresetName = getMatchingPresetName(draft, [...presets, ...customPresets]);
 
   /** @param {string} key */
   const toggle = (key) => {
@@ -683,27 +701,39 @@ const IndicatorPickerModal = ({
         </div>
         <div className="px-5 py-4 flex flex-col gap-4">
           <div>
-            <p
-              className="text-[9px] uppercase tracking-widest font-medium mb-2"
-              style={{ color: 'var(--text-ghost,#444)' }}
-            >
-              Presets
-            </p>
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <p
+                className="text-[9px] uppercase tracking-widest font-medium"
+                style={{ color: 'var(--text-ghost,#444)' }}
+              >
+                Presets
+              </p>
+              <span className="text-[9px]" style={{ color: 'var(--text-secondary,#a0a0a0)' }}>
+                Active: {activePresetName || 'None'}
+              </span>
+            </div>
             <div className="flex flex-wrap gap-1.5">
-              {presets.map((preset) => (
-                <button
-                  key={preset.id}
-                  onClick={() => setDraft(preset.keys)}
-                  className="text-[10px] font-mono px-2.5 py-1.5 rounded cursor-pointer"
-                  style={{
-                    border: '1px solid var(--border-subtle,#2a2a2a)',
-                    color: 'var(--text-secondary,#a0a0a0)',
-                    background: 'transparent',
-                  }}
-                >
-                  {preset.label}
-                </button>
-              ))}
+              {presets.map((preset) => {
+                const selected = getMatchingPresetName(draft, [preset]) !== null;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setDraft(preset.keys)}
+                    className="text-[10px] font-mono px-2.5 py-1.5 rounded cursor-pointer"
+                    style={{
+                      border: selected
+                        ? '1px solid var(--text-ghost,#444)'
+                        : '1px solid var(--border-subtle,#2a2a2a)',
+                      color: selected ? 'var(--text-primary,#e5e5e5)' : 'var(--text-secondary,#a0a0a0)',
+                      background: selected ? 'var(--border-subtle,#2a2a2a)' : 'transparent',
+                    }}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
             </div>
             <Link
               to={ROUTES.AI_CHAT}
@@ -724,38 +754,48 @@ const IndicatorPickerModal = ({
                 Your Presets
               </p>
               <div className="flex flex-wrap gap-1.5">
-                {customPresets.map((preset) => (
-                  <span
-                    key={preset.id}
-                    className="inline-flex items-center rounded overflow-hidden"
-                    style={{ border: '1px solid var(--border-subtle,#2a2a2a)' }}
-                  >
-                    <button
-                      onClick={() => setDraft(preset.keys)}
-                      className="text-[10px] font-mono pl-2.5 pr-1.5 py-1.5 cursor-pointer"
+                {customPresets.map((preset) => {
+                  const selected = getMatchingPresetName(draft, [preset]) !== null;
+                  return (
+                    <span
+                      key={preset.id}
+                      className="inline-flex items-center rounded overflow-hidden"
                       style={{
-                        color: 'var(--text-secondary,#a0a0a0)',
-                        background: 'transparent',
-                        border: 'none',
+                        border: selected
+                          ? '1px solid var(--text-ghost,#444)'
+                          : '1px solid var(--border-subtle,#2a2a2a)',
+                        background: selected ? 'var(--border-subtle,#2a2a2a)' : 'transparent',
                       }}
                     >
-                      {preset.label}
-                    </button>
-                    <button
-                      onClick={() => onDeleteCustomPreset(preset.id)}
-                      aria-label={`Delete preset ${preset.label}`}
-                      title={`Delete preset ${preset.label}`}
-                      className="text-[10px] pr-2 cursor-pointer"
-                      style={{
-                        color: 'var(--text-ghost,#444)',
-                        background: 'transparent',
-                        border: 'none',
-                      }}
-                    >
-                      x
-                    </button>
-                  </span>
-                ))}
+                      <button
+                        type="button"
+                        aria-pressed={selected}
+                        onClick={() => setDraft(preset.keys)}
+                        className="text-[10px] font-mono pl-2.5 pr-1.5 py-1.5 cursor-pointer"
+                        style={{
+                          color: selected ? 'var(--text-primary,#e5e5e5)' : 'var(--text-secondary,#a0a0a0)',
+                          background: 'transparent',
+                          border: 'none',
+                        }}
+                      >
+                        {preset.label}
+                      </button>
+                      <button
+                        onClick={() => onDeleteCustomPreset(preset.id)}
+                        aria-label={`Delete preset ${preset.label}`}
+                        title={`Delete preset ${preset.label}`}
+                        className="text-[10px] pr-2 cursor-pointer"
+                        style={{
+                          color: 'var(--text-ghost,#444)',
+                          background: 'transparent',
+                          border: 'none',
+                        }}
+                      >
+                        x
+                      </button>
+                    </span>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -1107,6 +1147,10 @@ export default function Analytics() {
                     loading={false}
                     results={stock}
                     visibleKeys={getVisibleKeys(stock.ticker)}
+                    presetName={getMatchingPresetName(
+                      getVisibleKeys(stock.ticker),
+                      [...presets, ...customPresets],
+                    )}
                     onCellSelect={(indicatorKey, ticker) => setSelected({ indicatorKey, ticker })}
                     onEdit={() => setEditingTicker(stock.ticker)}
                     onQuickRemove={(key) => handleQuickRemove(stock.ticker, key)}
