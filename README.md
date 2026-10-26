@@ -108,7 +108,7 @@ Third-year Computer Science student at the University of Pretoria, graduating at
 
 Antony is a final-year Computer Science student at the University of Pretoria specializing in App Development, Machine Learning, and Artificial Intelligence. He has a keen interest in quantitative finance, investing, and machine learning, which drives his passion for building data-focused financial tools. Outside of coursework, he is developing an independent mobile application using Flutter and Firebase designed to streamline the job-hunting process for individuals with disabilities. As an active EasyEquities investor with a diversified ETF portfolio, Antony combines his strong academic foundation in full-stack development with genuine enthusiasm for the FinTech space.
 
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/antony-van-straten/) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/antonyvs05) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Antony_Van_Straten_CV.pdf.pdf)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Profile-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/antony-van-straten/) [![GitHub](https://img.shields.io/badge/GitHub-Profile-181717?logo=github&logoColor=white)](https://github.com/antonyvs05) [![CV](https://img.shields.io/badge/CV-View_PDF-E87513?logo=adobeacrobatreader&logoColor=white)](./docs/cvs/Antony_Van_Straten_CV.pdf)
 
 </details>
 
@@ -126,12 +126,7 @@ I’m a final-year Bsc Computer Science student at the University of Pretoria. F
 ---
 
 ## Demo Videos
-
-- [Demo 1 Video](https://drive.google.com/file/d/1zTsXVxXO-8XaZbjOjm34sZqkUZCKs1rV/view?usp=sharing)
-- [Demo 2 Video](./Documentation/Demo_2/Demo_2_video/2026-07-30%2023-18-48.mp4)
-- [Demo 3 Video](https://drive.google.com/file/d/1x89mauJbrfO37-Z5hops6Qw0v2t45XQB/view?usp=sharing)
 - [Demo 4 Video](https://drive.google.com/file/d/1qxCTyB_wQ9fCqNMUHkxCQtzdevk20bmj/view?usp=sharing)
-
 ---
 
 ## Documentation
