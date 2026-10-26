@@ -2,11 +2,12 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as XLSX from 'xlsx';
 
 import api from '../../services/api';
 import { formatCurrency } from '../../utils/formatters';
 
-import Portfolio, { buildHoldingsPayload, parseExposureRow } from './Portfolio';
+import Portfolio, { buildHoldingsPayload, parseExposureRow, toDateOnly } from './Portfolio';
 
 vi.mock('../../services/api', () => ({
   default: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
@@ -91,6 +92,39 @@ describe('parseExposureRow', () => {
     const noWeight = 'Satrix S&P 500 Feeder ETF 15.6432 902.15 57.67 62.74 981.44 37.53';
 
     expect(() => parseExposureRow(noWeight)).toThrow(/exposure columns/);
+  });
+});
+describe('toDateOnly', () => {
+  it('keeps the calendar date of a local midnight', () => {
+    expect(toDateOnly(new Date(2025, 10, 3))).toBe('2025-11-03');
+  });
+
+  it('keeps the date late in the evening too', () => {
+    expect(toDateOnly(new Date(2025, 10, 3, 23, 59))).toBe('2025-11-03');
+  });
+
+  it('pads the month and the day', () => {
+    expect(toDateOnly(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+
+  it('passes a string or a missing cell straight through', () => {
+    expect(toDateOnly('2025-11-03')).toBe('2025-11-03');
+    expect(toDateOnly(undefined)).toBeUndefined();
+  });
+
+  it('reads back the date written into a real excel file', () => {
+    const sheet = XLSX.utils.aoa_to_sheet([['Transaction Date'], [new Date(2025, 10, 3)]], {
+      cellDates: true,
+    });
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, sheet, 'Purchase and Sales');
+    const file = XLSX.write(book, { type: 'array', bookType: 'xlsx' });
+
+    const read = XLSX.read(file, { cellDates: true });
+    /** @type {any[]} */
+    const rows = XLSX.utils.sheet_to_json(read.Sheets['Purchase and Sales']);
+
+    expect(toDateOnly(rows[0]['Transaction Date'])).toBe('2025-11-03');
   });
 });
 

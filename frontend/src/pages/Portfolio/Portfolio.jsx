@@ -339,9 +339,11 @@ const describeApiError = (error) => {
 /**
  * @param {Date | any} value
  */
-const toDateOnly = (value) => {
+export const toDateOnly = (value) => {
   if (!(value instanceof Date)) return value;
-  return value.toISOString().split('T')[0];
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${value.getFullYear()}-${month}-${day}`;
 };
 
 /**
@@ -482,7 +484,7 @@ const ReadingPDFFile = async (file, password) => {
   }
 
   const gettingthData = statementIndex.text.split('to')[1].trim();
-  const date = new Date(gettingthData).toISOString().split('T')[0];
+  const date = toDateOnly(new Date(gettingthData));
 
   const Portfolio = [
     {

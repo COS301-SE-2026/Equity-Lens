@@ -128,7 +128,7 @@ def test_a_held_event_puts_the_move_and_its_news_in_the_system_prompt(
     text = system_text(mock_client)
     assert text.count("\n<event_context>\n") == 1
     assert text.count("</event_context>") == 1
-    assert f"Mr Price Group ({TICKER})" in text
+    assert f"Mr Price Group Ltd ({TICKER})" in text
     assert "Move: -7.8% in one day, about 4.3x its typical daily move." in text
     assert "Market part" in text
     assert "company-specific part" in text

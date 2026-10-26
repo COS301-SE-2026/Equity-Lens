@@ -1,4 +1,7 @@
+import csv
 import re
+import unicodedata
+from pathlib import Path
 from typing import NamedTuple
 
 
@@ -147,7 +150,8 @@ def normalize_sector(sector: str) -> str:
 
 
 def _canonical(instrument_name: str) -> str:
-    name = re.sub(r"[^0-9a-z&]+", "", (instrument_name or "").lower())
+    name = unicodedata.normalize("NFKD", instrument_name or "").encode("ascii", "ignore").decode()
+    name = re.sub(r"[^0-9a-z&]+", "", name.lower())
     for noise in _FUND_NOISE:
         name = name.replace(noise, "")
     return name
@@ -160,18 +164,40 @@ def _build_table(rows: dict, kind: str) -> dict[str, Instrument]:
     }
 
 
-KNOWN_INSTRUMENTS: dict[str, Instrument] = {
-    **_build_table(_STOCKS, KIND_STOCK),
-    **_build_table(_ETFS, KIND_ETF),
-}
+CATALOGUE_FILE = Path(__file__).resolve().parent.parent / "data" / "jse_instruments.csv"
 
-_COMPANY_SUFFIXES = ("limited", "ltd")
+
+def _load_catalogue() -> dict[str, Instrument]:
+    with CATALOGUE_FILE.open(encoding="utf-8", newline="") as f:
+        return {
+            _canonical(row["name"]): Instrument(
+                row["ticker"],
+                normalize_sector(row["sector"]),
+                row["kind"],
+                row["region"],
+                row["name"],
+            )
+            for row in csv.DictReader(f)
+        }
+
+
+_COMPANY_SUFFIXES = ("limited", "ltd", "plc", "nv")
 
 def _strip_suffix(key: str) -> str:
     for suffix in _COMPANY_SUFFIXES:
         if key.endswith(suffix) and len(key) > len(suffix):
             return key[: -len(suffix)]
     return key
+
+_HAND_WRITTEN = {
+    **_build_table(_STOCKS, KIND_STOCK),
+    **_build_table(_ETFS, KIND_ETF),
+}
+_HAND_STRIPPED = {_strip_suffix(k) for k in _HAND_WRITTEN}
+KNOWN_INSTRUMENTS: dict[str, Instrument] = {
+    **{k: v for k, v in _load_catalogue().items() if _strip_suffix(k) not in _HAND_STRIPPED},
+    **_HAND_WRITTEN,
+}
 
 _BY_STRIPPED_KEY = {_strip_suffix(k): v for k, v in KNOWN_INSTRUMENTS.items()}
 

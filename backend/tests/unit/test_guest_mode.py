@@ -261,8 +261,8 @@ def test_a_guest_import_of_a_name_outside_the_catalogue_searches_yahoo(client, d
     session = start(client)
     portfolio_id = import_as_guest(client, db_session, session)
     body = _child_bodies(portfolio_id)["/api/import_pdf/save_holdings"]
-    body["instrument_name"] = "Mr Price Group"
-    found = {"Found": True, "ticker": "MRP.JO", "sector": "Consumer Discretionary"}
+    body["instrument_name"] = "Investec Limited"
+    found = {"Found": True, "ticker": "INL.JO", "sector": "Financial Services"}
 
     with patch.dict(import_service.Cache, clear=True), \
          patch.object(import_service, "_search_ticker_number_uncached",
@@ -272,11 +272,11 @@ def test_a_guest_import_of_a_name_outside_the_catalogue_searches_yahoo(client, d
         )
 
     assert response.status_code == 200
-    search.assert_called_once_with("Mr Price Group")
+    search.assert_called_once_with("Investec Limited")
     stored = db_session.scalars(
-        select(Holdings).where(Holdings.instrument_name == "Mr Price Group")
+        select(Holdings).where(Holdings.instrument_name == "Investec Limited")
     ).one()
-    assert (stored.ticker, stored.sector) == ("MRP.JO", "Consumer Discretionary")
+    assert (stored.ticker, stored.sector) == ("INL.JO", "Financial Services")
 
 
 def test_a_guest_sees_an_empty_email_and_is_flagged(client):

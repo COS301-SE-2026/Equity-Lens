@@ -1088,6 +1088,14 @@ def _write_events_cache(key: str, payload: dict) -> None:
         _events_cache[key] = (time.monotonic(), payload)
 
 
+def _forget_events(user_id: UUID) -> None:
+    # only the events, the priced holdings haven't changed
+    with _priced_holdings_guard:
+        prefix = f"{user_id}:"
+        for key in [k for k in _events_cache if k.startswith(prefix)]:
+            _events_cache.pop(key, None)
+
+
 def invalidate_priced_holdings(user_id: UUID | str | None = None) -> None:
     with _priced_holdings_guard:
         if user_id is None:
@@ -1610,7 +1618,11 @@ class PortfolioService:
         # only a share has its own news, a fund or the benchmark itself would waste a call
         if holding["kind"] == KIND_STOCK and not is_region_benchmark(ticker, region):
             fetch_event_window(self.db, ticker, event_date, user_id)
-        return self._possible_explanations(ticker, holding.get("name") or "", event_date)
+        explanations = self._possible_explanations(ticker, holding.get("name") or "", event_date)
+        if explanations:
+            # so a reload shows the news ring now instead of after the 15 min cache
+            _forget_events(user_id)
+        return explanations
 
     def _same_day(self, ticker: str, event_date: date, log_return: float | None) -> dict | None:
         repo = NewsRepository(self.db)

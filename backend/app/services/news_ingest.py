@@ -24,7 +24,6 @@ MARKETAUX_NEWS_URL = "https://api.marketaux.com/v1/news/all"
 MARKETAUX_ENTITY_URL = "https://api.marketaux.com/v1/entity/search"
 SOURCE = "marketaux"
 
-ARTICLES_PER_REQUEST = 3
 ON_DEMAND_TIMEOUT_SECONDS = 6
 JOB_TIMEOUT_SECONDS = 15
 
@@ -122,7 +121,7 @@ def fetch_articles(
         "symbols": ",".join(symbols),
         "filter_entities": "true",
         "language": "en",
-        "limit": ARTICLES_PER_REQUEST,
+        "limit": settings.marketaux_articles_per_request,
     }
     if countries:
         params["countries"] = countries
