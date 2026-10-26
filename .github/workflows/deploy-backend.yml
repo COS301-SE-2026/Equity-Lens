@@ -101,7 +101,7 @@ jobs:
             "docker run --rm --env-file /home/ubuntu/backend.env $ECR_REGISTRY/$ECR_REPO:$DEPLOY_TAG alembic upgrade head"
             "docker stop equity-lens-backend || true"
             "docker rm equity-lens-backend || true"
-            "docker run -d --name equity-lens-backend -p 8000:8000 --env-file /home/ubuntu/backend.env $ECR_REGISTRY/$ECR_REPO:$DEPLOY_TAG"
+            "docker run -d --restart unless-stopped --name equity-lens-backend -p 8000:8000 --env-file /home/ubuntu/backend.env $ECR_REGISTRY/$ECR_REPO:$DEPLOY_TAG"
             "HEALTHY=0"
             "for i in \$(seq 1 30); do"
             "  if curl -sf http://localhost:8000/health 2>/dev/null | grep -q '\"status\"[[:space:]]*:[[:space:]]*\"ok\"'; then"

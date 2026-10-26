@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
+from app.config import settings
 from app.models.news_event import NewsArticle, NewsFetchLog, NewsIngestRun, PriceAnomaly
 from app.repositories.news_repository import NewsRepository
 from app.scripts import seed_news
@@ -90,6 +91,35 @@ def test_seed_universe_is_in_holding_ticker_format():
     assert [t.upper() for t in seed_news.SEED_UNIVERSE] == seed_news.SEED_UNIVERSE
     jse = [t for t in seed_news.SEED_UNIVERSE if t.endswith(".JO")]
     assert len(jse) >= 30
+
+
+def test_the_seed_universe_uses_the_tickers_yahoo_still_quotes():
+    assert {"VAL.JO", "CNP.JO"} <= set(seed_news.SEED_UNIVERSE)
+    assert not {"AMS.JO", "MCG.JO"} & set(seed_news.SEED_UNIVERSE)
+
+
+def test_the_wider_universe_is_off_by_default():
+    assert seed_news.seed_universe() == seed_news.SEED_UNIVERSE
+
+
+def test_the_wider_universe_adds_the_catalogue_shares_but_no_funds(monkeypatch):
+    monkeypatch.setattr(settings, "news_extended_universe", True)
+
+    universe = seed_news.seed_universe()
+
+    assert {"OUT.JO", "PPH.JO"} <= set(universe)
+    assert "STXRES.JO" not in universe
+    assert universe == sorted(set(universe))
+    assert set(seed_news.SEED_UNIVERSE) <= set(universe)
+
+
+def test_the_backfill_picks_up_the_wider_universe(db_session, monkeypatch):
+    monkeypatch.setattr(settings, "news_extended_universe", True)
+
+    universe, held, _ = seed_news.backfill_universe(db_session, [])
+
+    assert "OUT.JO" in universe
+    assert held == set()
 
 
 def _series_with_one_event():

@@ -279,7 +279,7 @@ export const endMarker = ({ rows, ticker, colour, label }) => {
 };
 
 /**
- * @param {{ rows: any[], events: any }} args
+ * @param {{ rows: any[], events: any, details?: Record<string, any> }} args
  * @returns {{
  *   key: string,
  *   event: any,
@@ -287,9 +287,10 @@ export const endMarker = ({ rows, ticker, colour, label }) => {
  *   fill: string,
  *   stroke: string,
  *   strokeWidth: number,
+ *   hasNews: boolean,
  * }[]}
  */
-export function eventDots({ rows, events }) {
+export function eventDots({ rows, events, details = {} }) {
   const byDate = new Map(rows.map((row) => [row.date, row]));
 
   /** @param {string} date */
@@ -304,14 +305,17 @@ export function eventDots({ rows, events }) {
       if (y === null) return null;
 
       const fill = event.direction === 'down' ? 'var(--signal-negative)' : 'var(--signal-positive)';
+      const key = `${event.ticker}:${event.date}`;
+      const hasNews = event.has_news === true || details[key]?.possible_explanations?.length > 0;
 
       return {
-        key: `${event.ticker}:${event.date}`,
+        key,
         event,
         y,
         fill,
-        stroke: 'var(--surface-card)',
-        strokeWidth: 1.5,
+        stroke: hasNews ? 'var(--text-primary)' : 'var(--surface-card)',
+        strokeWidth: hasNews ? 2 : 1.5,
+        hasNews,
       };
     })
     .filter(Boolean);
@@ -471,6 +475,7 @@ const AnchoredPopover = ({ at, containerRef, children }) => {
  *   selected: string[],
  *   benchmarkLabel: string,
  *   events?: any,
+ *   eventDetails?: Record<string, any>,
  *   onSelectEvent?: (event: any) => void,
  *   groups?: { id: string, name: string }[],
  * }} props
@@ -482,6 +487,7 @@ const PerfChart = ({
   selected,
   benchmarkLabel,
   events = null,
+  eventDetails = {},
   onSelectEvent,
   groups = [],
 }) => {
@@ -496,7 +502,7 @@ const PerfChart = ({
     );
   }
 
-  const dots = eventDots({ rows, events });
+  const dots = eventDots({ rows, events, details: eventDetails });
 
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -589,10 +595,11 @@ const PerfChart = ({
           }),
         )}
         {dots.map((dot) => {
-          const { key, event, y, fill, stroke, strokeWidth } = dot;
+          const { key, event, y, fill, stroke, strokeWidth, hasNews } = dot;
           const open = (/** @type {{ cx: number, cy: number }} */ at) =>
             onSelectEvent?.({ ...dot, at });
           const top = headlineFor(event);
+          const label = top ? `${top.headline}, ${top.move} on ${top.date}` : event.ticker;
           return (
             <ReferenceDot
               key={key}
@@ -613,7 +620,7 @@ const PerfChart = ({
                   strokeWidth={strokeWidth}
                   role="button"
                   tabIndex={0}
-                  aria-label={top ? `${top.headline}, ${top.move} on ${top.date}` : event.ticker}
+                  aria-label={hasNews ? `${label}, news found` : label}
                   style={{ cursor: 'pointer' }}
                   onClick={() => open({ cx: props.cx, cy: props.cy })}
                   onKeyDown={(/** @type {any} */ e) => {
@@ -872,6 +879,7 @@ const PerformanceVsBenchmark = ({
       selected={selected}
       benchmarkLabel={benchmarkLabel}
       events={events}
+      eventDetails={eventDetails}
       onSelectEvent={selectEvent}
     />
   );
@@ -893,7 +901,12 @@ const PerformanceVsBenchmark = ({
 
   const note = markerNote({ events, loading: eventsLoading, failed: eventsFailed });
   const benchmarkStart = lateBenchmarkStart(visibleSeries);
-  const hasDots = eventDots({ rows: indexed ? chartRows : visibleSeries, events }).length > 0;
+  const shownDots = eventDots({
+    rows: indexed ? chartRows : visibleSeries,
+    events,
+    details: eventDetails,
+  });
+  const hasDots = shownDots.length > 0;
   const showsReconstructed =
     historyPref.source === 'reconstructed' &&
     Boolean(importedAt) &&
@@ -942,6 +955,9 @@ const PerformanceVsBenchmark = ({
                 <>
                   <LegendKey color="var(--signal-negative)" label="Unusual fall" variant="dot" />
                   <LegendKey color="var(--signal-positive)" label="Unusual rise" variant="dot" />
+                  {shownDots.some((dot) => dot.hasNews) && (
+                    <LegendKey color="var(--text-primary)" label="News found" variant="ring" />
+                  )}
                 </>
               )}
             </div>
@@ -1186,7 +1202,7 @@ const PerformanceVsBenchmark = ({
 
 /**
 
- * @param {{ color: string, label: string, variant?: 'line'|'dashed'|'dot' }} props
+ * @param {{ color: string, label: string, variant?: 'line'|'dashed'|'dot'|'ring' }} props
  */
 const LegendKey = ({ color, label, variant = 'line' }) => {
   let marker;
@@ -1199,6 +1215,8 @@ const LegendKey = ({ color, label, variant = 'line' }) => {
         style={{ background: color, boxShadow: `0 0 6px ${color}` }}
       />
     );
+  } else if (variant === 'ring') {
+    marker = <span className="h-2 w-2 rounded-full" style={{ border: `2px solid ${color}` }} />;
   } else {
     marker = <span className="h-0 w-4 border-t-2" style={{ borderColor: color }} />;
   }

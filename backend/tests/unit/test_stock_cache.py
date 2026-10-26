@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.orm import sessionmaker
 
-from app.models.market_data import MarketData
+from app.models.market_data import FundamentalsCache, MarketData
 from app.services import portfolio_service
 from app.services.instruments import REGION_SA, REGION_US
 from app.utils import stock_cache
@@ -545,3 +545,42 @@ def test_the_blended_benchmark_starts_on_the_portfolios_first_day(db_session):
     assert len(components) == 2
     assert min(series) <= PORTFOLIO_START
     assert series[PORTFOLIO_START] == 1000.0
+
+
+def _fundamentals_row(db_session, ticker, age):
+    db_session.add(FundamentalsCache(
+        ticker=ticker, info={"sector": "Basic Materials"}, fetched_at=datetime.now(UTC) - age,
+    ))
+    db_session.commit()
+
+
+@pytest.mark.usefixtures("cache_db")
+def test_a_bare_jse_symbol_uses_the_fresh_jo_fundamentals_row(db_session):
+    _fundamentals_row(db_session, "AGL.JO", timedelta(hours=1))
+
+    with (
+        patch.object(stock_cache.settings, "allow_live_market_fallback", True),
+        patch("app.utils.stock_cache.yf.Ticker", side_effect=AssertionError("yahoo")) as yahoo,
+    ):
+        result = stock_cache.get_cached_fundamentals("AGL")
+
+    yahoo.assert_not_called()
+    assert result["info"] == {"sector": "Basic Materials"}
+    assert result["live_fetch"] is False
+
+
+@pytest.mark.usefixtures("cache_db")
+def test_a_stale_jo_fundamentals_row_still_goes_to_yahoo(db_session):
+    _fundamentals_row(db_session, "AGL.JO", timedelta(days=8))
+
+    with (
+        patch.object(stock_cache.settings, "allow_live_market_fallback", True),
+        patch("app.utils.stock_cache.yf.Ticker") as yahoo,
+        patch("app.utils.stock_cache.time.sleep"),
+    ):
+        yahoo.return_value.info = {}
+        yahoo.return_value.balance_sheet = pd.DataFrame()
+        yahoo.return_value.financials = pd.DataFrame()
+        stock_cache.get_cached_fundamentals("AGL")
+
+    assert yahoo.call_args_list[0].args == ("AGL.JO",)

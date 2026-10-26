@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     news_daily_request_budget: int = 80
     news_nightly_request_budget: int = 60
     event_news_per_user_daily: int = 10
+    marketaux_articles_per_request: int = 3
+    news_extended_universe: bool = False
     guest_mode_enabled: bool = False
     guest_token_secret: str | None = None
     guest_session_hours: int = 4

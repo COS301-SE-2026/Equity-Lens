@@ -269,3 +269,20 @@ def test_rejected_entities_are_counted_by_reason(db_session):
 
     assert run.links_rejected == 2
     assert json.loads(run.details)["reasons"] == {"symbol_mismatch": 1, "not_equity": 1}
+
+def _limit_sent():
+    response = MagicMock(status_code=200)
+    response.json.return_value = {"data": []}
+    with patch.object(news_ingest.requests, "get", return_value=response) as get:
+        news_ingest.fetch_articles(["NPN.JO"], timeout=5)
+    return get.call_args.kwargs["params"]["limit"]
+
+
+def test_the_free_plan_asks_for_three_articles_a_call():
+    assert _limit_sent() == 3
+
+
+def test_a_paid_plan_can_ask_for_twenty_without_a_code_change(monkeypatch):
+    monkeypatch.setattr(news_ingest.settings, "marketaux_articles_per_request", 20)
+
+    assert _limit_sent() == 20

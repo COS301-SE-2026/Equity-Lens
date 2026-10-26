@@ -105,7 +105,7 @@ jobs:
             "docker pull $ECR_REGISTRY/$ECR_REPO:$DEPLOY_TAG"
             "docker stop equity-lens-frontend || true"
             "docker rm equity-lens-frontend || true"
-            "docker run -d --name equity-lens-frontend -p 3000:8080 $ECR_REGISTRY/$ECR_REPO:$DEPLOY_TAG"
+            "docker run -d --restart unless-stopped --name equity-lens-frontend -p 3000:8080 $ECR_REGISTRY/$ECR_REPO:$DEPLOY_TAG"
             "HEALTHY=0"
             "for i in \$(seq 1 30); do"
             "  BODY=\$(curl -sf http://localhost:3000/ 2>/dev/null || true)"

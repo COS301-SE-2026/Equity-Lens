@@ -20,6 +20,8 @@ _YFINANCE_GLOBAL_COOLDOWN_UNTIL: datetime | None = None
 _YFINANCE_COOLDOWN_STRIKES = 0
 YFINANCE_BASE_COOLDOWN_MINUTES = 3
 YFINANCE_MAX_COOLDOWN_MINUTES = 30
+UNIT_FLIP_TOLERANCE = 0.05
+PRICE_COLUMNS = ["Open", "High", "Low", "Close"]
 
 logger = logging.getLogger(__name__)
 
@@ -160,9 +162,61 @@ def _load_local_price_history(ticker: str) -> pd.DataFrame:
     return df
 
 
+def hundredfold_jump(before: float, after: float) -> int:
+    ratio = after / before
+    if abs(ratio / 100 - 1) <= UNIT_FLIP_TOLERANCE:
+        return 1
+    if abs(ratio * 100 - 1) <= UNIT_FLIP_TOLERANCE:
+        return -1
+    return 0
+
+
+def repair_unit_slips(ticker: str, history: pd.DataFrame) -> tuple[pd.DataFrame, list[date]]:
+    if history.empty or not ticker.upper().endswith(".JO"):
+        return history, []
+    closes = history["Close"].tolist()
+    jumps = {}
+    for i in range(1, len(closes)):
+        if closes[i - 1] <= 0 or closes[i] <= 0:
+            continue
+        jump = hundredfold_jump(closes[i - 1], closes[i])
+        if jump:
+            jumps[i] = jump
+
+    slips, lone = {}, []
+    order = sorted(jumps)
+    k = 0
+    while k < len(order):
+        i = order[k]
+        if jumps.get(i + 1) == -jumps[i]:
+            slips[i] = -jumps[i]
+            k += 2
+        else:
+            lone.append(i)
+            k += 1
+    if len(lone) == 1 and lone[0] == len(closes) - 1:
+        slips[lone[0]] = -jumps[lone[0]]
+    elif lone == [1]:
+        slips[0] = jumps[1]
+
+    repaired = history.copy()
+    for i in sorted(slips):
+        row = repaired.index[i]
+        if slips[i] > 0:
+            repaired.loc[row, PRICE_COLUMNS] *= 100
+        else:
+            repaired.loc[row, PRICE_COLUMNS] /= 100
+        if "Prev Close" in repaired and i + 1 < len(closes):
+            repaired.loc[repaired.index[i + 1], "Prev Close"] = repaired.loc[row, "Close"]
+    return repaired, [repaired.index[i].date() for i in sorted(slips)]
+
+
 def _save_price_history(ticker: str, history: pd.DataFrame) -> None:
     if history.empty:
         return
+    history, repaired = repair_unit_slips(ticker, history)
+    for day in repaired:
+        logger.warning("Repaired a 100x price slip for %s on %s", ticker, day)
     db = SessionLocal()
     try:
         for timestamp, row in history.iterrows():
@@ -214,6 +268,9 @@ def _save_price_history(ticker: str, history: pd.DataFrame) -> None:
 def _save_missing_history(ticker: str, history: pd.DataFrame) -> int:
     if history.empty:
         return 0
+    history, repaired = repair_unit_slips(ticker, history)
+    for day in repaired:
+        logger.warning("Repaired a 100x price slip for %s on %s", ticker, day)
     db = SessionLocal()
     try:
         stored = set(db.scalars(select(MarketData.date).where(MarketData.ticker == ticker.upper())))
@@ -600,6 +657,9 @@ def get_cached_fundamentals(ticker: str) -> dict:
             "financials": pd.DataFrame(),
         }
     cached = _load_cached_fundamentals(ticker)
+    if cached is None and "." not in ticker:
+        # explore asks with bare jse symbols, most rows are stored under .JO
+        cached = _load_cached_fundamentals(f"{ticker}.JO")
     if cached is not None:
         logger.debug("Fundamentals cache hit: %s", ticker)
         return {**cached, "live_fetch": False}

@@ -559,7 +559,7 @@ describe('event markers', () => {
   /** @param {any} over */
   const payload = (over) => ({ events: [], coverage: { holdings_scanned: 3 }, ...over });
 
-  it('marks a fall red and a rise green, and nothing any other way', () => {
+  it('marks a fall red and a rise green; a dot without news keeps the dark ring', () => {
     const dots = eventDots({
       rows: SPANNING,
       events: payload({
@@ -576,6 +576,79 @@ describe('event markers', () => {
     ]);
     expect(dots.every((d) => d.stroke === 'var(--surface-card)')).toBe(true);
     expect(dots.every((d) => d.strokeWidth === 1.5)).toBe(true);
+    expect(dots.every((d) => d.hasNews === false)).toBe(true);
+  });
+
+  const NPN_FALL = { ticker: 'NPN.JO', date: '2026-01-30', z_score: -4.2, direction: 'down' };
+
+  it('rings a dot the events scan found news for', () => {
+    const [dot] = eventDots({
+      rows: SPANNING,
+      events: payload({ events: [{ ...NPN_FALL, has_news: true }] }),
+    });
+
+    expect(dot.stroke).toBe('var(--text-primary)');
+    expect(dot.strokeWidth).toBe(2);
+    expect(dot.hasNews).toBe(true);
+    expect(dot.fill).toBe('var(--signal-negative)');
+  });
+
+  it('rings a dot once its card has found news, before the scan catches up', () => {
+    const [dot] = eventDots({
+      rows: SPANNING,
+      events: payload({ events: [{ ...NPN_FALL, has_news: false }] }),
+      details: { 'NPN.JO:2026-01-30': { possible_explanations: [{}] } },
+    });
+
+    expect(dot.hasNews).toBe(true);
+  });
+
+  it('leaves the ring alone when the card found nothing', () => {
+    const [dot] = eventDots({
+      rows: SPANNING,
+      events: payload({ events: [NPN_FALL] }),
+      details: { 'NPN.JO:2026-01-30': { possible_explanations: [] } },
+    });
+
+    expect(dot.hasNews).toBe(false);
+    expect(dot.stroke).toBe('var(--surface-card)');
+  });
+
+  describe('drawn on the chart', () => {
+    beforeEach(() => {
+      chartSize.current = { width: 800, height: 400 };
+    });
+
+    afterEach(() => {
+      chartSize.current = null;
+    });
+
+    it('says news was found and adds the ring to the legend', () => {
+      renderChart({
+        series: SPANNING,
+        historyDays: 2,
+        events: payload({ events: [{ ...NPN_FALL, return_pct: -4.0, has_news: true }] }),
+      });
+
+      expect(
+        screen.getByRole('button', { name: /NPN\.JO had an unusual fall.*, news found$/ }),
+      ).toBeInTheDocument();
+      expect(screen.getByText('News found')).toBeInTheDocument();
+    });
+
+    it('has no news key when no dot has news', () => {
+      renderChart({
+        series: SPANNING,
+        historyDays: 2,
+        events: payload({ events: [{ ...NPN_FALL, return_pct: -4.0 }] }),
+      });
+
+      expect(screen.getByText('Unusual fall')).toBeInTheDocument();
+      expect(screen.queryByText('News found')).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /NPN\.JO had an unusual fall/ }),
+      ).not.toHaveAccessibleName(/news found/);
+    });
   });
 
   it('has no markers when the scan found nothing', () => {

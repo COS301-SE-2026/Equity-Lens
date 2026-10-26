@@ -148,7 +148,7 @@ def test_without_top_40_prices_the_card_still_shows_its_article(
     assert card["available"] is False
     assert card["reason"] == "no_benchmark_for_region"
     assert card["region"] == "South Africa"
-    assert card["name"] == "Mr Price Group"
+    assert card["name"] == "Mr Price Group Ltd"
     assert [a["article_id"] for a in card["possible_explanations"]] == ["stored-1"]
 
 
@@ -323,3 +323,30 @@ def test_the_backfill_plans_the_same_scope_and_window(db_session):
     assert call.published_before == (EVENT_DAY + timedelta(days=2)).isoformat()
     assert call.countries == "za"
     assert seed_news.WINDOW_DAYS_BEFORE is news_ingest.WINDOW_DAYS_BEFORE
+
+
+def test_a_card_that_finds_news_rings_its_dot_without_waiting_for_the_cache(
+    client, auth_headers, db_session, test_user
+):
+    hold(db_session, test_user, "Mr Price Group", "MRP.JO")
+    start = date.today() - timedelta(days=70)
+    returns = [0.01 if i % 2 == 0 else -0.01 for i in range(30)] + [0.0] * 29 + [0.02]
+    series = [(start, 100.0)]
+    for i, r in enumerate(returns, start=1):
+        series.append((start + timedelta(days=i), series[-1][1] * math.exp(r)))
+    day = series[-1][0]
+    someone_else = f"{uuid4()}:1y:3.0"
+    portfolio_service._write_events_cache(someone_else, {"events": []})
+
+    def scan():
+        with patch.object(portfolio_service, "closes_for_tickers", return_value={"MRP.JO": series}):
+            return client.get("/api/portfolio/events", headers=auth_headers).json()["events"]
+
+    assert [(e["date"], e["has_news"]) for e in scan()] == [(day.isoformat(), False)]
+
+    store_article(db_session, "MRP.JO", day)
+    card = open_card(client, auth_headers, "MRP.JO", day=day)
+    assert [a["article_id"] for a in card["possible_explanations"]] == ["stored-1"]
+
+    assert [e["has_news"] for e in scan()] == [True]
+    assert portfolio_service._read_events_cache(someone_else) == {"events": []}
