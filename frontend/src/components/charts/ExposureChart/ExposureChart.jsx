@@ -1,5 +1,5 @@
 import * as d3 from 'd3';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import InfoTooltip from '../../common/InfoToolTip/InfoTooltip';
 
@@ -47,6 +47,10 @@ const KEY_OPACITY = 1;
 const BACKGROUND_OPACITY = 0.35;
 const DIMMED_OPACITY = 0.08;
 const FOCUS_MS = 150;
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 4.5;
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
 const METRIC_HELP = {
   marketCap:
@@ -87,6 +91,104 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
   const tooltipRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const focusRef = useRef(/** @type {((ticker: string | null) => void) | null} */ (null));
   const [selected, setSelected] = useState(/** @type {string | null} */ (null));
+  const [zoomState, setZoomState] = useState({ scale: MIN_ZOOM, x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragState = useRef(/** @type {{ x: number, y: number } | null} */ (null));
+
+  const getSelectedNodePoint = useCallback(() => {
+    if (!selected || !svgRef.current) return null;
+    const selectedNode = svgRef.current.querySelector(
+      `circle.stock[aria-label^="${CSS.escape(selected)}"]`,
+    );
+    if (!selectedNode) return null;
+    const svgRect = svgRef.current.getBoundingClientRect();
+    const nodeRect = selectedNode.getBoundingClientRect();
+    return {
+      x: nodeRect.left - svgRect.left + nodeRect.width / 2,
+      y: nodeRect.top - svgRect.top + nodeRect.height / 2,
+    };
+  }, [selected]);
+
+  const handleZoomAction = useCallback(
+    (direction, point = getSelectedNodePoint()) => {
+      setZoomState((current) => {
+        const nextScale = clamp(current.scale * direction, MIN_ZOOM, MAX_ZOOM);
+        const svg = svgRef.current;
+
+        if (!svg) {
+          return { scale: nextScale, x: 0, y: 0 };
+        }
+
+        const rect = svg.getBoundingClientRect();
+        const centerX = point?.x ?? rect.width / 2;
+        const centerY = point?.y ?? rect.height / 2;
+        const xShift = (centerX - rect.width / 2) * (1 - nextScale / current.scale);
+        const yShift = (centerY - rect.height / 2) * (1 - nextScale / current.scale);
+
+        return {
+          scale: nextScale,
+          x: current.x + xShift,
+          y: current.y + yShift,
+        };
+      });
+    },
+    [getSelectedNodePoint],
+  );
+
+  const handleWheel = useCallback(
+    (event) => {
+      event.preventDefault();
+      if (!svgRef.current) return;
+      const rect = svgRef.current.getBoundingClientRect();
+      handleZoomAction(event.deltaY < 0 ? 1.12 : 0.9, {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top,
+      });
+    },
+    [handleZoomAction],
+  );
+
+  const handleChartKeyDown = useCallback(
+    (event) => {
+      if (event.key === '+' || event.key === '=') {
+        event.preventDefault();
+        handleZoomAction(1.2, getSelectedNodePoint() ?? undefined);
+      } else if (event.key === '-') {
+        event.preventDefault();
+        handleZoomAction(0.85, getSelectedNodePoint() ?? undefined);
+      } else if (event.key === '0') {
+        event.preventDefault();
+        setZoomState({ scale: MIN_ZOOM, x: 0, y: 0 });
+      }
+    },
+    [getSelectedNodePoint, handleZoomAction],
+  );
+
+  const handlePointerDown = useCallback((event) => {
+    if (event.button !== undefined && event.button !== 0) return;
+    if (!svgRef.current) return;
+    dragState.current = { x: event.clientX, y: event.clientY };
+    setIsDragging(true);
+    event.preventDefault();
+    svgRef.current.setPointerCapture?.(event.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback((event) => {
+    if (!dragState.current) return;
+    const dx = event.clientX - dragState.current.x;
+    const dy = event.clientY - dragState.current.y;
+    dragState.current = { x: event.clientX, y: event.clientY };
+    setZoomState((current) => ({ ...current, x: current.x + dx, y: current.y + dy }));
+  }, []);
+
+  const handlePointerUp = useCallback((event) => {
+    if (!dragState.current && !isDragging) return;
+    if (svgRef.current && typeof event.pointerId === 'number') {
+      svgRef.current.releasePointerCapture?.(event.pointerId);
+    }
+    dragState.current = null;
+    setIsDragging(false);
+  }, [isDragging]);
 
   useEffect(() => {
     if (!svgRef.current || !universe.length) return;
@@ -106,7 +208,15 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
 
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
-    setSelected(null);
+
+    if (selected && !points.some((point) => point.ticker === selected)) {
+      setSelected(null);
+    }
+
+    const root = svg
+      .append('g')
+      .attr('class', 'chart-root')
+      .attr('transform', `translate(${zoomState.x} ${zoomState.y}) scale(${zoomState.scale})`);
 
     const xMin = (d3.min(points, (d) => d.market_cap) || 1) * 0.8;
     const xMax = (d3.max(points, (d) => d.market_cap) || 100) * 1.2;
@@ -126,7 +236,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     const yTicks = y.ticks(5);
     const xTicks = getLogTicks(xMin, xMax, 6);
 
-    svg
+    root
       .append('g')
       .selectAll('line.grid-y')
       .data(yTicks)
@@ -139,7 +249,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
       .attr('stroke', 'var(--chart-grid)')
       .attr('stroke-width', 0.5);
 
-    svg
+    root
       .append('g')
       .selectAll('line.grid-x')
       .data(xTicks)
@@ -152,7 +262,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
       .attr('stroke', 'var(--chart-grid)')
       .attr('stroke-width', 0.5);
 
-    const xAxis = svg
+    const xAxis = root
       .append('g')
       .attr('transform', `translate(0,${height - margin.bottom})`)
       .call(
@@ -165,7 +275,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     xAxis.selectAll('text').style('fill', 'var(--chart-axis-text)').style('font-size', '11px');
     xAxis.selectAll('path, line').style('stroke', 'var(--border-subtle)');
 
-    const yAxis = svg
+    const yAxis = root
       .append('g')
       .attr('transform', `translate(${margin.left},0)`)
       .call(
@@ -178,7 +288,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
     yAxis.selectAll('text').style('fill', 'var(--chart-axis-text)').style('font-size', '11px');
     yAxis.selectAll('path, line').style('stroke', 'var(--border-subtle)');
 
-    svg
+    root
       .append('text')
       .attr('x', (margin.left + width - margin.right) / 2)
       .attr('y', height - 12)
@@ -187,7 +297,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
       .style('font-size', '11px')
       .text('Market cap (log scale)');
 
-    svg
+    root
       .append('text')
       .attr('transform', `translate(16,${(margin.top + height - margin.bottom) / 2}) rotate(-90)`)
       .attr('text-anchor', 'middle')
@@ -212,7 +322,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
       return point ? [{ ...point, closeness: rec.closeness }] : [];
     });
 
-    const halos = svg
+    const halos = root
       .append('g')
       .selectAll('.halo')
       .data(haloPoints)
@@ -231,7 +341,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
       (a, b) => Number(isKey(a)) - Number(isKey(b)) || b.dividend_yield - a.dividend_yield,
     );
 
-    const stocks = svg
+    const stocks = root
       .append('g')
       .selectAll('.stock')
       .data(drawOrder)
@@ -287,7 +397,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
         if (tooltip) tooltip.style.opacity = '0';
       });
 
-    const defs = svg.append('defs');
+    const defs = root.append('defs');
     [
       ['rec-arrow', 'var(--text-secondary)'],
       ['rec-arrow-active', 'var(--text-primary)'],
@@ -338,7 +448,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
       })
       .filter((l) => l !== null);
 
-    const linkLayer = svg.append('g').style('pointer-events', 'none');
+    const linkLayer = root.append('g').style('pointer-events', 'none');
     const linkGroups = linkLayer.selectAll('g').data(links).join('g').attr('opacity', 0.8);
 
     linkGroups
@@ -362,7 +472,7 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
       .attr('stroke-dasharray', '4,3')
       .attr('marker-end', 'url(#rec-arrow)');
 
-    const focusText = svg.append('g').style('pointer-events', 'none');
+    const focusText = root.append('g').style('pointer-events', 'none');
 
     /** @type {string | null} */
     let focused = null;
@@ -477,7 +587,11 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
 
     svg.on('click', () => applyFocus(null));
     focusRef.current = applyFocus;
-  }, [portfolio, universe, recommended]);
+
+    if (selected) {
+      applyFocus(selected);
+    }
+  }, [portfolio, universe, recommended, zoomState]);
 
   const activeSectors = Array.from(new Set([...universe, ...portfolio].map((u) => u.sector)));
 
@@ -516,21 +630,86 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
         Select a holding or recommendation to see how they connect. Select it again, or anywhere
         else on the map, to reset.
       </p>
-      <svg
-        ref={svgRef}
-        width="100%"
-        viewBox="0 0 720 460"
-        role="group"
-        aria-label="Similarity map of JSE stocks"
-      />
-      <div ref={tooltipRef} style={TOOLTIP_STYLE} />
-
       <div
+        role="toolbar"
+        aria-label="Map zoom controls"
+        style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}
+      >
+        <button
+          type="button"
+          aria-label="Zoom in"
+          onClick={() => handleZoomAction(1.2, getSelectedNodePoint() ?? undefined)}
+          onFocus={(event) => Object.assign(event.currentTarget.style, { outline: '2px solid var(--accent-primary)', outlineOffset: '2px' })}
+          onBlur={(event) => {
+            event.currentTarget.style.outline = 'none';
+            event.currentTarget.style.outlineOffset = '0';
+          }}
+          style={{
+            padding: '6px 10px',
+            borderRadius: '999px',
+            border: '1px solid var(--border-subtle)',
+            background: 'var(--surface-card)',
+            color: 'var(--text-primary)',
+            cursor: 'pointer',
+            fontWeight: 600,
+          }}
+        >
+          +
+        </button>
+        <button
+          type="button"
+          aria-label="Zoom out"
+          onClick={() => handleZoomAction(0.85, getSelectedNodePoint() ?? undefined)}
+          onFocus={(event) => Object.assign(event.currentTarget.style, { outline: '2px solid var(--accent-primary)', outlineOffset: '2px' })}
+          onBlur={(event) => {
+            event.currentTarget.style.outline = 'none';
+            event.currentTarget.style.outlineOffset = '0';
+          }}
+          style={{
+            padding: '6px 10px',
+            borderRadius: '999px',
+            border: '1px solid var(--border-subtle)',
+            background: 'var(--surface-card)',
+            color: 'var(--text-primary)',
+            cursor: 'pointer',
+            fontWeight: 600,
+          }}
+        >
+          −
+        </button>
+        <button
+          type="button"
+          aria-label="Reset view"
+          onClick={() => setZoomState({ scale: MIN_ZOOM, x: 0, y: 0 })}
+          onFocus={(event) => Object.assign(event.currentTarget.style, { outline: '2px solid var(--accent-primary)', outlineOffset: '2px' })}
+          onBlur={(event) => {
+            event.currentTarget.style.outline = 'none';
+            event.currentTarget.style.outlineOffset = '0';
+          }}
+          style={{
+            padding: '6px 10px',
+            borderRadius: '999px',
+            border: '1px solid var(--border-subtle)',
+            background: 'transparent',
+            color: 'var(--text-secondary)',
+            cursor: 'pointer',
+            fontSize: '12px',
+          }}
+        >
+          Reset view
+        </button>
+        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', marginLeft: '4px' }}>
+          Drag to pan, scroll to zoom, or press + / − / 0 to adjust the view
+        </span>
+      </div>
+      <div
+        role="group"
+        aria-label="Chart legend"
         style={{
           display: 'flex',
           flexWrap: 'wrap',
           gap: '16px',
-          marginTop: '12px',
+          marginBottom: '12px',
           fontSize: '11px',
           color: 'var(--text-secondary)',
         }}
@@ -601,6 +780,32 @@ export function ExposureChart({ portfolio = [], universe = [], recommended = [] 
           </span>
         ))}
       </div>
+      <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border-subtle)' }}>
+        <p id="explore-chart-instructions" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap' }}>
+          Drag across the map to pan around it. Use the mouse wheel or the zoom controls to magnify the map. Press plus or minus to zoom in or out, and zero to reset.
+        </p>
+        <svg
+          ref={svgRef}
+          width="100%"
+          viewBox="0 0 720 460"
+          role="group"
+          aria-label="Similarity map of JSE stocks"
+          aria-describedby="explore-chart-instructions"
+          tabIndex={0}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerLeave={handlePointerUp}
+          onMouseDown={handlePointerDown}
+          onMouseMove={handlePointerMove}
+          onMouseUp={handlePointerUp}
+          onMouseLeave={handlePointerUp}
+          onKeyDown={handleChartKeyDown}
+          onWheel={handleWheel}
+          style={{ display: 'block', background: 'var(--surface-base)', touchAction: 'none', cursor: isDragging ? 'grabbing' : 'grab' }}
+        />
+      </div>
+      <div ref={tooltipRef} style={TOOLTIP_STYLE} />
     </div>
   );
 }

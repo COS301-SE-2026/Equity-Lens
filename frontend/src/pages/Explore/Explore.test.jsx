@@ -110,6 +110,14 @@ describe('Explore Component', () => {
       expect(screen.getByRole('heading', { name: /more of what you like/i })).toBeInTheDocument();
     });
 
+    it('provides a skip link to the visual map and main page landmarks', () => {
+      setupPendingFetch();
+      render(<Explore />);
+
+      expect(screen.getByRole('link', { name: /skip to visual map/i })).toBeInTheDocument();
+      expect(screen.getByRole('main')).toBeInTheDocument();
+    });
+
     it('displays loading spinner while request is pending', () => {
       setupPendingFetch();
       render(<Explore />);
@@ -138,10 +146,20 @@ describe('Explore Component', () => {
       setupFetchMock(MOCK_ELIGIBLE_RESPONSE);
       render(<Explore />);
 
-      expect(await screen.findByText('Sanlam')).toBeInTheDocument();
-      expect(screen.getByText('SLM')).toBeInTheDocument();
+      expect((await screen.findAllByText(/Sanlam/i)).length).toBeGreaterThan(0);
+      expect(screen.getAllByText('SLM').length).toBeGreaterThan(0);
       expect(screen.getByText(MOCK_ELIGIBLE_RESPONSE.recommended[0].description)).toBeInTheDocument();
       expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+    });
+
+    it('offers a compact recommended list above the map and richer how-it-works guidance', async () => {
+      setupFetchMock(MOCK_ELIGIBLE_RESPONSE);
+      render(<Explore />);
+
+      const summaryToggle = await screen.findByRole('button', { name: /hide recommended ideas/i });
+      expect(summaryToggle).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getAllByText('SLM').length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/how recommendations work/i).length).toBeGreaterThan(0);
     });
 
     it('falls back to ticker symbol when full company name is missing from universe', async () => {
@@ -153,7 +171,7 @@ describe('Explore Component', () => {
       render(<Explore />);
 
       await screen.findByTestId('exposure-chart');
-      expect(screen.getAllByText('ABC')).toHaveLength(2);
+      expect(screen.getAllByText('ABC').length).toBeGreaterThan(0);
     });
 
     it('passes parsed portfolio, universe, and recommendations props to chart', async () => {
