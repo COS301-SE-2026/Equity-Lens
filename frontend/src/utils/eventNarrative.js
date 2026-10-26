@@ -288,43 +288,15 @@ export function newsFor(detail) {
 
 /**
  * @param {any} event
- * @param {any} detail
  * @returns {string}
  */
-export function buildEventQuestion(event, detail) {
+export function buildEventQuestion(event) {
   const ticker = event?.ticker ?? 'this holding';
-  const top = headlineFor(event);
-  const lines = [top ? `${top.headline}: ${top.move} on ${top.date}.` : `${ticker} moved unusually.`];
-
-  const parts = detail?.decomposition;
-  if (parts) {
-    const label = detail.benchmark_label ?? 'the benchmark';
-    const market = round1(parts.market_component_pct);
-    lines.push(
-      `The ${label} moved ${signed(round1(parts.market_return_pct))}% that day. With a beta of `
-        + `${num(parts.beta)?.toFixed(2)} over ${detail.observations} trading days, about `
-        + `${signed(market)}% of the move is what the market would predict, leaving `
-        + `${signed(round1(round1(parts.stock_return_pct) - market))}% specific to ${ticker}.`,
-    );
-  }
-
-  lines.push(
-    `The move was ${Math.abs(num(event?.z_score) ?? 0).toFixed(1)} standard deviations out, `
-      + 'measured against an annualised volatility of '
-      + `${(num(event?.annualised_volatility_pct) ?? 0).toFixed(1)}% over ${event?.observations} `
-      + 'trading days.',
-  );
-
-  lines.push(
-    'Explain in plain language what this means for me as an investor, what kinds of '
-      + 'company-specific news typically produce a move of this size, and '
-      + (num(event?.return_pct) !== null && event.return_pct < 0
-        ? 'what I could have done to reduce my exposure to a single-company shock like this.'
-        : 'how a holding like this contributes when it runs.')
-      + ' Do not state a specific cause; you have not been given one.',
-  );
-
-  return lines.join(' ');
+  const who = event?.name ? `${event.name} (${ticker})` : ticker;
+  const move = num(event?.return_pct);
+  const size = move === null ? 'unusual' : `${signed(move)}%`;
+  const when = event?.date ? ` on ${longDate(event.date)}` : '';
+  return `What in the news might explain the ${size} move in ${who}${when}?`;
 }
 
 const TRADING_DAYS_PER_YEAR = 252;

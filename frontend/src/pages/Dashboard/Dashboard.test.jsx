@@ -16,6 +16,24 @@ vi.mock('../../services/api', () => ({
   },
 }));
 
+// wraps the real chart so a test can see the rows Dashboard hands it
+const perfProps = vi.hoisted(() => ({ series: /** @type {any[]} */ ([]) }));
+vi.mock(
+  '../../components/dashboard/PerformanceVsBenchmark/PerformanceVsBenchmark',
+  async (importOriginal) => {
+    const actual = /** @type {any} */ (await importOriginal());
+    const Real = actual.default;
+    return {
+      ...actual,
+      /** @param {any} props */
+      default: (props) => {
+        perfProps.series = props.series;
+        return <Real {...props} />;
+      },
+    };
+  },
+);
+
 vi.mock('recharts', async () => {
   const actual = await vi.importActual('recharts');
   return {
@@ -104,7 +122,15 @@ vi.mock('../../hooks/usePortfolio', () => ({
       performanceHistory: [
         { date: '2026-04-01', value: 790000, benchmark: 775000, twr_index: 100.0 },
         { date: '2026-05-01', value: 805000, benchmark: 782000, twr_index: 103.16 },
-        { date: '2026-06-01', value: 847231, benchmark: 800000, twr_index: 107.24 },
+        {
+          date: '2026-06-01',
+          value: 847231,
+          benchmark: 800000,
+          twr_index: 107.24,
+          net_flow: 12000,
+          benchmark_mirror: 830500.5,
+          mirror_exhausted: false,
+        },
       ],
     },
     loading: false,
@@ -278,5 +304,19 @@ describe('Dashboard', () => {
     if (!holdingsEl) throw new Error('expected #holdings-table to exist');
     expect(holdingsEl.className).toContain('is-active');
     vi.useRealTimers();
+  });
+
+  it('hands the chart the same money fields from the payload', () => {
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
+
+    expect(perfProps.series[2]).toMatchObject({
+      net_flow: 12000,
+      benchmark_mirror: 830500.5,
+      mirror_exhausted: false,
+    });
   });
 });

@@ -25,7 +25,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/news", tags=["importing news"])
 _PORTFOLIO_NEWS_CACHE: dict[tuple[str, ...], tuple[float, dict]] = {}
 _TICKER_NEWS_CACHE: dict[str, tuple[float, dict]] = {}
+_CATEGORY_NEWS_CACHE: dict[str, tuple[float, dict]] = {}
 _NEWS_TTL_SECONDS = 300
+_CATEGORY_NEWS_TTL_SECONDS = 900
+NEWS_CATEGORIES = {"business", "top", "technology", "politics", "crime"}
 _NEWS_CACHE_MAX_KEYS = 200
 
 _BREAKER_FAILURE_LIMIT = 3
@@ -63,9 +66,9 @@ class TickerResponse(BaseModel):
     tickers: list[str] = Field(examples=[["AAPL", "MFST", "TSLA"]])
 
 
-def _cache_get(cache: dict, key: object) -> dict | None:
+def _cache_get(cache: dict, key: object, ttl: int = _NEWS_TTL_SECONDS) -> dict | None:
     now = time.monotonic()
-    for stale in [k for k, (cached_at, _) in cache.items() if now - cached_at >= _NEWS_TTL_SECONDS]:
+    for stale in [k for k, (cached_at, _) in cache.items() if now - cached_at >= ttl]:
         cache.pop(stale, None)
     entry = cache.get(key)
     return entry[1] if entry else None
@@ -148,9 +151,21 @@ def _count_newsdata_sentiment(articles: list[dict]) -> dict:
     }
 
 
+def category_news(category: str) -> dict:
+    cached = _cache_get(_CATEGORY_NEWS_CACHE, category, ttl=_CATEGORY_NEWS_TTL_SECONDS)
+    if cached is not None:
+        return cached
+
+    params = {} if category == "all" else {"category": category}
+    envelope = _count_newsdata_sentiment(_newsdata_articles(params))
+    if envelope["results"]:
+        _cache_put(_CATEGORY_NEWS_CACHE, category, envelope)
+    return envelope
+
+
 @router.get("/all", response_model=NewsResponse)
 def get_news(_current_user: User = Depends(get_current_user)):
-    return _count_newsdata_sentiment(_newsdata_articles({}))
+    return category_news("all")
 
 
 @router.get("/", response_model=NewsResponse)
@@ -158,7 +173,12 @@ def get_news_by_category(
     category: str = "business",
     _current_user: User = Depends(get_current_user),
 ):
-    return _count_newsdata_sentiment(_newsdata_articles({"category": category}))
+    category = category.lower()
+    if category not in NEWS_CATEGORIES:
+        raise HTTPException(
+            status_code=400, detail=f"category must be one of {sorted(NEWS_CATEGORIES)}"
+        )
+    return category_news(category)
 
 
 def _user_tickers(db: Session, user_id) -> list[str]:

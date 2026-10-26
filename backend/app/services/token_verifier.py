@@ -70,6 +70,8 @@ def verify_access_token(token: str) -> dict[str, Any]:
         raise TokenVerificationUnavailableError(
             f"could not resolve the signing key: {exc}"
             ) from exc
+    except jwt.PyJWTError:
+        raise _rejected() from None
 
     claims: dict[str, Any]
     try:

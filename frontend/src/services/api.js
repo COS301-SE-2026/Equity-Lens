@@ -1,7 +1,9 @@
-import { fetchAuthSession, signOut } from 'aws-amplify/auth';
+import { signOut } from 'aws-amplify/auth';
 import axios from 'axios';
 
 import { API_BASE_URL } from '../utils/constants';
+
+import { clearGuestSession, getAccessToken, readGuestSession } from './guestSession';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,16 +11,9 @@ const api = axios.create({
 
 api.interceptors.request.use(
   async (config) => {
-    try {
-      const session = await fetchAuthSession();
-      const token = session.tokens?.accessToken?.toString();
-
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    } catch {
-      //Fails naturally so this can be empty
-     
+    const token = await getAccessToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
   },
@@ -34,6 +29,11 @@ api.interceptors.response.use(
       status === 401 && (code === 'TOKEN_EXPIRED' || code === 'UNAUTHORISED');
 
     if (sessionExpired && !window.location.pathname.startsWith('/login')) {
+      if (readGuestSession()) {
+        clearGuestSession();
+        window.location.href = '/login?guest=ended';
+        return Promise.reject(err);
+      }
       try {
         await signOut();
       } catch (e) {

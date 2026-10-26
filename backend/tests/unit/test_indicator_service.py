@@ -1,6 +1,8 @@
+from contextlib import nullcontext
 from unittest.mock import patch
 
 import pandas as pd
+import pytest
 
 from app.services.indicator_service import (
     build_live_indicator_row,
@@ -344,3 +346,33 @@ def test_live_fetch_false_when_no_price_data():
         row = build_live_indicator_row("DELISTED", "Delisted Co", _market_returns())
 
     assert row["live_fetch"] is False
+
+
+def _capm_row(beta=None):
+    no_fundamentals = {"info": {}, "balance_sheet": pd.DataFrame(), "financials": pd.DataFrame()}
+    fixed_beta = (
+        patch("app.services.indicator_service.calculate_beta", return_value=beta)
+        if beta is not None
+        else nullcontext()
+    )
+    with (
+        patch(
+            "app.services.indicator_service.get_cached_price_history", return_value=_price_history()
+        ),
+        patch(
+            "app.services.indicator_service.get_cached_fundamentals", return_value=no_fundamentals
+        ),
+        fixed_beta,
+    ):
+        return build_live_indicator_row("XYZ", "Widget Co", _market_returns())
+
+
+def test_capm_is_a_percentage_to_match_its_unit():
+    assert _capm_row(beta=1.5)["capm"] == 11.0
+
+
+def test_capm_follows_the_measured_beta_in_percent():
+    row = _capm_row()
+
+    assert row["beta"] is not None
+    assert row["capm"] == pytest.approx(2 + row["beta"] * 6, abs=0.01)

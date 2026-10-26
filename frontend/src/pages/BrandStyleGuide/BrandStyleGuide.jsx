@@ -10,6 +10,7 @@ import {
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import BrandMark from '../../components/common/BrandMark/BrandMark';
 import Button from '../../components/common/Button/Button';
 import LoadingSpinner from '../../components/common/LoadingSpinner/LoadingSpinner';
 import FormInput from '../../components/forms/FormInput/FormInput';
@@ -988,11 +989,7 @@ const BrandStyleGuide = () => {
                   marginBottom: '16px',
                 }}
               >
-                <img
-                  src="/logo.png"
-                  alt="EquityLens logo"
-                  style={{ height: '48px', width: '48px', objectFit: 'contain' }}
-                />
+                <BrandMark size={48} title="EquityLens logo" />
               </div>
               <ul
                 style={{

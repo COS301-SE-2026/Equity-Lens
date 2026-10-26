@@ -94,9 +94,10 @@ export const benchmarkCompositionLines = (composition) =>
     .map((c) => `${c.label} - ${c.weight}% of your book`);
 
 export const BENCHMARK_METHOD =
-  "Each region's index is converted to rand at that day's exchange rate, blended by that " +
-  "region's share of your book, then rebased to what your portfolio was worth on the first " +
-  'day of the series.';
+  "Each region's index is converted to rand at that day's exchange rate and blended by that " +
+  "region's share of your book. The % figures compare growth only, so when you added money " +
+  "does not count. In the chart's rand view, every rand you put into shares buys the " +
+  'benchmark that day, and every sale sells the same rand of it.';
 /**
  * @template {{ date: string }} T
  * @param {T[]} series

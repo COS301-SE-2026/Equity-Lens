@@ -1,6 +1,11 @@
+import csv
+
 import pytest
 
 from app.services.instruments import (
+    _ETFS,
+    _STOCKS,
+    CATALOGUE_FILE,
     KIND_ETF,
     KIND_STOCK,
     KNOWN_INSTRUMENTS,
@@ -9,6 +14,8 @@ from app.services.instruments import (
     REGION_GLOBAL,
     REGION_SA,
     REGION_US,
+    _canonical,
+    _strip_suffix,
     get_look_through_note,
     looks_like_fund,
     normalize_sector,
@@ -119,7 +126,8 @@ def test_the_three_sp500_trackers_stay_separate():
 def test_distinct_funds_do_not_collapse_onto_one_key():
     assert resolve_known_instrument("10X S&P 500 ETF").ticker == "CSP500.JO"
     assert resolve_known_instrument("Sygnia Itrix S&P 500 ETF").ticker == "SYG500.JO"
-    assert len({i.ticker for i in KNOWN_INSTRUMENTS.values()}) == len(KNOWN_INSTRUMENTS)
+    hand_written = {**_STOCKS, **_ETFS}
+    assert len({row[0] for row in hand_written.values()}) == len(hand_written)
 
 
 def test_every_etf_region_has_a_benchmark():
@@ -190,6 +198,10 @@ def test_known_stock_sectors_are_already_normalized():
         "Telecommunications",
         "Materials",
         "Healthcare",
+        "Consumer",
+        "Industrials",
+        "RealEstate",
+        "Energy",
     }
 
 
@@ -212,3 +224,67 @@ def test_ticker_with_no_look_through_caveat_returns_none():
 
 def test_look_through_lookup_is_case_insensitive():
     assert get_look_through_note("npn.jo") == get_look_through_note("NPN.JO")
+
+
+@pytest.mark.parametrize(
+    ("instrument_name", "ticker"),
+    [
+        ("Shoprite Holdings Ltd", "SHP.JO"),
+        ("Shoprite Holdings Limited", "SHP.JO"),
+        ("Anglo American plc", "AGL.JO"),
+        ("Prosus N.V.", "PRX.JO"),
+        ("Compagnie Financi\u00e8re Richemont SA", "CFR.JO"),
+        ("Compagnie Financiere Richemont SA", "CFR.JO"),
+        ("Capitec Limited", "CPI.JO"),
+        ("Capitec Bank Holdings", "CPI.JO"),
+        ("1NVEST Top 40 STANLIB ETF", "ETFT40.JO"),
+    ],
+)
+def test_the_jse_catalogue_names_resolve_without_yahoo(instrument_name, ticker):
+    assert resolve_known_instrument(instrument_name).ticker == ticker
+
+
+def test_a_catalogue_share_keeps_its_kind_region_and_dashboard_sector():
+    shoprite = resolve_known_instrument("Shoprite Holdings Ltd")
+
+    assert shoprite.kind == KIND_STOCK
+    assert shoprite.region == REGION_SA
+    assert shoprite.sector == "Consumer"
+
+
+@pytest.mark.parametrize(
+    ("instrument_name", "ticker", "region"),
+    [
+        ("Satrix Resi ETF", "STXRES.JO", REGION_SA),
+        ("Satrix RESI Portfolio", "STXRES.JO", REGION_SA),
+        ("Satrix MSCI India Feeder ETF", "STXNDA.JO", REGION_EM),
+    ],
+)
+def test_catalogue_funds_resolve_as_etfs(instrument_name, ticker, region):
+    fund = resolve_known_instrument(instrument_name)
+
+    assert (fund.ticker, fund.kind, fund.region) == (ticker, KIND_ETF, region)
+
+
+@pytest.mark.parametrize("instrument_name", ["Investec Limited", "Investec plc"])
+def test_investec_is_left_to_yahoo_because_both_listings_share_the_name(instrument_name):
+    assert resolve_known_instrument(instrument_name) is None
+
+
+def test_a_hand_written_name_still_wins_over_the_catalogue_spelling():
+    assert resolve_known_instrument("Sasol Limited").display_name == "Sasol"
+    assert resolve_known_instrument("Firstrand Ltd").display_name == "FirstRand"
+
+
+def test_no_name_in_either_list_points_at_two_tickers():
+    with CATALOGUE_FILE.open(encoding="utf-8", newline="") as f:
+        names = [(row["name"], row["ticker"]) for row in csv.DictReader(f)]
+    names += [(name, row[0]) for name, row in {**_STOCKS, **_ETFS}.items()]
+
+    by_key, by_stripped = {}, {}
+    for name, ticker in names:
+        by_key.setdefault(_canonical(name), set()).add(ticker)
+        by_stripped.setdefault(_strip_suffix(_canonical(name)), set()).add(ticker)
+
+    assert {k: t for k, t in by_key.items() if len(t) > 1} == {}
+    assert {k: t for k, t in by_stripped.items() if len(t) > 1} == {}

@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 
+from app.config import settings
 from app.models.portfolio import (
     ContributionsAndWithdrawals,
     DividendsAndWithholdingTax,
@@ -10,6 +11,7 @@ from app.models.portfolio import (
     TransactionExpenses,
 )
 from app.schemas.portfolio import ACCOUNT_TYPE_CURRENCY
+from app.schemas.responses import AppError
 
 
 def checkDocumentID(database, document_id, user_id):
@@ -21,6 +23,17 @@ def checkDocumentID(database, document_id, user_id):
 
     if document is None:
         raise HTTPException(status_code=404, detail="The document is not found")
+
+
+def checkPortfolioID(database, portfolio_id, user_id):
+    portfolio = (
+        database.query(Portfolios)
+        .filter(Portfolios.id == portfolio_id, Portfolios.user_id == user_id)
+        .first()
+    )
+
+    if portfolio is None:
+        raise HTTPException(status_code=404, detail="The portfolio is not found")
 
 
 def delete_portfolio(database, user_id, portfolio_id):
@@ -50,8 +63,17 @@ def save_document(database, user_id, data):
     return saving
 
 
-def save_portfolios(database, user_id, data):
+def save_portfolios(database, user_id, data, is_guest=False):
     checkDocumentID(database, data.document_id, user_id)
+    if is_guest:
+        owned = database.query(Portfolios).filter(Portfolios.user_id == user_id).count()
+        if owned >= settings.guest_max_portfolios:
+            raise AppError(
+                403,
+                "GUEST_LIMIT",
+                f"guest sessions can hold up to {settings.guest_max_portfolios} portfolios"
+                " - create an account for more",
+            )
     saving = Portfolios(
         user_id=user_id,
         document_id=data.document_id,
@@ -79,8 +101,8 @@ def get_latest_portfolio(database, user_id):
     )
 
 
-def save_holdings(database, user_id, data, ticker, sector): # noqa: ARG001
-
+def save_holdings(database, user_id, data, ticker, sector):
+    checkPortfolioID(database, data.portfolio_id, user_id)
     saving = Holdings(
         instrument_name=data.instrument_name,
         portfolio_id=data.portfolio_id,
@@ -101,8 +123,8 @@ def save_holdings(database, user_id, data, ticker, sector): # noqa: ARG001
     return saving
 
 
-def save_instrument_purchases_and_sales(database, user_id, data, ticker, sector): # noqa: ARG001
-
+def save_instrument_purchases_and_sales(database, user_id, data, ticker, sector):
+    checkPortfolioID(database, data.portfolio_id, user_id)
     saving = InstrumentPurchasesAndSales(
         portfolio_id=data.portfolio_id,
         transaction_date=data.transaction_date,
@@ -122,8 +144,8 @@ def save_instrument_purchases_and_sales(database, user_id, data, ticker, sector)
     return saving
 
 
-def save_contributions_and_withdrawals(database, user_id, data): # noqa: ARG001
-
+def save_contributions_and_withdrawals(database, user_id, data):
+    checkPortfolioID(database, data.portfolio_id, user_id)
     saving = ContributionsAndWithdrawals(
         portfolio_id=data.portfolio_id,
         transaction_date=data.transaction_date,
@@ -139,8 +161,8 @@ def save_contributions_and_withdrawals(database, user_id, data): # noqa: ARG001
     return saving
 
 
-def save_dividends_and_withholding_tax(database, user_id, data, ticker, sector): # noqa: ARG001
-
+def save_dividends_and_withholding_tax(database, user_id, data, ticker, sector):
+    checkPortfolioID(database, data.portfolio_id, user_id)
     saving = DividendsAndWithholdingTax(
         portfolio_id=data.portfolio_id,
         transaction_date=data.transaction_date,
@@ -160,8 +182,8 @@ def save_dividends_and_withholding_tax(database, user_id, data, ticker, sector):
     return saving
 
 
-def save_transaction_expenses(database, user_id, data): # noqa: ARG001
-
+def save_transaction_expenses(database, user_id, data):
+    checkPortfolioID(database, data.portfolio_id, user_id)
     saving = TransactionExpenses(
         portfolio_id=data.portfolio_id,
         transaction_date=data.transaction_date,

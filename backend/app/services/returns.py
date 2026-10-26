@@ -104,6 +104,38 @@ def time_weighted_index(
     return index
 
 
+def period_flows(days: list[date], flows: list[tuple[date, float]]) -> list[float]:
+    if not days:
+        return []
+    totals = [0.0]
+    for prev_day, this_day in pairwise(days):
+        totals.append(sum((amt for d, amt in flows if prev_day < d <= this_day), 0.0))
+    return totals
+
+
+def benchmark_mirror(rows: list[dict]) -> list[dict]:
+    out = []
+    units = None
+    for row in rows:
+        level = row.get("benchmark")
+        if not level or level <= 0:
+            out.append({**row, "benchmark_mirror": None, "mirror_exhausted": False})
+            continue
+
+        exhausted = False
+        if units is None:
+            held = row["value"]
+        else:
+            held = units * level + row["net_flow"]
+            if held < -0.005:
+                exhausted = True
+            held = max(held, 0.0)
+
+        units = held / level
+        out.append({**row, "benchmark_mirror": round(held, 2), "mirror_exhausted": exhausted})
+    return out
+
+
 def time_weighted_return_pct(
     snapshots: list[tuple[date, float]], flows: list[tuple[date, float]]
 ) -> float | None:

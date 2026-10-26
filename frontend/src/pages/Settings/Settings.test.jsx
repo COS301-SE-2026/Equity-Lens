@@ -44,6 +44,21 @@ describe('Settings Component', () => {
     ).toBeInTheDocument();
   });
 
+  it('replaces account deletion with a note for a guest', () => {
+    vi.mocked(useAuthContext).mockReturnValue({
+      user: { email: '', is_guest: true },
+      logout: mockLogout,
+      isGuest: true,
+    });
+    render(<Settings />);
+
+    expect(screen.queryByRole('button', { name: /delete account/i })).not.toBeInTheDocument();
+    expect(screen.queryByText(/danger zone/i)).not.toBeInTheDocument();
+    expect(
+      screen.getByText('Guest sessions are deleted automatically when they end.'),
+    ).toBeInTheDocument();
+  });
+
   describe('Delete Account Button enablement', () => {
     it('keeps the Delete Account button disabled when email input is empty or wrong', () => {
       render(<Settings />);

@@ -3,10 +3,11 @@ from __future__ import annotations
 import json
 import logging
 import re
+import threading
 import time
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 
 import requests
 from sqlalchemy.orm import Session
@@ -14,7 +15,8 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.models.news_event import NewsIngestRun
 from app.repositories.news_repository import NewsRepository
-from app.services.ticker_map import listing_country
+from app.services.ticker_map import canonical_key, listing_country
+from app.utils.ai_rate_limit import check_limit
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +24,6 @@ MARKETAUX_NEWS_URL = "https://api.marketaux.com/v1/news/all"
 MARKETAUX_ENTITY_URL = "https://api.marketaux.com/v1/entity/search"
 SOURCE = "marketaux"
 
-ARTICLES_PER_REQUEST = 3
 ON_DEMAND_TIMEOUT_SECONDS = 6
 JOB_TIMEOUT_SECONDS = 15
 
@@ -31,6 +32,12 @@ RETRY_PAUSE_SECONDS = 5
 CALL_PAUSE_SECONDS = 1
 MAX_CONSECUTIVE_FAILURES = 3
 MAX_HIGHLIGHT_CHARS = 300
+
+# one window per dot, shared by the backfill, the nightly job and an opened event card
+WINDOW_DAYS_BEFORE = 4
+WINDOW_DAYS_AFTER = 2
+EVENT_NEWS_MAX_AGE_DAYS = 365
+EVENT_NEWS_LOCK_SECONDS = 8
 
 _STATUS_BY_HTTP = {
     401: "auth_error",
@@ -114,7 +121,7 @@ def fetch_articles(
         "symbols": ",".join(symbols),
         "filter_entities": "true",
         "language": "en",
-        "limit": ARTICLES_PER_REQUEST,
+        "limit": settings.marketaux_articles_per_request,
     }
     if countries:
         params["countries"] = countries
@@ -216,6 +223,64 @@ def normalise_article(article: dict, wanted: set[str]) -> dict | None:
 
 def record_call(repo: NewsRepository, scope: str, result: ProviderResult) -> None:
     repo.record_fetch(scope, SOURCE, len(result.articles), ok=result.ok)
+
+
+_window_locks: dict[str, threading.Lock] = {}
+_window_locks_guard = threading.Lock()
+
+
+def _lock_for_window(scope: str) -> threading.Lock:
+    with _window_locks_guard:
+        return _window_locks.setdefault(scope, threading.Lock())
+
+
+def fetch_event_window(db: Session, ticker: str, event_date: date, user_id) -> None:
+    from app.routers.news import _breaker_open, _record_provider_result
+
+    if not settings.market_api_key:
+        return
+    if (date.today() - event_date).days > EVENT_NEWS_MAX_AGE_DAYS:
+        return
+
+    repo = NewsRepository(db)
+    scope = f"backfill:{ticker.upper()}:{event_date.isoformat()}"
+    try:
+        if repo.fetched_ok(scope):
+            return
+        if calls_used_today(repo) >= settings.news_daily_request_budget or _breaker_open():
+            return
+
+        lock = _lock_for_window(scope)
+        if not lock.acquire(timeout=EVENT_NEWS_LOCK_SECONDS):
+            return
+        try:
+            if repo.fetched_ok(scope):
+                return
+            allowed, _ = check_limit(
+                f"event-news:{user_id}", settings.event_news_per_user_daily, 86400
+            )
+            if not allowed:
+                return
+
+            result = fetch_articles(
+                [ticker],
+                ON_DEMAND_TIMEOUT_SECONDS,
+                (event_date - timedelta(days=WINDOW_DAYS_BEFORE)).isoformat(),
+                (event_date + timedelta(days=WINDOW_DAYS_AFTER)).isoformat(),
+                listing_country(ticker),
+            )
+            record_call(repo, scope, result)
+            _record_provider_result(result.ok)
+            if result.ok:
+                wanted = {canonical_key(ticker)}
+                rows = [r for r in (normalise_article(a, wanted) for a in result.articles) if r]
+                repo.upsert_articles(rows, ingest_mode="on_demand")
+            db.commit()
+        finally:
+            lock.release()
+    except Exception:
+        db.rollback()
+        logger.warning("event news fetch failed for %s on %s", ticker, event_date)
 
 
 def _start_of_day_utc() -> datetime:

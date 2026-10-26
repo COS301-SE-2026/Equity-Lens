@@ -37,7 +37,7 @@ class ImportPDFResponse(BaseModel):
 
 class MyPortfolioResponse(BaseModel):
     Found: bool = Field(examples=[True])
-    portfolio_id: str = Field(examples=["123"])
+    portfolio_id: str | None = Field(default=None, examples=["123"])
 
 
 class SavePortfolioResponse(BaseModel):
@@ -76,7 +76,9 @@ def save_portfolios_import_DB(
     db: Session = Depends(get_db),
     CurrentUser: UserResponse = Depends(get_current_user),
 ):
-    return save_portfolios_import(database=db, user_id=CurrentUser.id, data=data)
+    return save_portfolios_import(
+        database=db, user_id=CurrentUser.id, data=data, is_guest=bool(CurrentUser.is_guest)
+    )
 
 
 @router.post("/save_holdings", response_model=SaveActionResponse)

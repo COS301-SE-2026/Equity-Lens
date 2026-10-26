@@ -12,6 +12,7 @@ import PerformanceVsBenchmark, {
   IndexTooltip,
   endMarker,
   eventDots,
+  lateBenchmarkStart,
 } from './PerformanceVsBenchmark';
 
 vi.mock('../../../services/portfolioService', () => ({ getHoldingSeries: vi.fn() }));
@@ -186,7 +187,7 @@ describe('PerformanceVsBenchmark holding comparison', () => {
   it('keeps the header legend the same size however many holdings are picked', async () => {
     renderChart({ series: SERIES, historyDays: 31, holdings: HOLDINGS });
 
-    const keys = () => screen.getAllByText(/^(Portfolio|JSE ALSI)$/).length;
+    const keys = () => screen.getAllByText(/^(Portfolio|(Same money in )?JSE ALSI)$/).length;
     const before = keys();
 
     for (const ticker of ['NPN.JO', 'SBK.JO', 'AGL.JO']) {
@@ -558,7 +559,7 @@ describe('event markers', () => {
   /** @param {any} over */
   const payload = (over) => ({ events: [], coverage: { holdings_scanned: 3 }, ...over });
 
-  it('marks a fall red and a rise green, and nothing any other way', () => {
+  it('marks a fall red and a rise green; a dot without news keeps the dark ring', () => {
     const dots = eventDots({
       rows: SPANNING,
       events: payload({
@@ -575,6 +576,79 @@ describe('event markers', () => {
     ]);
     expect(dots.every((d) => d.stroke === 'var(--surface-card)')).toBe(true);
     expect(dots.every((d) => d.strokeWidth === 1.5)).toBe(true);
+    expect(dots.every((d) => d.hasNews === false)).toBe(true);
+  });
+
+  const NPN_FALL = { ticker: 'NPN.JO', date: '2026-01-30', z_score: -4.2, direction: 'down' };
+
+  it('rings a dot the events scan found news for', () => {
+    const [dot] = eventDots({
+      rows: SPANNING,
+      events: payload({ events: [{ ...NPN_FALL, has_news: true }] }),
+    });
+
+    expect(dot.stroke).toBe('var(--text-primary)');
+    expect(dot.strokeWidth).toBe(2);
+    expect(dot.hasNews).toBe(true);
+    expect(dot.fill).toBe('var(--signal-negative)');
+  });
+
+  it('rings a dot once its card has found news, before the scan catches up', () => {
+    const [dot] = eventDots({
+      rows: SPANNING,
+      events: payload({ events: [{ ...NPN_FALL, has_news: false }] }),
+      details: { 'NPN.JO:2026-01-30': { possible_explanations: [{}] } },
+    });
+
+    expect(dot.hasNews).toBe(true);
+  });
+
+  it('leaves the ring alone when the card found nothing', () => {
+    const [dot] = eventDots({
+      rows: SPANNING,
+      events: payload({ events: [NPN_FALL] }),
+      details: { 'NPN.JO:2026-01-30': { possible_explanations: [] } },
+    });
+
+    expect(dot.hasNews).toBe(false);
+    expect(dot.stroke).toBe('var(--surface-card)');
+  });
+
+  describe('drawn on the chart', () => {
+    beforeEach(() => {
+      chartSize.current = { width: 800, height: 400 };
+    });
+
+    afterEach(() => {
+      chartSize.current = null;
+    });
+
+    it('says news was found and adds the ring to the legend', () => {
+      renderChart({
+        series: SPANNING,
+        historyDays: 2,
+        events: payload({ events: [{ ...NPN_FALL, return_pct: -4.0, has_news: true }] }),
+      });
+
+      expect(
+        screen.getByRole('button', { name: /NPN\.JO had an unusual fall.*, news found$/ }),
+      ).toBeInTheDocument();
+      expect(screen.getByText('News found')).toBeInTheDocument();
+    });
+
+    it('has no news key when no dot has news', () => {
+      renderChart({
+        series: SPANNING,
+        historyDays: 2,
+        events: payload({ events: [{ ...NPN_FALL, return_pct: -4.0 }] }),
+      });
+
+      expect(screen.getByText('Unusual fall')).toBeInTheDocument();
+      expect(screen.queryByText('News found')).not.toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: /NPN\.JO had an unusual fall/ }),
+      ).not.toHaveAccessibleName(/news found/);
+    });
   });
 
   it('has no markers when the scan found nothing', () => {
@@ -696,5 +770,191 @@ describe('the open event card', () => {
 
     view.unmount();
     expect(disconnect).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('a benchmark that starts late', () => {
+  /** @param {string} benchmarkFrom */
+  const rows = (benchmarkFrom) => [
+    { date: '2026-03-02', name: 'Mar 02', value: 100000, twr_index: 100 },
+    { date: benchmarkFrom, name: 'start', value: 104000, benchmark: 100000, twr_index: 104 },
+    { date: '2026-05-04', name: 'May 04', value: 106000, benchmark: 101000, twr_index: 106 },
+  ];
+
+  it('says where the benchmark line begins when it starts weeks after the portfolio', () => {
+    renderChart({ series: rows('2026-04-13'), historyDays: 63 });
+    expect(screen.getByText('Benchmark data starts on 13 April 2026')).toBeInTheDocument();
+  });
+
+  it('stays quiet when the benchmark starts with the portfolio', () => {
+    renderChart({ series: SERIES, historyDays: 31 });
+    expect(screen.queryByText(/Benchmark data starts on/)).not.toBeInTheDocument();
+  });
+
+  it('allows a week for weekends and holidays and no more', () => {
+    expect(lateBenchmarkStart(rows('2026-03-09'))).toBeNull();
+    expect(lateBenchmarkStart(rows('2026-03-10'))).toBe('2026-03-10');
+    expect(lateBenchmarkStart([{ date: '2026-03-02', value: 1 }])).toBeNull();
+  });
+});
+
+describe('the same money in the benchmark', () => {
+  // a 500 buy on the second day and a flat benchmark: the same money line lands exactly on the
+  // portfolio, while the old rebased line would have stayed at 1000
+  const BOUGHT = [
+    {
+      date: '2026-07-01',
+      name: 'Jul 01',
+      value: 1000,
+      benchmark: 100,
+      twr_index: 100,
+      net_flow: 0,
+    },
+    {
+      date: '2026-07-02',
+      name: 'Jul 02',
+      value: 1500,
+      benchmark: 100,
+      twr_index: 100,
+      net_flow: 500,
+    },
+  ];
+  const HOLDINGS = [{ ticker: 'NPN.JO', name: 'Naspers', value: 1500 }];
+
+  beforeEach(() => {
+    chartSize.current = { width: 800, height: 400 };
+    vi.mocked(getHoldingSeries).mockReset();
+    vi.mocked(getHoldingSeries).mockResolvedValue({
+      period: '1y',
+      series: [
+        {
+          ticker: 'NPN.JO',
+          points: [
+            { date: '2026-07-01', close: 100 },
+            { date: '2026-07-02', close: 90 },
+          ],
+        },
+      ],
+      not_held: [],
+    });
+  });
+
+  afterEach(() => {
+    chartSize.current = null;
+  });
+
+  // the dash pattern is animated in, so tell the lines apart by colour
+  const curve = (/** @type {'solid'|'dashed'} */ kind) => {
+    const stroke = kind === 'dashed' ? 'var(--text-secondary)' : 'var(--accent-primary)';
+    const found = document.querySelector(`path.recharts-line-curve[stroke="${stroke}"]`);
+    return found?.getAttribute('d') ?? null;
+  };
+
+  it('draws the dashed line from the same money, so a buy moves both lines', () => {
+    renderChart({ series: BOUGHT, historyDays: 2, benchmarkLabel: 'JSE ALSI' });
+
+    expect(curve('dashed')).not.toBeNull();
+    expect(curve('dashed')).toBe(curve('solid'));
+    expect(screen.getByText('Same money in JSE ALSI')).toBeInTheDocument();
+  });
+
+  it('keeps the rebased benchmark once a holding is picked', async () => {
+    const rows = BOUGHT.map((row, i) => ({ ...row, benchmark: [100, 110][i] }));
+    renderChart({ series: rows, historyDays: 2, holdings: HOLDINGS, benchmarkLabel: 'JSE ALSI' });
+
+    await userEvent.click(screen.getByRole('button', { name: /compare holdings/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^NPN\.JO/ }));
+    await waitFor(() => expect(screen.getByText(/Indexed to 100/)).toBeInTheDocument());
+
+    // indexed: you flat at 100 (twr), the benchmark up to 110, so the two lines differ
+    expect(curve('dashed')).not.toBeNull();
+    expect(curve('dashed')).not.toBe(curve('solid'));
+    expect(screen.getByText('JSE ALSI')).toBeInTheDocument();
+    expect(screen.queryByText('Same money in benchmark')).not.toBeInTheDocument();
+  });
+
+  it('says how far ahead or behind the same money would be', () => {
+    const rows = [
+      {
+        date: '2026-07-01',
+        name: 'Jul 01',
+        value: 1000,
+        benchmark: 100,
+        twr_index: 100,
+        net_flow: 0,
+      },
+      {
+        date: '2026-07-02',
+        name: 'Jul 02',
+        value: 1550,
+        benchmark: 110,
+        twr_index: 105,
+        net_flow: 500,
+      },
+    ];
+    renderChart({ series: rows, historyDays: 2 });
+
+    // mirror: 10 units x 110 + 500 = 1600, so you are 50 behind
+    const stat = screen.getByText('Same money in benchmark').parentElement?.parentElement;
+    const scope = within(/** @type {HTMLElement} */ (stat));
+    expect(scope.getByText(rand(1600))).toHaveClass('money-value');
+    expect(scope.getByText(rand(50))).toHaveClass('money-value');
+    expect(scope.getByText(/behind/)).toBeInTheDocument();
+  });
+
+  it('says ahead when the portfolio beat the same money', () => {
+    const rows = BOUGHT.map((row, i) => ({ ...row, value: [1000, 1700][i] }));
+    renderChart({ series: rows, historyDays: 2 });
+
+    // mirror 1500 against a portfolio of 1700
+    expect(screen.getByText(/ahead/)).toBeInTheDocument();
+    expect(screen.queryByText(/behind/)).not.toBeInTheDocument();
+  });
+
+  it('shows both rand values and the difference under the blur class', () => {
+    const row = { value: 1550, mirror: 1600 };
+    const payload = [
+      { dataKey: 'value', color: 'var(--accent-primary)', value: 1550, payload: row },
+      { dataKey: 'mirror', color: 'var(--text-secondary)', value: 1600, payload: row },
+    ];
+    render(<PerfTooltip active payload={payload} label="2026-07-02" benchmarkLabel="JSE ALSI" />);
+
+    expect(screen.getByText('Same money in JSE ALSI')).toBeInTheDocument();
+    expect(screen.getByText(rand(1600))).toHaveClass('money-value');
+    const difference = screen.getByText(`-${rand(50)}`);
+    expect(difference).toHaveClass('money-value');
+    expect(difference).toHaveStyle({ color: 'var(--signal-negative)' });
+  });
+
+  it('notes the day the same money ran out', () => {
+    const rows = [
+      {
+        date: '2026-03-11',
+        name: 'Mar 11',
+        value: 1000,
+        benchmark: 100,
+        twr_index: 100,
+        net_flow: 0,
+      },
+      {
+        date: '2026-03-12',
+        name: 'Mar 12',
+        value: 0,
+        benchmark: 50,
+        twr_index: 100,
+        net_flow: -1100,
+      },
+    ];
+    renderChart({ series: rows, historyDays: 2 });
+
+    expect(
+      screen.getByText(/On 12 March 2026 you took out more than the benchmark version held/),
+    ).toBeInTheDocument();
+  });
+
+  it('has no such note when nothing ran out', () => {
+    renderChart({ series: BOUGHT, historyDays: 2 });
+
+    expect(screen.queryByText(/took out more than the benchmark version held/)).toBeNull();
   });
 });

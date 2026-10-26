@@ -1,6 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { MemoryRouter } from 'react-router-dom';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import * as XLSX from 'xlsx';
 
-import { buildHoldingsPayload, parseExposureRow } from './Portfolio';
+import api from '../../services/api';
+import { formatCurrency } from '../../utils/formatters';
+
+import Portfolio, { buildHoldingsPayload, parseExposureRow, toDateOnly } from './Portfolio';
+
+vi.mock('../../services/api', () => ({
+  default: { get: vi.fn(), post: vi.fn(), delete: vi.fn() },
+}));
 const PARSED_ROWS = [
   { instrument_name: 'Naspers Ltd', quantity: '10', total_cost: '173000.00' },
   { instrument_name: 'Standard Bank Group Ltd', quantity: '200', total_cost: '35000.00' },
@@ -81,5 +92,168 @@ describe('parseExposureRow', () => {
     const noWeight = 'Satrix S&P 500 Feeder ETF 15.6432 902.15 57.67 62.74 981.44 37.53';
 
     expect(() => parseExposureRow(noWeight)).toThrow(/exposure columns/);
+  });
+});
+describe('toDateOnly', () => {
+  it('keeps the calendar date of a local midnight', () => {
+    expect(toDateOnly(new Date(2025, 10, 3))).toBe('2025-11-03');
+  });
+
+  it('keeps the date late in the evening too', () => {
+    expect(toDateOnly(new Date(2025, 10, 3, 23, 59))).toBe('2025-11-03');
+  });
+
+  it('pads the month and the day', () => {
+    expect(toDateOnly(new Date(2026, 0, 5))).toBe('2026-01-05');
+  });
+
+  it('passes a string or a missing cell straight through', () => {
+    expect(toDateOnly('2025-11-03')).toBe('2025-11-03');
+    expect(toDateOnly(undefined)).toBeUndefined();
+  });
+
+  it('reads back the date written into a real excel file', () => {
+    const sheet = XLSX.utils.aoa_to_sheet([['Transaction Date'], [new Date(2025, 10, 3)]], {
+      cellDates: true,
+    });
+    const book = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(book, sheet, 'Purchase and Sales');
+    const file = XLSX.write(book, { type: 'array', bookType: 'xlsx' });
+
+    const read = XLSX.read(file, { cellDates: true });
+    /** @type {any[]} */
+    const rows = XLSX.utils.sheet_to_json(read.Sheets['Purchase and Sales']);
+
+    expect(toDateOnly(rows[0]['Transaction Date'])).toBe('2025-11-03');
+  });
+});
+
+// the sa demo statement as the snapshot route returns it, cut down to what the page reads
+const SUMMARY = {
+  PortfolioValue: 226905.1,
+  TotalHoldings: 7,
+  TotalPurchasesAndSales: 240475.5,
+  TotalContributionsAndWithdrawals: 226367.9,
+  TotalDividendsAndWithholdingTax: 3597.11,
+  TotalTransactionExpenses: 601.2,
+  StatementValue: 226905.1,
+  StatementDate: '2026-09-29',
+  ValueBasis: 'cost',
+};
+const SNAPSHOT = {
+  snapshot_id: '10ac4bc4b96a725bf6ba0d78c094bfd2a1735d607338a765c1156e24d26c8664',
+  created_at: '2026-10-19T09:00:00',
+  snapshot: {
+    summary: SUMMARY,
+    holdings: {
+      top: [
+        { name: 'Naspers Limited', value: 96247.97, weight_percentage: 42.42 },
+        { name: 'FirstRand', value: 15540, weight_percentage: 6.85 },
+      ],
+      allocation: [
+        { name: 'Naspers Limited', weight_percentage: 42.42 },
+        { name: 'FirstRand', weight_percentage: 6.85 },
+      ],
+      lowest: { name: 'FirstRand', value: 15540, weight_percentage: 6.85 },
+    },
+    activity: {
+      trading: [
+        { name: 'Buy', value: 233121.1, side: 'buy' },
+        { name: 'Sell', value: 7354.4, side: 'sell' },
+      ],
+      cash_flow: [
+        { name: 'Contribution', value: 233703.91 },
+        { name: 'Withdrawal', value: -7336.01 },
+      ],
+      dividend_income: [],
+    },
+  },
+};
+
+/** @param {Record<string, any>} summary */
+const openSummary = async (summary = SUMMARY) => {
+  vi.mocked(api.get).mockImplementation(async (url) => {
+    if (url === '/portfolio/current') {
+      return { data: [{ id: 'p-1', portfolio_name: 'Guest demo portfolio', account_number: '900000003' }] };
+    }
+    return { data: { ...SNAPSHOT, snapshot: { ...SNAPSHOT.snapshot, summary } } };
+  });
+  const user = userEvent.setup();
+  render(
+    <MemoryRouter>
+      <Portfolio />
+    </MemoryRouter>,
+  );
+  await user.click(await screen.findByRole('button', { name: 'View Summary' }));
+  await screen.findByText('Top Holdings');
+};
+
+// testing library collapses the non-breaking spaces Intl puts in an amount, so match that
+/** @param {number} value */
+const money = (value) => formatCurrency(value).replace(/\s/g, ' ');
+
+/** @param {string} label */
+const card = (label) => /** @type {HTMLElement} */ (screen.getByText(label).closest('.glass-surface'));
+
+describe('the portfolio summary figures', () => {
+  beforeEach(() => {
+    vi.mocked(api.get).mockReset();
+  });
+
+  it('formats every amount and keeps it behind the blur toggle', async () => {
+    await openSummary();
+
+    const traded = card('Traded (buys + sells)');
+    for (const amount of [240475.5, 233121.1, 7354.4]) {
+      const shown = within(traded).getByText(money(amount));
+      expect(shown.closest('.money-value')).not.toBeNull();
+    }
+    expect(within(card('Net contributions')).getByText(money(7336.01))).toBeInTheDocument();
+    expect(screen.getByText('900000003').closest('.money-value')).not.toBeNull();
+    expect(screen.queryByText(/R 226905/)).not.toBeInTheDocument();
+  });
+
+  it('says plainly when the value is only the cost basis', async () => {
+    await openSummary();
+
+    const value = card('Value at statement date');
+    expect(within(value).getByText('as at 29 Sep 2026')).toBeInTheDocument();
+    expect(within(value).getByText(/this is what you paid \(cost\)/)).toBeInTheDocument();
+  });
+
+  it('shows the cost basis under a value taken from the statement', async () => {
+    await openSummary({ ...SUMMARY, StatementValue: 231200.5, ValueBasis: 'statement' });
+
+    const value = card('Value at statement date');
+    expect(within(value).getByText(money(231200.5))).toBeInTheDocument();
+    expect(within(value).getByText(money(226905.1))).toBeInTheDocument();
+  });
+
+  it('shows a dash for a missing figure instead of R 0', async () => {
+    await openSummary({ ...SUMMARY, TotalTransactionExpenses: null, StatementValue: undefined });
+
+    expect(within(card('Expenses')).getByText('—')).toBeInTheDocument();
+    expect(within(card('Value at statement date')).getByText('—')).toBeInTheDocument();
+    expect(screen.queryByText(money(0))).not.toBeInTheDocument();
+  });
+
+  it('names the snapshot instead of claiming it was verified, and drops the ai card', async () => {
+    await openSummary();
+
+    expect(screen.getByText('Snapshot 10ac4bc4 · generated 19 Oct 2026')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Download Portfolio Summary' })).toBeInTheDocument();
+    expect(screen.queryByText('Verified')).not.toBeInTheDocument();
+    expect(screen.queryByText(/verified canonical snapshot/)).not.toBeInTheDocument();
+    expect(screen.queryByText('AI Portfolio Assistant')).not.toBeInTheDocument();
+  });
+
+  it('shows the smallest holding with its amount and its weight', async () => {
+    await openSummary();
+
+    const smallest = card('Smallest Holding');
+    expect(within(smallest).getByText('FirstRand')).toBeInTheDocument();
+    expect(within(smallest).getByText(money(15540))).toBeInTheDocument();
+    expect(within(smallest).getByText('6.85% of the portfolio')).toBeInTheDocument();
+    expect(screen.getByText('Allocation by holding')).toBeInTheDocument();
   });
 });

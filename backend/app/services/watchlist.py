@@ -1,22 +1,61 @@
 import logging
+import time
+from threading import Lock
 
 import yfinance as yf
 from fastapi import HTTPException
 
+from app.config import settings
 from app.repositories.watchlist import add_watchlist, get_watchlist, remove_watchlist
+from app.schemas.responses import AppError
 from app.services.market_data_service import WATCHLIST_QUOTE_TYPES, _cents_to_major
+from app.utils import stock_cache
 
 logger = logging.getLogger(__name__)
 
+TICKER_INFO_TTL_SECONDS = 900
+TICKER_INFO_MAX_KEYS = 200
+_TICKER_INFO: dict[str, tuple[float, dict]] = {}
+_TICKER_INFO_LOCK = Lock()
 
-def add_watchlist_service(database, user_id, data):
+
+def _ticker_info(ticker: str) -> dict | None:
+    now = time.monotonic()
+    with _TICKER_INFO_LOCK:
+        cached = _TICKER_INFO.get(ticker)
+        if cached and now - cached[0] < TICKER_INFO_TTL_SECONDS:
+            return cached[1]
+
+    if stock_cache._yfinance_globally_cooling_down():
+        return None
+
+    try:
+        info = yf.Ticker(ticker).info
+    except Exception as exc:
+        if stock_cache._is_rate_limit_error(exc):
+            stock_cache._trip_yfinance_global_cooldown()
+        logger.warning(f"yfinance lookup failed for {ticker}: {exc}")
+        return None
+
+    with _TICKER_INFO_LOCK:
+        if len(_TICKER_INFO) >= TICKER_INFO_MAX_KEYS:
+            _TICKER_INFO.pop(min(_TICKER_INFO, key=lambda k: _TICKER_INFO[k][0]))
+        _TICKER_INFO[ticker] = (now, info)
+    return info
+
+
+def add_watchlist_service(database, user_id, data, is_guest=False):
+    if is_guest and len(get_watchlist(database, user_id)) >= settings.guest_max_watchlist:
+        raise AppError(
+            403,
+            "GUEST_LIMIT",
+            f"guest sessions can watch up to {settings.guest_max_watchlist} tickers"
+            " - create an account for more",
+        )
+
     company_name = None
     sector = None
-    stock_info = None
-    try:
-        stock_info = yf.Ticker(data.ticker).info
-    except Exception as exc:
-        logger.warning(f"yfinance lookup failed for {data.ticker}: {exc}")
+    stock_info = _ticker_info(data.ticker)
 
     if stock_info:
         quote_type = stock_info.get("quoteType")
@@ -42,14 +81,12 @@ def get_watchlist_service(database, user_id):
     for items in watchlist:
         current_price = None
         change_percent = None
-        try:
-            getInfo = yf.Ticker(items.ticker).info
+        getInfo = _ticker_info(items.ticker)
+        if getInfo:
             current_price = getInfo.get("currentPrice")
             if current_price is not None:
                 current_price = current_price / _cents_to_major(items.ticker)
             change_percent = getInfo.get("regularMarketChangePercent")
-        except Exception as exc:
-            logger.warning(f"yfinance lookup failed for {items.ticker}: {exc}")
 
         AllResults.append(
             {

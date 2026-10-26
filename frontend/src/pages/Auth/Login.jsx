@@ -1,7 +1,8 @@
 import { QRCodeSVG } from 'qrcode.react';
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
+import GuestStart from '../../components/auth/GuestStart/GuestStart';
 import Button from '../../components/common/Button/Button';
 import FormInput from '../../components/forms/FormInput/FormInput';
 import PasswordInput from '../../components/forms/PasswordInput/PasswordInput';
@@ -48,9 +49,12 @@ export const Card = ({ title, subtitle, serverError, children }) => (
   </div>
 );
 
+const GUEST_ENDED = 'Your guest session ended. Start a new one or create an account.';
+
 const Login = () => {
   const { login, submitMFACode, activateTOTP } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [view, setView] = useState('login');
   const [serverError, setServerError] = useState(/** @type {string | null} */ (null));
@@ -68,6 +72,10 @@ const Login = () => {
       sessionStorage.removeItem('login_error');
     }
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get('guest') === 'ended') setServerError(GUEST_ENDED);
+  }, [searchParams]);
 
   const { values, errors, touched, isSubmitting, handleChange, handleBlur, handleSubmit } = useForm(
     { email: '', password: '' },
@@ -289,6 +297,7 @@ const Login = () => {
           Create one
         </Link>
       </p>
+      <GuestStart onError={setServerError} />
     </Card>
   );
 };

@@ -447,12 +447,20 @@ def _breadth_subscore(
     score = _clamp10(effective_n / config.breadth_target_n * 10)
 
     count = len(priced_holdings)
-    detail = (
-        f"{count} position{'s' if count != 1 else ''} in your book, but "
-        f"weighted by size that's only {effective_n:.1f} effective "
-        "position{'s' if round(effective_n, 1) != 1.0 else ''} - a raw "
-        "count hides how much one holding can dominate."
-    )
+    positions = f"{count} position{'s' if count != 1 else ''} in your book"
+    if count == 1:
+        detail = f"{positions}, so everything rides on that one holding."
+    elif round(effective_n, 1) >= count:
+        detail = (
+            f"{positions}, and weighted by size they still count as {effective_n:.1f} - "
+            "no single holding dominates."
+        )
+    else:
+        detail = (
+            f"{positions}, but weighted by size that's only {effective_n:.1f} effective "
+            f"position{'s' if round(effective_n, 1) != 1.0 else ''} - a raw "
+            "count hides how much one holding can dominate."
+        )
     improvement = (
         "Effective breadth is already in a healthy range."
         if effective_n >= config.breadth_target_n

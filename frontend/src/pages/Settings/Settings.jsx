@@ -145,7 +145,7 @@ const DeleteAccountModal = ({ userEmail, onClose, onConfirmed }) => {
 };
 
 export default function Settings() {
-  const { user, logout } = useAuthContext();
+  const { user, logout, isGuest } = useAuthContext();
   const navigate = useNavigate();
   const [typedEmail, setTypedEmail] = useState('');
   const [showConfirm, setShowConfirm] = useState(false);
@@ -194,55 +194,63 @@ export default function Settings() {
         </div>
       </div>
 
-      <div className="glass-surface rounded-xl p-5">
-        <p
-          className="text-[9px] uppercase tracking-widest font-medium mb-2"
-          style={{ color: 'var(--signal-negative,#ef4444)' }}
-        >
-          Danger Zone
-        </p>
-        <p
-          className="text-[11px] leading-relaxed mb-4"
-          style={{ color: 'var(--text-secondary,#a0a0a0)' }}
-        >
-          Permanently delete your account and all associated data. This action cannot be undone.
-        </p>
-
-        <label
-          className="text-[9px] uppercase tracking-widest font-medium mb-2 block"
-          style={{ color: 'var(--text-ghost,#444)' }}
-        >
-          Type your email ({userEmail}) to enable deletion
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="email"
-            value={typedEmail}
-            onChange={(e) => setTypedEmail(e.target.value)}
-            placeholder={userEmail}
-            className="flex-1 text-[11px] font-mono px-3 py-2 rounded"
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--border-subtle,#2a2a2a)',
-              color: 'var(--text-primary,#e5e5e5)',
-            }}
-          />
-          <button
-            onClick={() => setShowConfirm(true)}
-            disabled={!emailMatches}
-            className="text-[10px] font-mono px-3.5 py-2 rounded"
-            style={{
-              background: emailMatches
-                ? 'var(--signal-negative,#ef4444)'
-                : 'var(--border-subtle,#2a2a2a)',
-              color: emailMatches ? '#fff' : 'var(--text-ghost,#444)',
-              cursor: emailMatches ? 'pointer' : 'not-allowed',
-            }}
-          >
-            Delete Account
-          </button>
+      {isGuest ? (
+        <div className="glass-surface rounded-xl p-5">
+          <p className="text-[11px] leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+            Guest sessions are deleted automatically when they end.
+          </p>
         </div>
-      </div>
+      ) : (
+        <div className="glass-surface rounded-xl p-5">
+          <p
+            className="text-[9px] uppercase tracking-widest font-medium mb-2"
+            style={{ color: 'var(--signal-negative,#ef4444)' }}
+          >
+            Danger Zone
+          </p>
+          <p
+            className="text-[11px] leading-relaxed mb-4"
+            style={{ color: 'var(--text-secondary,#a0a0a0)' }}
+          >
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </p>
+
+          <label
+            className="text-[9px] uppercase tracking-widest font-medium mb-2 block"
+            style={{ color: 'var(--text-ghost,#444)' }}
+          >
+            Type your email ({userEmail}) to enable deletion
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="email"
+              value={typedEmail}
+              onChange={(e) => setTypedEmail(e.target.value)}
+              placeholder={userEmail}
+              className="flex-1 text-[11px] font-mono px-3 py-2 rounded"
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--border-subtle,#2a2a2a)',
+                color: 'var(--text-primary,#e5e5e5)',
+              }}
+            />
+            <button
+              onClick={() => setShowConfirm(true)}
+              disabled={!emailMatches}
+              className="text-[10px] font-mono px-3.5 py-2 rounded"
+              style={{
+                background: emailMatches
+                  ? 'var(--signal-negative,#ef4444)'
+                  : 'var(--border-subtle,#2a2a2a)',
+                color: emailMatches ? '#fff' : 'var(--text-ghost,#444)',
+                cursor: emailMatches ? 'pointer' : 'not-allowed',
+              }}
+            >
+              Delete Account
+            </button>
+          </div>
+        </div>
+      )}
 
       {showConfirm && (
         <DeleteAccountModal

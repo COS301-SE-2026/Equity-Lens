@@ -1,5 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
+
 import { ExposureChart } from './ExposureChart';
 
 const MOCK_UNIVERSE = [
@@ -79,6 +80,14 @@ describe('ExposureChart', () => {
       });
     });
 
+    it('renders chart legend and zoom controls with accessible labels', () => {
+      setup();
+      expect(screen.getByRole('group', { name: /chart legend/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /zoom in/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /zoom out/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /reset view/i })).toBeInTheDocument();
+    });
+
     it('renders recommendation connectors', () => {
       const { container } = setup();
       expect(container.querySelectorAll('line[marker-end]')).toHaveLength(MOCK_RECOMMENDED.length);
@@ -118,6 +127,7 @@ describe('ExposureChart', () => {
       expect(screen.getByText('SBK → SLM (65%)')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'SBK' })).toHaveAttribute('aria-pressed', 'false');
     });
+
 
     it('clears selection when clicking neutral canvas nodes', () => {
       const { getStockBubble } = setup();

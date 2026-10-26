@@ -14,6 +14,7 @@ import {
 } from 'aws-amplify/auth';
 
 import api from './api';
+import { clearGuestSession, saveGuestSession } from './guestSession';
 
 /**
  * @param {any} fullName
@@ -111,6 +112,31 @@ export async function getCurrentUserProfile() {
     email,
     full_name: fullName,
   };
+}
+
+export async function startGuestSession() {
+  const response = await api.post('/auth/guest');
+  saveGuestSession(response.data);
+  return response.data;
+}
+
+export async function getGuestModeStatus() {
+  try {
+    const response = await api.get('/auth/guest');
+    return response.data?.enabled === true;
+  } catch {
+    return false;
+  }
+}
+
+export async function endGuestSession() {
+  try {
+    await api.delete('/auth/guest');
+  } catch (err) {
+    console.warn('could not end the guest session:', err);
+  } finally {
+    clearGuestSession();
+  }
 }
 
 /**

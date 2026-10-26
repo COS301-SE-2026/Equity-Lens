@@ -6,28 +6,38 @@ import {
   Landmark,
   Briefcase,
   TriangleAlert,
-  Bot,
   LoaderCircle,
 } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   PieChart,
   Pie,
   Cell,
   BarChart,
+  CartesianGrid,
+  ReferenceLine,
   XAxis,
   YAxis,
   Tooltip,
   Bar,
-  LineChart,
-  Line,
   Legend,
   ResponsiveContainer,
 } from 'recharts';
 
+import Button from '../../components/common/Button/Button';
+import Money from '../../components/common/Money/Money';
+import { GlassPanel, PanelHead } from '../../components/dashboard/shared/GlassPanel';
+import MoneyAxisTick from '../../components/dashboard/shared/MoneyAxisTick';
 import api from '../../services/api';
-import { ROUTES } from '../../utils/constants';
+
+import {
+  dividendBars,
+  rand,
+  shortDate,
+  shortSnapshotId,
+  splitCashFlow,
+  splitTrading,
+} from './portfolioFigures';
 
 /** @type {Promise<any> | null} */
 let pdfPromise = null;
@@ -41,11 +51,81 @@ const loadXlsx = () => import('xlsx');
 const DownloadEXCEL = () => {
   window.open('/template/EquityLens_Portfolio_Excel_Template.xlsx');
 };
-const cardStyle = { background: 'var(--surface-card)', borderColor: 'var(--border-subtle)' };
-const panelStyle = { borderColor: 'var(--border-subtle)' };
 const titleStyle = { color: 'var(--text-primary)' };
 const mutedStyle = { color: 'var(--text-secondary)' };
 const dimStyle = { color: 'var(--text-dim)' };
+const badgeStyle = { background: 'var(--accent-subtle)', color: 'var(--accent-primary)' };
+
+const SERIES_COLOURS = [
+  'var(--accent-primary)',
+  'var(--signal-info)',
+  'var(--signal-positive)',
+  'var(--signal-warning)',
+  'var(--accent-light)',
+  'var(--text-secondary)',
+  'var(--text-dim)',
+];
+const axisTick = { fill: 'var(--chart-axis-text)', fontSize: 11 };
+const axisLine = { stroke: 'var(--chart-grid)' };
+const legendStyle = { fontSize: 12 };
+
+/** @param {string} value */
+const legendText = (value) => <span style={mutedStyle}>{value}</span>;
+
+/** @param {{ active?: boolean, payload?: any[], label?: string, percent?: boolean }} props */
+const ChartTooltip = ({ active, payload, label, percent = false }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div
+      className="rounded-lg px-3 py-2 font-mono text-[12px]"
+      style={{ background: 'var(--chart-tooltip-bg)', border: '1px solid var(--border-mid)' }}
+    >
+      {label && (
+        <div className="mb-1 text-[11px] tracking-widest" style={{ color: 'var(--text-ghost)' }}>
+          {label}
+        </div>
+      )}
+      {payload.map((p) => (
+        <div key={p.name} className="flex items-center gap-3 py-0.5">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="h-2 w-2 rounded-full" style={{ background: p.payload?.fill ?? p.color }} />
+            <span style={mutedStyle}>{p.name}</span>
+          </span>
+          {percent ? (
+            <span className="ml-auto font-semibold" style={titleStyle}>
+              {Number(p.value).toFixed(2)}%
+            </span>
+          ) : (
+            <Money className="ml-auto font-semibold" style={titleStyle}>
+              {rand(p.value)}
+            </Money>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+/** @param {{ icon: any, colour: string, label: string, children: any, note?: any }} props */
+const FigureCard = ({ icon: Icon, colour, label, children, note }) => (
+  <GlassPanel className="flex flex-col gap-2 p-4">
+    <div
+      className="flex items-center gap-2 font-mono text-[11px] tracking-widest"
+      style={{ color: 'var(--text-ghost)' }}
+    >
+      <Icon size={14} style={{ color: colour }} />
+      {label}
+    </div>
+    <div className="whitespace-nowrap font-mono text-base font-semibold md:text-lg xl:text-xl" style={titleStyle}>
+      {children}
+    </div>
+    {note && (
+      <div className="text-[12px] leading-5" style={mutedStyle}>
+        {note}
+      </div>
+    )}
+  </GlassPanel>
+);
 
 const ACCOUNT_TYPES = [
   { value: 'zar', label: 'ZAR' },
@@ -259,9 +339,11 @@ const describeApiError = (error) => {
 /**
  * @param {Date | any} value
  */
-const toDateOnly = (value) => {
+export const toDateOnly = (value) => {
   if (!(value instanceof Date)) return value;
-  return value.toISOString().split('T')[0];
+  const month = String(value.getMonth() + 1).padStart(2, '0');
+  const day = String(value.getDate()).padStart(2, '0');
+  return `${value.getFullYear()}-${month}-${day}`;
 };
 
 /**
@@ -402,7 +484,7 @@ const ReadingPDFFile = async (file, password) => {
   }
 
   const gettingthData = statementIndex.text.split('to')[1].trim();
-  const date = new Date(gettingthData).toISOString().split('T')[0];
+  const date = toDateOnly(new Date(gettingthData));
 
   const Portfolio = [
     {
@@ -511,11 +593,10 @@ const ReadingPDFFile = async (file, password) => {
 };
 
 const Portfolio = () => {
-  const navigate = useNavigate();
   /**
    * @type {[any, function]}
    */
-  const [summary, setSummary] = useState(null);
+  const [summary, setSummary] = useState(/** @type {any} */ (null));
   /**
    * @type {[any[], function]}
    */
@@ -528,7 +609,7 @@ const Portfolio = () => {
   const [summaGetTheTopAllocationImportPDFry, setGetTheTopAllocationImportPDF] = useState(
     /** @type {any[]}*/[],
   );
-  const [GetTheLowest, setGetTheLowest] = useState({ name: '', value: 0 });
+  const [GetTheLowest, setGetTheLowest] = useState(/** @type {any} */ ({ name: '', value: 0 }));
   /**
    * @type {[any[], function]}
    */
@@ -548,7 +629,7 @@ const Portfolio = () => {
   const [accountType, setAccountType] = useState('');
   const [showPortfolios, setShowPortfolios] = useState(false);
   const [portfolios, setPortfolios] = useState(/** @type {any[]}*/[]);
-  const [snapshot, setSnapshot] = useState(null);
+  const [snapshot, setSnapshot] = useState(/** @type {any} */ (null));
   const [selectedPortfolioId, setSelectedPortfolioId] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [pdfPassword, setPdfPassword] = useState('');
@@ -644,7 +725,6 @@ const Portfolio = () => {
     }
   };
 
-  const colours = ['#8B5CF6', '#3B82F6', '#22C55E', '#F59E0B'];
 
   /**
    *
@@ -826,14 +906,21 @@ const Portfolio = () => {
     }
   };
 
+  const trades = splitTrading(GetTradingActivity);
+  const cashFlow = splitCashFlow(GetCashFlow);
+  const rankedOn = summary?.ValueBasis === 'cost' ? 'by cost' : 'by value at statement date';
+
   if (LoadingPage) {
     return (
       <div className="flex flex-col items-center justify-center mt-32">
-        <LoaderCircle className="w-20 h-16 animate-spin text-orange-500" />
-        <h2 className="text-2xl font-bold mt-4" style={{ color: 'var(--text-primary)' }}>
+        <LoaderCircle
+          className="w-20 h-16 animate-spin"
+          style={{ color: 'var(--accent-primary)' }}
+        />
+        <h2 className="text-2xl font-bold mt-4" style={{ color: 'var(--text-page)' }}>
           Loading Portfolio
         </h2>
-        <p style={{ color: 'var(--text-secondary)' }}>
+        <p style={{ color: 'var(--text-page-secondary)' }}>
           Please wait until we import your portfolio...
         </p>
       </div>
@@ -841,52 +928,58 @@ const Portfolio = () => {
   }
 
   return (
-    <div className="p-6">
-      <div className="mx-auto max-w-6xl rounded-3xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-6 md:p-8">
-        <div className="mb-8 text-center">
-          <h2 className="mb-2 text-3xl font-bold text-[var(--text-primary)] md:text-4xl">
-            Upload <span className="text-[var(--accent-primary)]">Portfolio</span>
-          </h2>
+    <div className="mx-auto max-w-7xl md:p-2">
+      <div className="mb-6 text-center">
+        <h2 className="mb-2 text-3xl font-bold md:text-4xl" style={{ color: 'var(--text-page)' }}>
+          Upload <span style={{ color: 'var(--accent-primary)' }}>Portfolio</span>
+        </h2>
 
-          <p className="mx-auto max-w-2xl text-sm text-[var(--text-secondary)] md:text-base">
-            Import your EasyEquities portfolio using your statement or our Excel template
-          </p>
-        </div>
+        <p
+          className="mx-auto max-w-2xl text-sm md:text-base"
+          style={{ color: 'var(--text-page-secondary)' }}
+        >
+          Import your EasyEquities portfolio using your statement or our Excel template
+        </p>
+      </div>
 
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <GlassPanel className="flex flex-col">
+          <PanelHead label="My Portfolios" />
 
-          <div className="flex min-h-[380px] flex-col rounded-2xl border border-[var(--border-mid)] bg-[var(--surface-card)] p-6">
-            <div className="mb-5 flex items-center gap-3">
-
-              <div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">My Portfolios</h3>
-                <p className="text-sm text-[var(--text-secondary)]">Select one of your existing portfolios</p>
-              </div>
-            </div>
+          <div className="flex flex-1 flex-col p-5">
+            <p className="mb-4 text-sm" style={mutedStyle}>
+              Select one of your existing portfolios
+            </p>
 
             <div className="flex-1">
               {portfolios.slice(0, 2).map(
-          /** @param {any} portfolio*/(portfolio, index) => (
+                /** @param {any} portfolio*/ (portfolio, index) => (
                   <div
                     key={index}
-                    className="mb-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-inset)] p-4 transition hover:border-blue-500/50"
+                    className="mb-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--surface-inset)] p-4 transition hover:border-[var(--border-mid)]"
                   >
                     <div className="mb-1 flex items-center justify-between gap-3">
-                      <p className="font-semibold text-[var(--text-primary)]">{portfolio.portfolio_name}</p>
+                      <p className="min-w-0 truncate font-semibold" style={titleStyle}>
+                        {portfolio.portfolio_name}
+                      </p>
 
-                      <span className="rounded-md bg-purple-500/15 px-2 py-1 text-xs font-semibold text-purple-400">
+                      <span className="shrink-0 rounded-md px-2 py-1 text-xs font-semibold" style={badgeStyle}>
                         {accountTypeLabel(portfolio.account_type)}
                       </span>
                     </div>
 
-                    <p className="text-sm text-[var(--text-secondary)]">Account: {portfolio.account_number}</p>
+                    <p className="text-sm" style={mutedStyle}>
+                      Account: <Money>{portfolio.account_number}</Money>
+                    </p>
 
-                    <p className="text-sm text-[var(--text-secondary)]">{statementPeriod(portfolio)}</p>
+                    <p className="text-sm" style={mutedStyle}>
+                      {statementPeriod(portfolio)}
+                    </p>
 
                     <button
                       type="button"
                       onClick={() => ViewSummary(portfolio.id)}
-                      className="mt-3 text-sm font-medium text-[var(--signal-info)] transition hover:underline"
+                      className="mt-3 text-sm font-medium text-[var(--accent-primary)] transition hover:underline"
                     >
                       View Summary
                     </button>
@@ -903,17 +996,15 @@ const Portfolio = () => {
               View all portfolios
             </button>
           </div>
+        </GlassPanel>
 
-          <div className="flex min-h-[380px] flex-col rounded-2xl border border-[var(--border-mid)] bg-[var(--surface-card)] p-6 shadow-lg shadow-orange-500/5">
-            <div className="mb-5 flex items-center gap-3">
+        <GlassPanel className="flex flex-col">
+          <PanelHead label="Upload your statement" />
 
-              <div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Upload your statement</h3>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  Upload your EasyEquities PDF or complete the Excel template
-                </p>
-              </div>
-            </div>
+          <div className="flex flex-1 flex-col p-5">
+            <p className="mb-5 text-sm" style={mutedStyle}>
+              Upload your EasyEquities PDF or complete the Excel template
+            </p>
 
             <div className="mb-5">
               <label
@@ -927,7 +1018,7 @@ const Portfolio = () => {
                 id="account-type-select"
                 value={accountType}
                 onChange={(event) => setAccountType(event.target.value)}
-                className="w-full rounded-xl border border-[var(--border-mid)] bg-[var(--surface-inset)] p-3 text-[var(--text-primary)] outline-none transition focus:border-orange-500"
+                className="w-full rounded-xl border border-[var(--border-mid)] bg-[var(--surface-inset)] p-3 text-[var(--text-primary)] outline-none transition focus:border-[var(--accent-primary)]"
               >
                 <option value="">Select account type</option>
 
@@ -939,7 +1030,7 @@ const Portfolio = () => {
               </select>
             </div>
 
-            <label className="mt-auto block w-full cursor-pointer rounded-xl bg-orange-500 px-6 py-3 text-center font-semibold text-white transition hover:bg-orange-600">
+            <label className="pressable mt-auto block w-full cursor-pointer rounded-lg bg-[var(--accent-primary)] px-6 py-3 text-center font-semibold text-[var(--text-on-accent)] transition hover:bg-[var(--accent-hover)]">
               Choose File
 
               <input
@@ -1000,35 +1091,31 @@ const Portfolio = () => {
               />
             </label>
 
-            <p className="mt-3 text-center text-sm text-[var(--text-dim)]">PDF or XLSX</p>
+            <p className="mt-3 text-center text-sm" style={dimStyle}>
+              PDF or XLSX
+            </p>
           </div>
+        </GlassPanel>
 
-          <div className="flex min-h-[380px] flex-col rounded-2xl border border-[var(--border-mid)] bg-[var(--surface-card)] p-6">
-            <div className="mb-5 flex items-center gap-3">
+        <GlassPanel className="flex flex-col sm:col-span-2 lg:col-span-1">
+          <PanelHead label="Excel Template" />
 
-              <div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">Excel Template</h3>
-                <p className="text-sm text-[var(--text-secondary)]">
-                  Don&apos;t have a supported PDF? Use our template instead.
-                </p>
-              </div>
-            </div>
+          <div className="flex flex-1 flex-col p-5">
+            <p className="mb-5 text-sm" style={mutedStyle}>
+              Don&apos;t have a supported PDF? Use our template instead.
+            </p>
 
             <div className="mt-auto">
-              <button
-                type="button"
-                onClick={DownloadEXCEL}
-                className="w-full rounded-xl border border-[var(--accent-primary)] py-3 font-semibold text-[var(--accent-primary)] transition hover:bg-orange-500 hover:text-white"
-              >
+              <Button variant="secondary" size="lg" fullWidth onClick={DownloadEXCEL}>
                 Download Template
-              </button>
+              </Button>
 
-               <p className="mt-3 text-center text-sm text-[var(--text-dim)]">
+              <p className="mt-3 text-center text-sm" style={dimStyle}>
                 EquityLens Excel Template
               </p>
             </div>
           </div>
-        </div>
+        </GlassPanel>
       </div>
 
       {showPortfolios && (
@@ -1054,7 +1141,7 @@ const Portfolio = () => {
             <div className="max-h-[65vh] overflow-y-auto p-6">
               <div className="space-y-4">
                 {portfolios.map(
-          /** @param {any} portfolio */(portfolio) => (
+                  /** @param {any} portfolio */ (portfolio) => (
                     <div
                       key={portfolio.id}
                       className="rounded-2xl border border-[var(--border-subtle)] bg-[var(--surface-raised)] p-5 transition hover:border-[var(--border-mid)]"
@@ -1066,31 +1153,32 @@ const Portfolio = () => {
                           </p>
 
                           <p className="mt-2 text-sm text-[var(--text-secondary)]">
-                            Account: {portfolio.account_number}
+                            Account: <Money>{portfolio.account_number}</Money>
                           </p>
 
                           <p className="mt-1 text-sm text-[var(--text-secondary)]">
-
                             {statementPeriod(portfolio)}
                           </p>
                         </div>
 
-                        <span className="shrink-0 rounded-lg bg-purple-500/15 px-3 py-1 text-xs font-semibold text-purple-400">
+                        <span
+                          className="shrink-0 rounded-lg px-3 py-1 text-xs font-semibold"
+                          style={badgeStyle}
+                        >
                           {accountTypeLabel(portfolio.account_type)}
                         </span>
                       </div>
 
                       <div className="mt-4 border-t border-[var(--border-subtle)] pt-4">
-                        <button
-                          type="button"
+                        <Button
+                          size="sm"
                           onClick={() => {
                             setShowPortfolios(false);
                             ViewSummary(portfolio.id);
                           }}
-                          className="rounded-lg bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-600"
                         >
                           View Summary
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   ),
@@ -1102,282 +1190,245 @@ const Portfolio = () => {
       )}
 
       {summary && (
-        <div className="grid grid-cols-6 gap-8 mt-8">
-          <div className="p-5 border rounded-2xl" style={panelStyle}>
-            <div className="flex items-center gap-3 mb-2">
-              <Wallet size={20} className="text-yellow-500" />
-              <p style={mutedStyle}>Portfolio Value</p>
-            </div>
+        <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+          <FigureCard
+            icon={Wallet}
+            colour="var(--accent-primary)"
+            label="Value at statement date"
+            note={
+              <>
+                <div>as at {shortDate(summary.StatementDate) ?? '—'}</div>
+                {summary.ValueBasis === 'cost' ? (
+                  <div>The statement had no closing values, so this is what you paid (cost)</div>
+                ) : (
+                  <div>
+                    Cost basis <Money>{rand(summary.PortfolioValue)}</Money>
+                    {summary.ValueBasis === 'mixed' && ' · some holdings at cost'}
+                  </div>
+                )}
+              </>
+            }
+          >
+            <Money>{rand(summary.StatementValue)}</Money>
+          </FigureCard>
 
-            <h2 className="text-2xl font-bold" style={titleStyle}>
-              R {summary?.PortfolioValue || 0}
-            </h2>
-          </div>
+          <FigureCard icon={Briefcase} colour="var(--signal-info)" label="Holdings">
+            {summary.TotalHoldings ?? '—'}
+          </FigureCard>
 
-          <div className="p-5 border rounded-2xl" style={panelStyle}>
-            <div className="flex items-center gap-3 mb-2">
-              <Briefcase size={20} className="text-blue-500" />
-              <p style={mutedStyle}>Holdings</p>
-            </div>
+          <FigureCard
+            icon={ArrowLeftRight}
+            colour="var(--text-secondary)"
+            label="Traded (buys + sells)"
+            note={
+              <>
+                Bought <Money>{rand(trades.bought)}</Money> · Sold <Money>{rand(trades.sold)}</Money>
+              </>
+            }
+          >
+            <Money>{rand(summary.TotalPurchasesAndSales)}</Money>
+          </FigureCard>
 
-            <h2 className="text-2xl font-bold" style={titleStyle}>
-              {summary?.TotalHoldings || 0}
-            </h2>
-          </div>
+          <FigureCard
+            icon={Landmark}
+            colour="var(--signal-info)"
+            label="Net contributions"
+            note={
+              <>
+                In <Money>{rand(cashFlow.moneyIn)}</Money> · Out <Money>{rand(cashFlow.moneyOut)}</Money>
+              </>
+            }
+          >
+            <Money>{rand(summary.TotalContributionsAndWithdrawals)}</Money>
+          </FigureCard>
 
-          <div className="p-5 border rounded-2xl" style={panelStyle}>
-            <div className="flex items-center gap-3 mb-2">
-              <ArrowLeftRight size={20} className="text-green-500" />
-              <p style={mutedStyle}>Purchase & Sales</p>
-            </div>
+          <FigureCard icon={TrendingUp} colour="var(--signal-positive)" label="Dividends (after tax)">
+            <Money>{rand(summary.TotalDividendsAndWithholdingTax)}</Money>
+          </FigureCard>
 
-            <h2 className="text-2xl font-bold" style={titleStyle}>
-              R {summary?.TotalPurchasesAndSales || 0}
-            </h2>
-          </div>
-
-          <div className="p-5 border rounded-2xl" style={panelStyle}>
-            <div className="flex items-center gap-3 mb-2">
-              <Landmark size={20} className="text-purple-500" />
-              <p style={mutedStyle}>Contributions</p>
-            </div>
-
-            <h2 className="text-2xl font-bold" style={titleStyle}>
-              R {summary?.TotalContributionsAndWithdrawals || 0}
-            </h2>
-          </div>
-
-          <div className="p-5 border rounded-2xl" style={panelStyle}>
-            <div className="flex items-center gap-3 mb-2">
-              <TrendingUp size={20} className="text-green-500" />
-              <p style={mutedStyle}>Dividends</p>
-            </div>
-
-            <h2 className="text-2xl font-bold" style={titleStyle}>
-              R {summary?.TotalDividendsAndWithholdingTax || 0}
-            </h2>
-          </div>
-
-          <div className="p-5 border rounded-2xl" style={panelStyle}>
-            <div className="flex items-center gap-3 mb-2">
-              <CreditCard size={20} className="text-orange-500" />
-              <p style={mutedStyle}>Expenses</p>
-            </div>
-
-            <h2 className="text-2xl font-bold" style={titleStyle}>
-              R {summary?.TotalTransactionExpenses || 0}
-            </h2>
-          </div>
+          <FigureCard icon={CreditCard} colour="var(--signal-warning)" label="Expenses">
+            <Money>{rand(summary.TotalTransactionExpenses)}</Money>
+          </FigureCard>
         </div>
       )}
 
-      <div className="mt-8">
-        {snapshot && (
-          <div className="mt-8 p-6 border rounded-2xl" style={panelStyle}>
-            <div className="flex flex-col gap-5 lg:items-start lg:justify-between">
-              <div>
-                <div className="flex items-center gap-3">
-                  <span className="w-3 h-3 rounded-full bg-green-500" />
-                  <h2 className="text-xl font-bold" style={titleStyle}>
-                    Smart Portfolio Snapshot
-                  </h2>
-                </div>
+      {snapshot && (
+        <GlassPanel className="mt-6">
+          <PanelHead
+            label="Portfolio Summary"
+            hint={`Snapshot ${shortSnapshotId(snapshot.snapshot_id) ?? '—'} · generated ${
+              shortDate(snapshot.created_at) ?? '—'
+            }`}
+          />
 
-                <p className="mt-2 text-sm" style={mutedStyle}>
-                  All portfolio insights are generated from one verified canonical snapshot.
-                </p>
-              </div>
-
-              <span className="self-start px-3 py-1 rounded-full text-sm font-semibold bg-green-100/10 text-green-500">
-                Verified
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={downloadSnapshot}
-              className="mt-5 w-full px-5 py-3 rounded-xl bg-orange-500 text-white font-semibold hover:bg-orange-600 transition"
-            >
+          <div className="p-5">
+            <Button size="lg" fullWidth onClick={downloadSnapshot}>
               Download Portfolio Summary
-            </button>
+            </Button>
           </div>
-        )}
-      </div>
+        </GlassPanel>
+      )}
 
       {summaGetTheTopAllocationImportPDFry.length > 0 &&
         GetTheTopHoldingsImportPDF.length > 0 && (
-          <div className="grid grid-cols-3 gap-8 mb-7">
-            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-              <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-                Trading Activity
-              </h2>
+          <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <GlassPanel className="min-w-0">
+              <PanelHead label="Trading Activity" />
 
-              <div className="flex justify-center w-full h-80">
+              <div className="h-72 p-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={GetTradingActivity}>
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="value" fill={colours[1]} />
+                    <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+                    <XAxis dataKey="name" tick={axisTick} tickLine={false} axisLine={axisLine} />
+                    <YAxis tick={<MoneyAxisTick />} tickLine={false} axisLine={false} width={56} />
+                    <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--surface-hover)' }} />
+                    <Bar dataKey="value" name="Amount" radius={[4, 4, 0, 0]}>
+                      {GetTradingActivity.map((row, index) => (
+                        <Cell
+                          key={index}
+                          fill={row.side === 'sell' ? 'var(--text-secondary)' : 'var(--accent-primary)'}
+                        />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </div>
+            </GlassPanel>
 
-            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-              <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-                Cash flow
-              </h2>
+            <GlassPanel className="min-w-0">
+              <PanelHead label="Cash Flow" />
 
-              <div className="flex justify-center w-full h-80">
+              <div className="h-72 p-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={GetCashFlow}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={50}
-                      outerRadius={80}
-                    >
-                      {GetCashFlow.map((item, index) => (
-                        <Cell key={index} fill={colours[index % colours.length]} />
+                  <BarChart data={GetCashFlow}>
+                    <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+                    <XAxis dataKey="name" tick={axisTick} tickLine={false} axisLine={false} />
+                    <YAxis tick={<MoneyAxisTick />} tickLine={false} axisLine={false} width={56} />
+                    <ReferenceLine y={0} stroke="var(--chart-axis-text)" />
+                    <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--surface-hover)' }} />
+                    <Bar dataKey="value" name="Amount" radius={[4, 4, 0, 0]}>
+                      {GetCashFlow.map((row, index) => (
+                        <Cell
+                          key={index}
+                          fill={row.value < 0 ? 'var(--signal-negative)' : 'var(--signal-positive)'}
+                        />
                       ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                  </PieChart>
+                    </Bar>
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
-            </div>
+            </GlassPanel>
 
-            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-              <h2 className="text-xl font-bold text-center mb-4" style={titleStyle}>
-                Dividend Income
-              </h2>
+            <GlassPanel className="min-w-0 sm:col-span-2 lg:col-span-1">
+              <PanelHead label="Dividend Income" />
 
-              <div className="flex justify-center w-full h-80">
+              <div className="h-72 p-4">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={GetDividendIncome}>
-                    <XAxis dataKey="name" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-
-                    <Line dataKey="gross_dividend" stroke={colours[1]} />
-                    <Line dataKey="withholding_tax" stroke="#EF4444" />
-                    <Line dataKey="net_dividend" stroke={colours[2]} />
-                  </LineChart>
+                  <BarChart data={dividendBars(GetDividendIncome)}>
+                    <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+                    <XAxis dataKey="name" tick={axisTick} tickLine={false} axisLine={axisLine} />
+                    <YAxis tick={<MoneyAxisTick />} tickLine={false} axisLine={false} width={56} />
+                    <Tooltip content={<ChartTooltip />} cursor={{ fill: 'var(--surface-hover)' }} />
+                    <Legend wrapperStyle={legendStyle} formatter={legendText} />
+                    <Bar dataKey="net" name="Net dividend" stackId="dividend" fill="var(--accent-primary)" />
+                    <Bar
+                      dataKey="tax"
+                      name="Withholding tax"
+                      stackId="dividend"
+                      fill="var(--text-dim)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
                 </ResponsiveContainer>
               </div>
-            </div>
+            </GlassPanel>
           </div>
         )}
 
       {summaGetTheTopAllocationImportPDFry.length > 0 &&
         GetTheTopHoldingsImportPDF.length > 0 && (
-          <div className="grid grid-cols-3 gap-8 ">
-            <div className="min-w-0 border rounded-2xl p-4" style={panelStyle}>
-              <h2 className="text-xl font-bold text-center" style={titleStyle}>
-                Assert allocation
-              </h2>
+          <div className="mt-5 grid grid-cols-1 gap-5 lg:grid-cols-3">
+            <GlassPanel className="min-w-0">
+              <PanelHead label="Allocation by holding" />
 
-              <div className="flex justify-center w-full h-80">
+              <div className="h-80 p-4">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={summaGetTheTopAllocationImportPDFry}
                       dataKey="weight_percentage"
+                      nameKey="name"
                       innerRadius={50}
                       outerRadius={80}
+                      stroke="var(--surface-card)"
                     >
                       {summaGetTheTopAllocationImportPDFry.map((item, index) => (
-                        <Cell key={index} fill={colours[index % colours.length]} />
+                        <Cell key={index} fill={SERIES_COLOURS[index % SERIES_COLOURS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
-                    <Legend />
+                    <Tooltip content={<ChartTooltip percent />} />
+                    <Legend wrapperStyle={legendStyle} formatter={legendText} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-            </div>
+            </GlassPanel>
 
-            <div className="col-span-2 min-w-0 border rounded-2xl p-4" style={panelStyle}>
-              <h2 className="text-xl font-bold text-center" style={titleStyle}>
-                Top Holdings
-              </h2>
+            <GlassPanel className="min-w-0 lg:col-span-2">
+              <PanelHead label="Top Holdings" hint={rankedOn} />
 
-              {GetTheTopHoldingsImportPDF.map((item, index) => (
-                <div key={index} className="mb-4">
-                  <div className="flex justify-between mb-1">
-                    <p style={mutedStyle}>{item.name}</p>
-                    <p style={mutedStyle}>R{item.value}</p>
+              <div className="space-y-4 p-5">
+                {GetTheTopHoldingsImportPDF.map((item, index) => (
+                  <div key={index}>
+                    <div className="mb-1 flex justify-between gap-3 text-sm">
+                      <span className="min-w-0 truncate" style={mutedStyle}>
+                        {item.name}
+                      </span>
+                      <Money className="shrink-0 font-mono" style={titleStyle}>
+                        {rand(item.value)}
+                      </Money>
+                    </div>
+
+                    <div className="h-2 w-full rounded-full" style={{ background: 'var(--surface-inset)' }}>
+                      <div
+                        className="h-2 rounded-full"
+                        style={{
+                          width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
+                          backgroundColor: SERIES_COLOURS[index % SERIES_COLOURS.length],
+                        }}
+                      />
+                    </div>
                   </div>
-
-                  <div
-                    className="w-full rounded-full h-3"
-                    style={{ background: 'var(--surface-inset)' }}
-                  >
-                    <div
-                      className="h-3 rounded-full"
-                      style={{
-                        width: `${(item.value / (GetTheTopHoldingsImportPDF[0].value || 1)) * 100}%`,
-                        backgroundColor: colours[index % colours.length],
-                      }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </GlassPanel>
           </div>
         )}
 
       {summaGetTheTopAllocationImportPDFry.length > 0 &&
         GetTheTopHoldingsImportPDF.length > 0 && (
-          <div className="grid grid-cols-2 gap-8 mt-8">
-            <div className="p-6 border border-red-700 rounded-2xl">
-              <div className="flex items-center gap-2">
-                <TriangleAlert size={24} className="text-red-500" />
-                <h2 className="text-xl font-bold" style={{ color: 'var(--signal-negative)' }}>
-                  Lowest Holding
-                </h2>
+          <GlassPanel className="mt-5">
+            <PanelHead label="Smallest Holding" hint={rankedOn} />
+
+            <div className="flex flex-wrap items-center justify-between gap-3 p-5">
+              <div className="flex min-w-0 items-center gap-2">
+                <TriangleAlert size={18} style={{ color: 'var(--signal-warning)' }} />
+                <p className="truncate text-lg font-semibold" style={titleStyle}>
+                  {GetTheLowest?.name ?? 'No holdings'}
+                </p>
               </div>
 
-              <p className="mb-5" style={mutedStyle}>
-                Your smallest holdings by weight in the portfolio
-              </p>
-              <div className="flex justify-between border rounded-xl p-4" style={panelStyle}>
-                <div>
-                  <p className="text-xl font-bold" style={titleStyle}>
-                    {GetTheLowest?.name ?? 'No holdings'}
+              <div className="text-right">
+                <Money className="font-mono text-lg font-semibold" style={titleStyle}>
+                  {rand(GetTheLowest?.value)}
+                </Money>
+                {typeof GetTheLowest?.weight_percentage === 'number' && (
+                  <p className="text-sm" style={mutedStyle}>
+                    {GetTheLowest.weight_percentage.toFixed(2)}% of the portfolio
                   </p>
-                </div>
-
-                <div>
-                  <p className="text-xl text-red-400 font-bold">{GetTheLowest?.value}</p>
-                </div>
+                )}
               </div>
             </div>
-
-            <div className="p-6 border border-purple-500 rounded-2xl">
-              <div className="flex items-center gap-2">
-                <Bot size={24} className="text-purple-500" />
-                <h2 className="text-xl font-bold" style={titleStyle}>
-                  AI Portfolio Assistant
-                </h2>
-              </div>
-
-              <p className="mb-5" style={mutedStyle}>
-                Ask questions about your portfolio and recivce AI-powered insights.
-              </p>
-
-              <button
-                onClick={() => navigate(ROUTES.AI_CHAT)}
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold"
-              >
-                Go To Assistant
-              </button>
-            </div>
-          </div>
+          </GlassPanel>
         )}
 
       {showPasswordModal && (
@@ -1409,25 +1460,27 @@ const Portfolio = () => {
                 setPdfPassword(event.target.value);
               }}
               placeholder="Enter PDF password"
-              className="w-full rounded-xl border border-[var(--border-mid)] bg-[var(--surface-inset)] px-4 py-3 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-disabled)] focus:border-orange-500"
+              className="w-full rounded-xl border border-[var(--border-mid)] bg-[var(--surface-inset)] px-4 py-3 text-[var(--text-primary)] outline-none transition placeholder:text-[var(--text-disabled)] focus:border-[var(--accent-primary)]"
             />
 
 
             <div className="mt-6 flex gap-3">
-              <button
-                type="button"
+              <Button
+                variant="ghost"
+                size="lg"
+                className="flex-1"
                 onClick={() => {
                   setShowPasswordModal(false);
                   setPendingPdfFile(null);
                   setPdfPassword('');
                 }}
-                className="flex-1 rounded-xl border border-[var(--border-mid)] py-3 font-semibold text-[var(--text-secondary)] transition hover:bg-[var(--surface-hover)]"
               >
                 Cancel
-              </button>
+              </Button>
 
-              <button
-                type="button"
+              <Button
+                size="lg"
+                className="flex-1"
                 onClick={async () => {
                   if (!pendingPdfFile) return;
 
@@ -1460,10 +1513,9 @@ const Portfolio = () => {
                     setPdfPassword('');
                   }
                 }}
-                className="flex-1 rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600"
               >
                 Continue
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -1482,16 +1534,16 @@ const Portfolio = () => {
               </p>
             </div>
 
-            <button
-              type="button"
+            <Button
+              size="lg"
+              fullWidth
               onClick={() => {
                 setShowErrorModal(false);
                 setErrorMessage('');
               }}
-              className="w-full rounded-xl bg-orange-500 py-3 font-semibold text-white transition hover:bg-orange-600"
             >
               OK
-            </button>
+            </Button>
 
           </div>
         </div>

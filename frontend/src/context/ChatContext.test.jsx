@@ -2,11 +2,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+import ChatDock from '../components/chat/ChatDock/ChatDock';
 import useAuth from '../hooks/useAuth';
 import AIChat from '../pages/AIChat/AIChat';
 import api from '../services/api';
 
-import { ChatProvider } from './ChatContext';
+import { ChatProvider, useChatContext } from './ChatContext';
 import { ThemeProvider } from './ThemeContext';
 
 vi.mock('../hooks/useAuth');
@@ -82,6 +83,30 @@ describe('shared conversation across navigation', () => {
       );
   });
 
+  it('streams with the guest token when a guest session is in the tab', async () => {
+    sessionStorage.setItem(
+      'equitylens.guest',
+      JSON.stringify({
+        access_token: 'guest-token',
+        expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        user: { id: 'guest-1', full_name: 'Guest', is_guest: true },
+      }),
+    );
+    try {
+      render(<Harness initialPath="/ai" />);
+      fireEvent.change(screen.getByPlaceholderText('Ask the assistant...'), {
+        target: { value: 'hello' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: /send/i }));
+
+      await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+      const headers = /** @type {any} */ (globalThis.fetch).mock.calls[0][1].headers;
+      expect(headers.Authorization).toBe('Bearer guest-token');
+    } finally {
+      sessionStorage.clear();
+    }
+  });
+
   it('a follow-up message on /ai reuses the conversation_id the first reply returned', async () => {
     render(<Harness initialPath="/ai" />);
 
@@ -117,7 +142,10 @@ describe('shared conversation across navigation', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /send/i }));
     await screen.findByText('Technology is your largest sector.');
-    const getCallsAfterSend = /** @type {any} */ (api.get).mock.calls.length;
+        const threadGets = () =>
+        /** @type {import('vitest').Mock} */ (api.get).mock.calls.filter(
+        ([url]) => String(url).includes('/messages/'),).length;
+    const getCallsAfterSend = threadGets();
 
     fireEvent.click(screen.getByText('Go to dashboard'));
     expect(screen.getByText('Dashboard Page')).toBeInTheDocument();
@@ -128,6 +156,59 @@ describe('shared conversation across navigation', () => {
     // same thread reappears without a refetch - ChatProvider never unmounted across the hop
     expect(screen.getByText('first message')).toBeInTheDocument();
     expect(screen.getByText('Technology is your largest sector.')).toBeInTheDocument();
-    expect(/** @type {any} */ (api.get).mock.calls.length).toBe(getCallsAfterSend);
+        expect(threadGets()).toBe(getCallsAfterSend);
+  });
+});
+
+const AskFromCard = () => {
+  const { openDock } = useChatContext();
+  return (
+    <button onClick={() => openDock('What moved MTN?', { ticker: 'MTN.JO', date: '2026-07-31' })}>
+      Explore possible causes
+    </button>
+  );
+};
+
+describe('asking from an event card', () => {
+  beforeEach(() => {
+    mockUseAuth.mockReturnValue({ user: { full_name: 'Josh Heath' } });
+    /** @type {any} */ (api.get).mockResolvedValue({ data: [] });
+    globalThis.fetch = vi
+      .fn()
+      .mockImplementation(async () =>
+        sseResponse(
+          { type: 'text', value: 'Consistent with the trading update.' },
+          { type: 'done', conversation_id: 'convo-7' },
+        ),
+      );
+  });
+
+  it('sends the event with the first message only', async () => {
+    render(
+      <MemoryRouter initialEntries={['/dashboard']}>
+        <ThemeProvider>
+          <ChatProvider>
+            <AskFromCard />
+            <ChatDock />
+          </ChatProvider>
+        </ThemeProvider>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Explore possible causes' }));
+    await screen.findByText('Consistent with the trading update.');
+    expect(sentBody(0)).toMatchObject({
+      message: 'What moved MTN?',
+      event: { ticker: 'MTN.JO', date: '2026-07-31' },
+    });
+
+    fireEvent.change(screen.getByRole('textbox', { name: 'Message' }), {
+      target: { value: 'and the sector?' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalledTimes(2));
+    expect(sentBody(1)).toMatchObject({ message: 'and the sector?', conversation_id: 'convo-7' });
+    expect(sentBody(1)).not.toHaveProperty('event');
   });
 });

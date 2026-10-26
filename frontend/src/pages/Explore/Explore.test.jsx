@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 import Explore from './Explore';
 import { ExposureChart } from '../../components/charts/ExposureChart/ExposureChart';
+import { getAccessToken } from '../../services/guestSession';
 
 vi.mock('../../components/charts/ExposureChart/ExposureChart', () => ({
   ExposureChart: vi.fn(() => <div data-testid="exposure-chart" />),
@@ -10,6 +11,10 @@ vi.mock('../../components/charts/ExposureChart/ExposureChart', () => ({
 
 vi.mock('../../components/common/LoadingSpinner/LoadingSpinner', () => ({
   default: () => <div data-testid="loading-spinner" />,
+}));
+
+vi.mock('../../services/guestSession', () => ({
+  getAccessToken: vi.fn(),
 }));
 
 vi.mock('../../utils/constants', () => ({
@@ -83,6 +88,7 @@ describe('Explore Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    vi.mocked(getAccessToken).mockResolvedValue(null);
   });
 
   afterEach(() => {
@@ -104,6 +110,14 @@ describe('Explore Component', () => {
       expect(screen.getByRole('heading', { name: /more of what you like/i })).toBeInTheDocument();
     });
 
+    it('provides a skip link to the visual map and main page landmarks', () => {
+      setupPendingFetch();
+      render(<Explore />);
+
+      expect(screen.getByRole('link', { name: /skip to visual map/i })).toBeInTheDocument();
+      expect(screen.getByRole('main')).toBeInTheDocument();
+    });
+
     it('displays loading spinner while request is pending', () => {
       setupPendingFetch();
       render(<Explore />);
@@ -113,9 +127,8 @@ describe('Explore Component', () => {
   });
 
   describe('Data Fetching & Authorization', () => {
-    it('includes Cognito authorization token in API request', async () => {
-      localStorage.setItem('CognitoIdentityServiceProvider.client1.LastAuthUser', 'user1');
-      localStorage.setItem('CognitoIdentityServiceProvider.client1.user1.accessToken', 'token-123');
+    it('sends the token from getAccessToken, guest or cognito', async () => {
+      vi.mocked(getAccessToken).mockResolvedValue('token-123');
       const fetchMock = setupFetchMock(MOCK_ELIGIBLE_RESPONSE);
 
       render(<Explore />);
@@ -133,10 +146,20 @@ describe('Explore Component', () => {
       setupFetchMock(MOCK_ELIGIBLE_RESPONSE);
       render(<Explore />);
 
-      expect(await screen.findByText('Sanlam')).toBeInTheDocument();
-      expect(screen.getByText('SLM')).toBeInTheDocument();
+      expect((await screen.findAllByText(/Sanlam/i)).length).toBeGreaterThan(0);
+      expect(screen.getAllByText('SLM').length).toBeGreaterThan(0);
       expect(screen.getByText(MOCK_ELIGIBLE_RESPONSE.recommended[0].description)).toBeInTheDocument();
       expect(screen.queryByTestId('loading-spinner')).not.toBeInTheDocument();
+    });
+
+    it('offers a compact recommended list above the map and richer how-it-works guidance', async () => {
+      setupFetchMock(MOCK_ELIGIBLE_RESPONSE);
+      render(<Explore />);
+
+      const summaryToggle = await screen.findByRole('button', { name: /hide recommended ideas/i });
+      expect(summaryToggle).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.getAllByText('SLM').length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/how recommendations work/i).length).toBeGreaterThan(0);
     });
 
     it('falls back to ticker symbol when full company name is missing from universe', async () => {
@@ -148,7 +171,7 @@ describe('Explore Component', () => {
       render(<Explore />);
 
       await screen.findByTestId('exposure-chart');
-      expect(screen.getAllByText('ABC')).toHaveLength(2);
+      expect(screen.getAllByText('ABC').length).toBeGreaterThan(0);
     });
 
     it('passes parsed portfolio, universe, and recommendations props to chart', async () => {

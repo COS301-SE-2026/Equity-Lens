@@ -1,13 +1,14 @@
-import { fetchAuthSession } from 'aws-amplify/auth';
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 import api from '../services/api';
+import { getAccessToken } from '../services/guestSession';
 import { API_BASE_URL } from '../utils/constants';
 
 /**
  * @typedef {{id: number|string, role: 'user'|'assistant', text: string, at: Date, failed?: boolean, savedFacts?: string[], streaming?: boolean}} ChatMessage
  * @typedef {{id: string, title: string}} Conversation
  * @typedef {{id: string, role: 'user'|'assistant', content: string, created_at?: string|null}} ApiMessage
+ * @typedef {{ticker: string, date: string}} EventRef
  */
 const ChatContext = createContext(/** @type {any} */ (null));
 
@@ -92,17 +93,26 @@ export const ChatProvider = ({ children }) => {
   const [conversations, setConversations] = useState(/** @type {Conversation[]} */ ([]));
   const [dockOpen, setDockOpen] = useState(false);
   const [pendingQuestion, setPendingQuestion] = useState(/** @type {string|null} */ (null));
+  const [pendingEvent, setPendingEvent] = useState(/** @type {EventRef|null} */ (null));
 
-  /** @param {string} [question] */
-  const openDock = (question) => {
+  /** @param {string} [question] @param {EventRef} [event] the card the question came from */
+  const openDock = (question, event) => {
     setDockOpen(true);
-    if (question) setPendingQuestion(question);
+    if (question) {
+      setPendingQuestion(question);
+      setPendingEvent(event ?? null);
+    }
   };
   const closeDock = () => setDockOpen(false);
-  const clearPendingQuestion = () => setPendingQuestion(null);
+  const clearPendingQuestion = () => {
+    setPendingQuestion(null);
+    setPendingEvent(null);
+  };
   /** @typedef {{id: string, fact: string, created_at?: string|null}} Memory */
   const [memories, setMemories] = useState(/** @type {Memory[]} */ ([]));
   /** @typedef {{id: string, label: string, portfolio_name: string, account_number: string}} ChatPortfolio */
+  /** @typedef {{used: number, limit: number, remaining: number, resets_at: string}} Usage */
+  const [usage, setUsage] = useState(/** @type {Usage|null} */ (null));
   const [portfolios, setPortfolios] = useState(/** @type {ChatPortfolio[]} */ ([]));
   const [portfolioId, setPortfolioId] = useState(/** @type {string|null} */ (null));
   const [savedScopes] = useState(readScopes);
@@ -126,11 +136,13 @@ export const ChatProvider = ({ children }) => {
       return next;
     });
 
-  useEffect(() => {
+  const refreshPortfolios = () =>
     api
       .get('/ai_chat/portfolios/')
       .then((res) => setPortfolios(res.data))
       .catch(() => {});
+  useEffect(() => {
+    refreshPortfolios();
   }, []);
 
   useEffect(() => {
@@ -156,6 +168,15 @@ export const ChatProvider = ({ children }) => {
       .then((res) => setMemories(res.data))
       .catch(() => {});
 
+  const refreshUsage = () =>
+    api
+      .get('/ai_chat/usage/')
+      .then((res) => setUsage(res.data))
+      .catch(() => {});
+  useEffect(() => {
+    refreshUsage();
+  }, []);
+
   /** @param {string} memoryId */
   const deleteMemory = (memoryId) => {
     return api
@@ -168,9 +189,10 @@ export const ChatProvider = ({ children }) => {
 
   /**
    * @param {string} rawText
+   * @param {EventRef|null} [eventRef]
    * @returns {Promise<number>|undefined}
    */
-  const sendMessageStreaming = (rawText) => {
+  const sendMessageStreaming = (rawText, eventRef = null) => {
     if (isThinking) {
       return;
     }
@@ -178,14 +200,15 @@ export const ChatProvider = ({ children }) => {
     if (!text) {
       return;
     }
-    return runStream(text);
+    return runStream(text, eventRef);
   };
 
   /**
    * @param {string} text
+   * @param {EventRef|null} eventRef only on the message an event card sent
    * @returns {Promise<number>}
    */
-  const runStream = async (text) => {
+  const runStream = async (text, eventRef) => {
     const stamp = Date.now();
     const startedIn = conversationId;
     const scope = portfolioId;
@@ -232,8 +255,7 @@ export const ChatProvider = ({ children }) => {
     draw();
 
     try {
-      const session = await fetchAuthSession();
-      const token = session.tokens?.accessToken?.toString();
+      const token = await getAccessToken();
 
       const response = await fetch(`${API_BASE_URL}/ai_chat/stream/`, {
         method: 'POST',
@@ -241,7 +263,12 @@ export const ChatProvider = ({ children }) => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ message: text, conversation_id: startedIn, portfolio_id: scope }),
+        body: JSON.stringify({
+          message: text,
+          conversation_id: startedIn,
+          portfolio_id: scope,
+          ...(eventRef ? { event: eventRef } : {}),
+        }),
       });
 
       if (!response.ok) {
@@ -317,6 +344,7 @@ export const ChatProvider = ({ children }) => {
       return retryAfter;
     } finally {
       markBusy(streamKey, false);
+      refreshUsage();
       if (replyStatus === 'streaming') {
         replyStatus = 'done';
         draw();
@@ -373,7 +401,10 @@ export const ChatProvider = ({ children }) => {
         }
         return retryAfter;
       })
-      .finally(() => setRegeneratingId(null));
+      .finally(() => {
+        setRegeneratingId(null);
+        refreshUsage();
+      });
   };
 
   /** @param {Conversation} convo */
@@ -448,15 +479,17 @@ export const ChatProvider = ({ children }) => {
         conversations,
         dockOpen,
         pendingQuestion,
+        pendingEvent,
         openDock,
         closeDock,
         clearPendingQuestion,
         memories,
+        usage,
         portfolios,
         portfolioId,
         setPortfolioId,
+        refreshPortfolios,
         sendMessageStreaming,
-        // the dashboard dock sends through the same streaming path as the chat page
         sendMessage: sendMessageStreaming,
         regenerate,
         loadConversation,
@@ -464,6 +497,7 @@ export const ChatProvider = ({ children }) => {
         renameConversation,
         deleteConversation,
         refreshMemories,
+        refreshUsage,
         deleteMemory,
       }}
     >

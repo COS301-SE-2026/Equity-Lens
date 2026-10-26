@@ -7,10 +7,13 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 import app.database as db_module
+from app.config import settings
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.main import app
 from app.models.user import User
+from app.routers import news
+from app.services import ai_service, watchlist
 from app.services.portfolio_service import invalidate_priced_holdings
 from app.utils import stock_cache
 
@@ -22,9 +25,22 @@ def _clear_priced_holdings_cache():
     invalidate_priced_holdings()
 
 @pytest.fixture(autouse=True)
+def _clear_provider_caches():
+    watchlist._TICKER_INFO.clear()
+    ai_service._NEWS_TOOL_CACHE.clear()
+    news._CATEGORY_NEWS_CACHE.clear()
+
+
+@pytest.fixture(autouse=True)
+def _no_marketaux_key(monkeypatch):
+    monkeypatch.setattr(settings, "market_api_key", None)
+
+
+@pytest.fixture(autouse=True)
 def _reset_price_refresh_cooldowns():
     stock_cache._PRICE_REFRESH_COOLDOWN_UNTIL.clear()
     stock_cache._REFRESH_LOCKS.clear()
+    stock_cache._HISTORY_DEPTH_COOLDOWN_UNTIL.clear()
     stock_cache._YFINANCE_GLOBAL_COOLDOWN_UNTIL = None
     stock_cache._YFINANCE_COOLDOWN_STRIKES = 0
 

@@ -72,6 +72,42 @@ WEAK_PASSWORD = error(
     "Password did not conform with policy",
     "Password rejected by Cognito, or the request body failed validation",
 )
+GUEST_MODE_DISABLED = error(
+    404,
+    "GUEST_MODE_DISABLED",
+    "guest mode is not available",
+    "Guest mode is switched off, or its signing secret is missing or too short",
+)
+GUEST_RATE_LIMITED = error(
+    429,
+    "GUEST_RATE_LIMITED",
+    "too many guest sessions from this network, try again later",
+    "Too many guest sessions started from one address in ten minutes; see Retry-After",
+)
+GUEST_CAPACITY = error(
+    503,
+    "GUEST_CAPACITY",
+    "the demo is busy, try again in a minute",
+    "The maximum number of guest sessions is running; see Retry-After",
+)
+GUEST_FORBIDDEN = error(
+    403,
+    "GUEST_FORBIDDEN",
+    "not available in guest mode - create an account",
+    "Account and MFA settings are not available to a guest session",
+)
+GUEST_LIMIT = error(
+    403,
+    "GUEST_LIMIT",
+    "guest sessions can hold up to 3 portfolios - create an account for more",
+    "A guest session has reached its portfolio or watchlist limit",
+)
+PDF_BUSY = error(
+    503,
+    "PDF_BUSY",
+    "Lots of people are downloading right now, try again in a few seconds",
+    "Every PDF build slot was taken for the whole wait; see Retry-After",
+)
 
 
 def documented(description, example, errors=UNAUTHORISED, **more):

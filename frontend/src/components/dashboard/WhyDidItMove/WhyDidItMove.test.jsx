@@ -261,9 +261,10 @@ describe('EventPopover', () => {
     expect(screen.queryByRole('button', { name: 'Read the article' })).not.toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Explore possible causes' }));
-    const question = onAsk.mock.calls[0][0];
-    expect(question).toContain('leaving -10.6% specific to MTN.JO');
-    expect(question).toContain('Do not state a specific cause; you have not been given one.');
+    expect(onAsk).toHaveBeenCalledWith(
+      'What in the news might explain the -10.8% move in MTN Group (MTN.JO) on 31 July 2026?',
+      { ticker: 'MTN.JO', date: '2026-07-31' },
+    );
   });
 
   it('describes the move while the detail request is still in flight', () => {

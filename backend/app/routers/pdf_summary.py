@@ -28,11 +28,19 @@ class SummaryResponse(BaseModel):
     TotalDividendsAndWithholdingTax: float = Field(examples=["45"])
     TotalTransactionInterest: float = Field(examples=["56"])
     TotalTransactionExpenses: float = Field(examples=["68"])
+    StatementValue: float = Field(examples=[231200.5])
+    StatementDate: str | None = Field(default=None, examples=["2026-09-29"])
+    ValueBasis: str = Field(examples=["statement"])
 
 
 class HoldingResponse(BaseModel):
     name: str | None = Field(default=None, examples=["APPLE"])
     value: float = Field(examples=["68"])
+    weight_percentage: float | None = Field(default=None, examples=[12.5])
+
+
+class TradingResponse(HoldingResponse):
+    side: str | None = Field(default=None, examples=["buy"])
 
 
 class PortfolioResponse(BaseModel):
@@ -89,7 +97,7 @@ def import_get_the_top_allocation_import_PDF(
     )
 
 
-@router.get("/trading_activity/{portfolioID}", response_model=list[HoldingResponse])
+@router.get("/trading_activity/{portfolioID}", response_model=list[TradingResponse])
 def import_get_trading_activity_import_PDF(
     portfolioID: str,
     db: Session = Depends(get_db),

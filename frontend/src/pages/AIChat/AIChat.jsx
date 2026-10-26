@@ -113,6 +113,19 @@ const stampLabel = (iso) => {
   return `${d.toLocaleDateString('en-ZA',{weekday: 'short'})} ${timeLabel(d)}`;
 };
 
+/** @param {number} used @param {number} limit */
+const usageColour = (used, limit) => {
+  if (used >= limit) return 'var(--signal-negative)';
+  if (used >= limit * 0.8) return 'var(--signal-warning)';
+  return 'var(--accent-primary)';
+};
+
+/** @param {string} iso */
+const resetLabel = (iso) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime()) ? 'at midnight UTC' : timeLabel(d);
+};
+
 const CARET_CSS = `
 .ai-streaming > :last-child::after {
   content: '';
@@ -234,20 +247,25 @@ const AIChat = () => {
   const {
     messages, isThinking, conversationId, conversations, regeneratingId,
     sendMessageStreaming, regenerate, loadConversation, startNewChat, renameConversation,
-    deleteConversation, portfolios, portfolioId, setPortfolioId,
+    deleteConversation, portfolios, portfolioId, setPortfolioId, refreshPortfolios,
   } = /**@type {{messages: ChatMessage[], isThinking: boolean, conversationId: number|null,
         conversations: Conversation[], regeneratingId: string|number|null,
         sendMessageStreaming: Function, regenerate: Function, loadConversation: Function,
         startNewChat: Function, renameConversation: Function, deleteConversation: Function,
         portfolios: {id: string, label: string, portfolio_name: string}[],
-        portfolioId: string|null, setPortfolioId: Function}}*/ (useChat());
+        portfolioId: string|null, setPortfolioId: Function, refreshPortfolios: Function}}*/ (useChat());
   const [pickerOpen, setPickerOpen] = useState(false);
   const activePortfolio = portfolios.find((p) => p.id === portfolioId) ?? null;
+  useEffect(() => {
+     refreshPortfolios();
+     refreshUsage();
+  }, []);
   const [searchParams, setSearchParams] = useSearchParams();
   /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const bottomRef = useRef(null);
   /**@type {React.MutableRefObject<HTMLDivElement | null>}*/
   const scrollRef = useRef(null);
+  const stickToBottom = useRef(true);
   const lastMessage = messages[messages.length - 1];
   const streamingText = lastMessage?.streaming ? lastMessage.text : '';
   const [editingId, setEditingId] = useState(/**@type {number | null}*/(null));
@@ -276,7 +294,10 @@ const AIChat = () => {
   const cooling = cooldownLeft > 0;
   const busy = isThinking || regeneratingId !== null;
   const locked = busy || cooling;
-  const { memories, refreshMemories, deleteMemory } = useChat();
+  const { memories, refreshMemories, deleteMemory, usage, refreshUsage } = useChat();
+  const usageLoaded = Boolean(usage) && typeof usage.limit === 'number';
+  const usedToday = usageLoaded ? usage.used : 0;
+  const dailyLimit = usageLoaded ? usage.limit : null;
   const [memoriesOpen, setMemoriesOpen] = useState(false);
 
   const openMemories = () => {
@@ -304,13 +325,25 @@ const AIChat = () => {
     cursor: locked ? 'not-allowed' : 'pointer',
   });
 
-  useEffect(() => {
+  const handleScroll = () => {
     const el = scrollRef.current;
     if (!el) {return;}
-    if (el.scrollHeight - el.scrollTop - el.clientHeight > 140) {return;}
-    bottomRef.current?.scrollIntoView({
-      behavior: streamingText ? 'auto' : 'smooth', block: 'end' });
+    stickToBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+  };
+
+  useEffect(() => {
+    stickToBottom.current = true;
+  }, [conversationId]);
+  useEffect(() => {
+    if (lastMessage?.role === 'user') {stickToBottom.current = true;}
+  }, [messages.length, lastMessage?.role]);
+    
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !stickToBottom.current) {return;}
+    el.scrollTop = el.scrollHeight;
   }, [messages.length, isThinking, streamingText]);
+
 
   useEffect(() => {
     if (cooldownUntil === 0) 
@@ -515,7 +548,27 @@ const AIChat = () => {
             })
           )}
         </div>
-      <div className="flex shrink-0 justify-center px-3 py-3" style={{ borderTop: `1px solid ${palette.border}` }}>
+    <div className="shrink-0 px-3 py-3" style={{ borderTop: `1px solid ${palette.border}` }}>
+        <div className="mx-auto mb-3 w-full max-w-[180px]">
+          <div className="mb-1 flex items-center justify-between text-xs" style={{ color: 'var(--text-secondary)' }}>
+            <span>Daily usage</span>
+            <span style={{ fontFamily: 'var(--font-mono)' }}>{usedToday}/{dailyLimit ?? '–'}</span>
+          </div>
+          <div role="progressbar" aria-label="Daily messages used"
+            aria-valuemin={0} aria-valuemax={dailyLimit ?? 0} aria-valuenow={usedToday}
+            className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: palette.border}}>
+            <div className="h-full rounded-full transition-[width] duration-300"
+              style={{
+                width: dailyLimit ? `${Math.min(100, (usedToday / dailyLimit) * 100)}%` : '0%',
+                background: usageColour(usedToday, dailyLimit ?? Infinity),
+              }} />
+          </div>
+          {dailyLimit !== null && usedToday >= dailyLimit && (
+            <p className="mt-1 text-[11px]" style={{ color: 'var(--text-ghost)' }}>
+              Limit reached · resets {resetLabel(usage.resets_at)}
+            </p>
+          )}
+        </div>
         <button type="button" onClick={openMemories}
           className={`mx-auto flex w-full max-w-[180px] items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-xs ${HOVER}`}
           style={{ color: 'var(--text-secondary)', border: `1px solid ${palette.border}` }}>
@@ -665,7 +718,7 @@ const AIChat = () => {
           </header>
 
           <style>{CARET_CSS}</style>
-          <div ref = {scrollRef} className="min-h-0 flex-1 overflow-y-auto">
+          <div ref={scrollRef} onScroll={handleScroll} className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
             {messages.length === 0 ? (
               <div className="flex h-full items-center justify-center px-4 text-center">
                 <div className={CONTENT_MAX}>
@@ -820,7 +873,7 @@ const AIChat = () => {
                   </div>
                 )}
 
-                <button type="button" onClick={() => setPickerOpen((open) => !open)}
+                <button type="button" onClick={() => { if (!pickerOpen) refreshPortfolios(); setPickerOpen((open) => !open); }}
                   aria-label="Choose a portfolio to chat about"
                   aria-expanded={pickerOpen}
                   className={`rounded-lg p-1 ${HOVER}`}

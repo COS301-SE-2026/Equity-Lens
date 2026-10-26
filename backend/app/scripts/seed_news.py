@@ -16,7 +16,13 @@ from app.models.portfolio import Holdings
 from app.repositories.news_repository import NewsRepository
 from app.services import news_ingest
 from app.services.event_detection import K_SIGMA, MAX_GAP_DAYS, band_for, score_series
-from app.services.instruments import REGION_BENCHMARKS, looks_like_fund
+from app.services.instruments import (
+    KIND_STOCK,
+    KNOWN_INSTRUMENTS,
+    REGION_BENCHMARKS,
+    looks_like_fund,
+)
+from app.services.news_ingest import WINDOW_DAYS_AFTER, WINDOW_DAYS_BEFORE
 from app.services.news_ranking import (
     MAX_DAYS_AFTER,
     MAX_DAYS_BEFORE,
@@ -27,7 +33,7 @@ from app.services.news_ranking import (
 )
 from app.services.risk_analytics import _closes
 from app.services.ticker_map import listing_country
-from app.utils.stock_cache import get_cached_price_histories
+from app.utils.stock_cache import UNIT_FLIP_TOLERANCE, get_cached_price_histories
 
 logger = logging.getLogger("seed_news")
 
@@ -35,31 +41,38 @@ BATCH_SIZE = 5
 
 SEED_UNIVERSE = [
     "NPN.JO", "PRX.JO", "BHG.JO", "AGL.JO", "FSR.JO", "SBK.JO", "CPI.JO", "MTN.JO",
-    "GLN.JO", "ABG.JO", "NED.JO", "SLM.JO", "SOL.JO", "IMP.JO", "AMS.JO", "ANG.JO",
+    "GLN.JO", "ABG.JO", "NED.JO", "SLM.JO", "SOL.JO", "IMP.JO", "VAL.JO", "ANG.JO",
     "GFI.JO", "SHP.JO", "CFR.JO", "BID.JO", "BVT.JO", "VOD.JO", "APN.JO", "REM.JO",
     "DSY.JO", "INP.JO", "MRP.JO", "CLS.JO", "WHL.JO", "TFG.JO", "EXX.JO", "KIO.JO",
-    "HAR.JO", "SSW.JO", "OMU.JO", "MCG.JO", "TBS.JO", "NRP.JO", "RNI.JO", "BTI.JO",
+    "HAR.JO", "SSW.JO", "OMU.JO", "CNP.JO", "TBS.JO", "NRP.JO", "RNI.JO", "BTI.JO",
     "AAPL", "MSFT", "AMZN", "GOOGL", "META", "NVDA", "TSLA", "JPM", "V", "KO",
 ]
 
 
-WINDOW_DAYS_BEFORE = 4
-WINDOW_DAYS_AFTER = 2
 DEFAULT_BUDGET = 60
 EVENT_HISTORY_PERIOD = "1y"
 
 DEFAULT_SINCE_DAYS = 183
 ENTITY_SEARCH_BATCH = 50
 
-UNIT_FLIP_TOLERANCE = 0.05
 SPIKE_MOVE = 0.20
 SPIKE_REVERSAL = 0.80
 
 BENCHMARK_TICKERS = {ticker for ticker, _, _ in REGION_BENCHMARKS.values()}
 
 
+def seed_universe() -> list[str]:
+    if not settings.news_extended_universe:
+        return SEED_UNIVERSE
+    catalogue = {
+        i.ticker for i in KNOWN_INSTRUMENTS.values()
+        if i.kind == KIND_STOCK and i.ticker.endswith(".JO")
+    }
+    return sorted(set(SEED_UNIVERSE) | catalogue)
+
+
 def _merge_universe(held: list[str]) -> list[str]:
-    return sorted(set(held) | set(SEED_UNIVERSE))
+    return sorted(set(held) | set(seed_universe()))
 
 
 def _held_tickers(db) -> list[str]:
@@ -116,7 +129,7 @@ def backfill_universe(db, tickers: list[str]) -> tuple[list[str], set[str], list
             held.add(ticker)
 
     return (
-        sorted(held | set(SEED_UNIVERSE)),
+        sorted(held | set(seed_universe())),
         held,
         [{"ticker": t, "reason": excluded[t]} for t in sorted(excluded)],
     )

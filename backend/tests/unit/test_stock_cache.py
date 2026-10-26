@@ -1,9 +1,14 @@
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pandas as pd
 import pytest
+from sqlalchemy import select
+from sqlalchemy.orm import sessionmaker
 
+from app.models.market_data import FundamentalsCache, MarketData
+from app.services import portfolio_service
+from app.services.instruments import REGION_SA, REGION_US
 from app.utils import stock_cache
 
 MOCK_TICKER = "NPN"
@@ -35,6 +40,7 @@ def setup_function():
     stock_cache._FUNDAMENTALS_RATE_LIMITED_UNTIL.clear()
     stock_cache._PRICE_REFRESH_COOLDOWN_UNTIL.clear()
     stock_cache._REFRESH_LOCKS.clear()
+    stock_cache._HISTORY_DEPTH_COOLDOWN_UNTIL.clear()
     stock_cache._YFINANCE_GLOBAL_COOLDOWN_UNTIL = None
     stock_cache._YFINANCE_COOLDOWN_STRIKES = 0
 
@@ -390,3 +396,191 @@ def test_get_cached_fundamentals_successful_jo_fetch_saves_and_returns_data(
 
     assert result["info"]["sector"] == "Technology"
     assert result["live_fetch"] is True
+
+SPY_STORED_FROM = date(2026, 4, 13)
+PORTFOLIO_START = date(2025, 10, 1)
+
+
+def _weekdays(first, last=None):
+    last = last or date.today()
+    days = []
+    day = first
+    while day <= last:
+        if day.weekday() < 5:
+            days.append(day)
+        day += timedelta(days=1)
+    return days
+
+
+def _store(db_session, ticker, first, close=100.0, fetched_at=None):
+    fetched_at = fetched_at or datetime.now(UTC) - timedelta(hours=1)
+    for day in _weekdays(first):
+        db_session.add(MarketData(
+            ticker=ticker, date=day, open=close, high=close, low=close, close=close,
+            prev_close=close, volume=1, fetched_at=fetched_at,
+        ))
+    db_session.commit()
+
+
+def _yahoo_frame(first, close=50.0):
+    days = _weekdays(first)
+    frame = pd.DataFrame(
+        {"Open": close, "High": close, "Low": close, "Close": close, "Volume": 1.0},
+        index=pd.DatetimeIndex([pd.Timestamp(d) for d in days]),
+    )
+    frame["Prev Close"] = frame["Close"].shift(1)
+    return frame
+
+
+def _rows(db_session, ticker):
+    db_session.expire_all()
+    rows = db_session.scalars(select(MarketData).where(MarketData.ticker == ticker))
+    return {row.date: (float(row.close), row.fetched_at) for row in rows}
+
+
+@pytest.fixture
+def cache_db(db_engine):
+    with patch.object(stock_cache, "SessionLocal", sessionmaker(bind=db_engine)), \
+         patch.object(stock_cache, "_fetch_from_alpha_vantage",
+                      side_effect=AssertionError("alpha vantage")):
+        yield
+
+
+@pytest.mark.usefixtures("cache_db")
+def test_a_cache_that_starts_late_fetches_the_older_rows_once(db_session):
+    _store(db_session, "SPY", SPY_STORED_FROM)
+    before = _rows(db_session, "SPY")
+
+    with patch.object(stock_cache, "_fetch_from_yfinance",
+                      return_value=_yahoo_frame(date(2025, 9, 1))) as yahoo:
+        history = stock_cache.get_cached_price_history(
+            "SPY", period="2y", force_live=True, start=PORTFOLIO_START
+        )
+
+    assert yahoo.call_count == 1
+    after = _rows(db_session, "SPY")
+    assert {day: after[day] for day in before} == before
+    added = sorted(day for day in after if day not in before)
+    assert added[0] == date(2025, 9, 1)
+    assert added[-1] < SPY_STORED_FROM
+    assert {after[day][0] for day in added} == {50.0}
+    assert history.index.min().date() <= date(2025, 10, 3)
+
+
+@pytest.mark.usefixtures("cache_db")
+def test_a_failed_depth_fetch_is_not_retried_inside_the_cooldown(db_session):
+    _store(db_session, "SPY", SPY_STORED_FROM)
+
+    with patch.object(stock_cache, "_fetch_from_yfinance",
+                      side_effect=RuntimeError("yahoo down")) as yahoo:
+        first = stock_cache.get_cached_price_history(
+            "SPY", period="2y", force_live=True, start=PORTFOLIO_START
+        )
+        second = stock_cache.get_cached_price_history(
+            "SPY", period="2y", force_live=True, start=PORTFOLIO_START
+        )
+
+    assert yahoo.call_count == 1
+    assert first.index.min().date() == SPY_STORED_FROM
+    assert second.index.min().date() == SPY_STORED_FROM
+
+
+@pytest.mark.usefixtures("cache_db")
+def test_history_that_already_reaches_start_makes_no_call(db_session):
+    _store(db_session, "SPY", date(2025, 10, 3))
+
+    with patch.object(stock_cache, "_fetch_from_yfinance") as yahoo, \
+         patch.object(stock_cache, "_refresh_price_history") as refresh:
+        history = stock_cache.get_cached_price_history(
+            "SPY", period="2y", force_live=True, start=PORTFOLIO_START
+        )
+
+    yahoo.assert_not_called()
+    refresh.assert_not_called()
+    assert history.index.min().date() == date(2025, 10, 3)
+
+
+@pytest.mark.usefixtures("cache_db")
+def test_an_etf_with_nothing_older_costs_one_call_per_cooldown(db_session):
+    _store(db_session, "SPY", SPY_STORED_FROM)
+
+    with patch.object(stock_cache, "_fetch_from_yfinance", return_value=pd.DataFrame()) as yahoo:
+        for _ in range(3):
+            history = stock_cache.get_cached_price_history(
+                "SPY", period="2y", force_live=True, start=PORTFOLIO_START
+            )
+
+    assert yahoo.call_count == 1
+    assert history.index.min().date() == SPY_STORED_FROM
+
+
+@pytest.mark.usefixtures("cache_db")
+def test_a_call_without_start_never_reaches_back(db_session):
+    _store(db_session, "SPY", SPY_STORED_FROM)
+
+    with patch.object(stock_cache, "_fetch_from_yfinance") as yahoo:
+        history = stock_cache.get_cached_price_history("SPY", period="2y", force_live=True)
+
+    yahoo.assert_not_called()
+    assert history.index.min().date() == SPY_STORED_FROM
+
+
+@pytest.mark.usefixtures("cache_db")
+def test_the_blended_benchmark_starts_on_the_portfolios_first_day(db_session):
+    _store(db_session, "STX40.JO", date(2025, 9, 1), close=90.0)
+    _store(db_session, "USDZAR=X", date(2024, 9, 2), close=18.0)
+    _store(db_session, "SPY", SPY_STORED_FROM, close=600.0)
+    holdings = [
+        {"region": REGION_SA, "value": 50.0, "priced_live": True, "ticker": "NPN.JO"},
+        {"region": REGION_US, "value": 50.0, "priced_live": True, "ticker": "AAPL"},
+    ]
+
+    with patch.object(stock_cache, "_fetch_from_yfinance",
+                      return_value=_yahoo_frame(date(2025, 6, 2), close=600.0)) as yahoo:
+        series, components = portfolio_service._benchmark_series(
+            holdings, PORTFOLIO_START, base_value=1000.0
+        )
+
+    assert [call.args[0] for call in yahoo.call_args_list] == ["SPY"]
+    assert len(components) == 2
+    assert min(series) <= PORTFOLIO_START
+    assert series[PORTFOLIO_START] == 1000.0
+
+
+def _fundamentals_row(db_session, ticker, age):
+    db_session.add(FundamentalsCache(
+        ticker=ticker, info={"sector": "Basic Materials"}, fetched_at=datetime.now(UTC) - age,
+    ))
+    db_session.commit()
+
+
+@pytest.mark.usefixtures("cache_db")
+def test_a_bare_jse_symbol_uses_the_fresh_jo_fundamentals_row(db_session):
+    _fundamentals_row(db_session, "AGL.JO", timedelta(hours=1))
+
+    with (
+        patch.object(stock_cache.settings, "allow_live_market_fallback", True),
+        patch("app.utils.stock_cache.yf.Ticker", side_effect=AssertionError("yahoo")) as yahoo,
+    ):
+        result = stock_cache.get_cached_fundamentals("AGL")
+
+    yahoo.assert_not_called()
+    assert result["info"] == {"sector": "Basic Materials"}
+    assert result["live_fetch"] is False
+
+
+@pytest.mark.usefixtures("cache_db")
+def test_a_stale_jo_fundamentals_row_still_goes_to_yahoo(db_session):
+    _fundamentals_row(db_session, "AGL.JO", timedelta(days=8))
+
+    with (
+        patch.object(stock_cache.settings, "allow_live_market_fallback", True),
+        patch("app.utils.stock_cache.yf.Ticker") as yahoo,
+        patch("app.utils.stock_cache.time.sleep"),
+    ):
+        yahoo.return_value.info = {}
+        yahoo.return_value.balance_sheet = pd.DataFrame()
+        yahoo.return_value.financials = pd.DataFrame()
+        stock_cache.get_cached_fundamentals("AGL")
+
+    assert yahoo.call_args_list[0].args == ("AGL.JO",)
